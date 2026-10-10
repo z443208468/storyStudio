@@ -1,7 +1,8 @@
 """Private, source-preserving import tools for new CNW projects.
 
-Imports never infer confirmed Canon. Every extracted passage is a source-linked
-candidate marked TODO_CONFIRM until a human establishes project facts.
+Raw staging preserves originals and marks unclassified passages TODO_CONFIRM.
+The semantic Workflow 01/02 entry points classify directly stated facts,
+inferences and open questions through the pinned author method.
 """
 from __future__ import annotations
 
@@ -240,15 +241,18 @@ def incremental_update(workspace_root: str | Path, project_id: str, input_file: 
     manifest_file = root / "_INBOX/source_manifest.json"
     if not manifest_file.is_file():
         raise ContractError("INCREMENTAL_REQUIRES_EXISTING_PROJECT", "run Workflow 01 first")
-    imported = import_source(workspace_root, project_id, input_file)
-    if imported["status"] == "SOURCE_ALREADY_IMPORTED":
-        return imported
-    source_log = root / "00_meta" / "source_log.md"
-    source_log.parent.mkdir(parents=True, exist_ok=True)
-    with source_log.open("a", encoding="utf-8", newline="\n") as stream:
-        stream.write(f"- {imported['source_sha256'][:16]} {Path(input_file).name} imported via Workflow 02 (existing canon untouched)\n")
-    _append_log(root, f"Workflow 02 incremental update added {Path(input_file).name}")
-    return {"status": "INCREMENTAL_UPDATE_RECORDED", "project_id": project_id, "source_sha256": imported["source_sha256"], "canon_status": "TODO_CONFIRM", "provider_call": "none"}
+    if not (root / "00_meta/import_state.json").is_file():
+        raise ContractError("INCREMENTAL_REQUIRES_INITIAL_IMPORT", "run initial-import first")
+    import_source(workspace_root, project_id, input_file)
+    return semantic_import(root, incremental=True)
+
+
+def semantic_import(project_root: str | Path, *, incremental: bool = False) -> dict:
+    try:
+        from .cnw_import_workflow import run_import
+    except ImportError:
+        from cnw_import_workflow import run_import
+    return run_import(project_root, incremental=incremental)
 
 
 def canon_audit(project_root: str | Path) -> dict:
@@ -343,9 +347,13 @@ def main(argv=None) -> int:
     imp.add_argument("--workspace-root", required=True)
     imp.add_argument("--input", required=True)
     imp.add_argument("--format", choices=("md", "txt", "json"))
+    initial = sub.add_parser("initial-import", help="Run author Workflow 01 using the shared DeepSeek cost guard")
+    initial.add_argument("--project-root", required=True)
+    update = sub.add_parser("update-inbox", help="Run author Workflow 02 on only new/changed inbox material")
+    update.add_argument("--project-root", required=True)
     draft = sub.add_parser("draft-contract")
     draft.add_argument("--project-root", required=True)
-    draft.add_argument("--draft", required=True, help="private JSON containing source line anchors, explicit beat budgets, and scene facts")
+    draft.add_argument("--draft", required=True, help="private JSON with source anchors, overall length and assignment boundaries; Plot designs structure")
     incr = sub.add_parser("incremental-update")
     incr.add_argument("--project-id", required=True)
     incr.add_argument("--workspace-root", required=True)
@@ -366,6 +374,8 @@ def main(argv=None) -> int:
         result = import_source(args.workspace_root, args.project_id, args.input)
     elif args.command == "incremental-update":
         result = incremental_update(args.workspace_root, args.project_id, args.input)
+    elif args.command in ("initial-import", "update-inbox"):
+        result = semantic_import(args.project_root, incremental=args.command == "update-inbox")
     elif args.command == "canon-audit":
         result = canon_audit(args.project_root)
     elif args.command == "handoff":
