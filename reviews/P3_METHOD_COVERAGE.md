@@ -9,10 +9,11 @@
 | 原作者阶段 / 方法 | 固定源文件 | StoryStudio 对应职责 | 当前状态 | 目标验证 |
 |---|---|---|---|---|
 | 项目、Arc、Canon、Style 导入与持续维护 | `docs/EXISTING_PROJECT_IMPORT.md`; `templates/_workflows/01_first_import.md`; `templates/_workflows/02_incremental_update.md` | 支持任意私有项目根，维护来源与知识边界 | `NOT_IMPLEMENTED`（仅《苍歧》P2 固定导入存在） | A04、B01、E05 |
-| Plot 规划 | `templates/config/ai_roles.template.yml`; `templates/06_plot/plot.template.md` | 独立 Plot 输入/输出、作用/Hook/节拍/长度合同 | `PARTIAL`：W04 Prompt/角色包/结构 gate 已实现；尚无新 run 的真实 Plot 角色结果 | B01、B04、D02 |
+| 生产入口与 run 状态 | `templates/config/workflow.template.yml`; P3 W05 | 独立 run ID、依赖指纹、resume、历史/live 证据区分 | `PARTIAL`：可创建来源绑定离线 run 和阶段请求；没有真实 provider executor，W05 live fail-closed | B01、B02、B07、B08、E04、E05 |
+| Plot 规划 | `templates/config/ai_roles.template.yml`; `templates/06_plot/plot.template.md` | 独立 Plot 输入/输出、作用/Hook/节拍/长度合同 | `PARTIAL`：W04 Prompt/结构 gate 与 W05 独立 run stage-request 已实现；尚无新 run 的真实 Plot 角色结果 | B01、B04、D02 |
 | Plot 的 CritiCS 项目扩展 | P2 `tools/critics_bridge.py`; `tools/p2_06_critics_run.py` | 原桥接的计划批评接入，结果不能代替 CNW Plot Lens | `PARTIAL`：既有 P2 live 证据可复用；W04 新 run 安全调用构造器已实现，尚未真实调用新 Plot | D04 |
-| Scene Cards | `templates/05_scene_cards/scene_cards.template.md`; `ai_roles.template.yml` | 由已接受 Plot 生成多场或单场合同、起止与预算 | `PARTIAL`：W04 Prompt/角色依赖/beat 与预算 gate 已实现；尚无新 run 的真实 Card 角色结果 | B01、B04、B05 |
-| Writing Brief | `templates/07_draft/writing_brief.template.md`; `ai_roles.template.yml` | 从 Plot/Card/当前 Canon/声线导出冻结写作合同 | `PARTIAL`：W04 Prompt/隔离输入包/beat 与长度 gate 已实现；尚无新 run 的真实 Brief 角色结果 | B01、B06 |
+| Scene Cards | `templates/05_scene_cards/scene_cards.template.md`; `ai_roles.template.yml` | 由已接受 Plot 生成多场或单场合同、起止与预算 | `PARTIAL`：W04 Prompt/角色依赖/beat 与预算 gate、W05 stage dependency 已实现；尚无新 run 的真实 Card 角色结果 | B01、B04、B05 |
+| Writing Brief | `templates/07_draft/writing_brief.template.md`; `ai_roles.template.yml` | 从 Plot/Card/当前 Canon/声线导出冻结写作合同 | `PARTIAL`：W04 Prompt/隔离输入包/beat 与长度 gate、W05 依赖状态已实现；尚无新 run 的真实 Brief 角色结果 | B01、B06 |
 | NK POV hook | P2 `tools/p2_06_nk_live_probe.ps1`; NK 固定路由 | 当前 Card 到 NK 现有接口，反思结果映射入 Brief | `PARTIAL`：W04 按冻结 beats 构造 ordered `eventSequence`，且 Brief 映射需 receipt；本新合同尚未真实调用 | B06、E09 |
 | Prose | `ai_roles.template.yml`; `templates/07_draft/writing_brief.template.md` | 仅用 Brief 和相关声线生成新 ID 正文、保存 v0 | `PARTIAL`：W04 Prompt/Brief+声线输入限制与长度 gate 已实现；无 Controller 接受的 Plot/Card/Brief 时禁止构造 Prose 包 | B06、B07、C01、C06 |
 | Layer 1 表层校验 | `docs/THREE_LAYER_REVIEW.md` | 中文项目 lint，定位问题而不自动删文 | `NOT_IMPLEMENTED` | C09、D02 |
@@ -25,7 +26,7 @@
 | Promote / Manuscript Index | `templates/_workflows/03_revision.md`; `docs/ARCHITECTURE.md`; `templates/07_draft/episodes/README.md` | Controller 接受后晋升单一正本并更新索引 | `NOT_IMPLEMENTED` | D08 |
 | 导出阅读版 | `templates/93_exports/README.md`; P2 `tools/studio.ps1` | 根据 run manifest 动态导出而非 EP001 硬编码 | `NOT_IMPLEMENTED`（旧 EP001 导出可复用作历史） | E07、E08 |
 | 五话 Sprint 与 handoff | `templates/08_review/batch_review.template.md`; `_workflows/05_handoff.md` | 离线队列、批次审查及状态接续 | `NOT_IMPLEMENTED` | E02 |
-| 费用与供应商 | P2 `tools/p2_cost_guard.py`; `tools/p2_06_critics_run.py` | 复用现有预算和 reserve/settle，不建第二账本 | `ALREADY_IMPLEMENTED_WITH_EVIDENCE`：账本/请求护栏存在；新调度器尚未接入 | E03、E04、E05 |
+| 费用与供应商 | P2 `tools/p2_cost_guard.py`; `tools/p2_06_critics_run.py` | 复用现有预算和 reserve/settle，不建第二账本 | `PARTIAL`：runner 绑定既有配置与守卫代码 hash、固定 `max_in_flight=1`；新 provider executor 尚未调用 reserve/settle | E03、E04、E05 |
 
 ## 捕获与审阅边界
 

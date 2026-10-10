@@ -1,15 +1,20 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0,Mandatory=$true)]
-    [ValidateSet('doctor','prepare','import-source','verify','scene','resume','export','nk-start','nk-stop')]
+    [ValidateSet('doctor','prepare','import-source','verify','scene','legacy-scene','resume','produce','step','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
     [string]$Command,
     [ValidateSet('offline','live')][string]$Mode,
     [ValidateSet('plot','draft','revise')][string]$Stage,
     [string]$RunId,
+    [string]$ProjectRoot,
+    [ValidateSet('scene','episode')][string]$Unit,
+    [string]$Contract,
+    [string]$WorkId,
+    [string]$StepName,
     [int]$Port = 3175
 )
 $ErrorActionPreference = 'Stop'
-$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+$Root = if ($ProjectRoot) { (Resolve-Path -LiteralPath $ProjectRoot).Path } else { (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path }
 $SourceRoot = Join-Path $Root 'inputs/private/release/300a829c7524d620ab89177afcf52c03dffea633392c632f69a943f798dad3b2/Cangqi_Jun_Release_2_3'
 $Python = Join-Path $Root 'runtime/envs/critics-api/Scripts/python.exe'
 function Read-Json([string]$Path) { Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json }
@@ -22,6 +27,14 @@ function Write-Utf8([string]$Path,[string]$Text) {
     $Parent=Split-Path -Parent $Path
     New-Item -ItemType Directory -Force -Path $Parent | Out-Null
     [IO.File]::WriteAllText($Path,$Text,[Text.UTF8Encoding]::new($false))
+}
+function Invoke-CnwRunner([string[]]$Arguments) {
+    $Runner=Join-Path $Root 'tools/cnw_runner.py'
+    if (-not (Test-Path -LiteralPath $Runner -PathType Leaf)) { throw 'CNW_RUNNER_MISSING' }
+    if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) { throw 'PINNED_PYTHON_MISSING' }
+    if ($Arguments -notcontains '--project-root') { $Arguments += @('--project-root',$Root) }
+    & $Python $Runner @Arguments
+    if ($LASTEXITCODE -ne 0) { throw "CNW_RUNNER_FAILED:$LASTEXITCODE" }
 }
 function Assert-Prepared {
     $Critics=Read-Json (Join-Path $Root 'patches/critics/PATCH_INDEX.json')
@@ -135,17 +148,39 @@ switch ($Command) {
         if (-not $Stage) { throw 'SCENE_STAGE_REQUIRED: -Stage plot|draft|revise' }
         $Path=switch ($Stage) { plot { Join-Path $Root 'workspace/cangqi/06_plot/ep001_plot.v1.md' } draft { Join-Path $Root 'workspace/cangqi/07_draft/ep001_v0.md' } revise { Join-Path $Root 'workspace/cangqi/09_revision/ep001_v1.md' } }
         if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "CHECKPOINT_MISSING:$Stage" }
-        [ordered]@{status='CHECKPOINT_REUSED';stage=$Stage;path=$Path;sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash;provider_call='none; resume existing accepted work'} | ConvertTo-Json -Depth 4
+        [ordered]@{status='LEGACY_CHECKPOINT_ONLY';stage=$Stage;path=$Path;sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash;provider_call='none; historical P2 checkpoint'} | ConvertTo-Json -Depth 4
     }
+    'legacy-scene' { & $PSCommandPath scene -Stage $Stage }
+    'produce' {
+        if (-not $Contract -or -not $RunId -or -not $Mode) { throw 'PRODUCE_REQUIRES_MODE_CONTRACT_AND_NEW_RUN_ID' }
+        $RunnerArgs=@('produce','--mode',$Mode,'--contract',$Contract,'--run-id',$RunId)
+        if ($Unit) { $RunnerArgs += @('--unit',$Unit) }
+        if ($WorkId) { $RunnerArgs += @('--work-id',$WorkId) }
+        $RunnerArgs += @('--project-root',$Root)
+        Invoke-CnwRunner $RunnerArgs
+    }
+    'step' {
+        if (-not $RunId -or -not $StepName) { throw 'STEP_REQUIRES_RUN_ID_AND_STEP_NAME' }
+        $RunnerArgs=@('step','--run-id',$RunId,'--stage',$StepName)
+        if ($WorkId) { $RunnerArgs += @('--work-id',$WorkId) }
+        Invoke-CnwRunner $RunnerArgs
+    }
+    'review' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('review','--run-id',$RunId) }
+    'promote' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('promote','--run-id',$RunId) }
+    'show-run' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('show-run','--run-id',$RunId) }
+    'verify-history' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('verify-history','--run-id',$RunId) }
+    'verify-live' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('verify-live','--run-id',$RunId) }
+    'sprint' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('sprint','--run-id',$RunId) }
     'resume' {
         if (-not $RunId -or $RunId -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$') { throw 'VALID_RUN_ID_REQUIRED' }
         $Run=Join-Path $Root ("runs/$RunId")
         if (-not (Test-Path -LiteralPath $Run -PathType Container)) { throw 'RUN_NOT_FOUND' }
+        if (Test-Path -LiteralPath (Join-Path $Run 'run_state.json') -PathType Leaf) { Invoke-CnwRunner @('resume','--run-id',$RunId); break }
         $Ledger=Read-Json (Join-Path $Root 'runtime/private/p2-cost-ledger.json')
         $Rows=@($Ledger.requests | Where-Object run_id -eq $RunId)
         [ordered]@{status='RUN_REOPENED_READ_ONLY';run_id=$RunId;path=$Run;ledger_rows=$Rows.Count;provider_requests=@($Rows | Where-Object provider_request_id).Count;no_replay=$true} | ConvertTo-Json -Depth 4
     }
-    'export' { Export-ReadingPackage | ConvertTo-Json -Depth 6 }
+    'export' { if ($RunId) { Invoke-CnwRunner @('export','--run-id',$RunId) } else { Export-ReadingPackage | ConvertTo-Json -Depth 6 } }
     'nk-start' {
         Assert-Prepared | Out-Null
         if ($Port -lt 1024 -or $Port -gt 65535) { throw 'INVALID_PORT' }
