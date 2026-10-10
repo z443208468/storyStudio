@@ -2,7 +2,7 @@
 
 ## 00. 生效与证据性质
 
-- 当前：`PROPOSED_NOT_ADOPTED`。必须经过 G00 的独立 Reviewer 与用户 Controller 后才能变成活动治理。没有事后补签。
+- 当前：`PROPOSED_NOT_ADOPTED`。必须经过 G00 的独立 Reviewer 与 Controller 后才能变成活动治理。Controller 默认是用户；用户可在本任务中明确委托专用验收子智能体逐 Atom 签收和要求纠偏。没有事后补签。
 - 用户目标：**从真正空仓库开始**，先建立治理，再取得原版开源工作流与原版工具，安装/核实并用于《苍歧》真实的**一场**最小日常质量实验。原版第三方程序和工作流**一行一字节均不得改**。最终判断不是“接线成功”，而是用户可读到内容并判断是否达到效果。
 - 项目治理参考：MVP 活动分支 `perf/r667-migration-20261008` 的根 `AGENTS.md`（标注 R66.9）、`plans/packages/G3BB_R66_9_ARCHITECTURE_EXECUTION_20261009/{MASTER_PLAN,STRICT_SEQUENCE_AND_BUDGET,CODEX_START,REACCEPTANCE_RUNBOOK,FUNCTIONAL_ACCEPTANCE}.md`、`docs/governance/GOVERNANCE.md`。该仓库业务专属的 EMA/Host/PFValueKernel 等条款**不移植**。移植的是黑名单原则、作者与验收权分离、原始证据、Atom 顺序和远端读回；所有新增禁令由本次用户明确授权，不冒称 MVP 原有原文。
 - 源状态以当前本地和远端现场核对为准。2026-10-10 查询 `z443208468/storyStudio/main` 为提交 `06c66de7c7f18263039ea19a47e84c29716cde4b`、**empty Git tree** `4b825dc642cb6eb9a060e54bf8d69288fbee4904`。这是远端事实，**不能据此声称本地 D 盘无未跟踪数据**。若用户继续调整 main，以现场值为准，任何基线变化只报告，不自动重绑定。
@@ -22,20 +22,20 @@
 ## 02. 角色与权限（与MVP R66.9实际机制对齐）
 
 ```text
-ROLE_CONTROLLER = USER
+ROLE_CONTROLLER = USER_OR_EXPLICITLY_DELEGATED_ACCEPTANCE_SUBAGENT
 ROLE_WRITER = CODEX_ROOT_ONLY
 ROLE_REVIEWER = ONE_DEDICATED_INDEPENDENT_MESSAGE_ONLY_READ_ONLY_SUBAGENT
 REVIEWER_CAN_WRITE = NO
 REVIEWER_CAN_EXECUTE_TEST = NO
 REVIEWER_CAN_DELEGATE = NO
-REVIEWER_CAN_SIGN_FOR_CONTROLLER = NO
+DELEGATED_REVIEWER_CAN_SIGN_FOR_CONTROLLER_WITHIN_EXPLICIT_SCOPE = YES
 WRITER_CAN_SELF_SIGN = NO
 ONE_ATOM_FULLY_ACCEPTED_BEFORE_NEXT = YES
 OVER_NIGHT_AUTORUN_ACROSS_CONTROLLER_GATE = NO
 ```
 
 - Writer 负责所有命令、文件、实现、测试、普通提交和远端读回。Reviewer 根据 Writer 提供的**精确源文件、实际 diff、raw 和远端响应**独立判断，不能照搬 Writer 自评，也不能伪称亲自执行。
-- Controller 批准/驳回 **每一个 Atom** 的具体候选和证据。Reviewer 自己写的 `ACCEPT` 只是独立建议，非越权解除后续Atom锁定。
+- Controller 批准/驳回 **每一个 Atom** 的具体候选和证据。默认由用户签收；用户明确委托的专用验收子智能体可在委托范围内以 `ACCEPT` 解锁下一 Atom，或以 `RETURN` 要求当前 Atom 纠偏。委托不授权扩大用户给定的创作、模型、版本、预算、第三方不变性或样本范围；用户保留最高权威并可改变约束或撤销委托。
 - 若Codex不能实际建立独立只读子智能体，则当前任务不得假装已经分离；报告 `B09_REVIEWER_UNAVAILABLE`，不进入下个 Atom。不得用同一主执行AI的另一个聊天窗口“自我复核”充数。
 
 ## 03. 唯一硬停黑名单（B01–B14）

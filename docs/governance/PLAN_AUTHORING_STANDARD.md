@@ -4,7 +4,7 @@
 
 ## A. 计划输入：必须现场读，不接受记忆替代
 
-1. **本仓库活动状态**：实际远端main SHA/tree、本地 HEAD/untracked、当前已接受Atom和最近一条用户Controller批准消息。
+1. **本仓库活动状态**：实际远端main SHA/tree、本地 HEAD/untracked、当前已接受Atom和最近一条用户约束/委托消息，以及当前有效的 Controller 委托范围。
 2. **MVP治理范式**：`z443208468/mvp@perf/r667-migration-20261008` 的根 `AGENTS.md`、`docs/governance/GOVERNANCE.md` 与 R66.9 `MASTER_PLAN.md`、`STRICT_SEQUENCE_AND_BUDGET.md`、`CODEX_START.md`。使用其“规则机制”而非复制EMA业务合同或R66.9的AT号/130检查项/27业务真值到StoryStudio。
 3. **原版创作工作流**：`MintoTsukino/claude-novel-workflow@97ad71fe...` 的`docs/ARCHITECTURE.md`、`docs/EXISTING_PROJECT_IMPORT.md`、`docs/GETTING_STARTED.md`、`docs/HOW_TO_ADAPT.md`、`docs/THREE_LAYER_REVIEW.md`，及`templates/_workflows/`和对应`templates/{04_chapter_design,05_scene_cards,06_plot,07_draft,08_review,09_revision,90_canon,92_style_engine}/`文件的原字节。不得用你我之前的总结替代原文。
 4. **原版工具**：NK 的README、package.json、`lib/openaiServer.ts`、实际API Route和YAML；CritiCS的README、requirements、`critics/plan/plan.py`、`critics/text/text.py`、`critics/setting/chatsetting/gptsetting.py`和promptDesign。源码中的模型硬编码和坏语法是要先实证的真实部署障碍，不能隐去。
@@ -77,7 +77,7 @@ CONTROLLER_ACCEPTS_EXACT_COMMIT_TREE()
 SET_NEXT_ATOM_ACTIVE()
 ```
 
-计划制定完成仅意味着有“施工合同”，不是 Atom接受。Reviewer不能改写代码、运行测试或者自己成为 Controller。
+计划制定完成仅意味着有“施工合同”，不是 Atom接受。Reviewer不能改写代码、运行测试或者自行成为 Controller；仅用户明确委托的本任务专用验收子智能体可在委托范围内签收 Atom 并要求纠偏，用户保留最高权威。
 
 当已发生的真实缺陷能在当前Atom以自有代码、可逆且不修改第三方的纯传输修复闭合时，允许Writer当场修复，不需每次向用户追问路径问题；越过用户禁令、引入新故事方法或必须改第三方时 B01/B02/B10/B11 当场停。**不增加额外通用异常恢复框架、工作流引擎、黑盒自动签收平台。**
 
@@ -94,7 +94,7 @@ SET_NEXT_ATOM_ACTIVE()
 7. 创作效果：原版Plot/Scene Cards/Brief是否实际喂给生成；工具返回内容是否在样本起作用，是否是可演出的完整一场。
 8. 工程安全：读写权限、原始失败保留、API Key只在进程、无公开原稿、无网络监听公网、子智能体只读。
 9. 成本控制：单场样本与完整章节扇出不是一回事；真实请求量、retry、在途结算与预留可分清；不把旧$12当授权。
-10. 验收身份：Reviewer的独立证据和Controller是否真实给出授权；有没有脚本自签或自动下一阶段。
+10. 验收身份：Reviewer的独立证据、用户的明确 Controller 委托及其范围是否真实可查；Controller 是否对精确 commit/tree 签收；有没有脚本自签或自动下一阶段。
 11. 法律与来源：CNW CC BY 4.0许可范围和故事示例非授权；NK/CritiCS MIT归属；用户原作版权状态不能凭存有ZIP自动认定可商业发行。
 12. 失败归因：原版技术障碍 vs 自有适配错误 vs 无需代理的环境问题 vs 故事质量不达标，分开给证据。
 
