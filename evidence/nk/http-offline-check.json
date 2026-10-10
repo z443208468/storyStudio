@@ -4,12 +4,13 @@
   "good_input_status": 200,
   "too_few_status": 502,
   "malformed_statuses": {
+    "MALFORMED": 500,
     "EMPTY": 500,
-    "TRUNCATED": 500,
-    "MALFORMED": 500
+    "TRUNCATED": 500
   },
   "listener": "127.0.0.1",
   "no_key_routes": 8,
+  "reasoning_disabled_routes": 8,
   "no_key_status": 401,
   "captured_calls": 6,
   "external_provider_calls": 0,
@@ -18,46 +19,56 @@
       "host": "https://api.deepseek.com/v1",
       "model": "deepseek-flash",
       "response_format": "json_object",
+      "reasoning_effort": "none",
+      "max_output_tokens": 512,
       "case": "GOOD",
       "config_valid": true,
-      "prompt_sha256": "4030734185F81D46CED85F88C43C81C75387AAAA127DF82074C395731985758F",
-      "prompt_length": 1569
+      "prompt_sha256": "8ECE44313D433E189538E7D358907E526F882B023AE7783F6AFAC7697E01D1F0",
+      "prompt_length": 1726
     },
     {
       "host": "https://api.deepseek.com/v1",
       "model": "deepseek-flash",
       "response_format": "json_object",
+      "reasoning_effort": "none",
+      "max_output_tokens": 512,
       "case": "TOO_FEW",
       "config_valid": true,
-      "prompt_sha256": "0AECCEB550FB73C6E1A1033D0621D65F161F7787ED1B4ECAF870697FE630B8D9",
-      "prompt_length": 1770
+      "prompt_sha256": "99FCBB8FDF6DDB1F4B076BC88E4DF40F931D88C4DE15973A20FD590648993DF1",
+      "prompt_length": 1927
     },
     {
       "host": "https://api.deepseek.com/v1",
       "model": "deepseek-flash",
       "response_format": "json_object",
+      "reasoning_effort": "none",
+      "max_output_tokens": 512,
       "case": "EMPTY",
       "config_valid": true,
-      "prompt_sha256": "A3281BDD368B09E0FE463D11AC668A6A2E0E432098E64BC499CEE884926056AA",
-      "prompt_length": 1624
+      "prompt_sha256": "8A7FA08EA173A3F0BCFE4B8889DCA78E10FCF6B89D513DEBAAA76F6082D6AAAC",
+      "prompt_length": 1781
     },
     {
       "host": "https://api.deepseek.com/v1",
       "model": "deepseek-flash",
       "response_format": "json_object",
+      "reasoning_effort": "none",
+      "max_output_tokens": 512,
       "case": "MALFORMED",
       "config_valid": true,
-      "prompt_sha256": "93335E2F8DE9C88F92CDC0C93CDD8E8F35D13393BBA2574BD98074F61DE34619",
-      "prompt_length": 1628
+      "prompt_sha256": "FC7FD9783BD50C59A108D0B193B6E3A8C418D1CDA62BAFC6FD33D5A92D0A16E7",
+      "prompt_length": 1785
     },
     {
       "host": "https://api.deepseek.com/v1",
       "model": "deepseek-flash",
       "response_format": "json_object",
+      "reasoning_effort": "none",
+      "max_output_tokens": 512,
       "case": "TRUNCATED",
       "config_valid": true,
-      "prompt_sha256": "3FC64BD5340A9D7118042FB0C3B1DCB60F4EC0A6C3EDE6972EA9FEFF24EAD74A",
-      "prompt_length": 1628
+      "prompt_sha256": "E3C5734970B876FE716C9E6B647B682785A3C849584A74913456A9E45C743C65",
+      "prompt_length": 1785
     }
   ]
 }

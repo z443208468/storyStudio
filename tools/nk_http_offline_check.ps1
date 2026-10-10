@@ -2,6 +2,13 @@ $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $Index = Get-Content -LiteralPath (Join-Path $Root 'patches\nk\PATCH_INDEX.json') -Raw | ConvertFrom-Json
 $Build = Join-Path $Root ("runtime\patched\NK\" + [string]$Index.runtime_build_id)
+$RouteFiles = @(Get-ChildItem -LiteralPath (Join-Path $Build 'app\api') -Recurse -File | Where-Object { $_.Name -match '^route\.tsx?$' })
+if ($RouteFiles.Count -ne 8) { throw "GENERATION_ROUTE_COUNT_CHANGED:$($RouteFiles.Count)" }
+foreach ($RouteFile in $RouteFiles) {
+    if ((Get-Content -LiteralPath $RouteFile.FullName -Raw) -notmatch 'reasoningEffort:\s*["'']none["'']') {
+        throw "THINKING_MODE_NOT_DISABLED:$($RouteFile.FullName)"
+    }
+}
 $Port = 3173
 $NoKeyPort = 3174
 $Capture = Join-Path $Root 'runtime\tmp\nk-http-offline-capture.jsonl'
@@ -114,10 +121,11 @@ try {
         malformed_statuses = $FailureStatuses
         listener = '127.0.0.1'
         no_key_routes = $Routes.Count
+        reasoning_disabled_routes = $RouteFiles.Count
         no_key_status = 401
         captured_calls = $Captured.Count
         external_provider_calls = 0
-        provider_requests = @($Captured | Select-Object host, model, response_format, case, config_valid, prompt_sha256, prompt_length)
+        provider_requests = @($Captured | Select-Object host, model, response_format, reasoning_effort, max_output_tokens, case, config_valid, prompt_sha256, prompt_length)
     }
     $ReportPath = Join-Path $Root 'evidence\nk\http-offline-check.json'
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $ReportPath) | Out-Null
@@ -128,6 +136,11 @@ try {
 finally {
     if ($Server -and -not $Server.HasExited) { Stop-Process -Id $Server.Id -Force }
     if ($NoKeyServer -and -not $NoKeyServer.HasExited) { Stop-Process -Id $NoKeyServer.Id -Force }
+    foreach ($CandidatePort in @($Port, $NoKeyPort)) {
+        foreach ($Connection in (Get-NetTCPConnection -LocalPort $CandidatePort -State Listen -ErrorAction SilentlyContinue)) {
+            & taskkill.exe /PID $Connection.OwningProcess /T /F | Out-Null
+        }
+    }
     foreach ($Name in $EnvironmentNames) {
         if ($OriginalEnvironment.ContainsKey($Name)) {
             [Environment]::SetEnvironmentVariable($Name, $OriginalEnvironment[$Name], 'Process')

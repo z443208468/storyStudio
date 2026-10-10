@@ -15,11 +15,16 @@ globalThis.fetch = async (input, init = {}) => {
     const prompt = (request.messages || []).map((m) => m.content || '').join('\n');
     const cases = ['TOO_FEW', 'EMPTY', 'MALFORMED', 'TRUNCATED'];
     const mode = cases.find((key) => prompt.includes('OFFLINE_CASE_' + key)) || 'GOOD';
-    const validRequest = request.model === 'deepseek-flash' && request.response_format?.type === 'json_object';
+    const validRequest = request.model === 'deepseek-flash'
+      && request.response_format?.type === 'json_object'
+      && request.reasoning_effort === 'none'
+      && request.max_tokens === 512;
     const capture = {
       host: 'https://api.deepseek.com/v1',
       model: request.model || null,
       response_format: request.response_format?.type || null,
+      reasoning_effort: request.reasoning_effort || null,
+      max_output_tokens: request.max_tokens || null,
       prompt_sha256: crypto.createHash('sha256').update(prompt).digest('hex').toUpperCase(),
       prompt_length: prompt.length,
       case: mode,

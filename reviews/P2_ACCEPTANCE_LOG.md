@@ -60,3 +60,13 @@
 - Build and ordinary `npm start` offline HTTP evidence passed. Both normal start instances bound loopback; 8 no-key routes returned 401; mock/invalid-result cases matched contract; 0 external provider calls.
 - Controller `/root/g00_reviewer` local ACCEPT and remote readback ACCEPT; remote candidate C/T matched.
 
+## P2-04
+
+- Status：三条真实调用链均已跑通，等待 Controller local acceptance。
+- Live run：`runs/p2-04-live-20261010/`；汇总：`evidence/p2-04-live-check.json`；跨 run 费用账本：`runtime/private/p2-cost-ledger.json`（本地私有）。
+- Plain text：DeepSeek Flash 请求成功；NK `generate-perspective`：真实 HTTP 200、Zod 接收 1 项；CritiCS `chatsettubg` / `ConversationChain`：真实调用成功且 memory 有 2 条消息。
+- NK 首次真实返回被 Zod 拒绝，根因是模型返回的顶层 JSON 键与 schema 不同。已明确 prompt schema，设置 `reasoning_effort=none` 并限输出 512 tokens；仅重跑 NK 调用后通过。原始错误调用仍按实际 usage 计费并保留。
+- 真实联调还确认 8 条生成路由中 reasoning 参数先前均未落实；现已全部设置 `reasoningEffort: none`，离线验收确认八条路由，`npm start` 的 loopback/no-key 检查、响应边界和 provider 参数均通过。此修正的 current patch SHA256 `289D6E5CA63C3B45D7BC2697A095E0344033482B0F5512E679E6ABF3A2E355B1`，runtime build `p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161`。
+- 当前累计估算费用 `¥0.004892 / ¥10`；估算采用当日官方峰值价、输入按 cache miss，并按 USD/CNY 6.70 换算。缺失 usage 的规则为 UNKNOWN_NOT_ZERO 并保留 reservation。未发送项目源稿。
+- 该阶段 candidate C/T 与 Controller verdict：冻结后追加。
+
