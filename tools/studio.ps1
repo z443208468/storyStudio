@@ -25,6 +25,10 @@ param(
     [string]$SprintId,
     [string]$SprintPlan,
     [ValidateSet('01','02','03','04','05')][string]$WorkflowNumber,
+    [ValidateSet('full','light','targeted')][string]$AuditScope = 'full',
+    [string[]]$AuditChapter,
+    [string]$AuditTarget,
+    [switch]$Pipeline,
     [switch]$CreateOnly,
     [int]$Port = 3175
 )
@@ -193,11 +197,16 @@ switch ($Command) {
         if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_INCREMENTAL_FAILED:$LASTEXITCODE" }
     }
     'canon-audit' {
-        & $Python (Join-Path $Root 'tools/cnw_project.py') canon-audit --project-root $ProjectRootPath
+        $AuditArguments = @('canon-audit','--project-root',$ProjectRootPath,'--scope',$AuditScope)
+        foreach ($Chapter in $AuditChapter) { $AuditArguments += @('--chapter',$Chapter) }
+        if ($AuditTarget) { $AuditArguments += @('--target',$AuditTarget) }
+        & $Python (Join-Path $Root 'tools/cnw_project.py') @AuditArguments
         if ($LASTEXITCODE -ne 0) { throw "CNW_CANON_AUDIT_FAILED:$LASTEXITCODE" }
     }
     'handoff' {
-        & $Python (Join-Path $Root 'tools/cnw_project.py') handoff --project-root $ProjectRootPath
+        $HandoffArguments = @('handoff','--project-root',$ProjectRootPath)
+        if ($Pipeline) { $HandoffArguments += '--pipeline' }
+        & $Python (Join-Path $Root 'tools/cnw_project.py') @HandoffArguments
         if ($LASTEXITCODE -ne 0) { throw "CNW_HANDOFF_FAILED:$LASTEXITCODE" }
     }
     'support-workflow' {

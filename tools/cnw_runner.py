@@ -375,7 +375,7 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
 
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "sprint_review", "sprint_handoff"}:
+    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))

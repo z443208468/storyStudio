@@ -268,66 +268,20 @@ def semantic_import(project_root: str | Path, *, incremental: bool = False) -> d
     return run_import(project_root, incremental=incremental)
 
 
-def canon_audit(project_root: str | Path) -> dict:
-    """Workflow 04: deterministic conflict/ambiguity report. Never modifies canon."""
-    root = Path(project_root).resolve(strict=True)
-    if not root.is_relative_to((ROOT / "workspace").resolve()):
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
-    glossary = root / "90_canon/glossary.md"
-    entries: dict[str, set] = {}
-    if glossary.is_file():
-        for line in glossary.read_text(encoding="utf-8-sig").splitlines():
-            if line.startswith("|") and "---" not in line:
-                cells = [cell.strip() for cell in line.strip("|").split("|")]
-                if len(cells) >= 2 and cells[0] and cells[0] != "术语":
-                    entries.setdefault(cells[0], set()).add(cells[1])
-    findings = []
-    for term, definitions in entries.items():
-        if len(definitions) > 1:
-            findings.append({"severity": "HARD CONFLICT", "term": term, "definitions": sorted(definitions), "suggested_resolution": "人工确认该术语的唯一权威定义"})
-    review_dir = root / "08_review"
-    review_dir.mkdir(parents=True, exist_ok=True)
-    report = root / "08_review/continuity_audit.md"
-    body = ["# Continuity Audit", "", f"- Project: {root.name}", f"- Findings: {len(findings)}", "", "> 该审计只报告，不修改 Canon；AI 深度审计按 workflow 04 提示词由操作者运行。", ""]
-    for item in findings:
-        body.append(f"- [{item['severity']}] {item['term']}: {item['definitions']} → {item['suggested_resolution']}")
-    report.write_text("\n".join(body) + "\n", encoding="utf-8")
-    unresolved = root / "90_canon/unresolved_questions.md"
-    if findings:
-        with unresolved.open("a", encoding="utf-8", newline="\n") as stream:
-            for item in findings:
-                stream.write(f"- [{item['severity']}] {item['term']}: {item['definitions']}\n")
-    _append_log(root, f"Workflow 04 canon audit recorded {len(findings)} deterministic finding(s)")
-    return {"status": "CANON_AUDIT_RECORDED", "findings": len(findings), "report": "08_review/continuity_audit.md", "canon_modified": False, "provider_call": "none"}
+def canon_audit(project_root: str | Path, *, scope: str = "full", chapters=(), target: str | None = None) -> dict:
+    try:
+        from .cnw_maintenance import run_maintenance
+    except ImportError:
+        from cnw_maintenance import run_maintenance
+    return run_maintenance(project_root, "audit", scope=scope, chapters=chapters, target=target)
 
 
-def handoff(project_root: str | Path) -> dict:
-    """Workflow 05: compact handoff brief with pointers, not duplicated canon."""
-    root = Path(project_root).resolve(strict=True)
-    if not root.is_relative_to((ROOT / "workspace").resolve()):
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
-    exports = root / "93_exports"
-    exports.mkdir(parents=True, exist_ok=True)
-    def first_lines(relative: str, count: int) -> str:
-        path = root / relative
-        if not path.is_file():
-            return f"(missing: {relative})"
-        return "\n".join(path.read_text(encoding="utf-8-sig").splitlines()[:count])
-    open_questions = root / "90_canon/unresolved_questions.md"
-    next_action = "运行 workflow 03 修订或继续下一场；如需 AI 摘要请按 workflow 05 提示词执行。"
-    body = "\n".join([
-        "# AI Handoff Brief", "",
-        "## Project one-liner", f"{root.name} — CNW 生产项目；状态文件见 00_meta/ 与 90_canon/。", "",
-        "## Protected core", "- 不改已确认 Canon；不越过读者知识边界；不改原玩法路由。", "",
-        "## Canon pointers", "- 90_canon/canon.md", "- 90_canon/character_bible.md", "- 90_canon/glossary.md", "- 90_canon/timeline.md", "- 90_canon/world_bible.md", "",
-        "## Open questions", (open_questions.read_text(encoding='utf-8-sig') if open_questions.is_file() else "(none recorded)"), "",
-        "## Next best action", next_action, "",
-        "## File index", "- 06_plot/ / 05_scene_cards/ / 07_draft/ / 08_review/ / 09_revision/", "",
-        "## Canon excerpt (pointer aid only)", first_lines("90_canon/canon.md", 6),
-    ])
-    (exports / "handoff_brief.md").write_text(body + "\n", encoding="utf-8")
-    _append_log(root, "Workflow 05 handoff brief written to 93_exports/handoff_brief.md")
-    return {"status": "HANDOFF_WRITTEN", "path": "93_exports/handoff_brief.md", "provider_call": "none"}
+def handoff(project_root: str | Path, *, pipeline: bool = False) -> dict:
+    try:
+        from .cnw_maintenance import run_maintenance
+    except ImportError:
+        from cnw_maintenance import run_maintenance
+    return run_maintenance(project_root, "handoff", pipeline=pipeline)
 
 
 def support_workflow_prompt(project_root: str | Path, number: str) -> dict:
@@ -373,8 +327,12 @@ def main(argv=None) -> int:
     incr.add_argument("--input", required=True)
     audit = sub.add_parser("canon-audit")
     audit.add_argument("--project-root", required=True)
+    audit.add_argument("--scope", choices=("full", "light", "targeted"), default="full")
+    audit.add_argument("--chapter", action="append", default=[], help="private 07_draft path for a light audit")
+    audit.add_argument("--target", help="subsystem for a targeted audit, e.g. timeline")
     hoff = sub.add_parser("handoff")
     hoff.add_argument("--project-root", required=True)
+    hoff.add_argument("--pipeline", action="store_true")
     support = sub.add_parser("support-workflow")
     support.add_argument("--project-root", required=True)
     support.add_argument("--number", required=True, choices=tuple(SUPPORT_WORKFLOW_SOURCE))
@@ -390,9 +348,9 @@ def main(argv=None) -> int:
     elif args.command in ("initial-import", "update-inbox"):
         result = semantic_import(args.project_root, incremental=args.command == "update-inbox")
     elif args.command == "canon-audit":
-        result = canon_audit(args.project_root)
+        result = canon_audit(args.project_root, scope=args.scope, chapters=args.chapter, target=args.target)
     elif args.command == "handoff":
-        result = handoff(args.project_root)
+        result = handoff(args.project_root, pipeline=args.pipeline)
     elif args.command == "support-workflow":
         result = support_workflow_prompt(args.project_root, args.number)
     else:

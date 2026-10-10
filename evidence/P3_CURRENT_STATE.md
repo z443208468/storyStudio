@@ -55,3 +55,11 @@
 - 仅同一 J19 兼容历史 Plot/Cards + 必要正常 NK/Brief，未调用新 Prose，未冒称新全链。66 项相关离线最终通过；已付费 NK/Brief 身份禁网络复用成功，账本未变。
 - 修复真实发现的固定 NK 端口误连旧服务：独立端口、直接自有 Node PID、退出及 capture ID 检查。本轮新服务已停止；旧服务未被终止。首笔缺身份结果 `UNKNOWN_NOT_ZERO` 留存 0.028333 CNY；成功两笔 0.062025 CNY，campaign committed 4.521101/10 CNY（含未知预留）。
 - 保留清理/manifest 自身异常的 pending 恢复边界及 Windows 临时 mock ledger 偶发 WinError 5；不宣称它们已修复。C12/C13、当前状态全链及完整等价终验仍未完成。
+
+## 2026-10-11 C12/C13 有限维护验证
+
+- 前次 C05 限定签收提交已推送/远端回读一致：C=`f135e4e8b52915bf24fc661a77c48df76dfd96ee`，T=`ac9672c2b7010d5cd9b3116828558d7b952b831c`。
+- `evidence/CNW_C12_C13_MAINTENANCE_DIAGNOSTIC.md`：真正 full Canon Audit 与 pipeline Handoff 各一次正常调用，在静态虚构维护 fixture 上完成；原 request/raw/产物/消费/归档与独立 Controller 限定 ACCEPT 均保留。锁定 Canon/设计/正文未修改；旧作者问题保留；Handoff 消费审计新增行动项。
+- 原模型报告过度判定及 Handoff 旧路径措辞原样记录，不手修、不重复付费、不宣称模型准确率。文本去重与语义去重区分；light/targeted/异常恢复为离线覆盖。
+- 新两笔保守估算共 0.093960 CNY，campaign committed 4.615061/10 CNY（含前次 UNKNOWN_NOT_ZERO）；无新小说正文、无第二场、无扩预算。入口与恢复/禁网络重入证据见维护文档与诊断。
+- 可关闭本次 C12/C13 有限实现缺口。仍须完成其余 C-ID 的总表兼容身份审计、逐角色当期状态通过 J19 全链的消费验证及最终源码/结果审查，完整等价和用户创意接受未签收。
