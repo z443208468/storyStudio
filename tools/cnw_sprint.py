@@ -1,4 +1,4 @@
-"""Explicitly offline five-episode sprint fixture; never calls a provider."""
+"""Five-episode Sprint CLI with distinct live and offline fixture modes."""
 from __future__ import annotations
 
 import argparse
@@ -100,8 +100,17 @@ def main(argv=None) -> int:
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--sprint-id", required=True)
     parser.add_argument("--plan", required=True)
+    parser.add_argument("--mode", choices=("fixture", "live"), default="fixture")
     args = parser.parse_args(argv)
-    print(json.dumps(run_fixture_sprint(args.project_root, args.sprint_id, args.plan), ensure_ascii=False, indent=2))
+    if args.mode == "live":
+        try:
+            from .cnw_sprint_live import run_live_sprint
+        except ImportError:
+            from cnw_sprint_live import run_live_sprint
+        result = run_live_sprint(args.project_root, args.sprint_id, args.plan)
+    else:
+        result = run_fixture_sprint(args.project_root, args.sprint_id, args.plan)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 
 

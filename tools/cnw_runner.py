@@ -379,7 +379,7 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
 
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    if stage not in PROVIDER_STAGES | {"project_import", "project_update"}:
+    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
@@ -1705,6 +1705,12 @@ def sprint_run(args) -> dict:
     plan = getattr(args, "sprint_plan", None)
     if not plan:
         raise ContractError("SPRINT_QUEUE_REQUIRED", "supply --sprint-plan with five episode contracts")
+    if getattr(args, "mode", "fixture") == "live":
+        try:
+            from .cnw_sprint_live import run_live_sprint
+        except ImportError:
+            from cnw_sprint_live import run_live_sprint
+        return run_live_sprint(Path(getattr(args, "project_root", None) or ROOT), args.run_id, Path(plan))
     return run_fixture_sprint(Path(getattr(args, "project_root", None) or ROOT), args.run_id, Path(plan))
 
 
@@ -1932,6 +1938,7 @@ def make_parser() -> argparse.ArgumentParser:
             item.add_argument("--review-evidence")
         if command == "sprint":
             item.add_argument("--sprint-plan")
+            item.add_argument("--mode", choices=("fixture", "live"), default="fixture")
         item.set_defaults(func=func)
     return parser
 
