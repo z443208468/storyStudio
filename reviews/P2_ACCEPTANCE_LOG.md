@@ -167,4 +167,7 @@
 - 真实单场 Run：`CNW1TO1-CQ-J19-20261010-01`（私有，Git 忽略）。11 个 CNW 阶段全部 `STAGE_MATERIALIZED`；`verify-live` 返回 `LIVE_EVIDENCE_VALIDATED`（83 条 provider 收据，全部 SETTLED）。真实 provider 呼叫含：plot/scene_cards/writing_brief/prose、5 Lens、每 finding×3 反证、Completeness、Refine、受影响 Re-review；NK POV 与 CritiCS plan-critique/text-refine 各自真实运行。
 - 本轮费用：本 Run 估算 ¥3.5258，唯一账本累计 ¥3.6491 / ¥10 上限；无并行计费系统。
 - 覆盖限制：`EPISODE_LIVE_NOT_RUN`；`SPRINT_LIVE_NOT_RUN`；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
-- 尚未完成的治理门：独立 Controller 工程 ACCEPT、推送与远端回读、当前 ChatGPT 的源码/结果审查。因此不得记 Atom 终验通过。
+- 本地提交：C=`adda408be36239ef94ca779245d2082866675f38`，T=`cc4babd71019b1deb4f1beea0a72c61a65ad72b7`（父提交 `de49ef2…`，未改写历史）。
+- 推送与远端回读：用户指示在没有独立 Controller 的本会话中推送以便当前 ChatGPT 审查。`git push origin main` 使 `de49ef2..adda408`；`git ls-remote origin refs/heads/main` = `adda408be36239ef94ca779245d2082866675f38`，与本地 HEAD/tree 一致；未强推、未 reset/clean，main 单分支保留。
+- 保留 WIP：未提交的 W10 文件（`tools/cnw_live_executor.py`、`tools/cnw_live_provider.py`、`tools/cnw_w10_*.py`、`tools/cnw_w10_nk_live.ps1`、`tests/test_cnw_live_provider.py`）仍在工作树原位，未被删除或覆盖。
+- 尚未完成的治理门：独立只读 Controller 的本 Atom 工程 ACCEPT（本会话无可调用 Controller，Writer 不自签）、当前 ChatGPT 的源码/结果审查。因此不得记 Atom 终验通过。
