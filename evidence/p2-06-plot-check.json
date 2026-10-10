@@ -1,0 +1,64 @@
+{
+  "stage": "P2-06_PLOT_GATE",
+  "status": "WAITING_CONTROLLER_PLOT_ACCEPTANCE",
+  "run_ids": [
+    "p2-06-critique-20261010",
+    "p2-06-critique-20261010-02",
+    "p2-06-plan-revise-20261010"
+  ],
+  "original_plot_reused": true,
+  "native_critic_calls": 5,
+  "modified_storyline_calls": 1,
+  "stage_provider_calls": 6,
+  "provider_request_ids": [
+    "cf9e312d-4133-4f35-a4e4-de662327afc9",
+    "c2d9d7f3-756a-49d7-826d-34dad913fd2f",
+    "100ee269-75e3-4fdf-b7df-e1996e548abf",
+    "4e1116a4-5ac9-4346-85c3-13b08b6eb8f3",
+    "85a154d4-a137-42f1-a431-eabbe17ce78c",
+    "4dea42c3-18f0-4416-8e05-08b9be0b1c8f"
+  ],
+  "model": "deepseek-flash",
+  "finish_reason": "stop",
+  "stage_estimated_cost_cny": "0.077503",
+  "campaign": {
+    "actual_provider_requests": 12,
+    "request_records": 14,
+    "committed_estimate_cny": "0.096389",
+    "limit_cny": "10"
+  },
+  "max_output_tokens_enforced_per_call": 2048,
+  "plot_filter_decision": "Raw native feedback and modifiedStoryline output preserved. Only observable-action differentiation was retained; unsafe expansion, ungrounded world facts, hidden clue, multi-scene structure, and mind-reading were rejected with reasons.",
+  "current_plot": "workspace/cangqi/06_plot/ep001_plot.v1.md",
+  "reasoning_content_policy": "reasoning_content fields recursively removed from persisted provider response artifacts; checks passed.",
+  "artifacts_sha256": {
+    "tools/p2_06_critics_run.py": "2C94CBB15EEEBA1572E3ED80A58097355CE62FE13F09D4C90AF1702EAC3F3AFF",
+    "workspace/cangqi/06_plot/ep001_plot.v0.md": "83F2BABDD3C6674D38FE5DDBF80D79D6E31492971512445BCEA0D1CB446DBECA",
+    "workspace/cangqi/06_plot/ep001_plot.v1.md": "741B69CB9144194CEE24A8F6F67D7205DBF956375B739B72767D1195ACD16454",
+    "workspace/cangqi/sample_contract.json": "652157EE7F7F17924ACDE368B2DBA04A55A3E9ECBEE91D83159099D986DBF3DF",
+    "workspace/cangqi/06_plot/ep001_source_anchors.md": "A5B2BF3EDD64225339B4B79AFC49082C62D345AFA435374B994F42F0731BCB5E",
+    "runs/p2-06-critique-20261010-02/critique.json": "2384D9E3D3AD24ABFF70F666CFC2DC1560816C8908233D7BF07A52D381C47767",
+    "runs/p2-06-critique-20261010-02/critique-with-boundaries.json": "610BD4BFDBB5AFDD81AD8B9F27B78D895A96D10101E7EE7CD9AE739443B6E620",
+    "runs/p2-06-critique-20261010-02/plot-filtering-record.md": "CEBB4C2B4E5F67159BCE1F3563501FBE1E391AB41D30713512C51C109198F9B1",
+    "runs/p2-06-critique-20261010-02/provider-calls.json": "492F568FA385EBF8401C770590429C5689E8FF215DEFC31FCC56FC6BD82DDF8F",
+    "runs/p2-06-plan-revise-20261010/modified_plot.md": "A20C8EE99DE80EB2E572F8BB05618C57BE54EA252BF66FE28C8F33C63ED592D2",
+    "runs/p2-06-plan-revise-20261010/provider-calls.json": "99BF46CC8A38F7F0F91768B115B3AB04B74CE994D7BA64D1A35D10077477FA00",
+    "runs/p2-06-critique-20261010-02/p2-cost-ledger.json": "79176D546072618E0F2046A731510E578BA840D1E2251C68AD6EEC01E43EDEDE",
+    "runs/p2-06-plan-revise-20261010/p2-cost-ledger.json": "E6DE21CAF257477DD11A9D13B1C7D68CBD143106A09C2B352F7AC2AFB8C1B3D6",
+    "runs/p2-06-critique-20261010-02/run_receipt.json": "62CD8FD360D217F98982BB91DA3C370C823F87786E67A3E88C2F6408A337F698",
+    "runs/p2-06-plan-revise-20261010/run_receipt.json": "A99BD093F0B0575E5C6458EF487E34BE3A049DB48A961FC9552470BFFA49F309",
+    "runtime/private/p2-cost-ledger.json": "E6DE21CAF257477DD11A9D13B1C7D68CBD143106A09C2B352F7AC2AFB8C1B3D6",
+    "runs/p2-06-critique-20261010/provider-calls.json": "A5338D955B09046EC0B16F3A9625B7955C763AAE07DC722E474E6078745F932F",
+    "runs/p2-06-critique-20261010/p2-cost-ledger.json": "9ACE1D402FE8CE46454B4ABE0CF4F2FBEE8DCB1CBEBA497B8E323A906CC3A045",
+    "runs/p2-06-critique-20261010/runner-error.json": "2989347E03566660C141B8E2521222D51E08F28AFB178BB498F16CC466C98995"
+  },
+  "non_billable_attempts": [
+    {
+      "run_id": "p2-06-critique-20261010",
+      "status": "NO_PROVIDER_REQUEST",
+      "cause": "initial attempt used global Python without CritiCS locked dependencies; rerun used accepted P2-02 virtual environment",
+      "provider_calls": 0,
+      "estimated_cost_cny": "0"
+    }
+  ]
+}
