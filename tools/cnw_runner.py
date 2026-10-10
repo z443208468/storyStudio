@@ -211,6 +211,20 @@ def _validate_raw_live_response(raw_path: Path, receipt: dict, usage: dict, inde
         raise ContractError("LIVE_RAW_RESPONSE_RECEIPT_MISMATCH", f"request {index}: {exc}") from exc
 
 
+def _validate_review_call_coverage(receipts: list[dict]) -> None:
+    expected = {
+        "lens5": {"style", "character", "plot", "canon", "story_specific"},
+        "verifier3": {"verifier_1", "verifier_2", "verifier_3"},
+    }
+    for stage, identities in expected.items():
+        selected = [receipt for receipt in receipts if receipt.get("stage") == stage]
+        field = "lens_id" if stage == "lens5" else "verifier_id"
+        actual = [receipt.get(field) for receipt in selected]
+        if (len(actual) != len(identities) or not all(isinstance(item, str) for item in actual)
+                or set(actual) != identities):
+            raise ContractError("LIVE_REVIEW_CALL_SET_INCOMPLETE", f"{stage}: expected {sorted(identities)}, got {actual}")
+
+
 def produce(args) -> dict:
     if args.mode == "live":
         raise ContractError("LIVE_EXECUTOR_NOT_AVAILABLE", "provider execution is gated for W10; W05 creates offline run state only")
@@ -476,12 +490,17 @@ def verify_live(args) -> dict:
     receipts_by_stage = {}
     for receipt in state["provider_requests"]:
         stage = receipt.get("stage")
-        if stage not in pipeline or stage in receipts_by_stage:
-            raise ContractError("LIVE_PIPELINE_INCOMPLETE", f"unexpected or duplicate stage: {stage}")
-        receipts_by_stage[stage] = receipt
+        if stage not in pipeline:
+            raise ContractError("LIVE_PIPELINE_INCOMPLETE", f"unexpected stage: {stage}")
+        receipts_by_stage.setdefault(stage, []).append(receipt)
+    multi_call_stages = {"lens5", "verifier3"}
     missing_stages = [stage for stage in pipeline if stage not in receipts_by_stage or state["stages"].get(stage, {}).get("status") != "ACCEPTED"]
+    duplicate_stages = [stage for stage, stage_receipts in receipts_by_stage.items() if stage not in multi_call_stages and len(stage_receipts) != 1]
+    if duplicate_stages:
+        raise ContractError("LIVE_PIPELINE_INCOMPLETE", f"duplicate stages: {', '.join(duplicate_stages)}")
     if missing_stages:
         raise ContractError("LIVE_PIPELINE_INCOMPLETE", ", ".join(missing_stages))
+    _validate_review_call_coverage(state["provider_requests"])
     required = {"stage", "request_id", "provider_request_id", "model", "status", "http_status", "finish_reason", "usage", "input_sha256", "output_sha256", "raw_response_path", "raw_response_sha256", "cost_cny", "ledger_settlement"}
     seen_provider_ids = set()
     seen_request_ids = set()
@@ -500,6 +519,9 @@ def verify_live(args) -> dict:
             raise ContractError("LIVE_RECEIPT_INCOMPLETE", f"request {index} missing {', '.join(missing)}")
         if not all(isinstance(receipt.get(key), str) and receipt[key].strip() for key in ("stage", "request_id", "provider_request_id")):
             raise ContractError("LIVE_RECEIPT_IDENTITY_INVALID", f"request {index}")
+        role_field = "lens_id" if receipt["stage"] == "lens5" else "verifier_id" if receipt["stage"] == "verifier3" else None
+        if role_field and (not isinstance(receipt.get(role_field), str) or not receipt[role_field].strip()):
+            raise ContractError("LIVE_RECEIPT_IDENTITY_INVALID", f"request {index} missing {role_field}")
         if receipt["provider_request_id"] in seen_provider_ids or receipt["request_id"] in seen_request_ids:
             raise ContractError("LIVE_PROVIDER_REQUEST_ID_DUPLICATE", receipt["provider_request_id"])
         seen_provider_ids.add(receipt["provider_request_id"])

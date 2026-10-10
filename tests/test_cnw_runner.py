@@ -201,6 +201,24 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "LIVE_RAW_RESPONSE_RECEIPT_MISMATCH"):
             cnw_runner._validate_raw_live_response(raw, receipt, usage, 1)
 
+    def test_live_review_coverage_requires_five_lenses_and_three_verifiers(self):
+        lenses = [
+            {"stage": "lens5", "lens_id": name}
+            for name in ("style", "character", "plot", "canon", "story_specific")
+        ]
+        verifiers = [
+            {"stage": "verifier3", "verifier_id": f"verifier_{number}"}
+            for number in range(1, 4)
+        ]
+        cnw_runner._validate_review_call_coverage(lenses + verifiers)
+        with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
+            cnw_runner._validate_review_call_coverage(lenses[:-1] + verifiers)
+        duplicate = lenses[:-1] + [{"stage": "lens5", "lens_id": "canon"}] + verifiers
+        with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
+            cnw_runner._validate_review_call_coverage(duplicate)
+        with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
+            cnw_runner._validate_review_call_coverage(lenses + verifiers[:-1] + [verifiers[-2]])
+
     def test_same_run_stage_mutations_are_serialized(self):
         path = self.base / "runs/FICT_SCENE_A"
         active = 0
