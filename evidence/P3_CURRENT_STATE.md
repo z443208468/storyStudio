@@ -38,3 +38,13 @@
 - 唯一真实单场 Run：`workspace/cangqi/runs/CNW1TO1-CQ-J19-20261010-01`（私有，Git 忽略），合同 SHA256=`e5ef4ce8d4468756021b8b7a8e10dd3cff0b9445e25a6a399f3cc683bb0978d0`。所有 provider 调用经既有 `p2_cost_guard.py` reserve→send→settle，计入同一 ¥10 账本。
 - 覆盖声明：`CNW_PUBLIC_WORKFLOW_STAGE_STRUCTURE=implemented_to_11_public_stages`；`CNW_EPISODE_MULTI_SCENE_LIVE=NOT_RUN`；`CNW_FIVE_EPISODE_SPRINT_LIVE=NOT_RUN`；`CNW_PRIVATE_AUTHOR_AUTOMATION_CODE=NOT_PUBLICLY_AVAILABLE`；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
 - 未取得的门：本 Atom 尚无独立只读 Controller 的工程 ACCEPT，也未经当前 ChatGPT 对已推送源码/结果的审查；因此不以本文件声称 Atom 终验通过。
+
+## 2026-10-11 最新目标收敛与实际状态
+
+- 本文件以上记录保留为对应时点历史，不作为当前每项功能已完成的声明。最新目标和停止准则为 `plans/CNW_PUBLIC_REPLICATION_GOAL.md` 的 C01–C15。
+- 用户要求完整复现官方公开方法，用于既定主线与情感节点之间的有意义日常事件；时间位置、逐角色当前处境/知情/关系限制须有来源并传至正确岗位。测试用于找实现差异，不手工打磨诊断样本，不以故事零 bug 延长工程。
+- 导入方法增量已由独立 Controller 限定 ACCEPT，正常推送 main 并回读一致：C=`fe3733ea208b243755a35c730d5a4c34da7253d3`；T=`0b7abfee3ac7fc72cf3fcfef9e9d975585c0bda6`。不等于整个工作流终验。
+- 独立来源研究确认至少仍有方法缺口：C12 跨项目 AI Canon Audit，C13 真实当前项目 Handoff，C05 Brief 相关 Canon/时间/世界/术语读取及按实际说话者选择声线。逐角色当前状态的完整传递仍未验证。
+- 当前原稿有相对时间、分支和知情资料，不能声称所有时点/所有分支已自动推导；源缺失保留待确认。官方公开方法不保证玩家喜欢角色或情绪落点。
+- `CNW_FULL_PRODUCTION=NOT_VERIFIED`；`PUBLIC_METHOD_EQUIVALENCE_VERIFIED=NO`；Episode/Sprint Live 未运行；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
+- 本次目标研究及落盘未新增付费调用或小说正文。完整方法实现与必要证据闭合后停止工程整改，创意亲读和规模 Live 如实另列。
