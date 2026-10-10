@@ -63,6 +63,8 @@ class AdapterTests(unittest.TestCase):
             self.assertNotIn("contract", view)
             self.assertEqual(view["execution_contract"]["target_visible_chars"], 1500)
             self.assertNotIn("character_knowledge_boundary_ref", json.dumps(view, ensure_ascii=False))
+            with self.assertRaisesRegex(ContractError, "ROLE_INPUT_SCOPE_VIOLATION"):
+                build_role_packet("plot", CONTRACT_PATH, {"canon_scope": paths["canon"], "source_anchors": paths["anchors"], "future_route": paths["canon"]})
         finally:
             for path in workdir.glob("*"):
                 path.unlink()
@@ -78,28 +80,32 @@ class AdapterTests(unittest.TestCase):
     def test_plot_card_brief_cannot_drop_beat_ids_or_budget(self):
         contract = load_contract(CONTRACT_PATH)
         valid = "\n".join([
+            "## Quick Header", "## Active Canon", "## Scene-by-Scene Instructions", "## Voice References",
+            "## Hard Constraints", "## Style Targets", "## What NOT to include in the prose", "NK Perspective Reflection",
             "CNW_CONTRACT target_visible_chars=1500 min_visible_chars=1200 max_visible_chars=1800",
             *[f"CNW_BEAT {beat['beat_id']} budget_visible_chars={beat['budget_visible_chars']}" for beat in contract["story"]["required_beats"]],
         ])
         validate_role_output("brief", contract, valid)
+        with self.assertRaisesRegex(ContractError, "ROLE_TEMPLATE_SECTION_MISSING"):
+            validate_role_output("brief", contract, valid.replace("## Active Canon", "## Missing"))
         with self.assertRaisesRegex(ContractError, "ROLE_BEAT_ID_DROPPED"):
-            validate_role_output("plot", contract, valid.replace("B03", "MISSING"))
+            validate_role_output("brief", contract, valid.replace("B03", "MISSING"))
         with self.assertRaisesRegex(ContractError, "ROLE_BEAT_BUDGET_MISMATCH"):
-            validate_role_output("cards", contract, valid.replace("CNW_BEAT B03 budget_visible_chars=500", "CNW_BEAT B03 budget_visible_chars=501"))
+            validate_role_output("brief", contract, valid.replace("CNW_BEAT B03 budget_visible_chars=500", "CNW_BEAT B03 budget_visible_chars=501"))
 
     def test_role_prompt_sources_match_captured_cnw_manifest_blobs(self):
         manifest = json.loads((ROOT / "runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json").read_text(encoding="utf-8"))
         upstream = {item["source_path"]: item["upstream_git_blob"] for item in manifest["references"]}
         prompt_sources = {
-            "plot.md": "templates/06_plot/plot.template.md",
-            "scene_cards.md": "templates/05_scene_cards/scene_cards.template.md",
-            "brief.md": "templates/07_draft/writing_brief.template.md",
-            "prose.md": "templates/config/ai_roles.template.yml",
+            "plot.md": ["templates/06_plot/plot.template.md"],
+            "scene_cards.md": ["templates/05_scene_cards/scene_cards.template.md"],
+            "brief.md": ["templates/07_draft/writing_brief.template.md"],
+            "prose.md": ["templates/config/ai_roles.template.yml", "templates/07_draft/writing_brief.template.md"],
         }
-        for prompt_name, source_path in prompt_sources.items():
+        for prompt_name, source_paths in prompt_sources.items():
             prompt = (ROOT / "prompts/cnw" / prompt_name).read_text(encoding="utf-8")
-            blob = re.search(r"^upstream_blob: ([0-9a-f]+)$", prompt, re.MULTILINE).group(1)
-            self.assertEqual(blob, upstream[source_path], prompt_name)
+            actual_blobs = set(re.findall(r"^\s*(?:upstream_blob|blob): ([0-9a-f]+)$", prompt, re.MULTILINE))
+            self.assertEqual(actual_blobs, {upstream[source_path] for source_path in source_paths}, prompt_name)
 
     def test_critics_hook_routes_through_existing_cost_guarded_runner(self):
         command = build_plan_critique_command(

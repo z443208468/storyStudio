@@ -1,6 +1,10 @@
 ---
 upstream_method_source: templates/config/ai_roles.template.yml + templates/07_draft/writing_brief.template.md
-upstream_blob: 8ec31cb93cb0be1913579cc5cb05de45460988f8
+upstream_sources:
+  - path: templates/config/ai_roles.template.yml
+    blob: 8ec31cb93cb0be1913579cc5cb05de45460988f8
+  - path: templates/07_draft/writing_brief.template.md
+    blob: d67e3c4539eaea5bbcce904f3eb3ee42ff1e2fc5
 project_adaptation: true
 input_fields: [accepted_brief, participating_character_voice_samples]
 output_fields: [continuous_scene_prose]

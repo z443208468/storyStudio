@@ -91,17 +91,19 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
         validate_episode_budget(contract["unit"])
     else:
         raise ContractError("WORK_UNIT_KIND_INVALID", str(contract["unit"].get("kind")))
-    expected = {
+    allowed_inputs = {
         "plot": ("canon_scope", "source_anchors"),
         "cards": ("plot", "canon_scope"),
         "brief": ("plot", "cards", "canon_scope", "style_guide", "voice_samples", "nk_reflection"),
         "prose": ("brief", "voice_samples"),
     }[role]
+    expected = allowed_inputs
     missing = [name for name in expected if name not in inputs]
     if missing:
         raise ContractError("ROLE_DEPENDENCY_MISSING", ", ".join(missing))
-    if role == "prose" and set(inputs) - {"brief", "voice_samples"}:
-        raise ContractError("PROSE_INPUT_SCOPE_VIOLATION", "prose may receive only brief and voice_samples")
+    extra = set(inputs) - set(allowed_inputs)
+    if extra:
+        raise ContractError("ROLE_INPUT_SCOPE_VIOLATION", f"{role} may not receive {sorted(extra)}")
     if role == "prose" and "voice_samples" not in inputs:
         raise ContractError("ROLE_DEPENDENCY_MISSING", "voice_samples")
     required_receipts = {"plot": (), "cards": ("plot",), "brief": ("plot", "cards"), "prose": ("plot", "cards", "brief")}[role]
@@ -145,6 +147,14 @@ def validate_role_output(role: str, contract: dict[str, Any], output: str) -> No
         raise ContractError("ROLE_OUTPUT_INVALID", "empty output or role returned a failure")
     beat_ids = [beat["beat_id"] for beat in contract["story"].get("required_beats", [])]
     if role in ("plot", "cards", "brief"):
+        required_sections = {
+            "plot": ("## Identity", "## Role in the Arc", "## Key Scenes", "## Hook", "## Required Story Beats", "## Forbidden Items", "## Connections", "## Target Length", "Reader Reward"),
+            "cards": ("### Identity", "### Cast", "### Start state", "### End state", "Character Wants", "### Required beats", "### Forbidden items for this scene", "### Sensory anchor", "### Tone / pacing", "### Connection to next scene"),
+            "brief": ("## Quick Header", "## Active Canon", "## Scene-by-Scene Instructions", "## Voice References", "## Hard Constraints", "## Style Targets", "## What NOT to include in the prose", "NK Perspective Reflection"),
+        }[role]
+        missing_sections = [section for section in required_sections if section.casefold() not in output.casefold()]
+        if missing_sections:
+            raise ContractError("ROLE_TEMPLATE_SECTION_MISSING", ", ".join(missing_sections))
         missing = [beat_id for beat_id in beat_ids if beat_id not in output]
         if missing:
             raise ContractError("ROLE_BEAT_ID_DROPPED", ", ".join(missing))
