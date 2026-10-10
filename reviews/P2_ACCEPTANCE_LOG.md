@@ -157,3 +157,4 @@
 - 实际新 run `P3-W05-CQ-J19-OFFLINE-20261010` 绑定 W03 合同 SHA256=`e5ef4ce8d4468756021b8b7a8e10dd3cff0b9445e25a6a399f3cc683bb0978d0`；Plot request 可 resume 并同 fingerprint 复用；`verify-history` 返回 `HISTORICAL_EVIDENCE_FOUND`。`verify-live` 因本 run 无 provider receipt 明确失败；`p2-cost-ledger.json` 前后 SHA256 一致，零 API。
 - 限制：真实 Plot/Card/Brief/Prose 执行、reserve/settle 接入、五 Lens、三 Verifier、Completeness、Refine、Re-review、Promote、动态 Export、Sprint 仍未实现或验证；W05 live 保持关闭，后续依计划推进。
 - 推送及远端 readback：待完成。
+- 独立远端回读：`REMOTE_READBACK ACCEPT — P3 W05`；Controller 确认 remote `main` 与 local tracking ref C=`d965b449898a209b1ce6f75b506599c0dc53408e`、T=`87bc6999887a44196532506f2d6ceecd4cd137fd` 一致；W05 接受候选为关闭提交直接父提交，工作树干净。
