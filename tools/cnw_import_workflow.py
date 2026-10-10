@@ -13,10 +13,12 @@ try:
     from .cnw_contract import ContractError, assert_output_within_root
     from .cnw_roles import _pinned_upstream
     from .cnw_runner import ROOT, cnw_live_call, locked_run, sha, save_state
+    from . import cnw_runner as runner
 except ImportError:
     from cnw_contract import ContractError, assert_output_within_root
     from cnw_roles import _pinned_upstream
     from cnw_runner import ROOT, cnw_live_call, locked_run, sha, save_state
+    import cnw_runner as runner
 
 DOCUMENTS = (
     "00_meta/project_index.md", "01_theme/theme.md", "02_logline/logline.md",
@@ -27,15 +29,16 @@ STATUSES = {"CONFIRMED", "INFERRED", "TODO_CONFIRM"}
 STATE = "00_meta/import_state.json"
 PENDING = "00_meta/import_pending.json"
 DESIGN_FOLDERS = {"01_theme", "02_logline", "03_project_design", "04_chapter_design", "90_canon"}
+UPDATE_FOLDERS = DESIGN_FOLDERS | {"05_scene_cards", "06_plot", "08_review"}
 # Adapter capacity, not an author method rule. The shared ledger reserves the
 # entire ceiling; truncated responses are retained and never parsed as success.
 IMPORT_OUTPUT_CAP = 12000
 
 
-def _document_allowed(name: str) -> bool:
+def _document_allowed(name: str, *, incremental=False) -> bool:
     path = Path(name)
     return (isinstance(name, str) and not path.anchor and not path.drive and ".." not in path.parts
-            and path.suffix.lower() == ".md" and (name in DOCUMENTS or path.parts[0] in DESIGN_FOLDERS))
+            and path.suffix.lower() == ".md" and (name in (*DOCUMENTS, "00_meta/source_log.md", "00_meta/ai_work_log.md") or path.parts[0] in (UPDATE_FOLDERS if incremental else DESIGN_FOLDERS)))
 
 
 def _json(text: str) -> dict:
@@ -109,6 +112,35 @@ def run_import(project_root: str | Path, *, incremental: bool = False) -> dict:
         return _run_import(root, incremental=incremental)
 
 
+def _reconsume_bookkeeping_response(run, stage, messages):
+    """A log-output whitelist correction does not require new story generation."""
+    current = json.loads(messages[1]["content"])
+    for row in runner.cached_receipts(runner.load_state(run)):
+        if row.get("status") != "SUCCEEDED" or row.get("stage") != stage or row.get("role_id") != "project_organization" or not row.get("request_path"):
+            continue
+        content = runner._receipt_content(run, row)
+        old_body = json.loads(assert_output_within_root(run, row["request_path"]).read_text(encoding="utf-8"))
+        old_messages = old_body.get("messages", [])
+        if len(old_messages) != 2 or old_messages[0] != messages[0] or old_body.get("model") != runner.MODEL or old_body.get("max_tokens") != IMPORT_OUTPUT_CAP:
+            continue
+        expected = sha(json.dumps({"stage": stage, "role_id": "project_organization", "messages": old_messages,
+            "output_cap": IMPORT_OUTPUT_CAP, "model": runner.MODEL, "url": runner.API_URL, "extra": None}, ensure_ascii=False, sort_keys=True).encode())
+        if row.get("request_fingerprint") != expected:
+            continue
+        old = json.loads(old_messages[1]["content"])
+        old_allowed, new_allowed = set(old.get("allowed_existing_documents", [])), set(current.get("allowed_existing_documents", []))
+        if old_allowed == new_allowed or not old_allowed.issubset(new_allowed) or not (new_allowed - old_allowed).issubset({"00_meta/source_log.md", "00_meta/ai_work_log.md"}):
+            continue
+        if {k: v for k, v in old.items() if k != "allowed_existing_documents"} != {k: v for k, v in current.items() if k != "allowed_existing_documents"}:
+            continue
+        _record_classification(run, "response_reconsume", {"provider_request_id": row["provider_request_id"],
+            "original_request_sha256": row["request_sha256"], "original_output_sha256": row["output_sha256"],
+            "current_message_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True).encode()),
+            "reason": "Only allowed bookkeeping output paths expanded; source text and complete method unchanged. Original receipt identity retained."})
+        return content, row
+    return None
+
+
 def _run_import(root: Path, *, incremental: bool) -> dict:
     pending = assert_output_within_root(root, PENDING)
     pending.parent.mkdir(parents=True, exist_ok=True)
@@ -134,7 +166,8 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
         return {"status": "NO_NEW_OR_CHANGED_SOURCES", "provider_call": "none"}
     existing = {}
     existing_names = set((*DOCUMENTS, "90_canon/unresolved_questions.md", "00_meta/source_log.md", "00_meta/ai_work_log.md"))
-    for folder in DESIGN_FOLDERS:
+    folders = UPDATE_FOLDERS if incremental else DESIGN_FOLDERS
+    for folder in folders:
         for path in (root / folder).rglob("*.md"):
             existing_names.add(path.relative_to(root).as_posix())
     for name in sorted(existing_names):
@@ -189,13 +222,17 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
                                     if name not in {"author:templates/CLAUDE.md", "author:" + workflow_path}
                                     and row["kind"] == "public_method")
     source_bindings = {**{name: {**row, "kind": "original"} for name, row in selected.items()}, **author_sources}
+    for name, text in existing.items():
+        if text:
+            source_bindings[name] = {"text": text, "sha256": sha(assert_output_within_root(root, name).read_bytes()), "kind": "project_context"}
     messages = [
         {"role": "system", "content": instruction + extension + "\nOfficial workflow:\n" + upstream + '\nTransport format for the official workflow: read every supplied original in full and perform its internal passes, then return JSON {"source_notes":{"source path":"brief inventory description"},"documents":{"allowed/path.md":[{"status":"CONFIRMED|INFERRED|TODO_CONFIRM","text":"organized Markdown section","source_refs":["original source or author reference identifier"]}]},"conflicts":[{"old_file":"existing or generated document","old_quote":"literal old passage","new_file":"generated document path","new_entry":0,"reason":"actual contradiction"}],"next_action":"one specific action"}. No preliminary line-by-line transcription or separate claim inventory is required. Use the source language for Markdown prose; copy all file and source identifiers exactly without translating them. Bind story assertions to original_sources, and operating instructions to author_reference_sources; template placeholders are not story facts. Use each document\'s purpose: project index, rough concept/design, confirmed canon/character index and calling rules, complete chapter/scene structure, theme/logline, unresolved author decisions, work handoff. Classify information as the author specifies; faithful paraphrase is allowed. Canon sections must be CONFIRMED and supported by their original source_refs. Inferences and gaps belong in design or unresolved questions, not canon. Distinguish conditional routes/design instructions from events that happened; preserve actors, conditions, time, negation and attribution. Reconcile information across all originals before calling something an author question. Do not invent facts. For an update, append only relevant new conclusions and preserve old ones. Judge contradictions by meaning, not string differences, synonyms or distinct events; cite both versions and do not resolve them. For conflicts within new output also supply old_entry, the old section index in documents[old_file]. new_entry is the zero-based index of the new conflicting section within documents[new_file]; it will be withheld and logged as a conflict. Reference templates (placeholders/examples are not project facts):\n' + reference_templates},
-        {"role": "user", "content": json.dumps({"required_initial_documents": list(DOCUMENTS), "allowed_existing_documents": [name for name in existing if _document_allowed(name)], "allowed_new_markdown_folders": sorted(DESIGN_FOLDERS), "original_sources": selected, "author_reference_sources": author_sources, "existing_documents": existing}, ensure_ascii=False)},
+        {"role": "user", "content": json.dumps({**({"required_initial_documents": list(DOCUMENTS)} if not incremental else {}), "allowed_existing_documents": [name for name in existing if _document_allowed(name, incremental=incremental)], "allowed_new_markdown_folders": sorted(folders), "original_sources": selected, "author_reference_sources": author_sources, "existing_documents": existing}, ensure_ascii=False)},
     ]
     _record_classification(run_dir, "import_request", {"messages": messages, "sources": {
         name: {key: value for key, value in row.items() if key != "text"} for name, row in source_bindings.items()}})
-    content, _ = cnw_live_call(run_dir, stage=stage, role_id="project_organization", messages=messages, output_cap=IMPORT_OUTPUT_CAP)
+    reused_response = _reconsume_bookkeeping_response(run_dir, stage, messages)
+    content, _ = reused_response or cnw_live_call(run_dir, stage=stage, role_id="project_organization", messages=messages, output_cap=IMPORT_OUTPUT_CAP)
     organized = _json(content)
     documents, conflicts, source_notes = (organized.get(key) for key in ("documents", "conflicts", "source_notes"))
     if (not isinstance(documents, dict) or not isinstance(conflicts, list) or not isinstance(source_notes, dict)
@@ -208,7 +245,7 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     date = datetime.now(timezone.utc).isoformat(timespec="seconds")
     additions, claims, classified = {}, {}, {}
     for name, entries in documents.items():
-        if not _document_allowed(name) or not isinstance(entries, list):
+        if not _document_allowed(name, incremental=incremental) or not isinstance(entries, list):
             raise ContractError("IMPORT_DOCUMENT_INVALID", str(name))
         assert_output_within_root(root, name)
         if not entries:
@@ -221,15 +258,16 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
                 raise ContractError("IMPORT_ENTRY_INVALID", name)
             status, refs, text = (entry.get(key) for key in ("status", "source_refs", "text"))
             if (status not in STATUSES or not isinstance(refs, list)
-                    or any(not isinstance(ref, str) or ref not in source_bindings for ref in refs)
+                    or any(not isinstance(ref, str) or not ref.strip() for ref in refs)
                     or not isinstance(text, str) or not text.strip()
-                    or (status != "TODO_CONFIRM" and not refs)):
+                    or (status != "TODO_CONFIRM" and not any(ref in source_bindings for ref in refs))):
                 raise ContractError("IMPORT_ENTRY_INVALID", name)
             if Path(name).parts[0] == "90_canon" and name != "90_canon/unresolved_questions.md" and status != "CONFIRMED":
                 raise ContractError("IMPORT_UNCONFIRMED_CANON", name)
             claim = {"document": name, "entry": index, "status": status, "text": text,
-                     "sources": {ref: source_bindings[ref]["sha256"] for ref in refs},
-                     "source_kinds": {ref: source_bindings[ref]["kind"] for ref in refs}}
+                     "sources": {ref: source_bindings[ref]["sha256"] for ref in refs if ref in source_bindings},
+                     "source_kinds": {ref: source_bindings[ref]["kind"] for ref in refs if ref in source_bindings},
+                     "unverified_source_refs": [ref for ref in refs if ref not in source_bindings]}
             claim["id"] = sha(json.dumps(claim, ensure_ascii=False, sort_keys=True).encode())[:24]
             claims[claim["id"]] = claim
             classified[name, index] = claim
@@ -269,6 +307,8 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
             continue
         provenance = "; ".join(f"{ref}@{digest}" for ref, digest in claim["sources"].items())
         rendered = f"{claim['text']}\n\nClassification: {claim['status']}\nSource: {provenance or 'TODO_CONFIRM — no supporting material'}"
+        if claim["unverified_source_refs"]:
+            rendered += "\nUnverified source citations (not supporting provenance): " + "; ".join(claim["unverified_source_refs"])
         additions.setdefault(claim["document"], []).append(rendered)
         if claim["status"] == "TODO_CONFIRM" and claim["document"] != "90_canon/unresolved_questions.md":
             additions.setdefault("90_canon/unresolved_questions.md", []).append(rendered)
@@ -276,8 +316,8 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     if not incremental:
         for name in DOCUMENTS:
             additions.setdefault(name, ["No nonconflicting entries available; see 90_canon/unresolved_questions.md."])
-    additions["00_meta/source_log.md"] = [f"- {name} SHA256={item['sha256']} processed {date}\n  Inventory notes: {source_notes[name]}" for name, item in selected.items()]
-    additions["00_meta/ai_work_log.md"] = [f"Workflow {method}; sources={len(selected)}; classified={len(claims)}; conflicts={len(conflicts)}; created/appended={', '.join(sorted(additions))}.\nNext action: {organized['next_action']}"]
+    additions.setdefault("00_meta/source_log.md", []).extend(f"- {name} SHA256={item['sha256']} processed {date}\n  Inventory notes: {source_notes[name]}" for name, item in selected.items())
+    additions.setdefault("00_meta/ai_work_log.md", []).append(f"Workflow {method}; sources={len(selected)}; classified={len(claims)}; conflicts={len(conflicts)}; created/appended={', '.join(sorted(additions))}.\nNext action: {organized['next_action']}")
     writes = {}
     for name, sections in additions.items():
         path = assert_output_within_root(root, name)
@@ -295,6 +335,8 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
         if (path.read_text(encoding="utf-8") if path.exists() else "") != old:
             raise ContractError("IMPORT_CONCURRENT_EDIT", name)
     result = {"status": "INCREMENTAL_IMPORT_COMPLETE" if incremental else "INITIAL_IMPORT_COMPLETE", "source_count": len(selected), "claim_count": len(claims), "conflicts": len(conflicts), "next_action": organized["next_action"], "run_dir": str(run_dir), "provider_call": "performed"}
+    if reused_response:
+        result.update(provider_call="reconsumed_existing_response", original_provider_request_id=reused_response[1]["provider_request_id"])
     journal = {"writes": writes, "result": result, "source_hashes": {k: v["sha256"] for k, v in inventory.items()}}
     journal_path.write_text(json.dumps(journal, ensure_ascii=False, indent=2), encoding="utf-8")
     pending.write_text(json.dumps({"journal": journal_path.relative_to(root).as_posix()}), encoding="utf-8")

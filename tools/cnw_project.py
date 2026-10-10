@@ -16,9 +16,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .cnw_contract import ContractError, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
+    from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
 except ImportError:  # direct script execution
-    from cnw_contract import ContractError, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
+    from cnw_contract import ContractError, assert_output_within_root, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{1,63}\Z")
@@ -252,11 +252,35 @@ def incremental_update(workspace_root: str | Path, project_id: str, input_file: 
     """Workflow 02: add new material without overwriting prior imports or resolving conflicts."""
     root = project_directory(workspace_root, project_id)
     manifest_file = root / "_INBOX/source_manifest.json"
-    if not manifest_file.is_file():
-        raise ContractError("INCREMENTAL_REQUIRES_EXISTING_PROJECT", "run Workflow 01 first")
+    if (root / "00_meta/import_pending.json").is_file():
+        return {**semantic_import(root, incremental=True), "requested_input_deferred": True,
+            "note": "Recovered the pending import first; submit the requested input again after recovery."}
     if not (root / "00_meta/import_state.json").is_file():
         raise ContractError("INCREMENTAL_REQUIRES_INITIAL_IMPORT", "run initial-import first")
-    import_source(workspace_root, project_id, input_file)
+    source_path = Path(input_file).resolve(strict=True)
+    if source_path.is_relative_to((root / "_INBOX").resolve()):
+        assert_output_within_root(root, str(source_path))
+    elif all(path.is_file() for path in (manifest_file, root / "_INBOX/source_index.json", root / "90_canon/canon_candidates.json")):
+        import_source(workspace_root, project_id, source_path)
+    else:
+        # Ordinary public _INBOX projects have no legacy staging manifest.
+        # Preserve their old material and candidate files; only stage new bytes.
+        if not source_path.is_file() or source_path.suffix.lower() not in {".md", ".txt", ".json"}:
+            raise ContractError("IMPORT_NEEDS_FORMAT_ADAPTER", str(source_path))
+        raw = source_path.read_bytes()
+        try:
+            text = raw.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise ContractError("IMPORT_ENCODING_INVALID", "source must be UTF-8") from exc
+        if source_path.suffix.lower() == ".json" and not isinstance(json.loads(text), (dict, list)):
+            raise ContractError("IMPORT_NEEDS_FORMAT_ADAPTER", "JSON root must be object or array")
+        digest = sha(raw)
+        destination = assert_output_within_root(root, f"_INBOX/originals/{digest[:16]}_{source_path.name}")
+        if destination.exists() and destination.read_bytes() != raw:
+            raise ContractError("EXISTING_SOURCE_COLLISION", destination.name)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if not destination.exists():
+            destination.write_bytes(raw)
     return semantic_import(root, incremental=True)
 
 
