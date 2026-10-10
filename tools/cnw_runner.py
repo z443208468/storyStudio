@@ -225,6 +225,28 @@ def _validate_review_call_coverage(receipts: list[dict]) -> None:
             raise ContractError("LIVE_REVIEW_CALL_SET_INCOMPLETE", f"{stage}: expected {sorted(identities)}, got {actual}")
 
 
+def bind_accepted_review_outputs(accepted_review:dict,provider_receipts:list[dict],run_root:Path)->None:
+    expected_lenses={"style","character","plot","canon","story_specific"}; expected_verifiers={"verifier_1","verifier_2","verifier_3"}
+    review_rows=accepted_review.get("provider_requests",[])
+    lenses=[row for row in review_rows if row.get("stage")=="lens5"]; verifiers=[row for row in review_rows if row.get("stage")=="verifier3"]
+    if len(lenses)!=5 or {row.get("lens_id") for row in lenses}!=expected_lenses or len(verifiers)!=3 or {row.get("verifier_id") for row in verifiers}!=expected_verifiers:
+        raise ContractError("ACCEPTED_REVIEW_CALL_SET_INVALID","five lenses and three verifiers required")
+    actual={(row.get("stage"),row.get("lens_id"),row.get("verifier_id"),row.get("provider_request_id")) for row in provider_receipts}
+    expected={(row.get("stage"),row.get("lens_id"),row.get("verifier_id"),row.get("provider_request_id")) for row in review_rows}
+    if not expected.issubset(actual): raise ContractError("ACCEPTED_REVIEW_PROVIDER_RECEIPTS_UNBOUND","review requests must belong to this verified run")
+    receipt_by_id={row.get("provider_request_id"):row for row in provider_receipts}
+    for review_receipt in verifiers:
+        receipt=receipt_by_id[review_receipt["provider_request_id"]]
+        raw_path=assert_output_within_root(run_root,receipt["raw_response_path"])
+        try:
+            raw_payload=json.loads(raw_path.read_text(encoding="utf-8")); body=raw_payload.get("response",raw_payload)
+            content=body["choices"][0]["message"]["content"]
+        except (OSError,UnicodeError,json.JSONDecodeError,KeyError,TypeError,IndexError) as exc:
+            raise ContractError("ACCEPTED_VERIFIER_RAW_OUTPUT_INVALID",review_receipt.get("verifier_id","unknown")) from exc
+        if review_receipt.get("response_content")!=content or review_receipt.get("output_sha256")!=sha(content.encode("utf-8")):
+            raise ContractError("ACCEPTED_VERIFIER_OUTPUT_MISMATCH",review_receipt.get("verifier_id","unknown"))
+
+
 def produce(args) -> dict:
     if args.mode == "live":
         raise ContractError("LIVE_EXECUTOR_NOT_AVAILABLE", "provider execution is gated for W10; W05 creates offline run state only")
@@ -461,9 +483,7 @@ def promote_run(args) -> dict:
     evidence=json.loads(evidence_path.read_text(encoding="utf-8"))
     accepted_review=evidence.get("accepted_review")
     if not isinstance(accepted_review,dict): raise ContractError("ACCEPTED_REVIEW_EVIDENCE_REQUIRED","promotion record must include the reviewed provider receipts")
-    actual={(row.get("stage"),row.get("lens_id"),row.get("verifier_id"),row.get("provider_request_id")) for row in state["provider_requests"]}
-    expected={(row.get("stage"),row.get("lens_id"),row.get("verifier_id"),row.get("provider_request_id")) for row in accepted_review.get("provider_requests",[])}
-    if not expected or not expected.issubset(actual): raise ContractError("ACCEPTED_REVIEW_PROVIDER_RECEIPTS_UNBOUND","review issue votes must use this run's verified requests")
+    bind_accepted_review_outputs(accepted_review,state["provider_requests"],path)
     try:
         from .cnw_revision import promote_revision
     except ImportError:

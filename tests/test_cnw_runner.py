@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -218,6 +219,24 @@ class RunnerTests(unittest.TestCase):
             cnw_runner._validate_review_call_coverage(duplicate)
         with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
             cnw_runner._validate_review_call_coverage(lenses + verifiers[:-1] + [verifiers[-2]])
+
+    def test_accepted_review_votes_must_match_verified_raw_response_content(self):
+        run=self.base/"runs/R1"; artifacts=run/"artifacts"; artifacts.mkdir(parents=True)
+        review_rows=[]; provider_rows=[]
+        for lens in ("style","character","plot","canon","story_specific"):
+            pid=f"L-{lens}"; review_rows.append({"stage":"lens5","lens_id":lens,"provider_request_id":pid})
+            provider_rows.append({"stage":"lens5","lens_id":lens,"provider_request_id":pid})
+        for i,verifier in enumerate(("verifier_1","verifier_2","verifier_3"),1):
+            pid=f"V-{i}"; content=json.dumps({"verifier_id":verifier,"votes":[{"finding_id":"I1","verdict":"not_refuted"}]},sort_keys=True)
+            raw={"id":pid,"model":"deepseek-flash","choices":[{"finish_reason":"stop","message":{"content":content}}],"usage":{"prompt_tokens":10,"completion_tokens":10}}
+            path=artifacts/f"{pid}.json"; path.write_text(json.dumps(raw),encoding="utf-8")
+            review_rows.append({"stage":"verifier3","verifier_id":verifier,"provider_request_id":pid,"response_content":content,"output_sha256":hashlib.sha256(content.encode()).hexdigest()})
+            provider_rows.append({"stage":"verifier3","verifier_id":verifier,"provider_request_id":pid,"raw_response_path":path.relative_to(run).as_posix()})
+        accepted={"provider_requests":review_rows}
+        cnw_runner.bind_accepted_review_outputs(accepted,provider_rows,run)
+        accepted["provider_requests"][-1]["response_content"]="{\"votes\":[]}"
+        with self.assertRaisesRegex(ContractError,"ACCEPTED_VERIFIER_OUTPUT_MISMATCH"):
+            cnw_runner.bind_accepted_review_outputs(accepted,provider_rows,run)
 
     def test_same_run_stage_mutations_are_serialized(self):
         path = self.base / "runs/FICT_SCENE_A"

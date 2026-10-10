@@ -37,7 +37,13 @@ def review_evidence_fixture(findings=None,*,candidate_sha="b"*64,contract_sha="c
     provider_requests += [{"stage":"verifier3","verifier_id":name,"provider_request_id":f"P-V-{i}"} for i,name in enumerate(("verifier_1","verifier_2","verifier_3"),1)]
     votes=[{"verifier_id":name,"provider_request_id":f"P-V-{i}","verdict":"not_refuted" if i<3 else "uncertain"} for i,name in enumerate(("verifier_1","verifier_2","verifier_3"),1)]
     finding={"issue_id":"I1","severity":"P1","owner":"character","source":"anchor-1","evidence":"quoted source fact","fix":"restore distinct voice","acceptance":"voice distinction present","verifier_votes":votes}
-    return {"status":"EXTERNAL_ACCEPTED","execution_mode":"TEST_FIXTURE_ONLY" if fixture else "LIVE","fixture_only":fixture,"candidate_sha256":candidate_sha,"contract_sha256":contract_sha,"source_identity_sha256":source_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY" if fixture else "EXTERNAL_CONTROLLER_ACCEPTANCE","provider_requests":provider_requests,"source_catalog":{"anchor-1":{"text":"A quoted source fact appears here.","sha256":hashlib.sha256("A quoted source fact appears here.".encode()).hexdigest(),"source_manifest_sha256":source_sha}},"findings":findings or [finding]}
+    selected=findings or [finding]
+    for receipt in provider_requests:
+        if receipt["stage"]!="verifier3": continue
+        output={"verifier_id":receipt["verifier_id"],"votes":[{"finding_id":item["issue_id"],"verdict":next(v["verdict"] for v in item["verifier_votes"] if v["verifier_id"]==receipt["verifier_id"])} for item in selected]}
+        receipt["response_content"]=json.dumps(output,ensure_ascii=False,sort_keys=True)
+        receipt["output_sha256"]=hashlib.sha256(receipt["response_content"].encode()).hexdigest()
+    return {"status":"EXTERNAL_ACCEPTED","execution_mode":"TEST_FIXTURE_ONLY" if fixture else "LIVE","fixture_only":fixture,"candidate_sha256":candidate_sha,"contract_sha256":contract_sha,"source_identity_sha256":source_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY" if fixture else "EXTERNAL_CONTROLLER_ACCEPTANCE","provider_requests":provider_requests,"source_catalog":{"anchor-1":{"text":"A quoted source fact appears here.","sha256":hashlib.sha256("A quoted source fact appears here.".encode()).hexdigest(),"source_manifest_sha256":source_sha}},"findings":selected}
 
 
 class CnwGenerationTests(unittest.TestCase):
@@ -164,6 +170,10 @@ class CnwGenerationTests(unittest.TestCase):
         unbound={**review["findings"][0],"verifier_votes":[{**review["findings"][0]["verifier_votes"][0],"provider_request_id":"fake"},*review["findings"][0]["verifier_votes"][1:]]}
         with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_VOTE_UNBOUND"):
             build_revision_plan(review_evidence_fixture([unbound]),allow_fixture=True)
+        mismatched=review_evidence_fixture()
+        mismatched["findings"][0]["verifier_votes"][0]["verdict"]="refuted"
+        with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_VOTE_NOT_IN_RAW_OUTPUT"):
+            build_revision_plan(mismatched,allow_fixture=True)
         ungrounded={**review["findings"][0],"evidence":"unsupported evidence text"}
         with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_EVIDENCE_NOT_IN_SOURCE"):
             build_revision_plan(review_evidence_fixture([ungrounded]),allow_fixture=True)

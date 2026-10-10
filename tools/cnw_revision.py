@@ -58,6 +58,17 @@ def build_revision_plan(accepted_review: dict, *, allow_fixture:bool=False) -> d
     provider_ids=[x.get("provider_request_id") for x in lens_rows+verifier_rows]
     if not all(isinstance(x,str) and x for x in provider_ids) or len(set(provider_ids))!=8: raise ContractError("ACCEPTED_REVIEW_CALL_ID_INVALID","eight distinct provider request IDs required")
     verifier_by_id={x["verifier_id"]:x["provider_request_id"] for x in verifier_rows}
+    verifier_outputs={}
+    for row in verifier_rows:
+        content=row.get("response_content")
+        if not isinstance(content,str) or hashlib.sha256(content.encode()).hexdigest()!=row.get("output_sha256"):
+            raise ContractError("VERIFIER_RAW_OUTPUT_UNBOUND",row["verifier_id"])
+        try: parsed=json.loads(content)
+        except json.JSONDecodeError as exc: raise ContractError("VERIFIER_OUTPUT_SCHEMA_INVALID",row["verifier_id"]) from exc
+        if parsed.get("verifier_id")!=row["verifier_id"] or not isinstance(parsed.get("votes"),list): raise ContractError("VERIFIER_OUTPUT_SCHEMA_INVALID",row["verifier_id"])
+        vote_ids=[vote.get("finding_id") for vote in parsed["votes"]]
+        if len(vote_ids)!=len(set(vote_ids)) or any(vote.get("verdict") not in {"not_refuted","refuted","uncertain"} for vote in parsed["votes"]): raise ContractError("VERIFIER_OUTPUT_SCHEMA_INVALID",row["verifier_id"])
+        verifier_outputs[row["verifier_id"]]={vote.get("finding_id"):vote.get("verdict") for vote in parsed["votes"]}
     source_catalog=accepted_review.get("source_catalog",{}); allowed={"P0","P1","P2","P3"}; seen=set(); items=[]
     for item in accepted_review.get("findings",[]):
         issue_id=str(item.get("issue_id","")).strip()
@@ -76,6 +87,7 @@ def build_revision_plan(accepted_review: dict, *, allow_fixture:bool=False) -> d
         for vote in votes:
             if vote.get("provider_request_id")!=verifier_by_id.get(vote.get("verifier_id")) or vote.get("verdict") not in {"not_refuted","refuted","uncertain"}:
                 raise ContractError("REVISION_ISSUE_VOTE_UNBOUND",issue_id)
+            if verifier_outputs.get(vote["verifier_id"],{}).get(issue_id)!=vote["verdict"]: raise ContractError("REVISION_ISSUE_VOTE_NOT_IN_RAW_OUTPUT",issue_id)
         if sum(v["verdict"]=="not_refuted" for v in votes)<2: continue
         required=("owner","fix","acceptance"); missing=[key for key in required if not str(item.get(key,"")).strip()]
         if missing: raise ContractError("REVISION_ISSUE_INCOMPLETE",f"{issue_id}: {', '.join(missing)}")
