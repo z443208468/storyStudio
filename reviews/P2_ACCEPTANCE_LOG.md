@@ -38,7 +38,15 @@
 
 ## P2-01
 
-- Status：候选整理中；未签收。
+- Verdict：`REMOTE_READBACK ACCEPT`（local candidate 与 remote readback 均接受）。
+- Candidate：C=`675d2b6b26ccbb9bd913cc435266748769a7a918`，T=`a6c8b171c760391e6bee4a72fd0868d90d53062d`。
+- Main：C=`06c66de7c7f18263039ea19a47e84c29716cde4b`。
 - Source identity：版本 `JUN-SINGLE-02.3`；ZIP SHA256 `300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2`。
-- Controller：`/root/g00_reviewer` 已被 Writer 明确要求对冻结候选开展只读验收；尚未提交候选或发出 verdict。
-- Candidate C/T、私有目录逐文件哈希及实际审查范围：冻结/Controller签收后追加。
+- Controller：`/root/g00_reviewer`；该阶段已完成，不在 P2-02 重复验收。
+
+## P2-02
+
+- Status：实现和离线验证收敛；等待 Controller local acceptance。
+- Source commit：`fbf66cbc913012c6f80af1687e27f0ce350475e3`；patch SHA256：`1A36A1120449560FE2BFE50FA62CE90354E475C26E8B31F8B60A6D117C9BF80F`；dependency lock SHA256：`C4EDECD8D4A1904D9D6032815E9FCB1D089099B13AF9BD83A14171AE9705D30B`。
+- Offline contract：9 固定响应通过、0 provider calls；44 个锁定依赖一致；52 个归档源文件干净重建一致。安全扫描记录及所选调用路径适用性见 `evidence/critics/security-audit.md`。
+- Candidate C/T：冻结后追加；Controller verdict 和远端回读后追加。

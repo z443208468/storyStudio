@@ -1,0 +1,71 @@
+{
+  "tool": "CritiCS",
+  "source_commit": "fbf66cbc913012c6f80af1687e27f0ce350475e3",
+  "source_tree": "c48be7d9cbeb680238a9e832be86bdf167c305a9",
+  "source_archive_sha256": "B78C4DA5494ECCEDFCA33B3515C3F8DABF8C4249FBB323364940FFAC61A7D6FC",
+  "ordered_patch_files": [
+    "patches/critics/0001-project-adapter.patch"
+  ],
+  "patch_sha256": [
+    "1A36A1120449560FE2BFE50FA62CE90354E475C26E8B31F8B60A6D117C9BF80F"
+  ],
+  "changed_paths": [
+    "critics/setting/chatsetting/gptsetting.py",
+    "critics/plan/plan.py",
+    "critics/text/text.py",
+    "critics/setting/promptDesign/story_template.py",
+    "critics/setting/util.py"
+  ],
+  "classification": "PRODUCTION_ADAPTER; upstream reference remains unchanged",
+  "requirements_input": "requirements/critics-api.in",
+  "requirements_input_sha256": "F11C82332FF3232CAB6F4511F251FF8D8370F86FC543C4122013B4CE33E5A314",
+  "dependency_lock": "requirements/critics-api.lock",
+  "dependency_lock_sha256": "C4EDECD8D4A1904D9D6032815E9FCB1D089099B13AF9BD83A14171AE9705D30B",
+  "python": "3.11.15",
+  "non_secret_provider_config_sha256": "C03468ACF42D93ECBF2A9E04CE4DE6D0223523686F1DE007D2F43F4631217326",
+  "runtime_build_id": "p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1",
+  "runtime_path": "runtime/patched/CritiCS/p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1",
+  "security_audit_report_sha256": "51AE783FEB7A94371D197C0942EF177228E3E23DCE66FC8872EE1D24979D6540",
+  "verification": [
+    {
+      "check": "production source export",
+      "result": "PASS",
+      "evidence": "52 upstream tracked files exported from the pinned commit; source archive hash recorded"
+    },
+    {
+      "check": "patch reproducibility",
+      "result": "PASS",
+      "evidence": "clean export + patch compared across all 52 tracked source files; 0 SHA256 mismatches"
+    },
+    {
+      "check": "dependency resolution",
+      "result": "PASS",
+      "evidence": "44 locked packages installed in Python 3.11.15; uv pip check reported compatible"
+    },
+    {
+      "check": "entry imports without key",
+      "result": "PASS",
+      "evidence": "Critic, modifiedStoryline, Refinement imported with both API-key variables absent; provider construction fails closed without key"
+    },
+    {
+      "check": "offline method chain",
+      "result": "PASS",
+      "evidence": "5 original plan calls + modifiedStoryline + 3 original text-refinement calls; captured inputs/results and verified data flow; 0 provider calls"
+    },
+    {
+      "check": "empty/malformed result handling",
+      "result": "PASS",
+      "evidence": "empty response, malformed persona and missing selected Question raise explicit errors"
+    },
+    {
+      "check": "real SDK configuration construction",
+      "result": "PASS",
+      "evidence": "installed ChatOpenAI accepted model/base_url/extra_body/timeout/max_retries/stop; no network request"
+    },
+    {
+      "check": "dependency advisory triage",
+      "result": "REVIEWED_NON_PATH_FINDINGS_RECORDED",
+      "evidence": "pip-audit report hash and selected-path applicability are recorded; no blanket clean claim"
+    }
+  ]
+}

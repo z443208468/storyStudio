@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "python": "3.11.15",
+  "fixed_response_fixture_sha256": "1AB35244AFC6AC344BEE8744FE238313E83A1DA7F77D782F38B3737954FD3079",
+  "calls": [
+    {
+      "sequence": 1,
+      "prompt_sha256": "CF420F06A389783C0D190AD039CD9D4BD7FB01AB5DD010968754F514C0503C59",
+      "prompt_length": 1715
+    },
+    {
+      "sequence": 2,
+      "prompt_sha256": "CECE9D87640153900F5932EE11881EACF3695F9D1DA02CF9DCDDCBA75EA09B78",
+      "prompt_length": 4173
+    },
+    {
+      "sequence": 3,
+      "prompt_sha256": "52EAAA0563108B10B17BD5188C135310B26CE584D22E54566C7FD5AD06A0B71B",
+      "prompt_length": 3594
+    },
+    {
+      "sequence": 4,
+      "prompt_sha256": "02992E2DB9BDBD01D9411FD857AE170A9AB0964D7708C1DA0008747BF19B9C47",
+      "prompt_length": 4291
+    },
+    {
+      "sequence": 5,
+      "prompt_sha256": "9B5D566589E7D61B034170E5D5DD74B62C2A3E86F579BD0828473F904AFF774F",
+      "prompt_length": 3135
+    },
+    {
+      "sequence": 6,
+      "prompt_sha256": "685357B5336CDD25DF1479600E0D6A2EFC08868F09D08B66AECE65782DCE6541",
+      "prompt_length": 2078
+    },
+    {
+      "sequence": 7,
+      "prompt_sha256": "CFCD17D563BD83D3843038C1200ABA36003F13D83A6CE60F30D5B351764FD877",
+      "prompt_length": 1258
+    },
+    {
+      "sequence": 8,
+      "prompt_sha256": "6E26B3A35A061A8815E123F2B27888BEC4D3A7F0F536E45453E34588CADB1B2C",
+      "prompt_length": 1013
+    },
+    {
+      "sequence": 9,
+      "prompt_sha256": "275773089EDD56E1B25D96D2857E84B4DB1C8B4C455882D82EC1F7FB4E9D1F93",
+      "prompt_length": 2932
+    }
+  ],
+  "checks": {
+    "original_five_plan_roles": true,
+    "leader_selection_reaches_modified_storyline": true,
+    "image_and_voice_receive_original_excerpt": true,
+    "text_leader_receives_both_role_results": true,
+    "all_model_construction_is_explicit_flash": true,
+    "legacy_routes_fail_closed": true,
+    "project_path_boundary_enforced": true,
+    "sensitive_config_input_rejected": true,
+    "malformed_persona_and_leader_fail_closed": true,
+    "empty_model_response_fails_closed": true,
+    "missing_key_fails_closed": true,
+    "tracing_disabled_for_production_runs": true,
+    "provider_calls": 0
+  },
+  "outputs": {
+    "critic_keys": [
+      "ending",
+      "inspector",
+      "original",
+      "structure"
+    ],
+    "modified_plot_sha256": "26FF193D633856B9C73CDCE291EB1BE35EE9B578484393A50ADBA6780C20F62E",
+    "text_refinement_keys": [
+      "image",
+      "select",
+      "voice"
+    ],
+    "leader_result_sha256": "522B34FCDDC421AB1D04C3F9839B9F02AE51941F9D0DB792D6C5456ADC80F9D0"
+  }
+}

@@ -1,0 +1,402 @@
+--- a/critics/setting/chatsetting/gptsetting.py
++++ b/critics/setting/chatsetting/gptsetting.py
+@@ -1,47 +1,48 @@
+-# Import necessary modules
+-from langchain.chat_models import ChatOpenAI
++"""Project adapter for the upstream CritiCS conversational call path."""
++from __future__ import annotations
++
++import os
++
+ from langchain.chains import ConversationChain
+ from langchain.memory import ConversationBufferMemory
+-from langchain_openai import OpenAI  
+-import os
++from langchain_openai import ChatOpenAI
+ 
+-# Fetch the OpenAI API key from the environment variables
+-OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
++_ALLOWED_MODEL = "deepseek-flash"
++_ALLOWED_BASE_URL = "https://api.deepseek.com/v1"
+ 
+-# Function to set up the chat model and conversation chain
+-def chatsettubg(model_name='gpt-3.5-turbo', stop=None, completion=None):
+-    if completion == 'completion_mode':
+-        llm = OpenAI(
+-            model='gpt-3.5-turbo-instruct', 
+-            temperature=1.0,                 
+-            max_tokens=1400,                 
+-            openai_api_key=OPENAI_API_KEY,  
+-            stop=stop                       
+-        )
+-        return llm  
+ 
+-    if stop is not None:
+-        llm = ChatOpenAI(
+-            model=model_name,                # Model to use (e.g., 'gpt-3.5-turbo', 'gpt-4')
+-            temperature=1.0,                 # Temperature
+-            openai_api_key=OPENAI_API_KEY,   # API key 
+-            stop=stop                        # Stop sequence 
+-        )
+-    else:
+-        # Default case: No stop sequence provided
+-        llm = ChatOpenAI(
+-            model=model_name,                # Default model
+-            temperature=1.0,                 # Default temperature for balanced creativity
+-            openai_api_key=OPENAI_API_KEY    # API key for authentication
+-        )
+-    
++def chatsettubg(model_name=_ALLOWED_MODEL, stop=None, completion=None):
++    """Return the upstream-shaped conversation wrapper using explicit DeepSeek Flash.
++
++    The legacy `completion_mode` is intentionally unavailable in this production
++    path. No credential is read until a model is actually constructed, so offline
++    import and adapter checks do not need an API key.
++    """
++    if completion is not None:
++        raise ValueError("LEGACY_COMPLETION_MODE_UNSUPPORTED")
++
++    configured_model = os.environ.get("STORYSTUDIO_MODEL", _ALLOWED_MODEL)
++    configured_base_url = os.environ.get("STORYSTUDIO_BASE_URL", _ALLOWED_BASE_URL)
++    requested_model = model_name or configured_model
++    if requested_model != _ALLOWED_MODEL or configured_model != _ALLOWED_MODEL:
++        raise ValueError("UNSUPPORTED_MODEL: only deepseek-flash is enabled")
++    if configured_base_url != _ALLOWED_BASE_URL:
++        raise ValueError("UNSUPPORTED_BASE_URL: only the official DeepSeek API is enabled")
++
++    api_key = os.environ.get("DEEPSEEK_API_KEY")
++    if not api_key:
++        raise RuntimeError("DEEPSEEK_API_KEY_REQUIRED")
++
++    llm = ChatOpenAI(
++        model=_ALLOWED_MODEL,
++        base_url=_ALLOWED_BASE_URL,
++        api_key=api_key,
++        temperature=1.0,
++        stop=stop,
++        max_retries=0,
++        timeout=180,
++        extra_body={"thinking": {"type": "disabled"}},
++    )
+     memory = ConversationBufferMemory()
+-    
+-    conversation = ConversationChain(
+-        llm=llm,                          
+-        memory=memory,                      
+-        verbose=True                       s
+-    )
+-    
+-    # Return a dictionary with the memory and conversation chain for further use
+-    return {'memory': memory, 'conversation': conversation}
++    conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
++    return {"memory": memory, "conversation": conversation}
+--- a/critics/plan/plan.py
++++ b/critics/plan/plan.py
+@@ -1,21 +1,9 @@
+-import random
+-import logging
+-import datetime
+ import re
+-import yaml
+ import string
+-import argparse
+-import os
+-import pandas as pd
+-from langchain.chat_models import ChatOpenAI
+-from langchain.chains import ConversationChain
+-from langchain.memory import ConversationBufferMemory
+ from critics.setting.promptDesign import storyline_template, critic_persona
+ from critics.setting.chatsetting.gptsetting import chatsettubg
+-from critics.setting.util import write_to_file
+-
+-# Get the current time
+-current_time = datetime.datetime.now()
++from critics.setting.util import get_assistant_response, write_to_file
++
+ # Divider bar for formatting
+ divide_bar = '=' * 180
+ 
+@@ -33,8 +21,7 @@
+         util = chatsettubg(stop=['<question/>'])
+         conversation = util['conversation']
+         conversation.predict(input=critic_prompt)  
+-        saved_dict = conversation.memory.chat_memory.dict()  
+-        output = str(saved_dict['messages'][1]['content'])  
++        output = get_assistant_response(conversation)
+         
+         # Save the result to a file
+         original_setting = 'output/same_criteria/question/structure.txt'
+@@ -51,8 +38,7 @@
+         util2 = chatsettubg(stop=['<question/>'])
+         conversation = util2['conversation']  
+         conversation.predict(input=critic_prompt)
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        output = str(saved_dict['messages'][1]['content'])  
++        output = get_assistant_response(conversation)
+         
+         # Save the result to a file
+         original_setting = 'output/same_criteria/question/ending.txt'
+@@ -68,8 +54,7 @@
+         util3 = chatsettubg(stop=['<question/>'])
+         conversation = util3['conversation']   
+         conversation.predict(input=critic_prompt)
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        output = str(saved_dict['messages'][1]['content']) 
++        output = get_assistant_response(conversation)
+         
+         # Save the result to a file
+         original_setting = 'output/same_criteria/question/original.txt'
+@@ -79,10 +64,10 @@
+     # Combine all critiques and generate a final, more comprehensive critique
+     def inspector_gpt(self, persona_type=None, first_critique=None, second_critique=None, third_critique=None) -> str:
+         def question_indexing(critique):
+-            search_str = "Question"
+-            start_index = critique.find(search_str)
+-            if start_index != -1:
+-                return critique[start_index + len(search_str):]
++            match = re.search(r"(?ims)^\s*Question\s*:\s*(.*?)(?=^\s*(?:Why|Originality|Coherence|Interesting)\s*:|^\s*</?question\b|\Z)", critique or "")
++            if not match or not match.group(1).strip():
++                raise ValueError("CRITIQUE_QUESTION_PARSE_FAILED")
++            return match.group(1).strip()
+ 
+         # Extract the question portion from each critique
+         question_1 = question_indexing(first_critique)
+@@ -101,18 +86,23 @@
+         insert_persona = critic_persona.gpt_inspector.format(leader=persona_type)
+         critic_prompt = insert_persona + '\n' + divide_bar + '\n' + prompt
+         
+-        # Function to extract the final question from the model's output
++        # Parse the selected question, including wrapped multi-line answers.
+         def find_result_questions(input_string):
+-            pattern = r"(Question|question)(.*?)(\n|$)"
+-            matches = re.findall(pattern, input_string)
+-            output = [f"Question: {match[1].strip()}" for match in matches]
+-            return output[0]
+-    
++            answer_start = input_string.lower().find("<answer>")
++            if answer_start >= 0:
++                input_string = input_string[answer_start + len("<answer>"):]
++            match = re.search(
++                r"(?ims)^\s*Question\s*:\s*(.*?)(?=^\s*(?:Why|Originality|Coherence|Interesting)\s*:|^\s*</?answer\b|\Z)",
++                input_string,
++            )
++            if not match or not match.group(1).strip():
++                raise ValueError("INSPECTOR_QUESTION_PARSE_FAILED")
++            return match.group(1).strip()
++
+         util = chatsettubg(stop=['<answer/>'])
+         conversation = util['conversation']
+         conversation.predict(input=critic_prompt)
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        output = str(saved_dict['messages'][1]['content'])
++        output = get_assistant_response(conversation)
+         output = find_result_questions(output)  
+         
+         # Save the final critique to a file
+@@ -120,25 +110,29 @@
+         write_to_file(original_setting, output)
+         return output
+     
+-    # Split the persona content into individual persona segments
++    # Split the persona content into individual persona segments.
+     def split_personas(self, persona):
+-        def extract_section(text, start_pattern, end_pattern):
+-            pattern = rf"{start_pattern}(.*?){end_pattern}"
+-            matches = re.findall(pattern, text, re.DOTALL)
+-            return matches[0].strip() if matches else ""
+-        
+-        first_persona = extract_section(persona, r'Expert 1', r'2')
+-        second_persona = extract_section(persona, r'Expert 2', r'3')
+-        third_persona = extract_section(persona, r'Expert 3', r'Leader')
+-        leader_persona = extract_section(persona, r'Leader', r'\Z')
+-        
++        expected = ["Expert 1", "Expert 2", "Expert 3", "Leader"]
++        marker = re.compile(r"(?im)^\s*(Expert\s+[123]|Leader)\.?\s*$")
++        matches = list(marker.finditer(persona or ""))
++        labels = [re.sub(r"\s+", " ", m.group(1)).strip() for m in matches]
++        if labels != expected:
++            raise ValueError("PERSONA_SECTION_COUNT_OR_ORDER_INVALID")
++        sections = {}
++        for index, match in enumerate(matches):
++            stop = matches[index + 1].start() if index + 1 < len(matches) else len(persona)
++            body = persona[match.end():stop]
++            body = re.sub(r"(?m)^\s*<<persona_split>>\s*$", "", body).strip()
++            if not body:
++                raise ValueError("PERSONA_SECTION_EMPTY")
++            sections[labels[index]] = body
+         return {
+-            "first_persona": first_persona,
+-            "second_persona": second_persona,
+-            "third_persona": third_persona,
+-            "leader": leader_persona
++            "first_persona": sections["Expert 1"],
++            "second_persona": sections["Expert 2"],
++            "third_persona": sections["Expert 3"],
++            "leader": sections["Leader"],
+         }
+-    
++
+     # Generate critiques from three experts and a leader persona
+     def three_critic(self) -> dict:
+         storyline = self.storyline
+@@ -147,8 +141,7 @@
+         util = chatsettubg(stop=['<persona/>'])
+         conversation = util['conversation']
+         conversation.predict(input=three_editer_one_leader)
+-        save_dict = conversation.memory.chat_memory.dict()
+-        persona_list = save_dict['messages'][1]['content']
++        persona_list = get_assistant_response(conversation)
+ 
+         persona_logging_path = 'output/persona.txt'
+         write_to_file(persona_logging_path, persona_list)
+@@ -198,17 +191,8 @@
+     
+     # Calculate the score for each story and find the winning story
+     def calculateSelectScore(self, story_list):
+-        llm = ChatOpenAI(
+-            model='gpt-4',
+-            temperature=0, 
+-            openai_api_key=OPENAI_API_KEY,
+-        )
+-        memory = ConversationBufferMemory()
+-        conversation = ConversationChain(
+-            llm=llm,
+-            memory=memory,
+-            verbose=True
+-        )
++        util = chatsettubg()
++        conversation = util['conversation']
+         
+         UPPER_ALP = list(string.ascii_uppercase[:len(story_list)])
+         
+@@ -228,8 +212,7 @@
+         )
+ 
+         conversation.predict(input=select_storyline)
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        raw_score = saved_dict['messages'][1]['content']
++        raw_score = get_assistant_response(conversation)
+         raw_score_result = self.find_winning_pattern(raw_score)
+ 
+         for inx, rel in enumerate(raw_score_result):
+@@ -268,9 +251,8 @@
+ def modifiedStoryline(storyline, final_critic) -> dict:
+     prompt = storyline_template.applyQA
+     apply_critic = prompt.format(final_critic=final_critic, storyline=storyline)  
+-    util = chatsettubg(stop=['<applyStoryline>'], model_name='gpt-4')
++    util = chatsettubg(stop=['<applyStoryline>'])
+     conversation = util['conversation']
+     conversation.predict(input=apply_critic)
+-    saved_dict = conversation.memory.chat_memory.dict()
+-    output = saved_dict['messages'][1]['content']
+-    return output
++    output = get_assistant_response(conversation)
++    return output
+\ No newline at end of file
+--- a/critics/text/text.py
++++ b/critics/text/text.py
+@@ -1,27 +1,7 @@
+-from langchain.chat_models import ChatOpenAI
+-from langchain.chains import ConversationChain
+-from langchain.memory import ConversationBufferMemory
+ from critics.setting.promptDesign import story_template  
+ from critics.setting.chatsetting.gptsetting import chatsettubg  
+-from critics.setting.util import write_to_file 
+-import random
+-import logging
+-import datetime
++from critics.setting.util import get_assistant_response, write_to_file
+ import re
+-import yaml
+-import string
+-import argparse
+-import os
+-import pandas as pd
+-
+-# Get the OpenAI API key from environment variables
+-OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
+-
+-# Get the current time
+-current_time = datetime.datetime.now()
+-
+-# A divider bar for formatting outputs
+-divide_bar = '=' * 180
+ 
+ # Refinement class: Handles refinement tasks for both image and voice aspects of a story
+ class Refinement:
+@@ -37,8 +17,7 @@
+         conversation.predict(input=refine_prompt)
+         
+         # Extract the conversation's memory and output (refinement suggestions)
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        five_refi = str(saved_dict['messages'][1]['content'])
++        five_refi = get_assistant_response(conversation)
+         
+         return five_refi
+     
+@@ -51,8 +30,7 @@
+         conversation = util['conversation']
+         conversation.predict(input=refine_prompt)
+         
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        five_refi = str(saved_dict['messages'][1]['content'])
++        five_refi = get_assistant_response(conversation)
+         
+         return five_refi
+     
+@@ -64,8 +42,7 @@
+         
+         conversation.predict(input=select_three_prompt)
+         
+-        saved_dict = conversation.memory.chat_memory.dict()
+-        three_refine = str(saved_dict['messages'][1]['content'])
++        three_refine = get_assistant_response(conversation)
+         
+         return three_refine
+     
+--- a/critics/setting/promptDesign/story_template.py
++++ b/critics/setting/promptDesign/story_template.py
+@@ -50,6 +50,7 @@
+ 
+ refine_prompt_voice="""
+ Sentence)
++{story}
+ ===================
+ Please review the following 'five sentences' from my draft and suggest revisions with explanations for each.
+ However, when fixing a sentence, consider the following below creativity features.
+--- a/critics/setting/util.py
++++ b/critics/setting/util.py
+@@ -1,16 +1,25 @@
+ import os
+-import requests
+-import datetime
+-import logging
+-import re
+-import json 
++
+ 
+ def write_to_file(filename, content):
+     directory = os.path.dirname(filename)
+     if not os.path.exists(directory):
+         os.makedirs(directory)
+ 
+-    with open(filename, 'a') as f: 
++    with open(filename, 'a', encoding='utf-8') as f:
+         if f.tell() != 0:  
+             f.write('================\n')  
+-        f.write(content + '\n')
+\ No newline at end of file
++        f.write(content + '\n')
++
++
++def get_assistant_response(conversation):
++    """Return the last non-empty text answer or fail instead of fabricating success."""
++    state = conversation.memory.chat_memory.dict()
++    messages = state.get("messages") if isinstance(state, dict) else None
++    if not isinstance(messages, list) or not messages:
++        raise ValueError("MODEL_RESPONSE_MESSAGES_MISSING")
++    last = messages[-1]
++    content = last.get("content") if isinstance(last, dict) else None
++    if not isinstance(content, str) or not content.strip():
++        raise ValueError("EMPTY_OR_NON_TEXT_MODEL_RESPONSE")
++    return content
