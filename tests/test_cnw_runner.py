@@ -179,6 +179,28 @@ class RunnerTests(unittest.TestCase):
             cnw_runner.produce(args)
         self.assertFalse((self.base / "runs/NO-LIVE-CALL").exists())
 
+    def test_live_candidate_requires_complete_contract_pipeline(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        state = cnw_runner.load_state(run)
+        state["mode"] = "live"
+        state["fixture_only"] = False
+        state["provider_requests"] = [{"stage": "plot", "mode": "live"}]
+        cnw_runner.save_state(run, state)
+        with self.assertRaisesRegex(ContractError, "LIVE_PIPELINE_INCOMPLETE"):
+            cnw_runner.register_editorial_candidate(argparse.Namespace(run_id="FICT_SCENE_A", candidate="draft.md"))
+
+    def test_raw_provider_payload_must_match_receipt_fields(self):
+        raw = self.base / "raw.json"
+        receipt = {"request_id": "req-1", "provider_request_id": "provider-1", "model": "deepseek-flash", "finish_reason": "stop"}
+        usage = {"prompt_tokens": 12, "completion_tokens": 8}
+        body = {"id": "provider-1", "model": "deepseek-flash", "choices": [{"finish_reason": "stop"}], "usage": usage}
+        raw.write_text(json.dumps({"request_id": "req-1", "status": 200, "requested_model": "deepseek-flash", "response": body}), encoding="utf-8")
+        cnw_runner._validate_raw_live_response(raw, receipt, usage, 1)
+        body["id"] = "other-provider"
+        raw.write_text(json.dumps({"request_id": "req-1", "status": 200, "requested_model": "deepseek-flash", "response": body}), encoding="utf-8")
+        with self.assertRaisesRegex(ContractError, "LIVE_RAW_RESPONSE_RECEIPT_MISMATCH"):
+            cnw_runner._validate_raw_live_response(raw, receipt, usage, 1)
+
     def test_same_run_stage_mutations_are_serialized(self):
         path = self.base / "runs/FICT_SCENE_A"
         active = 0

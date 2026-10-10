@@ -185,6 +185,32 @@ def stage_prompt_hash(stage: str) -> str | None:
     return sha(prompt.read_bytes())
 
 
+def _validate_raw_live_response(raw_path: Path, receipt: dict, usage: dict, index: int) -> None:
+    try:
+        payload = json.loads(raw_path.read_text(encoding="utf-8"))
+        # Historical NK provider artifacts wrap the OpenAI-compatible body in an envelope.
+        body = payload.get("response", payload) if isinstance(payload, dict) else None
+        choices = body.get("choices") if isinstance(body, dict) else None
+        raw_usage = body.get("usage") if isinstance(body, dict) else None
+        if not choices or not isinstance(choices[0], dict) or not isinstance(raw_usage, dict):
+            raise ValueError("missing response fields")
+        outer_status = payload.get("status") if isinstance(payload, dict) else None
+        outer_model = payload.get("requested_model") if isinstance(payload, dict) else None
+        if outer_status is not None and outer_status != 200:
+            raise ValueError("HTTP status mismatch")
+        if outer_model is not None and outer_model != receipt["model"]:
+            raise ValueError("requested model mismatch")
+        if (body.get("id") != receipt["provider_request_id"] or body.get("model") != receipt["model"]
+                or choices[0].get("finish_reason") != receipt["finish_reason"]
+                or raw_usage.get("prompt_tokens") != usage["prompt_tokens"]
+                or raw_usage.get("completion_tokens") != usage["completion_tokens"]):
+            raise ValueError("raw response fields disagree with receipt")
+        if payload.get("request_id") is not None and payload["request_id"] != receipt["request_id"]:
+            raise ValueError("request id mismatch")
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, TypeError, IndexError, AttributeError) as exc:
+        raise ContractError("LIVE_RAW_RESPONSE_RECEIPT_MISMATCH", f"request {index}: {exc}") from exc
+
+
 def produce(args) -> dict:
     if args.mode == "live":
         raise ContractError("LIVE_EXECUTOR_NOT_AVAILABLE", "provider execution is gated for W10; W05 creates offline run state only")
@@ -437,11 +463,25 @@ def verify_history(args) -> dict:
 
 
 def verify_live(args) -> dict:
-    state = load_state(run_path(args.run_id, runs_root_for(args)))
+    run_root = run_path(args.run_id, runs_root_for(args))
+    state = load_state(run_root)
     if not state["provider_requests"]:
         raise ContractError("LIVE_PROVIDER_EVIDENCE_MISSING", args.run_id)
     if any(receipt.get("mode") == "MOCK_ONLY" or receipt.get("fixture_only") is True for receipt in state["provider_requests"]):
         raise ContractError("MOCK_RECEIPT_CANNOT_PROVE_LIVE", args.run_id)
+    pipeline = ["plot", "cards", "brief"]
+    if state["unit_kind"] == "scene":
+        pipeline.append("pov")
+    pipeline += ["draft", "lint1", "lint2", "lens5", "verifier3", "completeness", "refine", "re-review"]
+    receipts_by_stage = {}
+    for receipt in state["provider_requests"]:
+        stage = receipt.get("stage")
+        if stage not in pipeline or stage in receipts_by_stage:
+            raise ContractError("LIVE_PIPELINE_INCOMPLETE", f"unexpected or duplicate stage: {stage}")
+        receipts_by_stage[stage] = receipt
+    missing_stages = [stage for stage in pipeline if stage not in receipts_by_stage or state["stages"].get(stage, {}).get("status") != "ACCEPTED"]
+    if missing_stages:
+        raise ContractError("LIVE_PIPELINE_INCOMPLETE", ", ".join(missing_stages))
     required = {"stage", "request_id", "provider_request_id", "model", "status", "http_status", "finish_reason", "usage", "input_sha256", "output_sha256", "raw_response_path", "raw_response_sha256", "cost_cny", "ledger_settlement"}
     seen_provider_ids = set()
     seen_request_ids = set()
@@ -471,9 +511,10 @@ def verify_live(args) -> dict:
             raise ContractError("LIVE_USAGE_MISSING", f"request {index}")
         if not all(re.fullmatch(r"[0-9a-fA-F]{64}", str(receipt[key])) for key in ("input_sha256", "output_sha256", "raw_response_sha256")):
             raise ContractError("LIVE_RECEIPT_HASH_INVALID", f"request {index}")
-        raw_response = assert_output_within_root(run_path(args.run_id, runs_root_for(args)), receipt["raw_response_path"])
+        raw_response = assert_output_within_root(run_root, receipt["raw_response_path"])
         if not raw_response.is_file() or sha(raw_response.read_bytes()) != receipt["raw_response_sha256"].lower():
             raise ContractError("LIVE_RAW_RESPONSE_HASH_MISMATCH", f"request {index}")
+        _validate_raw_live_response(raw_response, receipt, usage, index)
         if not isinstance(receipt["cost_cny"], (int, float)) or isinstance(receipt["cost_cny"], bool) or not math.isfinite(receipt["cost_cny"]) or receipt["cost_cny"] < 0:
             raise ContractError("LIVE_COST_MISSING", f"request {index}")
         settlement = receipt["ledger_settlement"]
