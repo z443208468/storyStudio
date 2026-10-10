@@ -163,7 +163,9 @@ class AdapterTests(unittest.TestCase):
                 paths[name] = path
             voices = "\n\n".join(f"### {name}\nSample voice" for name in contract["story"]["characters_in_scene"])
             voices += "\n\n### Unrelated character\nPrivate unrelated sample"
-            view = build_prose_input_view(contract, "BRIEF", voices)
+            brief = "# Brief\n## Voice References\n" + "\n".join(
+                f"- {name} — see voice sample" for name in contract["story"]["characters_in_scene"])
+            view = build_prose_input_view(contract, brief, voices)
             self.assertEqual(set(view["inputs"]), {"brief", "voice_samples"})
             self.assertNotIn("contract", view)
             self.assertEqual(view["execution_contract"]["target_visible_chars"], 1500)

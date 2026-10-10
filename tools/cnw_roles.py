@@ -43,6 +43,18 @@ AUTHOR_ROLE_READS: dict[str, tuple[str, ...]] = {
         "92_style_engine/character_voice_samples.md",
     ),
 }
+# The concise role table is supplemented by the public templates' explicit
+# Brief duties (Active Canon, glossary/world details and previous story time).
+AUTHOR_TEMPLATE_READS = {
+    "brief": ("90_canon/canon.md", "90_canon/timeline.md",
+              "90_canon/world_bible.md", "90_canon/glossary.md"),
+}
+AUTHOR_TEMPLATE_READ_SOURCES = {
+    "brief": ("templates/90_canon/canon.template.md",
+              "templates/90_canon/timeline.template.md",
+              "templates/90_canon/world_bible.template.md",
+              "templates/90_canon/glossary.template.md"),
+}
 # Author template each role prompt reproduces (S5.3).
 ROLE_TO_AUTHOR_TEMPLATE = {
     "plot": "templates/06_plot/plot.template.md",
@@ -143,7 +155,7 @@ def resolve_author_reads(role: str, project_root: Path, work_id: str, *, arc_ref
     if role not in AUTHOR_ROLE_READS:
         raise ContractError("ROLE_UNKNOWN", role)
     resolved: dict[str, Path] = {}
-    for template in AUTHOR_ROLE_READS[role]:
+    for template in AUTHOR_ROLE_READS[role] + AUTHOR_TEMPLATE_READS.get(role, ()):
         if "<NN>" in template:
             resolved[template] = resolve_arc(project_root, work_id, arc_ref)
         elif "<work_id>" in template:
@@ -192,7 +204,7 @@ def read_production_preparation(project_root: Path, contract: dict) -> dict:
 def relevant_voice_samples(text: str, characters: list[str]) -> str:
     """Select character sections, retaining their nested sample headings only."""
     if not characters:
-        raise ContractError("PROSE_CAST_MISSING", "participating characters are required")
+        return ""
     headings = list(re.finditer(r"^(#{1,6})\s+(.+?)\s*$", text, re.MULTILINE))
     sections = []
     found = set()
@@ -211,10 +223,62 @@ def relevant_voice_samples(text: str, characters: list[str]) -> str:
     return "\n\n".join(sections)
 
 
+def brief_voice_characters(brief: str) -> list[str]:
+    """Read the author's Voice References list; cast membership is not speech.
+
+    Accept ordinary Markdown lists, links, emphasis and registry tables. An
+    empty list or explicit no-dialogue entry needs no voice samples. Missing
+    references are reported rather than replaced with the entire cast.
+    """
+    headings = list(re.finditer(r"^(#{1,6})\s+(.+?)\s*$", brief, re.MULTILINE))
+    section = next((i for i, h in enumerate(headings)
+                    if h.group(2).strip().strip("*").casefold().startswith("voice references")), None)
+    if section is None:
+        raise ContractError("BRIEF_VOICE_REFERENCES_MISSING", "use the author's Voice References section")
+    heading = headings[section]
+    end = next((h.start() for h in headings[section + 1:]
+                if len(h.group(1)) <= len(heading.group(1))), len(brief))
+    characters = []
+    for line in brief[heading.end():end].splitlines():
+        value = line.strip()
+        if not value:
+            continue
+        if value.startswith("|"):
+            value = value.strip("|").split("|", 1)[0].strip()
+            value = re.sub(r"\[([^\]]+)\]\([^\n)]+\)", r"\1", value)
+            value = re.sub(r"[*`_]", "", value).strip()
+            if re.fullmatch(r"[:\-\s]+", value) or value.casefold() in {"character", "character name", "name", "角色", "人物"}:
+                continue
+        else:
+            listed = re.match(r"^(?:[-*+]\s+|\d+[.)]\s+)(.+)$", value)
+            if listed:
+                value = listed.group(1)
+            else:
+                # Plain prose explaining where samples are loaded is not a name.
+                continue
+        value = re.sub(r"\[([^\]]+)\]\([^\n)]+\)", r"\1", value)
+        name = re.split(r"\s*[—–：:]\s*|\s+-\s+", value, maxsplit=1)[0]
+        name = re.sub(r"[*`_]", "", name).strip()
+        if re.match(r"^(?:none\b|n/a\b|no (?:speakers|dialogue)\b|无(?:对白|说话角色)?(?:\s|$|[（(]))", name, re.I):
+            continue
+        # The public template does not require one unannotated name per row.
+        # Preserve explicit listed speakers, including grouped references.
+        for character in re.split(r"\s*[/／]\s*", name):
+            character = re.sub(r"\s*[（(]\s*POV\s*[）)]\s*$", "", character, flags=re.I).strip()
+            if character and character not in characters:
+                characters.append(character)
+    return characters
+
+
+def brief_voice_samples(brief: str, voice_samples: str) -> str:
+    """One selection rule for both the actual Prose API and packet paths."""
+    return relevant_voice_samples(voice_samples, brief_voice_characters(brief))
+
+
 def build_prose_input_view(contract: dict[str, Any], brief: str, voice_samples: str) -> dict[str, Any]:
     """Return only the brief, relevant voices, and minimum execution bounds."""
     unit = contract["unit"]
-    voice_samples = relevant_voice_samples(voice_samples, contract["story"].get("characters_in_scene", []))
+    voice_samples = brief_voice_samples(brief, voice_samples)
     return {
         "execution_contract": {
             "unit_id": unit["id"],
@@ -282,17 +346,20 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
     if role == "prose":
         brief_key, voice_key = AUTHOR_ROLE_READS["prose"]
         brief = materials[brief_key]
-        voices = relevant_voice_samples(materials[voice_key], contract["story"]["characters_in_scene"])
+        voices = brief_voice_samples(brief, materials[voice_key])
         # Canon, plot, contract.story, and review rules must reach prose only
         # through the Brief. The orchestrator retains validation metadata.
         return [
-            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the participating characters' voice samples. Output only the prose, without planning notes or commentary."},
+            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary."},
             {"role": "user", "content": json.dumps({"writing_brief": brief, "voice_samples": voices}, ensure_ascii=False)},
         ]
     template_text, blob = _pinned_upstream(ROLE_TO_AUTHOR_TEMPLATE[role])
     reads_text, _ = _pinned_upstream("templates/config/ai_roles.template.yml")
     header = f"[pinned_author_template: {ROLE_TO_AUTHOR_TEMPLATE[role]} blob={blob}]\n"
     system = header + template_text + "\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n" + reads_text
+    for source in AUTHOR_TEMPLATE_READ_SOURCES.get(role, ()):
+        text, source_blob = _pinned_upstream(source)
+        system += f"\n\n[pinned_author_supplementary_reading: {source} blob={source_blob}]\n{text}"
     if role in ROLE_REQUIRED_SECTIONS:
         headings = " / ".join(ROLE_REQUIRED_SECTIONS[role])
         beat_ids = "、".join(beat["beat_id"] for beat in contract["story"].get("required_beats", []))

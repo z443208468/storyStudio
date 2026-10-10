@@ -396,6 +396,10 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
     provider_dir.mkdir(parents=True, exist_ok=True)
     raw_path = provider_dir / f"{request_id}.json"
     body = {"model": MODEL, "messages": messages, "max_tokens": output_cap, "stream": False, "thinking": {"type": "disabled"}}
+    request_path = provider_dir / f"{request_id}.request.json"
+    # Preserve the exact API body for source-to-request review. Headers and keys
+    # are excluded; project text remains in the private, ignored run directory.
+    request_path.write_text(json.dumps(body, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     payload = None
     status_code = None
     try:
@@ -434,6 +438,7 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
         "http_status": status_code, "finish_reason": choice.get("finish_reason"),
         "usage": {"prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"]},
         "input_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")),
+        "request_path": request_path.relative_to(run_dir).as_posix(), "request_sha256": sha(request_path.read_bytes()),
         "output_sha256": sha(content.encode("utf-8")),
         "raw_response_path": raw_path.relative_to(run_dir).as_posix(), "raw_response_sha256": sha(raw_path.read_bytes()),
         "cost_cny": float(cost.quantize(Decimal("0.000001"), rounding=ROUND_CEILING)),
@@ -456,6 +461,17 @@ def _receipt_content(run_dir: Path, receipt: dict) -> str:
     path = assert_output_within_root(run_dir, receipt["raw_response_path"])
     if sha(path.read_bytes()) != receipt["raw_response_sha256"]:
         raise ContractError("LIVE_RAW_RESPONSE_HASH_MISMATCH", receipt["request_id"])
+    if receipt.get("request_path"):
+        request_path = assert_output_within_root(run_dir, receipt["request_path"])
+        if sha(request_path.read_bytes()) != receipt.get("request_sha256"):
+            raise ContractError("LIVE_REQUEST_HASH_MISMATCH", receipt["request_id"])
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+        if receipt.get("request_format") == "native_nk_payload":
+            input_hash = sha(json.dumps(request, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        else:
+            input_hash = sha(json.dumps(request["messages"], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+        if input_hash != receipt["input_sha256"]:
+            raise ContractError("LIVE_REQUEST_IDENTITY_MISMATCH", receipt["request_id"])
     raw = json.loads(path.read_text(encoding="utf-8"))
     body = raw.get("response", raw)
     content = body["choices"][0]["message"]["content"]
@@ -956,6 +972,18 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
     project_root = _run_dir_base(run_dir)
     cards_text = _read_stage_text(run_dir, state, "scene_cards")
     payload = build_nk_payload(contract, cards_text, _role_meta("cards", contract))
+    existing = state.get("support_hooks", {}).get("nk_pov", {})
+    receipt = next((item for item in state.get("provider_requests", [])
+                    if item.get("request_id") == existing.get("request_id")
+                    and item.get("role_id") == "nk_pov" and item.get("status") == "SUCCEEDED"), None)
+    payload_hash = sha(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+    if existing.get("status") == "MATERIALIZED" and receipt and receipt.get("input_sha256") == payload_hash:
+        artifact = existing["artifact"]
+        reflection = assert_output_within_root(run_dir, artifact["path"])
+        if sha(reflection.read_bytes()) != artifact["sha256"]:
+            raise ContractError("NK_REFLECTION_HASH_MISMATCH", receipt["request_id"])
+        _receipt_content(run_dir, receipt)
+        return {"path": artifact["path"], "mapping": existing["mapping"], "provider_call": "reused"}
     nk_result = _invoke_nk_service(run_dir, payload)
     reflection_response = nk_result["response"]
     receipt = nk_result["receipt"]
@@ -979,20 +1007,25 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
 
 
 def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
+    import socket
+    import shutil
     import subprocess
     index = json.loads((ROOT / "patches/nk/PATCH_INDEX.json").read_text(encoding="utf-8"))
     build = ROOT / "runtime/patched/NK" / index["runtime_build_id"]
     if not (build / "node_modules").is_dir():
         raise ContractError("NK_BUILD_MISSING", str(build))
+    node = shutil.which("node")
+    next_cli = build / "node_modules/next/dist/bin/next"
+    if not node or not next_cli.is_file():
+        raise ContractError("NK_LAUNCHER_MISSING", str(build))
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key:
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", "nk")
     guard = _p2_guard()
     request_id = f"nk-{run_dir.name}-{uuid.uuid4().hex}"
-    buffer = io.StringIO()
-    with redirect_stdout(buffer):
-        guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name, purpose="P3.1 NK generate-perspective", input_token_cap=10000, output_token_cap=1024))
-    if json.loads(buffer.getvalue()).get("status") != "RESERVED":
+    reservation = guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name,
+        purpose="P3.1 NK generate-perspective", input_token_cap=10000, output_token_cap=1024), emit=False)
+    if reservation.get("status") != "RESERVED":
         raise ContractError("NK_COST_RESERVATION_FAILED", request_id)
     capture = run_dir / f"nk-provider-{request_id}.jsonl"
     env = dict(os.environ)
@@ -1000,16 +1033,37 @@ def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
     env["STORYSTUDIO_NK_LIVE_CAPTURE"] = str(capture).replace("\\", "/")
     env["STORYSTUDIO_NK_LIVE_REQUEST_ID"] = request_id
     env["NODE_OPTIONS"] = f"--require={(ROOT / 'tools/nk-live-fetch.cjs').as_posix()}"
-    port = 3179
-    server = subprocess.Popen(["npm.cmd", "start", "--", "--port", str(port)], cwd=str(build), env=env,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=False)
+    # A fixed port can reach a previous run's server and capture under its ID.
+    # Launch Next directly so the PID we terminate is the actual server.
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        port = listener.getsockname()[1]
+    command = [node, str(next_cli), "start", "--hostname", "127.0.0.1", "--port", str(port)]
+    manifest = {"request_id": request_id, "port": port, "command": command,
+                "runtime_build_id": index["runtime_build_id"], "status": "STARTING"}
+    service_path = run_dir / f"nk-service-{request_id}.json"
+    request_path = run_dir / "artifacts/provider" / f"{request_id}.request.json"
+    request_path.parent.mkdir(parents=True, exist_ok=True)
+    request_path.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    server = None
+    failure = None
     try:
+        server = subprocess.Popen(command, cwd=str(build), env=env,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=False)
+        manifest["pid"] = server.pid
+        service_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         ready = False
         for _ in range(120):
+            if server.poll() is not None:
+                raise ContractError("NK_SERVER_EXITED", request_id)
             try:
                 httpx.get(f"http://127.0.0.1:{port}/", timeout=1.0)
+                if server.poll() is not None:
+                    raise ContractError("NK_SERVER_EXITED", request_id)
                 ready = True
                 break
+            except ContractError:
+                raise
             except Exception:
                 time.sleep(0.5)
         if not ready:
@@ -1017,27 +1071,43 @@ def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
         response = httpx.post(f"http://127.0.0.1:{port}/api/generate-perspective", json=payload, timeout=180.0)
         http_status = int(response.status_code)
         body = response.json()
+    except Exception as exc:
+        failure = exc
     finally:
-        try:
-            server.terminate()
-            server.wait(timeout=10)
-        except Exception:
+        if server is not None:
             try:
+                if server.poll() is None:
+                    server.terminate()
+                server.wait(timeout=10)
+            except subprocess.TimeoutExpired:
                 server.kill()
-            except Exception:
-                pass
-    if not capture.is_file():
-        raise ContractError("NK_PROVIDER_CAPTURE_MISSING", request_id)
-    record = [json.loads(line) for line in capture.read_text(encoding="utf-8").splitlines() if line.strip()][-1]
+                server.wait(timeout=10)
+        manifest["status"] = "STOPPED" if server is None or server.poll() is not None else "STOP_FAILED"
+        service_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    record = None
+    if capture.is_file():
+        try:
+            records = [json.loads(line) for line in capture.read_text(encoding="utf-8").splitlines() if line.strip()]
+            if len(records) == 1 and records[0].get("request_id") == request_id:
+                record = records[0]
+        except (ValueError, TypeError):
+            pass
+    if record is None:
+        guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=None,
+            returned_model=None, finish_reason=None, input_tokens=None, output_tokens=None), emit=False)
+        if failure is not None:
+            raise failure
+        raise ContractError("NK_PROVIDER_CAPTURE_MISSING_OR_INVALID", request_id)
     provider_response = record.get("response", {})
     usage = provider_response.get("usage", {})
-    buffer = io.StringIO()
-    with redirect_stdout(buffer):
-        guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=provider_response.get("id"), returned_model=provider_response.get("model"),
-            finish_reason=((provider_response.get("choices") or [{}])[0]).get("finish_reason"), input_tokens=usage.get("prompt_tokens"), output_tokens=usage.get("completion_tokens")))
-    settlement = json.loads(buffer.getvalue())
+    settlement = guard.command_settle(argparse.Namespace(request_id=request_id,
+        provider_request_id=provider_response.get("id"), returned_model=provider_response.get("model"),
+        finish_reason=((provider_response.get("choices") or [{}])[0]).get("finish_reason"),
+        input_tokens=usage.get("prompt_tokens"), output_tokens=usage.get("completion_tokens")), emit=False)
     if settlement.get("status") != "SETTLED":
         raise ContractError("NK_COST_SETTLEMENT_FAILED", request_id)
+    if failure is not None:
+        raise failure
     if http_status != 200 or not isinstance(body.get("perspectives"), list) or len(body["perspectives"]) != 1 or not body["perspectives"][0].get("reflection"):
         raise ContractError("NK_RESULT_INVALID", request_id)
     raw_path = run_dir / "artifacts/provider" / f"{request_id}.json"
@@ -1051,6 +1121,8 @@ def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
         "finish_reason": ((provider_response.get("choices") or [{}])[0]).get("finish_reason"),
         "usage": {"prompt_tokens": usage.get("prompt_tokens"), "completion_tokens": usage.get("completion_tokens")},
         "input_sha256": sha(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")),
+        "request_path": request_path.relative_to(run_dir).as_posix(), "request_sha256": sha(request_path.read_bytes()),
+        "request_format": "native_nk_payload",
         "output_sha256": sha(nk_content.encode("utf-8")),
         "raw_response_path": raw_path.relative_to(run_dir).as_posix(), "raw_response_sha256": sha(raw_path.read_bytes()),
         "cost_cny": float(cost.quantize(Decimal("0.000001"), rounding=ROUND_CEILING)),

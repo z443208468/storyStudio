@@ -48,3 +48,10 @@
 - 当前原稿有相对时间、分支和知情资料，不能声称所有时点/所有分支已自动推导；源缺失保留待确认。官方公开方法不保证玩家喜欢角色或情绪落点。
 - `CNW_FULL_PRODUCTION=NOT_VERIFIED`；`PUBLIC_METHOD_EQUIVALENCE_VERIFIED=NO`；Episode/Sprint Live 未运行；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
 - 本次目标研究及落盘未新增付费调用或小说正文。完整方法实现与必要证据闭合后停止工程整改，创意亲读和规模 Live 如实另列。
+
+## 2026-10-11 C05 有限输入诊断
+
+- `evidence/CNW_C05_BRIEF_INPUT_DIAGNOSTIC.md` 记录本次修正和独立只读 Controller 限定 ACCEPT：Brief 四份补充 Canon 与完整模板进入真实请求；原样真实 Brief 提取当期知识/关系/时间和行动指令；Prose API/packet 依 Brief 四位说话者选择同一声线，API 只消费 Brief+voice。
+- 仅同一 J19 兼容历史 Plot/Cards + 必要正常 NK/Brief，未调用新 Prose，未冒称新全链。66 项相关离线最终通过；已付费 NK/Brief 身份禁网络复用成功，账本未变。
+- 修复真实发现的固定 NK 端口误连旧服务：独立端口、直接自有 Node PID、退出及 capture ID 检查。本轮新服务已停止；旧服务未被终止。首笔缺身份结果 `UNKNOWN_NOT_ZERO` 留存 0.028333 CNY；成功两笔 0.062025 CNY，campaign committed 4.521101/10 CNY（含未知预留）。
+- 保留清理/manifest 自身异常的 pending 恢复边界及 Windows 临时 mock ledger 偶发 WinError 5；不宣称它们已修复。C12/C13、当前状态全链及完整等价终验仍未完成。
