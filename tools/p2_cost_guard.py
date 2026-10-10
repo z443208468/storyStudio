@@ -31,6 +31,57 @@ def money(value: Decimal) -> str:
     return str(value.quantize(MICRO, rounding=ROUND_CEILING))
 
 
+@contextmanager
+def provider_slot():
+    """Cross-process admission bound shared by CNW provider requests."""
+    limit = json.loads(CONFIG.read_text(encoding="utf-8-sig"))["provider"]["max_in_flight"]
+    if type(limit) is not int or not 1 <= limit <= 5:
+        raise ValueError("MAX_IN_FLIGHT_POLICY_MISMATCH")
+    directory = LEDGER.parent / "provider-slots"
+    if directory.is_symlink():
+        raise ValueError("PROVIDER_SLOT_PATH_UNSAFE")
+    directory.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + 210
+    acquired = None
+    while acquired is None:
+        for index in range(limit):
+            path = directory / f"slot-{index}.lock"
+            if path.is_symlink():
+                raise ValueError("PROVIDER_SLOT_PATH_UNSAFE")
+            stream = open(path, "a+b")
+            stream.seek(0, os.SEEK_END)
+            if stream.tell() == 0:
+                stream.write(b"0")
+                stream.flush()
+            try:
+                stream.seek(0)
+                if os.name == "nt":
+                    import msvcrt
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                acquired = stream
+                break
+            except (OSError, BlockingIOError):
+                stream.close()
+        if acquired is None:
+            if time.monotonic() >= deadline:
+                raise TimeoutError("PROVIDER_SLOT_TIMEOUT")
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        acquired.seek(0)
+        if os.name == "nt":
+            import msvcrt
+            msvcrt.locking(acquired.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(acquired.fileno(), fcntl.LOCK_UN)
+        acquired.close()
+
+
 def load_config():
     cfg = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
     pricing = json.loads(PRICING.read_text(encoding="utf-8-sig"))
@@ -116,7 +167,7 @@ def amounts(ledger):
     return committed
 
 
-def command_reserve(args):
+def command_reserve(args, *, emit=True):
     if args.input_token_cap <= 0 or args.output_token_cap <= 0:
         raise ValueError("TOKEN_CAPS_MUST_BE_POSITIVE")
     with locked_ledger() as ledger:
@@ -140,12 +191,15 @@ def command_reserve(args):
             "reserved_at": now(),
         }
         ledger["requests"].append(row)
-        print(json.dumps({"status": "RESERVED", "request_id": args.request_id,
+        result = {"status": "RESERVED", "request_id": args.request_id,
                           "reserved_cny": row["reserved_cny"],
-                          "campaign_committed_cny": money(committed + reserve), "limit_cny": ledger["limit"]}))
+                          "campaign_committed_cny": money(committed + reserve), "limit_cny": ledger["limit"]}
+    if emit:
+        print(json.dumps(result))
+    return result
 
 
-def command_settle(args):
+def command_settle(args, *, emit=True):
     with locked_ledger() as ledger:
         matches = [row for row in ledger["requests"] if row["request_id"] == args.request_id]
         if len(matches) != 1:
@@ -180,9 +234,12 @@ def command_settle(args):
                 "campaign_limit": over_campaign,
             }
         committed = amounts(ledger)
-        print(json.dumps({"status": row["status"], "request_id": args.request_id,
+        result = {"status": row["status"], "request_id": args.request_id,
                           "estimated_request_cny": money(charge),
-                          "campaign_committed_cny": money(committed), "limit_cny": ledger["limit"]}))
+                          "campaign_committed_cny": money(committed), "limit_cny": ledger["limit"]}
+    if emit:
+        print(json.dumps(result))
+    return result
 
 
 def command_report(_args):

@@ -8,7 +8,7 @@
     "model": "deepseek-flash",
     "key_environment_variable": "DEEPSEEK_API_KEY",
     "thinking": "disabled",
-    "max_in_flight": 1,
+    "max_in_flight": 5,
     "sdk_max_retries": 0,
     "network_extra_attempts": 2,
     "format_repair_extra_attempts": 1,

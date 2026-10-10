@@ -24,6 +24,7 @@ import re
 import shutil
 import sys
 import threading
+from concurrent.futures import ThreadPoolExecutor
 import time
 import uuid
 from decimal import Decimal, InvalidOperation, ROUND_CEILING
@@ -199,15 +200,15 @@ def _held_paths() -> set:
 
 
 @contextmanager
-def locked_run(path: Path):
-    key = str(Path(path).resolve())
+def locked_run(path: Path, *, lock_name: str = "run.lock"):
+    key = str((Path(path) / lock_name).resolve())
     held = _held_paths()
     if key in held:
         # Reentrant within the same process/thread: an enclosing stage already
         # owns the run lock, so downstream helpers may mutate state directly.
         yield
         return
-    lock_path = path / "run.lock"
+    lock_path = path / lock_name
     if lock_path.is_symlink():
         raise ContractError("RUN_LOCK_SYMLINK_REJECTED", str(lock_path))
     stream = open(lock_path, "a+b")
@@ -373,6 +374,11 @@ def _sanitize(value):
 
 
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
+    with _p2_guard().provider_slot():
+        return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
+
+
+def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
     if stage not in PROVIDER_STAGES | {"project_import", "project_update"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
@@ -386,11 +392,8 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", stage)
     input_cap = _estimate_input_tokens(messages)
     request_id = f"cnw-{run_dir.name}-{stage}-{uuid.uuid4().hex}"
-    buffer = io.StringIO()
-    with redirect_stdout(buffer):
-        guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name,
-            purpose=f"P3.1 CNW {stage}/{role_id or 'single'}", input_token_cap=input_cap, output_token_cap=output_cap))
-    reserved = json.loads(buffer.getvalue())
+    reserved = guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name,
+            purpose=f"P3.1 CNW {stage}/{role_id or 'single'}", input_token_cap=input_cap, output_token_cap=output_cap), emit=False)
     if reserved.get("status") != "RESERVED":
         raise ContractError("LIVE_COST_RESERVATION_FAILED", stage)
     provider_dir = run_dir / "artifacts" / "provider"
@@ -411,16 +414,11 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
         raw_path.write_bytes(raw_bytes)
     except Exception as exc:  # transport failure: keep the reservation held
         raw_path.write_text(json.dumps({"request_id": request_id, "transport_error_type": type(exc).__name__}, indent=2) + "\n", encoding="utf-8")
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=None, returned_model=None, finish_reason=None, input_tokens=None, output_tokens=None))
+        guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=None, returned_model=None, finish_reason=None, input_tokens=None, output_tokens=None), emit=False)
         raise ContractError("LIVE_PROVIDER_OUTCOME_UNKNOWN", f"{stage}: {type(exc).__name__}") from exc
-    buffer = io.StringIO()
-    with redirect_stdout(buffer):
-        guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=(payload or {}).get("id"),
+    settlement = guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=(payload or {}).get("id"),
             returned_model=(payload or {}).get("model"), finish_reason=((payload or {}).get("choices") or [{}])[0].get("finish_reason"),
-            input_tokens=((payload or {}).get("usage") or {}).get("prompt_tokens"), output_tokens=((payload or {}).get("usage") or {}).get("completion_tokens")))
-    settlement = json.loads(buffer.getvalue())
+            input_tokens=((payload or {}).get("usage") or {}).get("prompt_tokens"), output_tokens=((payload or {}).get("usage") or {}).get("completion_tokens")), emit=False)
     if settlement.get("status") == "SETTLED_OVER_BUDGET":
         raise ContractError("LIVE_PROVIDER_BUDGET_EXCEEDED", stage)
     if status_code != 200 or not isinstance(payload, dict):
@@ -588,8 +586,9 @@ def produce(args) -> dict:
     production_config = ROOT / "config/production.example.json"
     cost_guard_runner = ROOT / "tools/p2_cost_guard.py"
     provider_settings = json.loads(production_config.read_text(encoding="utf-8-sig"))
-    if provider_settings.get("provider", {}).get("max_in_flight") != 1:
-        raise ContractError("MAX_IN_FLIGHT_POLICY_MISMATCH", "W05 requires max_in_flight=1")
+    max_in_flight = provider_settings.get("provider", {}).get("max_in_flight")
+    if type(max_in_flight) is not int or not 1 <= max_in_flight <= 5:
+        raise ContractError("MAX_IN_FLIGHT_POLICY_MISMATCH", "max_in_flight must be an integer from 1 to 5")
     if provider_settings.get("cost_guard", {}).get("persist_across_run_ids") is not True:
         raise ContractError("COST_GUARD_POLICY_MISMATCH", "persistent campaign accounting is required")
     path = run_path(run_id, project_root / "runs")
@@ -612,7 +611,7 @@ def produce(args) -> dict:
             "workflow_template_sha256": sha(WORKFLOW_PATH.read_bytes()),
             "cnw_method_source": {"commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e", "workflow_blob": "146ea01a484cc0578cf290478b3941599ad7fb15"},
             "cnw_stages": list(CNW_STAGES), "support_hooks": {}, "next_stage": CNW_STAGES[0],
-            "provider_requests": [], "stages": stages, "max_in_flight": 1,
+            "provider_requests": [], "stages": stages, "max_in_flight": max_in_flight,
             "literary_source_hashes": source_freeze,
             "provider_config_sha256": sha(production_config.read_bytes()),
             "cost_guard_runner_sha256": sha(cost_guard_runner.read_bytes()),
@@ -659,7 +658,7 @@ def run_remaining_stages(run_dir: Path) -> None:
 # --------------------------------------------------------------------------
 def step(args) -> dict:
     path = run_path(args.run_id, runs_root_for(args))
-    with locked_run(path):
+    with locked_run(path, lock_name="execution.lock"):
         return _step_locked(args, path)
 
 
@@ -746,7 +745,7 @@ def _step_locked(args, path: Path) -> dict:
 
 def mark_stage(args) -> dict:
     path = run_path(args.run_id, runs_root_for(args))
-    with locked_run(path):
+    with locked_run(path, lock_name="execution.lock"), locked_run(path):
         return _mark_stage_locked(args, path)
 
 
@@ -863,6 +862,11 @@ def _role_meta(role: str, contract: dict) -> dict:
 
 
 def execute_cnw_stage(run_dir: Path, stage: str) -> dict:
+    with locked_run(run_dir, lock_name="execution.lock"):
+        return _execute_cnw_stage_locked(run_dir, stage)
+
+
+def _execute_cnw_stage_locked(run_dir: Path, stage: str) -> dict:
     stage = normalize_stage(stage)
     state = load_state(run_dir)
     if state.get("mode") == "live" and not state.get("fixture_only"):
@@ -1192,6 +1196,25 @@ def _parse_json_content(content: str, label: str) -> dict:
     return parsed
 
 
+def _parallel_provider_calls(run_dir: Path, calls: list[dict]) -> list[tuple[str, dict]]:
+    """Independent prompts fan out; the coordinator combines ordered results."""
+    limit = load_state(run_dir).get("max_in_flight", 1)
+    if type(limit) is not int or not 1 <= limit <= 5:
+        raise ContractError("MAX_IN_FLIGHT_POLICY_MISMATCH", str(limit))
+    if not calls:
+        return []
+    with ThreadPoolExecutor(max_workers=min(limit, len(calls))) as pool:
+        futures = [pool.submit(cnw_live_call, run_dir, **call) for call in calls]
+        try:
+            return [future.result() for future in futures]
+        except BaseException:
+            for future in futures:
+                future.cancel()
+            # Context exit waits for requests already sent to settle and retain
+            # their receipts. Retrying reuses those exact successful responses.
+            raise
+
+
 def execute_five_lenses(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
@@ -1205,9 +1228,11 @@ def execute_five_lenses(run_dir: Path) -> dict:
     artifacts = {}
     receipt_ids = []
     all_findings = []
-    for lens_id in LENS_IDS:
-        packet = build_lens_input(lens_id, draft, sources)
-        content, receipt = cnw_live_call(run_dir, stage="multi_lens_review", role_id=lens_id, messages=lens_messages(packet), output_cap=2500, extra={"lens_id": lens_id})
+    packets = {lens_id: build_lens_input(lens_id, draft, sources) for lens_id in LENS_IDS}
+    results = _parallel_provider_calls(run_dir, [dict(stage="multi_lens_review", role_id=lens_id,
+        messages=lens_messages(packets[lens_id]), output_cap=2500, extra={"lens_id": lens_id}) for lens_id in LENS_IDS])
+    for lens_id, (content, receipt) in zip(LENS_IDS, results):
+        packet = packets[lens_id]
         parsed = _parse_json_content(content, f"multi_lens_review:{lens_id}")
         if parsed.get("lens_id") != lens_id or not isinstance(parsed.get("findings"), list):
             raise ContractError("LIVE_LENS_OUTPUT_INVALID", lens_id)
@@ -1255,9 +1280,10 @@ def execute_three_verifiers(run_dir: Path) -> dict:
             continue
         evidence = {name: sources[name] for name in ("scene_cards", "writing_brief", "character_bible", "timeline", "glossary")}
         votes = {}
-        for verifier_id in VERIFIER_IDS:
-            packet = build_verifier_packet(finding, verifier_id, draft, evidence)
-            content, receipt = cnw_live_call(run_dir, stage="adversarial_verify", role_id=verifier_id, messages=verifier_messages(packet), output_cap=1200, extra={"finding_id": finding_id, "verifier_id": verifier_id})
+        results = _parallel_provider_calls(run_dir, [dict(stage="adversarial_verify", role_id=verifier_id,
+            messages=verifier_messages(build_verifier_packet(finding, verifier_id, draft, evidence)), output_cap=1200,
+            extra={"finding_id": finding_id, "verifier_id": verifier_id}) for verifier_id in VERIFIER_IDS])
+        for verifier_id, (content, receipt) in zip(VERIFIER_IDS, results):
             parsed = _parse_json_content(content, f"adversarial_verify:{finding_id}:{verifier_id}")
             if parsed.get("verifier_id") != verifier_id or not isinstance(parsed.get("votes"), list):
                 raise ContractError("LIVE_VERIFIER_OUTPUT_INVALID", verifier_id)
@@ -1440,12 +1466,14 @@ def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
     receipt_ids = []
     findings = []
     candidate_sha = sha(v1.encode("utf-8"))
+    calls = []
     for lens_id in affected:
         packet = build_lens_input(lens_id, v1, sources)
         packet["changed_context"] = {"v0_sha256": sha(v0.encode("utf-8")), "v1_sha256": candidate_sha,
                                      "diff": changed_hunks, "instruction": "Review changed passages and their consequences in the full draft; do not reopen unchanged unrelated passages."}
-        content, receipt = cnw_live_call(run_dir, stage="re_review", role_id=lens_id, messages=lens_messages(packet), output_cap=2500,
-                                        extra={"lens_id": lens_id, "task_kind": "lens", "revision_number": revision_number, "candidate_sha256": candidate_sha})
+        calls.append(dict(stage="re_review", role_id=lens_id, messages=lens_messages(packet), output_cap=2500,
+                          extra={"lens_id": lens_id, "task_kind": "lens", "revision_number": revision_number, "candidate_sha256": candidate_sha}))
+    for lens_id, (content, receipt) in zip(affected, _parallel_provider_calls(run_dir, calls)):
         parsed = _parse_json_content(content, f"re_review:{lens_id}")
         if parsed.get("lens_id") != lens_id or not isinstance(parsed.get("findings"), list):
             raise ContractError("LIVE_LENS_OUTPUT_INVALID", f"re_review:{lens_id}")
@@ -1456,10 +1484,10 @@ def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
     confirmed, dispositions = [], []
     for finding in findings:
         votes = []
-        for verifier_id in VERIFIER_IDS:
-            packet = build_verifier_packet(finding, verifier_id, v1, sources)
-            content, receipt = cnw_live_call(run_dir, stage="re_review", role_id=verifier_id, messages=verifier_messages(packet), output_cap=1200,
-                extra={"task_kind": "verifier", "verifier_id": verifier_id, "finding_id": finding["finding_id"], "revision_number": revision_number, "candidate_sha256": candidate_sha})
+        calls = [dict(stage="re_review", role_id=verifier_id,
+            messages=verifier_messages(build_verifier_packet(finding, verifier_id, v1, sources)), output_cap=1200,
+            extra={"task_kind": "verifier", "verifier_id": verifier_id, "finding_id": finding["finding_id"], "revision_number": revision_number, "candidate_sha256": candidate_sha}) for verifier_id in VERIFIER_IDS]
+        for verifier_id, (content, receipt) in zip(VERIFIER_IDS, _parallel_provider_calls(run_dir, calls)):
             parsed = _parse_json_content(content, "re_review:verify")
             rows = parsed.get("votes", [])
             if (parsed.get("verifier_id") != verifier_id or len(rows) != 1
@@ -1577,7 +1605,7 @@ def review_run(args) -> dict:
 
 def register_editorial_candidate(args) -> dict:
     path = run_path(args.run_id, runs_root_for(args))
-    with locked_run(path):
+    with locked_run(path, lock_name="execution.lock"), locked_run(path):
         state = load_state(path)
         if state.get("fixture_only") or state.get("mode") != "live":
             raise ContractError("MOCK_CANDIDATE_CANNOT_REQUEST_EDITORIAL_REVIEW", args.run_id)
@@ -1594,7 +1622,7 @@ def register_editorial_candidate(args) -> dict:
 def invalidate_run(args) -> dict:
     """Reopen a stage and its downstream consumers without destroying prior receipts/artifacts."""
     path = run_path(args.run_id, runs_root_for(args))
-    with locked_run(path):
+    with locked_run(path, lock_name="execution.lock"), locked_run(path):
         state = load_state(path)
         start = CNW_STAGES.index(normalize_stage(args.from_stage))
         reopened = CNW_STAGES[start:]

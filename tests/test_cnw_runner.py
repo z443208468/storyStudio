@@ -327,14 +327,63 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(cnw_runner.normalize_stage(source), target)
         self.assertEqual(cnw_runner.stage_predecessors("writing_brief", "scene"), ("plot", "scene_cards"))
 
+    def test_parallel_transport_keeps_all_receipts_and_shared_budget(self):
+        from tools import p2_cost_guard as guard_module
+        from unittest.mock import Mock
+        run_dir = self.base / "runs/FICT_SCENE_A"
+        state = cnw_runner.load_state(run_dir)
+        state["max_in_flight"] = 5
+        cnw_runner.save_state(run_dir, state)
+        config = self.base / "config/production.example.json"
+        config.write_text(json.dumps({"provider": {"max_in_flight": 3}}), encoding="utf-8")
+        pricing = json.loads((ROOT / "config/p2_cost_pricing_2026-10-10.json").read_text(encoding="utf-8-sig"))
+        ledger = self.base / "mock-ledger.json"
+        barrier = threading.Barrier(3)
+        mutex = threading.Lock()
+        active = peak = started = 0
+        def post(*args, **kwargs):
+            nonlocal active, peak, started
+            with mutex:
+                active += 1
+                peak = max(peak, active)
+                started += 1
+                ordinal = started
+            if ordinal <= 3:
+                barrier.wait(timeout=5)
+            time.sleep(0.03)
+            with mutex:
+                active -= 1
+            response = Mock(status_code=200)
+            response.json.return_value = {"id": kwargs["headers"]["X-Client-Request-Id"] + "-mock-provider", "model": cnw_runner.MODEL,
+                "choices": [{"finish_reason": "stop", "message": {"content": "MOCK_ONLY " + kwargs["json"]["messages"][0]["content"]}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 10}}
+            return response
+        calls = [dict(stage="multi_lens_review", role_id=str(i), messages=[{"role": "user", "content": str(i)}], output_cap=100) for i in range(5)]
+        with patch.object(guard_module, "CONFIG", config), patch.object(guard_module, "LEDGER", ledger), \
+                patch.object(guard_module, "load_config", return_value=({"model": cnw_runner.MODEL, "scope": "MOCK_ONLY", "currency": "CNY", "estimated_campaign_limit": 10}, pricing)), \
+                patch.object(cnw_runner.httpx, "post", side_effect=post), \
+                patch.dict(cnw_runner.os.environ, {"DEEPSEEK_API_KEY": "MOCK_ONLY_NOT_A_REAL_KEY_12345"}):
+            with cnw_runner.locked_run(run_dir, lock_name="execution.lock"):
+                results = cnw_runner._parallel_provider_calls(run_dir, calls)
+            self.assertEqual(peak, 3)
+            self.assertEqual([item[0] for item in results], ["MOCK_ONLY " + str(i) for i in range(5)])
+            self.assertEqual(len(cnw_runner.load_state(run_dir)["provider_requests"]), 5)
+            entries = json.loads(ledger.read_text(encoding="utf-8"))["requests"]
+            self.assertEqual(len(entries), 5)
+            self.assertTrue(all(row["status"] == "SETTLED" for row in entries))
+            cnw_runner._parallel_provider_calls(run_dir, calls)
+            self.assertEqual(started, 5)
+
     def test_successful_provider_task_is_reused_after_restart_and_hash_checked(self):
         from decimal import Decimal
+        from contextlib import nullcontext
         from types import SimpleNamespace
         from unittest.mock import Mock
         run_dir = self.base / "runs/FICT_SCENE_A"
         guard = SimpleNamespace(
-            command_reserve=lambda args: print(json.dumps({"status": "RESERVED"})),
-            command_settle=lambda args: print(json.dumps({"status": "SETTLED", "request_id": args.request_id})),
+            provider_slot=nullcontext,
+            command_reserve=lambda args, **kwargs: {"status": "RESERVED"},
+            command_settle=lambda args, **kwargs: {"status": "SETTLED", "request_id": args.request_id},
             load_config=lambda: ({}, {}), estimate=lambda *args: Decimal("0.001"))
         body = {"id": "MOCK_PROVIDER_RESPONSE", "model": cnw_runner.MODEL,
                 "choices": [{"finish_reason": "stop", "message": {"content": "fixture output"}}],
