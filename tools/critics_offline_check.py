@@ -164,6 +164,7 @@ except ValueError as error:
     require(str(error) == "INPUT_MUST_BE_UNDER_CANGQI_WORKSPACE_OR_RUNS", "SENSITIVE_INPUT_SCOPE_NOT_ENFORCED")
 else:
     raise AssertionError("SENSITIVE_CONFIG_PATH_ACCEPTED_AS_STORY_INPUT")
+symlink_output_case_executed = False
 with tempfile.TemporaryDirectory(dir=ROOT / "runtime" / "tmp", prefix="critics-path-guard-") as guard_root:
     guard_root = Path(guard_root)
     runs = guard_root / "runs"
@@ -179,18 +180,16 @@ with tempfile.TemporaryDirectory(dir=ROOT / "runtime" / "tmp", prefix="critics-p
         raise AssertionError("EXISTING_RUN_DIR_ACCEPTED")
     fresh = bridge.create_run_directory(str(runs / "fresh"))
     outside = guard_root / "outside.txt"
+    (fresh / "critique.json").symlink_to(outside)
+    require((fresh / "critique.json").is_symlink(), "SYMLINK_FIXTURE_NOT_CREATED")
+    symlink_output_case_executed = True
     try:
-        (fresh / "critique.json").symlink_to(outside)
-    except (OSError, NotImplementedError):
-        pass
-    if (fresh / "critique.json").is_symlink():
-        try:
-            bridge.write_json(fresh / "critique.json", {"safe": False}, fresh)
-        except ValueError as error:
-            require(str(error) == "OUTPUT_PATH_NOT_FRESH_INSIDE_RUN_DIR", "SYMLINK_OUTPUT_NOT_REJECTED")
-        else:
-            raise AssertionError("SYMLINK_OUTPUT_NOT_REJECTED")
-        require(not outside.exists(), "SYMLINK_TARGET_WAS_WRITTEN")
+        bridge.write_json(fresh / "critique.json", {"safe": False}, fresh)
+    except ValueError as error:
+        require(str(error) == "OUTPUT_PATH_NOT_FRESH_INSIDE_RUN_DIR", "SYMLINK_OUTPUT_NOT_REJECTED")
+    else:
+        raise AssertionError("SYMLINK_OUTPUT_NOT_REJECTED")
+    require(not outside.exists(), "SYMLINK_TARGET_WAS_WRITTEN")
     bridge.ROOT = ROOT
 
 try:
@@ -221,6 +220,7 @@ record = {
         "legacy_routes_fail_closed": True,
         "project_path_boundary_enforced": True,
     "fresh_run_directory_and_symlink_outputs_rejected": True,
+    "symlink_output_case_executed": symlink_output_case_executed,
         "sensitive_config_input_rejected": True,
         "malformed_persona_and_leader_fail_closed": True,
         "empty_model_response_fails_closed": True,
