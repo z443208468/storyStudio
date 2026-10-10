@@ -76,6 +76,20 @@ def validate_source_identity(
     expected_manifest_sha256: str,
 ) -> None:
     source = contract.get("source", {})
+    if source.get("identity_type") == "imported_project":
+        if source.get("version") != expected_version or source.get("import_id") != expected_zip_sha256:
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "imported source version or import ID differs")
+        manifest_path = _safe_source_file(source_root, source.get("manifest_file", ""))
+        if _sha256(manifest_path.read_bytes()) != expected_manifest_sha256.lower():
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "actual imported source manifest SHA256 differs")
+        source_file = contract.get("story", {}).get("source_file")
+        if not source_file:
+            raise ContractError("SOURCE_IDENTITY_MISSING", "story.source_file is required")
+        path = _safe_source_file(source_root, source_file)
+        if _sha256(path.read_bytes()) != source.get("source_file_sha256", "").lower():
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "imported source file SHA256 differs")
+        _validate_story_anchors(contract, source_root, path)
+        return
     if source.get("version") != expected_version or source.get("zip_sha256", "").lower() != expected_zip_sha256.lower():
         raise ContractError("SOURCE_IDENTITY_MISMATCH", "source version or release ZIP SHA256 differs")
     if source.get("local_private_source_manifest_sha256", "").lower() != expected_manifest_sha256.lower():
@@ -95,6 +109,14 @@ def validate_source_identity(
     data = path.read_bytes()
     if source.get("script_sha256", "").lower() != _sha256(data):
         raise ContractError("SOURCE_IDENTITY_MISMATCH", "script SHA256 differs")
+    _validate_story_anchors(contract, source_root, path)
+    if unit.get("id") is None:
+        raise ContractError("PREFLIGHT_REQUIRED_FIELD_MISSING", "unit.id is required")
+
+
+def _validate_story_anchors(contract: dict[str, Any], source_root: str | Path, path: Path) -> None:
+    story = contract.get("story", {})
+    data = path.read_bytes()
     for field in ("before_anchor", "after_anchor"):
         anchor = story.get(field, {})
         start = anchor.get("source_line")
@@ -108,8 +130,6 @@ def validate_source_identity(
         actual = _sha256(b"".join(lines[start - 1 : end]))
         if actual != expected:
             raise ContractError("SOURCE_ANCHOR_MISMATCH", f"{field} SHA256 differs")
-    if unit.get("id") is None:
-        raise ContractError("PREFLIGHT_REQUIRED_FIELD_MISSING", "unit.id is required")
 
 
 def validate_scene_budget(contract: dict[str, Any]) -> None:

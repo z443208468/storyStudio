@@ -103,12 +103,27 @@ class RunnerTests(unittest.TestCase):
         with patch.object(cnw_runner, "ROOT", self.base):
             ready = cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="plot", input=None))
             self.assertEqual(ready["status"], "READY_FOR_EXECUTION")
+            with self.assertRaisesRegex(ContractError, "EDITORIAL_CANDIDATE_NOT_READY"):
+                cnw_runner.review_run(argparse.Namespace(run_id="FICT_SCENE_A"))
+            candidate = self.base / "runs/FICT_SCENE_A/artifacts/mock-draft.md"
+            candidate.write_text("MOCK_ONLY draft", encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "MOCK_CANDIDATE_CANNOT_REQUEST_EDITORIAL_REVIEW"):
+                cnw_runner.register_editorial_candidate(argparse.Namespace(run_id="FICT_SCENE_A", candidate=str(candidate)))
             resumed = cnw_runner.show_run(argparse.Namespace(run_id="FICT_SCENE_A"))
             self.assertEqual(resumed["stages"]["plot"], "READY_FOR_EXECUTION")
             history = cnw_runner.verify_history(argparse.Namespace(run_id="FICT_SCENE_A"))
             self.assertEqual(history["status"], "HISTORICAL_EVIDENCE_FOUND")
             with self.assertRaisesRegex(ContractError, "LIVE_PROVIDER_EVIDENCE_MISSING"):
                 cnw_runner.verify_live(argparse.Namespace(run_id="FICT_SCENE_A"))
+            state = cnw_runner.load_state(self.base / "runs/FICT_SCENE_A")
+            state["provider_requests"] = [{"stage": "lens5", "mode": "MOCK_ONLY", "provider_request_id": "mock-1"}]
+            cnw_runner.save_state(self.base / "runs/FICT_SCENE_A", state)
+            with self.assertRaisesRegex(ContractError, "MOCK_RECEIPT_CANNOT_PROVE_LIVE"):
+                cnw_runner.verify_live(argparse.Namespace(run_id="FICT_SCENE_A"))
+            state["stages"]["re-review"]["status"] = "ACCEPTED"
+            cnw_runner.save_state(self.base / "runs/FICT_SCENE_A", state)
+            with self.assertRaisesRegex(ContractError, "EXTERNAL_REVIEW_EVIDENCE_REQUIRED"):
+                cnw_runner.promote_run(argparse.Namespace(run_id="FICT_SCENE_A"))
             with self.assertRaisesRegex(ContractError, "STAGE_DEPENDENCY_NOT_ACCEPTED"):
                 cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="cards", input=None))
 

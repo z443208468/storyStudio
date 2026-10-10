@@ -10,12 +10,14 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
 import sys
 import time
 import uuid
+from decimal import Decimal, InvalidOperation, ROUND_CEILING
 
 try:
     from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity
@@ -188,22 +190,31 @@ def produce(args) -> dict:
         raise ContractError("LIVE_EXECUTOR_NOT_AVAILABLE", "provider execution is gated for W10; W05 creates offline run state only")
     run_id = safe_run_id(args.run_id)
     unit_id = args.work_id or ""
+    project_root = Path(args.project_root).resolve() if args.project_root else ROOT
     contract_file = Path(args.contract)
     if not contract_file.is_absolute():
-        contract_file = ROOT / contract_file
+        project_relative = project_root / contract_file
+        contract_file = project_relative if project_relative.is_file() else ROOT / contract_file
     contract_candidate = contract_file.absolute()
     for ancestor in (contract_candidate, *contract_candidate.parents):
         if ancestor.is_symlink():
             raise ContractError("CONTRACT_PATH_UNSAFE", "contract path contains a symlink")
     contract_file = contract_file.resolve(strict=True)
-    project_root = Path(args.project_root).resolve() if args.project_root else ROOT
     if not contract_file.is_relative_to(project_root):
         raise ContractError("CONTRACT_PATH_OUTSIDE_PROJECT", str(contract_file))
     contract = load_contract(contract_file)
     check_required_fields(contract)
     is_fixture = str(contract.get("project_id", "")).startswith("FICT_")
-    if not is_fixture:
-        source = contract["source"]
+    private_workspace = (ROOT / "workspace").resolve()
+    if not project_root.is_relative_to(private_workspace) and not is_fixture:
+        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(project_root))
+    source = contract.get("source", {})
+    if source.get("identity_type") == "imported_project":
+        source_root = (project_root / source.get("source_root", ".")).resolve()
+        if not source_root.is_relative_to(project_root):
+            raise ContractError("SOURCE_PATH_UNSAFE", "import source root escapes the private project")
+        validate_source_identity(contract, source_root=source_root, expected_version=source["version"], expected_zip_sha256=source["import_id"], expected_manifest_sha256=source["source_manifest_sha256"])
+    elif not is_fixture:
         release_root = project_root / "inputs/private/release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
         validate_source_identity(contract, source_root=release_root, expected_version=source["version"], expected_zip_sha256=source["zip_sha256"], expected_manifest_sha256=source["local_private_source_manifest_sha256"])
     kind = args.unit or contract["unit"].get("kind")
@@ -362,17 +373,40 @@ def show_run(args) -> dict:
 
 
 def review_run(args) -> dict:
-    state = load_state(run_path(args.run_id, runs_root_for(args)))
-    candidates = [name for name, record in state["stages"].items() if record["status"] == "READY_FOR_EXECUTION"]
-    if not candidates:
-        raise ContractError("REVIEW_CANDIDATE_MISSING", args.run_id)
-    return {"status": "REVIEW_REQUIRED", "run_id": args.run_id, "ready_stages": candidates, "self_acceptance": False}
+    path = run_path(args.run_id, runs_root_for(args))
+    state = load_state(path)
+    candidate = state.get("editorial_candidate")
+    if not candidate:
+        raise ContractError("EDITORIAL_CANDIDATE_NOT_READY", "stage request artifacts are not a prose candidate")
+    target = assert_output_within_root(path, candidate.get("path", ""))
+    if not target.is_file() or sha(target.read_bytes()) != candidate.get("sha256"):
+        raise ContractError("EDITORIAL_CANDIDATE_HASH_MISMATCH", args.run_id)
+    return {"status": "READY_FOR_EDITORIAL_REVIEW", "run_id": args.run_id, "candidate": candidate, "review_evidence": "external_controller_or_author_required", "self_acceptance": False, "promote_allowed": False}
+
+
+def register_editorial_candidate(args) -> dict:
+    path = run_path(args.run_id, runs_root_for(args))
+    with locked_run(path):
+        state = load_state(path)
+        if state.get("fixture_only") or state.get("mode") != "live":
+            raise ContractError("MOCK_CANDIDATE_CANNOT_REQUEST_EDITORIAL_REVIEW", args.run_id)
+        verify_live(args)
+        target = safe_run_input(args.candidate, path)
+        candidate = {"path": target.relative_to(path).as_posix(), "sha256": sha(target.read_bytes()), "status": "READY_FOR_EDITORIAL_REVIEW", "provider_evidence": "validated"}
+        state["editorial_candidate"] = candidate
+        state["status"] = "READY_FOR_EDITORIAL_REVIEW"
+        state["updated_at"] = now()
+        save_state(path, state)
+        return {"status": "READY_FOR_EDITORIAL_REVIEW", "run_id": args.run_id, "candidate": candidate, "self_acceptance": False}
 
 
 def promote_run(args) -> dict:
     state = load_state(run_path(args.run_id, runs_root_for(args)))
     if state["stages"].get("re-review", {}).get("status") != "ACCEPTED":
         raise ContractError("PROMOTION_GATE_NOT_ACCEPTED", "re-review")
+    evidence = state.get("editorial_review")
+    if not evidence or evidence.get("status") != "EXTERNAL_ACCEPTED" or not evidence.get("evidence_sha256"):
+        raise ContractError("EXTERNAL_REVIEW_EVIDENCE_REQUIRED", "CLI or fixture stage status cannot authorize promotion")
     return {"status": "PROMOTION_READY", "run_id": args.run_id, "self_acceptance": False}
 
 
@@ -406,7 +440,58 @@ def verify_live(args) -> dict:
     state = load_state(run_path(args.run_id, runs_root_for(args)))
     if not state["provider_requests"]:
         raise ContractError("LIVE_PROVIDER_EVIDENCE_MISSING", args.run_id)
-    return {"status": "NEW_PROVIDER_CALL_PASSED", "run_id": args.run_id, "provider_requests": len(state["provider_requests"])}
+    if any(receipt.get("mode") == "MOCK_ONLY" or receipt.get("fixture_only") is True for receipt in state["provider_requests"]):
+        raise ContractError("MOCK_RECEIPT_CANNOT_PROVE_LIVE", args.run_id)
+    required = {"stage", "request_id", "provider_request_id", "model", "status", "http_status", "finish_reason", "usage", "input_sha256", "output_sha256", "raw_response_path", "raw_response_sha256", "cost_cny", "ledger_settlement"}
+    seen_provider_ids = set()
+    seen_request_ids = set()
+    ledger_path = ROOT / "runtime/private/p2-cost-ledger.json"
+    if ledger_path.is_symlink() or not ledger_path.is_file():
+        raise ContractError("LIVE_COST_LEDGER_MISSING", str(ledger_path))
+    try:
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError("LIVE_COST_LEDGER_INVALID", str(exc)) from exc
+    for index, receipt in enumerate(state["provider_requests"], 1):
+        if receipt.get("mode") == "MOCK_ONLY" or receipt.get("fixture_only") is True:
+            raise ContractError("MOCK_RECEIPT_CANNOT_PROVE_LIVE", f"request {index}")
+        missing = sorted(required - set(receipt))
+        if missing:
+            raise ContractError("LIVE_RECEIPT_INCOMPLETE", f"request {index} missing {', '.join(missing)}")
+        if not all(isinstance(receipt.get(key), str) and receipt[key].strip() for key in ("stage", "request_id", "provider_request_id")):
+            raise ContractError("LIVE_RECEIPT_IDENTITY_INVALID", f"request {index}")
+        if receipt["provider_request_id"] in seen_provider_ids or receipt["request_id"] in seen_request_ids:
+            raise ContractError("LIVE_PROVIDER_REQUEST_ID_DUPLICATE", receipt["provider_request_id"])
+        seen_provider_ids.add(receipt["provider_request_id"])
+        seen_request_ids.add(receipt["request_id"])
+        if receipt["status"] != "SUCCEEDED" or receipt["http_status"] != 200 or receipt["model"] != "deepseek-flash" or receipt["finish_reason"] != "stop":
+            raise ContractError("LIVE_RECEIPT_STATUS_INVALID", f"request {index}")
+        usage = receipt["usage"]
+        if not isinstance(usage, dict) or not all(isinstance(usage.get(key), int) and usage[key] > 0 for key in ("prompt_tokens", "completion_tokens")):
+            raise ContractError("LIVE_USAGE_MISSING", f"request {index}")
+        if not all(re.fullmatch(r"[0-9a-fA-F]{64}", str(receipt[key])) for key in ("input_sha256", "output_sha256", "raw_response_sha256")):
+            raise ContractError("LIVE_RECEIPT_HASH_INVALID", f"request {index}")
+        raw_response = assert_output_within_root(run_path(args.run_id, runs_root_for(args)), receipt["raw_response_path"])
+        if not raw_response.is_file() or sha(raw_response.read_bytes()) != receipt["raw_response_sha256"].lower():
+            raise ContractError("LIVE_RAW_RESPONSE_HASH_MISMATCH", f"request {index}")
+        if not isinstance(receipt["cost_cny"], (int, float)) or isinstance(receipt["cost_cny"], bool) or not math.isfinite(receipt["cost_cny"]) or receipt["cost_cny"] < 0:
+            raise ContractError("LIVE_COST_MISSING", f"request {index}")
+        settlement = receipt["ledger_settlement"]
+        if not isinstance(settlement, dict) or settlement.get("status") != "SETTLED" or settlement.get("request_id") != receipt["request_id"]:
+            raise ContractError("LIVE_COST_NOT_SETTLED", f"request {index}")
+        rows = [row for row in ledger.get("requests", []) if row.get("request_id") == receipt["request_id"]]
+        if len(rows) != 1:
+            raise ContractError("LIVE_COST_LEDGER_ROW_MISSING", receipt["request_id"])
+        row = rows[0]
+        usage_matches = row.get("usage") == {"input_tokens": usage["prompt_tokens"], "output_tokens": usage["completion_tokens"]}
+        try:
+            settled_cost = Decimal(str(row.get("estimated_actual_cny")))
+            receipt_cost = Decimal(str(receipt["cost_cny"])).quantize(Decimal("0.000001"), rounding=ROUND_CEILING)
+        except (InvalidOperation, ValueError):
+            raise ContractError("LIVE_COST_MISSING", f"request {index}")
+        if row.get("status") != "SETTLED" or row.get("provider_request_id") != receipt["provider_request_id"] or row.get("finish_reason") != "stop" or not usage_matches or settled_cost != receipt_cost:
+            raise ContractError("LIVE_COST_SETTLEMENT_MISMATCH", f"request {index}")
+    return {"status": "LIVE_EVIDENCE_VALIDATED", "run_id": args.run_id, "provider_requests": len(state["provider_requests"]), "all_receipts_settled": True}
 
 
 def make_parser() -> argparse.ArgumentParser:
@@ -427,6 +512,11 @@ def make_parser() -> argparse.ArgumentParser:
     run.add_argument("--input")
     run.add_argument("--project-root")
     run.set_defaults(func=step)
+    candidate = sub.add_parser("register-candidate")
+    candidate.add_argument("--run-id", required=True)
+    candidate.add_argument("--candidate", required=True)
+    candidate.add_argument("--project-root")
+    candidate.set_defaults(func=register_editorial_candidate)
     run = sub.add_parser("record-fixture")
     run.add_argument("--run-id", required=True)
     run.add_argument("--stage", required=True)

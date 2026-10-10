@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0,Mandatory=$true)]
-    [ValidateSet('doctor','prepare','import-source','verify','scene','legacy-scene','resume','produce','step','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
+    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','verify','scene','legacy-scene','resume','produce','step','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
     [string]$Command,
     [ValidateSet('offline','live')][string]$Mode,
     [ValidateSet('plot','draft','revise')][string]$Stage,
@@ -10,11 +10,17 @@ param(
     [ValidateSet('scene','episode')][string]$Unit,
     [string]$Contract,
     [string]$WorkId,
+    [string]$ProjectId,
+    [string]$InputFile,
+    [ValidateSet('md','txt','json')][string]$Format,
     [string]$StepName,
     [int]$Port = 3175
 )
 $ErrorActionPreference = 'Stop'
-$Root = if ($ProjectRoot) { (Resolve-Path -LiteralPath $ProjectRoot).Path } else { (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path }
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+$WorkspaceRoot = Join-Path $Root 'workspace'
+$ProjectRootPath = if ($ProjectRoot) { (Resolve-Path -LiteralPath $ProjectRoot).Path } else { Join-Path $WorkspaceRoot 'cangqi' }
+if (-not $ProjectRootPath.StartsWith(($WorkspaceRoot.TrimEnd('\') + '\'),[StringComparison]::OrdinalIgnoreCase)) { throw 'PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE' }
 $SourceRoot = Join-Path $Root 'inputs/private/release/300a829c7524d620ab89177afcf52c03dffea633392c632f69a943f798dad3b2/Cangqi_Jun_Release_2_3'
 $Python = Join-Path $Root 'runtime/envs/critics-api/Scripts/python.exe'
 function Read-Json([string]$Path) { Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json }
@@ -32,7 +38,7 @@ function Invoke-CnwRunner([string[]]$Arguments) {
     $Runner=Join-Path $Root 'tools/cnw_runner.py'
     if (-not (Test-Path -LiteralPath $Runner -PathType Leaf)) { throw 'CNW_RUNNER_MISSING' }
     if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) { throw 'PINNED_PYTHON_MISSING' }
-    if ($Arguments -notcontains '--project-root') { $Arguments += @('--project-root',$Root) }
+    if ($Arguments -notcontains '--project-root') { $Arguments += @('--project-root',$ProjectRootPath) }
     & $Python $Runner @Arguments
     if ($LASTEXITCODE -ne 0) { throw "CNW_RUNNER_FAILED:$LASTEXITCODE" }
 }
@@ -150,13 +156,34 @@ switch ($Command) {
         if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "CHECKPOINT_MISSING:$Stage" }
         [ordered]@{status='LEGACY_CHECKPOINT_ONLY';stage=$Stage;path=$Path;sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash;provider_call='none; historical P2 checkpoint'} | ConvertTo-Json -Depth 4
     }
+    'project-init' {
+        if (-not $ProjectId) { throw 'PROJECT_ID_REQUIRED' }
+        & $Python (Join-Path $Root 'tools/cnw_project.py') init --project-id $ProjectId --workspace-root $WorkspaceRoot
+        if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_INIT_FAILED:$LASTEXITCODE" }
+    }
+    'project-import' {
+        if (-not $ProjectId -or -not $InputFile) { throw 'PROJECT_IMPORT_REQUIRES_PROJECT_ID_AND_INPUT_FILE' }
+        $ImportArgs=@((Join-Path $Root 'tools/cnw_project.py'),'import-source','--project-id',$ProjectId,'--workspace-root',$WorkspaceRoot,'--input',(Resolve-Path -LiteralPath $InputFile).Path)
+        if ($Format) { $ImportArgs += @('--format',$Format) }
+        & $Python @ImportArgs
+        if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_IMPORT_FAILED:$LASTEXITCODE" }
+    }
+    'project-contract' {
+        if (-not $ProjectRoot -or -not $InputFile) { throw 'PROJECT_CONTRACT_REQUIRES_PROJECT_ROOT_AND_PRIVATE_DRAFT_JSON' }
+        $DraftPath=(Resolve-Path -LiteralPath $InputFile).Path
+        if (-not $DraftPath.StartsWith(($ProjectRootPath.TrimEnd('\')+'\'),[StringComparison]::OrdinalIgnoreCase)) { throw 'CONTRACT_DRAFT_OUTSIDE_PROJECT' }
+        & $Python (Join-Path $Root 'tools/cnw_project.py') draft-contract --project-root $ProjectRootPath --draft $DraftPath
+        if ($LASTEXITCODE -ne 0) { throw "CNW_CONTRACT_DRAFT_FAILED:$LASTEXITCODE" }
+    }
     'legacy-scene' { & $PSCommandPath scene -Stage $Stage }
     'produce' {
         if (-not $Contract -or -not $RunId -or -not $Mode) { throw 'PRODUCE_REQUIRES_MODE_CONTRACT_AND_NEW_RUN_ID' }
-        $RunnerArgs=@('produce','--mode',$Mode,'--contract',$Contract,'--run-id',$RunId)
+        if (-not $ProjectRoot) { $ProjectRootPath = Join-Path $WorkspaceRoot 'cangqi' }
+        $ContractPath = if ([IO.Path]::IsPathRooted($Contract)) { $Contract } else { Join-Path $ProjectRootPath $Contract }
+        $RunnerArgs=@('produce','--mode',$Mode,'--contract',$ContractPath,'--run-id',$RunId)
         if ($Unit) { $RunnerArgs += @('--unit',$Unit) }
         if ($WorkId) { $RunnerArgs += @('--work-id',$WorkId) }
-        $RunnerArgs += @('--project-root',$Root)
+        $RunnerArgs += @('--project-root',$ProjectRootPath)
         Invoke-CnwRunner $RunnerArgs
     }
     'step' {

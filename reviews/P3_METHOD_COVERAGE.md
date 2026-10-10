@@ -8,7 +8,7 @@
 
 | 原作者阶段 / 方法 | 固定源文件 | StoryStudio 对应职责 | 当前状态 | 目标验证 |
 |---|---|---|---|---|
-| 项目、Arc、Canon、Style 导入与持续维护 | `docs/EXISTING_PROJECT_IMPORT.md`; `templates/_workflows/01_first_import.md`; `templates/_workflows/02_incremental_update.md` | 支持任意私有项目根，维护来源与知识边界 | `NOT_IMPLEMENTED`（仅《苍歧》P2 固定导入存在） | A04、B01、E05 |
+| 项目、Arc、Canon、Style 导入与持续维护 | `docs/EXISTING_PROJECT_IMPORT.md`; `templates/_workflows/01_first_import.md`; `templates/_workflows/02_incremental_update.md` | 支持任意私有项目根，维护来源与知识边界 | `P3.1_DELTA_CANDIDATE`：新增 `tools/cnw_project.py` 导入 UTF-8 `.md/.txt/.json`，保留哈希/行号或 JSON Pointer，输出 `TODO_CONFIRM` Canon 候选；两种原始文件到合同、Plot/Brief 输入和通用离线 runner 的测试已编写，待独立 Controller 补验。模型未运行，Canon 未确认 | B01/W04/W09 |
 | 生产入口与 run 状态 | `templates/config/workflow.template.yml`; P3 W05 | 独立 run ID、依赖指纹、resume、历史/live 证据区分 | `PARTIAL`：可创建来源绑定离线 run 和阶段请求；没有真实 provider executor，W05 live fail-closed | B01、B02、B07、B08、E04、E05 |
 | Plot 规划 | `templates/config/ai_roles.template.yml`; `templates/06_plot/plot.template.md` | 独立 Plot 输入/输出、作用/Hook/节拍/长度合同 | `PARTIAL`：W04 Prompt/结构 gate 与 W05 独立 run stage-request 已实现；尚无新 run 的真实 Plot 角色结果 | B01、B04、D02 |
 | Plot 的 CritiCS 项目扩展 | P2 `tools/critics_bridge.py`; `tools/p2_06_critics_run.py` | 原桥接的计划批评接入，结果不能代替 CNW Plot Lens | `PARTIAL`：既有 P2 live 证据可复用；W04 新 run 安全调用构造器已实现，尚未真实调用新 Plot | D04 |
