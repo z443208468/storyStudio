@@ -165,7 +165,7 @@
 - 施工文件：`plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md`（SHA256=`14E2E0A8B5C2FE2DC39944FF167FA6086283C5B3D08039A9F3996D9F63493846`）。
 - 离线验证：`python -m pytest tests` 80 项通过。
 - 真实单场 Run：`CNW1TO1-CQ-J19-20261010-01`（私有，Git 忽略）。11 个 CNW 阶段全部 `STAGE_MATERIALIZED`；`verify-live` 返回 `LIVE_EVIDENCE_VALIDATED`（83 条 provider 收据，全部 SETTLED）。真实 provider 呼叫含：plot/scene_cards/writing_brief/prose、5 Lens、每 finding×3 反证、Completeness、Refine、受影响 Re-review；NK POV 与 CritiCS plan-critique/text-refine 各自真实运行。
-- 本轮费用：本 Run 估算 ¥3.5258，唯一账本累计 ¥3.6491 / ¥10 上限；无并行计费系统。
+- 本轮费用（收尾核定）：本 Run 估算 ¥3.5400（含两次重编码后被作废但仍计费、以及 CritiCS 支持材料的真实呼叫），唯一账本累计 ¥3.6633 / ¥10 上限；无并行计费系统。本 Run 账单行 155 行；accepted 收据 83 条。
 - 覆盖限制：`EPISODE_LIVE_NOT_RUN`；`SPRINT_LIVE_NOT_RUN`；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
 - 本地提交：C=`adda408be36239ef94ca779245d2082866675f38`，T=`cc4babd71019b1deb4f1beea0a72c61a65ad72b7`（父提交 `de49ef2…`，未改写历史）。
 - 推送与远端回读：用户指示在没有独立 Controller 的本会话中推送以便当前 ChatGPT 审查。`git push origin main` 使 `de49ef2..adda408`；`git ls-remote origin refs/heads/main` = `adda408be36239ef94ca779245d2082866675f38`，与本地 HEAD/tree 一致；未强推、未 reset/clean，main 单分支保留。
