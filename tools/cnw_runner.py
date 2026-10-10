@@ -459,6 +459,11 @@ def promote_run(args) -> dict:
     if not contract_path.is_relative_to(project_root) or contract_path.is_symlink(): raise ContractError("CONTRACT_PATH_UNSAFE",state["contract_path"])
     contract=load_contract(contract_path)
     evidence=json.loads(evidence_path.read_text(encoding="utf-8"))
+    accepted_review=evidence.get("accepted_review")
+    if not isinstance(accepted_review,dict): raise ContractError("ACCEPTED_REVIEW_EVIDENCE_REQUIRED","promotion record must include the reviewed provider receipts")
+    actual={(row.get("stage"),row.get("lens_id"),row.get("verifier_id"),row.get("provider_request_id")) for row in state["provider_requests"]}
+    expected={(row.get("stage"),row.get("lens_id"),row.get("verifier_id"),row.get("provider_request_id")) for row in accepted_review.get("provider_requests",[])}
+    if not expected or not expected.issubset(actual): raise ContractError("ACCEPTED_REVIEW_PROVIDER_RECEIPTS_UNBOUND","review issue votes must use this run's verified requests")
     try:
         from .cnw_revision import promote_revision
     except ImportError:

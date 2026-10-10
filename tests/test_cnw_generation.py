@@ -32,6 +32,14 @@ def tiny_contract(minimum=120, target=160, maximum=220):
     return value
 
 
+def review_evidence_fixture(findings=None,*,candidate_sha="b"*64,contract_sha="c"*64,source_sha="a"*64,fixture=True):
+    provider_requests=[{"stage":"lens5","lens_id":name,"provider_request_id":f"P-L-{name}"} for name in ("style","character","plot","canon","story_specific")]
+    provider_requests += [{"stage":"verifier3","verifier_id":name,"provider_request_id":f"P-V-{i}"} for i,name in enumerate(("verifier_1","verifier_2","verifier_3"),1)]
+    votes=[{"verifier_id":name,"provider_request_id":f"P-V-{i}","verdict":"not_refuted" if i<3 else "uncertain"} for i,name in enumerate(("verifier_1","verifier_2","verifier_3"),1)]
+    finding={"issue_id":"I1","severity":"P1","owner":"character","source":"anchor-1","evidence":"quoted source fact","fix":"restore distinct voice","acceptance":"voice distinction present","verifier_votes":votes}
+    return {"status":"EXTERNAL_ACCEPTED","execution_mode":"TEST_FIXTURE_ONLY" if fixture else "LIVE","fixture_only":fixture,"candidate_sha256":candidate_sha,"contract_sha256":contract_sha,"source_identity_sha256":source_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY" if fixture else "EXTERNAL_CONTROLLER_ACCEPTANCE","provider_requests":provider_requests,"source_catalog":{"anchor-1":{"text":"A quoted source fact appears here.","sha256":hashlib.sha256("A quoted source fact appears here.".encode()).hexdigest(),"source_manifest_sha256":source_sha}},"findings":findings or [finding]}
+
+
 class CnwGenerationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="cnw-generation-")
@@ -143,18 +151,27 @@ class CnwGenerationTests(unittest.TestCase):
         self.assertEqual(explained["shortening_reason"],"删除重复对白，保留全部动作与节拍")
 
     def test_revision_plan_requires_source_and_acceptance_per_issue(self):
-        items=[{"issue_id":"I2","severity":"P2","owner":"style","source":"lens-style","evidence":"line 4","fix":"reduce repetition","acceptance":"repeat removed","verification_status":"CONFIRMED"},
-               {"issue_id":"I1","severity":"P0","owner":"canon","source":"source anchor A1","evidence":"claim lacks anchor","fix":"remove claim","acceptance":"all claims cited","verification_status":"CONFIRMED"}]
-        plan=build_revision_plan(items)
+        review=review_evidence_fixture([
+            {"issue_id":"I2","severity":"P2","owner":"style","source":"anchor-1","evidence":"quoted source fact","fix":"reduce repetition","acceptance":"repeat removed","verifier_votes":review_evidence_fixture()["findings"][0]["verifier_votes"]},
+            {"issue_id":"I1","severity":"P0","owner":"canon","source":"anchor-1","evidence":"quoted source fact","fix":"remove claim","acceptance":"all claims cited","verifier_votes":review_evidence_fixture()["findings"][0]["verifier_votes"]}])
+        plan=build_revision_plan(review,allow_fixture=True)
         self.assertEqual([x["issue_id"] for x in plan["issues"]],["I1","I2"])
         self.assertFalse(plan["self_acceptance"])
         with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_INCOMPLETE"):
-            build_revision_plan([{"issue_id":"I1","severity":"P0","verification_status":"CONFIRMED"}])
-        with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_NOT_CONFIRMED"):
-            build_revision_plan([{**items[0],"verification_status":"REFUTED_OR_UNCERTAIN"}])
+            build_revision_plan(review_evidence_fixture([{**review["findings"][0],"acceptance":""}]),allow_fixture=True)
+        finding={**review["findings"][0],"verifier_votes":[{**v,"verdict":"refuted"} for v in review["findings"][0]["verifier_votes"]]}
+        self.assertEqual(build_revision_plan(review_evidence_fixture([finding]),allow_fixture=True)["issues"],[])
+        unbound={**review["findings"][0],"verifier_votes":[{**review["findings"][0]["verifier_votes"][0],"provider_request_id":"fake"},*review["findings"][0]["verifier_votes"][1:]]}
+        with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_VOTE_UNBOUND"):
+            build_revision_plan(review_evidence_fixture([unbound]),allow_fixture=True)
+        ungrounded={**review["findings"][0],"evidence":"unsupported evidence text"}
+        with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_EVIDENCE_NOT_IN_SOURCE"):
+            build_revision_plan(review_evidence_fixture([ungrounded]),allow_fixture=True)
+        with self.assertRaisesRegex(ContractError,"MOCK_REVIEW_CANNOT_CREATE_PRODUCTION_PLAN"):
+            build_revision_plan(review_evidence_fixture())
 
     def test_revision_record_preserves_v0_and_records_diff_and_shrink_reason(self):
-        plan=build_revision_plan([{"issue_id":"I1","severity":"P1","owner":"plot","source":"beat B01","evidence":"missing response","fix":"add response","acceptance":"response in scene","verification_status":"CONFIRMED"}])
+        plan=build_revision_plan(review_evidence_fixture(),allow_fixture=True)
         with self.assertRaisesRegex(ContractError,"REVISION_SHRINK_OVER_25_PERCENT_REQUIRES_REASON"):
             build_revision_record(self.prose*2,self.prose[:180],plan)
         record=build_revision_record(self.prose*2,self.prose[:180],plan,shortening_reason="删除重复对白，保留两个节拍的动作和回应")
@@ -166,13 +183,12 @@ class CnwGenerationTests(unittest.TestCase):
     def test_revision_plan_cli_writes_into_private_project(self):
         repo=self.base/"revision-cli"; project=repo/"workspace/project"; inputs=project/"inputs"; inputs.mkdir(parents=True)
         issue={"issue_id":"I1","severity":"P1","owner":"character","source":"voice evidence","evidence":"flat response","fix":"restore distinction","acceptance":"distinct voice present","verification_status":"CONFIRMED"}
-        (inputs/"issues.json").write_text(json.dumps({"issues":[issue]},ensure_ascii=False),encoding="utf-8")
+        review=review_evidence_fixture([{**issue,"source":"anchor-1","evidence":"quoted source fact","verifier_votes":review_evidence_fixture()["findings"][0]["verifier_votes"]}])
+        (inputs/"review.json").write_text(json.dumps(review,ensure_ascii=False),encoding="utf-8")
         import tools.cnw_revision as revision
         with patch.object(cnw_generate,"ROOT",repo),redirect_stdout(io.StringIO()):
-            code=revision.main(["plan","--project-root",str(project),"--issues","inputs/issues.json","--output","09_revision/revision_plan.json"])
-        self.assertEqual(code,0)
-        saved=json.loads((project/"09_revision/revision_plan.json").read_text(encoding="utf-8"))
-        self.assertEqual(saved["issues"][0]["issue_id"],"I1")
+            with self.assertRaisesRegex(ContractError,"MOCK_REVIEW_CANNOT_CREATE_PRODUCTION_PLAN"):
+                revision.main(["plan","--project-root",str(project),"--review","inputs/review.json","--output","09_revision/revision_plan.json"])
 
     def test_rereview_only_builds_affected_lenses_with_fresh_full_text(self):
         sources={"style_guide":"style","language_rules":"language"}
@@ -189,10 +205,18 @@ class CnwGenerationTests(unittest.TestCase):
         repo=temp/"repo"; project=repo/"tests/_isolated_workspace/project"; run=project/"runs/R1"
         (run/"artifacts").mkdir(parents=True); (project/"07_draft/scenes").mkdir(parents=True)
         old=project/"07_draft/scenes/SCENE-1.md"; old.write_text("prior accepted copy",encoding="utf-8")
-        candidate=run/"artifacts/scene.md"; candidate.write_text("new complete candidate",encoding="utf-8")
-        contract={"unit":{"id":"SCENE-1","kind":"scene"},"source":{"source_manifest_sha256":"a"*64}}
+        candidate=run/"artifacts/scene.md"; candidate.write_text(self.prose[:180],encoding="utf-8")
+        v0_path=run/"artifacts/v0.md"; v0_path.write_text(self.prose[:180],encoding="utf-8")
+        contract=copy.deepcopy(self.contract); contract["unit"]["id"]="SCENE-1"
+        if "source_manifest_sha256" in contract["source"]: contract["source"]["source_manifest_sha256"]="a"*64
+        else: contract["source"]["local_private_source_manifest_sha256"]="a"*64
         contract_sha=hashlib.sha256(json.dumps(contract,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
-        evidence={"status":"EXTERNAL_ACCEPTED","fixture_only":True,"work_id":"SCENE-1","candidate_sha256":hashlib.sha256(candidate.read_bytes()).hexdigest(),"source_identity_sha256":"a"*64,"contract_sha256":contract_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY"}
+        candidate_sha=hashlib.sha256(candidate.read_bytes()).hexdigest(); source_sha=contract["source"].get("source_manifest_sha256") or contract["source"].get("local_private_source_manifest_sha256")
+        accepted=review_evidence_fixture(candidate_sha=candidate_sha,contract_sha=contract_sha,source_sha=source_sha)
+        plan=build_revision_plan(accepted,allow_fixture=True)
+        validation={"finish_reason":"stop","v0_beat_evidence":self.evidence,"v1_beat_evidence":self.evidence,"dialogue_evidence":self.dialogue,"action_evidence":self.action,"start_state_evidence":"她推开门。","end_state_evidence":"他收起信。"}
+        record=build_revision_record(v0_path.read_text(encoding="utf-8"),candidate.read_text(encoding="utf-8"),plan)
+        evidence={"status":"EXTERNAL_ACCEPTED","fixture_only":True,"work_id":"SCENE-1","candidate_sha256":candidate_sha,"source_identity_sha256":source_sha,"contract_sha256":contract_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY","accepted_review":accepted,"revision_plan":plan,"v0_path":"artifacts/v0.md","validation_evidence":validation,"revision_record":record}
         prod_project=repo/"workspace/project"; prod_run=prod_project/"runs/R1"; prod_candidate=prod_run/"artifacts/scene.md"
         prod_candidate.parent.mkdir(parents=True); prod_candidate.write_bytes(candidate.read_bytes())
         prod_evidence={**evidence,"candidate_sha256":hashlib.sha256(prod_candidate.read_bytes()).hexdigest()}
@@ -202,9 +226,12 @@ class CnwGenerationTests(unittest.TestCase):
         # Isolated fixture root is configurable through the module root; it never points at a production workspace.
         import tools.cnw_revision as rev
         with patch.object(rev,"__file__",str(repo/"tools/cnw_revision.py")):
+            invalid={**evidence,"validation_evidence":{**validation,"finish_reason":"length"}}
+            with self.assertRaisesRegex(ContractError,"REVISION_CONTRACT_VALIDATION_FAILED"):
+                promote_revision(project,run,candidate,contract,invalid,test_fixture=True)
             result=promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
         self.assertEqual(result["status"],"PROMOTED")
-        self.assertEqual(old.read_text(encoding="utf-8"),"new complete candidate")
+        self.assertEqual(old.read_text(encoding="utf-8"),self.prose[:180])
         self.assertEqual((project/result["archive_path"]).read_text(encoding="utf-8"),"prior accepted copy")
         index=(project/"07_draft/manuscript_index.md").read_text(encoding="utf-8")
         self.assertIn("# Manuscript Index",index)
