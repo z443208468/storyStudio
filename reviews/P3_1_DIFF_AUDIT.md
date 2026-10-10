@@ -1,6 +1,6 @@
 # P3.1 对既有 W00–W05 的差异审计
 
-状态：**二次修复候选，待同一独立 Controller 再补验；不是 W06 签收。**
+状态：**P3.1 W04/W05 差异纠偏已由同一独立 Controller 接受；W06 仍未签收。**
 
 ## 基线与权限
 
@@ -9,6 +9,7 @@
 - 独立 Controller 首轮差异审查确认：W00–W03 可沿用历史验收；P3.1 W04/W05 不能沿用为新剧本导入已完成的证据。Controller 未审 W06 文件。
 - Controller 对首个 P3.1 候选提交 `fd0a83975f8514dbf16b1449dc0c433c74a87c55` / 树 `a06bd11c3fedc43f488275bc4d86072e78d050e5` 给出 `RETURN`：指出实时校验未将 receipt 字段与原始响应 JSON 内容交叉核验，且候选登记未强制完整岗位链。以下补丁只修这两项边界，待同一 Controller 按新 C/T 复验。
 - Controller 对第二候选 `91ccf13e2da95fc70e8725fac765e875c2b0c99d` / 树 `869fc05d3c41542c72cffcc368cf96ae89ca693f` 确认前述两项已修，但指出 W10 未验证 5 个不同 Lens 和 3 个不同 Verifier 的独立请求身份。现补上角色 ID 集合门和缺失/重复负例；二次修复仍待复验。
+- 同一 Controller 最终接受候选 `e7fcac6c0372ddca670f12c10ac86704064e22b9` / 树 `3d25ee789c7d5f8bac6477d685f5751200fe7dad`。接受范围为 P3.1 对 W04/W05 的差异补齐与 Live 验收边界代码；Controller 明确未运行测试，也未检查或签收 W06。
 - P3.1 包内要求创建候选分支，与用户此前明确的“只要一个 main、不要分支”冲突。本工程继续只在 `main` 上增量工作，既不创建分支，也不强推、reset、clean 或删改既有历史。
 - P3.1 作为当前活动施工合同，旧 `plans/MASTER_PLAN_P3.md` 保留为旧版历史；包内活动文件已逐字节复制并保留原 SHA，见 `AGENTS.md`。
 
@@ -16,11 +17,11 @@
 
 | P3.1 项 | 原 W00–W05 事实 | 候选修复 / 当前证据 | 状态 |
 |---|---|---|---|
-| W04 / M04 新剧本导入 | `studio.ps1 import-source` 只验证固定《苍歧》包；不存在通用 `cnw_project.py`；角色输入限于 `workspace/cangqi` | 新增 `tools/cnw_project.py`：初始化私有项目、导入 UTF-8 `.md/.txt/.json`、保存原文件 SHA/字节/路径、行号或 JSON Pointer、source manifest/index、Canon 候选均为 `TODO_CONFIRM`；由显式人工输入生成 source-bound 合同草案 | 候选；两种格式链路测试通过，待 Controller |
-| W04 → W05 数据贯通 | runner 固定按《苍歧》 release 目录验源；Studio 把 `ProjectRoot` 当代码根 | runner/角色包支持项目内 imported source identity；`studio.ps1` 从脚本位置推导仓库根、将 `ProjectRoot` 限定于 `workspace/<project>`，新增 `project-init/project-import/project-contract`，`produce` 使用导入项目合同和项目私有 runs 目录 | 候选；Python 集成测试和实际 PowerShell CLI 均通过，待 Controller |
-| 两个原始剧本 | 旧测试从预制《苍歧》合同开始，不能证明导入器 | `tests/test_cnw_project_import.py` 实际导入不同 `.md` 与 `.json` 原件，核对独立 source SHA、索引定位、Canon 候选、source anchor、合同 hash、Plot/Brief role input hash，再从 Studio runner 创建各自 offline run | 候选；`MOCK_ONLY`、零模型调用 |
-| 外部 Controller / promote | W05 的阶段 fixture 可记为 ACCEPTED，`review` 只回 `REVIEW_REQUIRED`，promote 没有明确外审证据门 | 离线阶段请求不能注册为 editorial candidate；非 fixture live run 必须有完整阶段回执、每阶段 ACCEPTED，五个 Lens ID 与三个 Verifier ID 各自齐全且独立；promote 另要求外部审阅证据，CLI 不自签 | 候选；部分流水线和重复/缺失 role ID 拦截测试通过 |
-| W07 与 W10 | W05 live fail-closed；`verify_live` 曾只校验 raw 文件 hash，没有核对 raw 内容，也未数清 5+3 独立调用 | receipt 逐请求与原始响应 request/provider ID、DeepSeek Flash、HTTP 状态、finish reason、prompt/completion tokens 比较；分别要求 `style/character/plot/canon/story_specific` 与 `verifier_1..3` 八个 ID；仍与唯一 SETTLED 账本行核对。W07 `MOCK_ONLY` 明确不计 Live | 候选；原始字段篡改及 5+3 缺失/重复测试通过。真实 W10 未运行，必须等 W00–W09 门通过 |
+| W04 / M04 新剧本导入 | `studio.ps1 import-source` 只验证固定《苍歧》包；不存在通用 `cnw_project.py`；角色输入限于 `workspace/cangqi` | 新增 `tools/cnw_project.py`：初始化私有项目、导入 UTF-8 `.md/.txt/.json`、保存原文件 SHA/字节/路径、行号或 JSON Pointer、source manifest/index、Canon 候选均为 `TODO_CONFIRM`；由显式人工输入生成 source-bound 合同草案 | Controller ACCEPT；新源候选仍需人确认 |
+| W04 → W05 数据贯通 | runner 固定按《苍歧》 release 目录验源；Studio 把 `ProjectRoot` 当代码根 | runner/角色包支持项目内 imported source identity；`studio.ps1` 从脚本位置推导仓库根、将 `ProjectRoot` 限定于 `workspace/<project>`，新增 `project-init/project-import/project-contract`，`produce` 使用导入项目合同和项目私有 runs 目录 | Controller ACCEPT；双原稿链路与 PowerShell CLI 通过 |
+| 两个原始剧本 | 旧测试从预制《苍歧》合同开始，不能证明导入器 | `tests/test_cnw_project_import.py` 实际导入不同 `.md` 与 `.json` 原件，核对独立 source SHA、索引定位、Canon 候选、source anchor、合同 hash、Plot/Brief role input hash，再从 Studio runner 创建各自 offline run | Controller ACCEPT；`MOCK_ONLY`、零模型调用 |
+| 外部 Controller / promote | W05 的阶段 fixture 可记为 ACCEPTED，`review` 只回 `REVIEW_REQUIRED`，promote 没有明确外审证据门 | 离线阶段请求不能注册为 editorial candidate；非 fixture live run 必须有完整阶段回执、每阶段 ACCEPTED，五个 Lens ID 与三个 Verifier ID 各自齐全且独立；promote 另要求外部审阅证据，CLI 不自签 | Controller ACCEPT；真实 W10 未运行 |
+| W07 与 W10 | W05 live fail-closed；`verify_live` 曾只校验 raw 文件 hash，没有核对 raw 内容，也未数清 5+3 独立调用 | receipt 逐请求与原始响应 request/provider ID、DeepSeek Flash、HTTP 状态、finish reason、prompt/completion tokens 比较；分别要求 `style/character/plot/canon/story_specific` 与 `verifier_1..3` 八个 ID；仍与唯一 SETTLED 账本行核对。W07 `MOCK_ONLY` 明确不计 Live | Controller ACCEPT 代码边界；真实 W10 未运行，须按 P3.1 后续阶段验收 |
 | 分支治理 | 当前唯一 branch 是 `main`，本地/远端一致 | 遵循用户明确授权；不按 P3.1 包内规则创建候选分支 | 已按用户权限确定，不是 P3.1 候选分支流程已执行 |
 
 ## 验证
@@ -33,4 +34,4 @@
 
 ## 阶段决定
 
-历史 W00–W05 ACCEPT 记录不变。P3.1 对 W04/W05 的新增功能目前是**本地候选**，须同一 Controller 对代码、测试、真实 CLI 行为和精确候选 C/T 补验签收。补验之前 W06 正式签收保持暂停；新剧本导入离线事实不等于 Canon 获确认、不等于模型写作或生产系统完成。
+历史 W00–W05 ACCEPT 记录不变。P3.1 对 W04/W05 的新增差异已经 Controller 签收；双源离线链路不代表 Canon 获确认、不代表模型写作或生产系统完成。按用户要求现可从保留进度继续 W06，且之后阶段仍须分别验收；不得把 W07 mock 或代码门称作 W10 Live。
