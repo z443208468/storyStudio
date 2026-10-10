@@ -49,11 +49,14 @@ def run_fixture_sprint(project_root: str | Path, sprint_id: str, plan_path: str 
         if not isinstance(episode_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", episode_id) or episode_id in ids:
             raise ContractError("SPRINT_EPISODE_ID_INVALID", str(index))
         ids.add(episode_id)
-        contract_path = (root / str(row.get("contract", ""))).resolve(strict=True)
+        supplied_contract = root / str(row.get("contract", ""))
+        if any(part.is_symlink() for part in (supplied_contract, *supplied_contract.parents) if part.exists() and part != root.parent):
+            raise ContractError("SPRINT_CONTRACT_UNSAFE", episode_id)
+        contract_path = supplied_contract.resolve(strict=True)
         if not contract_path.is_relative_to(root):
             raise ContractError("SPRINT_CONTRACT_OUTSIDE_PROJECT", episode_id)
         contract = load_contract(contract_path)
-        if contract.get("project_id", "").startswith("FICT_") is False:
+        if not str(contract.get("project_id", "")).startswith("FICT_"):
             raise ContractError("SPRINT_FIXTURE_PROJECT_REQUIRED", episode_id)
         if contract.get("unit", {}).get("kind") == "episode":
             validate_episode_budget(contract["unit"])
@@ -65,13 +68,16 @@ def run_fixture_sprint(project_root: str | Path, sprint_id: str, plan_path: str 
             raise ContractError("SPRINT_CONTRACT_ID_MISMATCH", episode_id)
         plot_text = row.get("plot_fixture")
         review_status = row.get("review_fixture")
-        if not isinstance(plot_text, str) or not plot_text.strip() or review_status not in {"ACCEPTED", "RETURN"}:
+        if not isinstance(plot_text, str) or not plot_text.strip() or not isinstance(review_status, str) or review_status not in {"ACCEPTED", "RETURN"}:
             raise ContractError("SPRINT_FIXTURE_STAGE_INVALID", episode_id)
         rows.append({"episode_id": episode_id, "contract": contract_path.relative_to(root).as_posix(),
                      "contract_sha256": digest(contract_path.read_bytes()), "plot": plot_text.strip(),
                      "plot_status": "FIXTURE_READY", "review_status": review_status,
                      "review_notes": row.get("review_notes", ""), "provider_call": "none"})
-    out = root / "sprints" / sprint_id
+    parent = root / "sprints"
+    if parent.is_symlink():
+        raise ContractError("SPRINT_OUTPUT_UNSAFE", "sprints directory is a symlink")
+    out = parent / sprint_id
     if out.exists() or out.is_symlink():
         raise ContractError("SPRINT_ID_COLLISION", sprint_id)
     out.mkdir(parents=True)
