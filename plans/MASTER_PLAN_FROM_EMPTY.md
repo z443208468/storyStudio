@@ -56,6 +56,17 @@ D:\CangqiStudio\StoryStudio\
 - CNW 许可只覆盖其声明的文档/模板等范围；示例小说、Plot、Card、Canon 等作品材料不因仓库可访问就获得复制许可。只引用原仓与路径核对结构。
 - 子模块 checkout 只固定 Git link。需要生成构建文件时，将 `git archive` 的原字节放到 Git 忽略的独立 `runtime/build/<tool>/<run-id>/`；生产构建只在副本做。原 checkout 保持 pinned 且 clean，不能覆盖用户 WIP。
 - 公开 Git 只放治理、source pins、许可归属、可复现命令与脱敏证据索引。用户原稿、Key、完整 Prompt/响应与正文留在私有目录。
+- I00 自有 `.gitignore` 至少写入以下精确路径规则；Key 只经进程环境传入，不写入仓库文件：
+
+```gitignore
+/inputs/private/
+/workspace/
+/runtime/
+/runs/
+/.env
+/.env.*
+!/.env.example
+```
 
 ## C. Atom 执行合同
 
@@ -111,7 +122,7 @@ git status --short
 
 ### I01 — 本机兼容性与真实执行路径（不调用付费 API）
 
-仅在 I00 接受后执行。Vendor checkout 保持只读；用 `git archive` 原字节复制至 Git 忽略的 runtime。先只读探测 Node/npm/Python/WSL 与硬件，不安装大型环境。按 README 在隔离 runtime 副本进行解析、安装、构建与启动，记录命令、退出码、源和副本文件身份、实际异常。CritiCS 的第 43 行源文本需 `py_compile` 实证；如失败，准确记录 B11，不改原文件。NK 必须证明模型配置、base URL 和 schema 在原语义下确实可路由 Flash；不发真实创作请求，不以 SDK 环境变量猜测替代证明。I01 输出 `evidence/I01_NATIVE_COMPATIBILITY.md`，逐工具标 `NATIVE_BOOT_OK / MODEL_ROUTE_FLASH_VERIFIED / BLOCKED_UPSTREAM_IMMUTABLE / NOT_TESTED`。如原版冲突，停止在事实状态并交 Controller，不继续宣称全栈。
+仅在 I00 接受后执行。Vendor checkout 保持只读；用 `git archive` 原字节复制至 Git 忽略的唯一 runtime 目录。先只读探测 Node/npm/Python/WSL 与硬件，不安装 WSL/CUDA 或大型环境。CritiCS 先在无依赖原字节副本上执行 `py_compile`；若环境缺少原版硬依赖或需安装大型环境/下载模型才可继续，则记录阻塞并停止，不尝试该安装/下载。只有运行环境已具备要求、且不需未授权大型依赖时，才依 README 在隔离副本进行解析、安装、构建与启动。记录命令、退出码、源和副本文件身份、实际异常。NK 必须证明模型配置、base URL 和 schema 在原语义下确实可路由 Flash；不发真实创作请求，不以 SDK 环境变量猜测替代证明。I01 输出 `evidence/I01_NATIVE_COMPATIBILITY.md`，逐工具标 `NATIVE_BOOT_OK / MODEL_ROUTE_FLASH_VERIFIED / BLOCKED_UPSTREAM_IMMUTABLE / NOT_TESTED`。如原版冲突，停止在事实状态并交 Controller，不继续宣称全栈。
 
 先执行只读环境探测：
 
@@ -155,10 +166,12 @@ $Downloads = [Environment]::ExpandEnvironmentVariables($Folders.$DownloadGuid)
 if (!(Test-Path -LiteralPath $Downloads)) { throw 'SOURCE_DOWNLOAD_FOLDER_NOT_FOUND' }
 $Expected = '300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2'
 $Candidates = Get-ChildItem -LiteralPath $Downloads -File -Recurse -Filter '*.zip' -ErrorAction Stop
-$Matches = @($Candidates | Where-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash -eq $Expected })
-if ($Matches.Count -eq 0) { throw 'B04/B10: exact JUN-SINGLE-02.3 release not found; do not substitute' }
-$Matches | Select-Object FullName,Length,LastWriteTime
+$MatchedArchives = @($Candidates | Where-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash -eq $Expected })
+if ($MatchedArchives.Count -eq 0) { throw 'B04/B10: exact JUN-SINGLE-02.3 release not found; do not substitute' }
+$MatchedArchives | Select-Object FullName,Length,LastWriteTime
 ```
+
+解压前用 .NET ZIP API 只读枚举 entry；拒绝重复名或规范化后越出目标目录的路径。目标目录必须不存在；通过检查后使用 `ExtractToDirectory` 到该私有目标。对每个 entry 记录相对名；不启动任何成员文件。
 
 ### I03 — 按 CNW 原文导入并设计一个场景
 
@@ -166,7 +179,7 @@ $Matches | Select-Object FullName,Length,LastWriteTime
 
 ### I04 — 一场真实样本（仅在用户授权及兼容性成立后）
 
-仅在 I00–I03 被 Controller 接受、NK/CritiCS 均证明原版语义可用且 Controller 已明确接受 I01 模型路径后，才可进行任何付费 Flash 请求。只允许 `deepseek-flash`。按 CNW Brief 写一场完整的君天离单 POV 日常对话与动作，不私设 token/字数/调用数。NK 原版生成结果必须真实进入样本制作链；CritiCS 必须走固定原算法和真实流程。任一工具不兼容时将相应使用状态写 `NOT_RUN`/`BLOCKED`，不以自写替代。保存本地请求响应、服务端型号、用量、费用原始凭据及前后上下文；保留首次失败 raw。用户亲读前立即停止，状态 `CONTROLLER_REVIEW_REQUIRED`，不得自动生成第二场或扩量。不能把历史 `$12` 当预算授权。
+仅在 I00–I03 被 Controller 接受、NK/CritiCS 均证明原版语义可用且 Controller 已明确接受 I01 模型路径后，才可进行任何付费 Flash 请求。只允许 `deepseek-flash`。按 CNW Brief 写一场完整的君天离单 POV 日常对话与动作，不私设 token/字数/调用数。NK 原版生成结果必须真实进入样本制作链。CritiCS 必须真实走 `critics/plan/plan.py` 的 `story_structure_question`、`ending_question`、`original_question` 与原生组合入口，以及 `critics/text/text.py` 的原生 refinement/leader 路径；按其实际调用入口和原 Prompt 执行，不自写替代意见或算法。任一工具不兼容时将相应使用状态写 `NOT_RUN`/`BLOCKED`，不以自写替代。保存本地请求响应、服务端型号、用量、费用原始凭据及前后上下文；保留首次失败 raw。用户亲读前立即停止，状态 `CONTROLLER_REVIEW_REQUIRED`，不得自动生成第二场或扩量。不能把历史 `$12` 当预算授权。
 
 ### I05 — 远端证据与最终读者判断
 
