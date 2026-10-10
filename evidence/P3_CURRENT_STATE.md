@@ -1,7 +1,7 @@
 # P3 当前状态
 
 - 当前唯一分支 `main` 已将 P3.1 差异修复和 Controller ACCEPT 正常推送；远端/本地回读一致。用户明确只保留 main，不创建候选分支；不强推、不 reset/clean、不删除既有工作。
-- 唯一活动计划：`plans/MASTER_PLAN_P3_1.md`。P3.1 ZIP SHA256=`2550F43B266BFDCAC324F9C24E4DCC7E86B6AA38462B32310A203F54BD6FFDF3`。P3.1 的 W04/W05 差异修复已同一独立 Controller ACCEPT；当前在 W06 纠偏候选审查中。
+- 唯一活动计划：`plans/MASTER_PLAN_P3_1.md`。P3.1 ZIP SHA256=`2550F43B266BFDCAC324F9C24E4DCC7E86B6AA38462B32310A203F54BD6FFDF3`。P3.1 W04/W05 差异修复、W06 与 W07 均已同一独立 Controller ACCEPT；正在推进 W08。
 - P3 工单包 SHA256：`E3D4E10B7C876A2F4F53B0BFC5560BB24419F975D4A88445FAED993A66BE3CAD`。CNW pin：`97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`；本地捕获 manifest SHA256：`E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983`，98 项。
 - 状态：`ENV_READY=ACCEPTED`; `NK_LIVE=ACCEPTED`; `CRITICS_LIVE=ACCEPTED`; `CNW_FULL_PRODUCTION=NOT_VERIFIED`; `PRODUCT_MILESTONE_REOPENED=YES`; `USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
 - W00 `ACCEPTED` 并已推送；W01 `ACCEPTED` 并已推送。详细 Controller 消息、精确候选 C/T 及远端回读见 `reviews/P2_ACCEPTANCE_LOG.md` 中追加的 P3 W00/W01/W04 记录。
@@ -25,5 +25,6 @@
 | W05 | ACCEPTED | Controller C/T ACCEPT；远端 C/T readback 一致；离线可恢复 run 调度与 hash/invalidation；23 项测试通过；实际 source-bound run/Plot request/history verify；无 provider request |
 | P3.1 W04/W05 delta | ACCEPTED | 同一独立 Controller 接受；已正常推送唯一 main；双原稿链路测试覆盖新来源到角色输入；不代表 Canon 人工确认 |
 | W06 | ACCEPTED | 同一 Controller ACCEPT C=`a31c91451dc6e67b714dae434ff0a9ebd765a5d2` / T=`7b7a5859bbf06befea8ebad7e4af2ba7ad981de2`；47 项测试通过；仅构造离线请求与验收门，未生成新正文/未调用模型 |
-| W07 | IN_PROGRESS | 仅实现和验收 MOCK_ONLY 独立上下文五 Lens、三 Verifier、Completeness；不得冒充 W10 |
-| W08–W11 | NOT_STARTED | W10 才允许本轮唯一一场真实模型端到端验收 |
+| W07 | ACCEPTED | 同一 Controller ACCEPT C=`366b296392b432b4a0a82643566b5df42b3b50e0` / T=`257148031c2d2ed9b0984132304196e2be86172e`；57 tests 通过；完整必需来源、隔离五 Lens/三 Verifier、真实投票分类后的全文 Completeness、P2 cost guard dry-run 预算接口；未写账本/无 provider ID/零模型调用 |
+| W08 | IN_PROGRESS | 修订计划、长度与节拍保护、受影响复审、Controller 证据门及晋升/索引；不得把模拟凭据用于生产目录 |
+| W09–W11 | NOT_STARTED | W10 才允许本轮唯一一场真实模型端到端验收；W07 mock 不能计入 |
