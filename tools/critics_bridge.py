@@ -46,9 +46,35 @@ def read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def write_json(path: Path, payload):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+def create_run_directory(value: str) -> Path:
+    runs = ROOT / "runs"
+    if runs.is_symlink() or not runs.is_dir():
+        raise ValueError("RUNS_ROOT_INVALID")
+    candidate = Path(value)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    try:
+        relative = candidate.relative_to(runs)
+    except ValueError as exc:
+        raise ValueError("RUN_DIR_MUST_BE_UNDER_RUNS") from exc
+    if len(relative.parts) != 1 or relative.parts[0] in (".", ".."):
+        raise ValueError("RUN_DIR_MUST_BE_NEW_DIRECT_CHILD")
+    if candidate.is_symlink() or candidate.exists():
+        raise ValueError("RUN_DIR_MUST_BE_NEW")
+    candidate.mkdir(exist_ok=False)
+    return candidate.resolve(strict=True)
+
+
+def write_text(path: Path, content: str, run_dir: Path):
+    if path.parent != run_dir or path.exists() or path.is_symlink():
+        raise ValueError("OUTPUT_PATH_NOT_FRESH_INSIDE_RUN_DIR")
+    path.relative_to(run_dir)
+    with path.open("x", encoding="utf-8", newline="") as stream:
+        stream.write(content)
+
+
+def write_json(path: Path, payload, run_dir: Path):
+    write_text(path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n", run_dir)
 
 
 def configure_provider():
@@ -90,10 +116,7 @@ def main(argv=None) -> int:
     source = project_path(input_arg)
     if not source.is_file():
         raise FileNotFoundError("INPUT_FILE_NOT_FOUND")
-    run_dir = project_path(args.run_dir, directory=True)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    if run_dir.is_symlink():
-        raise ValueError("RUN_DIR_SYMLINK_REJECTED")
+    run_dir = create_run_directory(args.run_dir)
 
     configure_provider()
     sys.path.insert(0, str(BUILD))
@@ -106,7 +129,7 @@ def main(argv=None) -> int:
         from critics.plan.plan import Critic
         result = Critic(text).three_critic()
         output_path = run_dir / "critique.json"
-        write_json(output_path, result)
+        write_json(output_path, result, run_dir)
     elif args.action == "plan-revise":
         from critics.plan.plan import modifiedStoryline
         critique_path = project_path(args.critique)
@@ -115,12 +138,12 @@ def main(argv=None) -> int:
         critique = read_json(critique_path)
         result = modifiedStoryline(text, critique)
         output_path = run_dir / "modified_plot.md"
-        output_path.write_text(str(result), encoding="utf-8")
+        write_text(output_path, str(result), run_dir)
     else:
         from critics.text.text import Refinement
         result = Refinement(text).Two_refinement()
         output_path = run_dir / "text_refinement.json"
-        write_json(output_path, result)
+        write_json(output_path, result, run_dir)
 
     if not output_path.is_file() or not output_path.stat().st_size:
         raise RuntimeError("CRITICS_OUTPUT_NOT_WRITTEN")
@@ -132,7 +155,7 @@ def main(argv=None) -> int:
         "base_url": "https://api.deepseek.com/v1",
         "build": str(BUILD.relative_to(ROOT)).replace("\\", "/"),
         "status": "SUCCEEDED",
-    })
+    }, run_dir)
     print(json.dumps({"status": "SUCCEEDED", "output": str(output_path), "receipt": str(run_dir / "run_receipt.json")}, ensure_ascii=False))
     return 0
 

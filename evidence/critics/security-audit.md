@@ -18,3 +18,7 @@
 | ChatOpenAI image-token SSRF advisories | 仅发送文本，不接受 image URL，不调用 image token counting。 |
 
 以上是按已检查调用图得出的适用性判断，不是全包安全声明。`langchain-core`、`langchain-openai` 和 `langsmith` 仍被扫描器标记为有非所选辅助功能相关公告；若今后启用这些辅助功能，必须先升级/复核其边界。依赖选择保留上游 LangChain 0.2 对话链接口，避免把工具方法替换成自制批评器。
+
+## Bridge output hardening
+
+- Controller review found that reusing a run directory could follow a pre-existing output symlink. The bridge now atomically creates a new direct child of `runs/` and refuses existing directories; each output uses exclusive creation in that directory. The offline check exercised an output symlink and confirmed no write reached its target.

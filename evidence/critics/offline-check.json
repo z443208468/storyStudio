@@ -57,6 +57,7 @@
     "all_model_construction_is_explicit_flash": true,
     "legacy_routes_fail_closed": true,
     "project_path_boundary_enforced": true,
+    "fresh_run_directory_and_symlink_outputs_rejected": true,
     "sensitive_config_input_rejected": true,
     "malformed_persona_and_leader_fail_closed": true,
     "empty_model_response_fails_closed": true,
