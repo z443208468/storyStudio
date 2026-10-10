@@ -2,7 +2,7 @@
 
 2026-10-11，方法基准 `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`。范围、停止准则始终为 `plans/CNW_PUBLIC_REPLICATION_GOAL.md` C01–C15；没有追加创作阶段或文学质量门。本文不含私有稿件或密钥。下列为各项实际验证范围，不是全规模Live或成稿通过声明。
 
-独立Controller对本轮九文件工程/测试/交付证据限定ACCEPT；按冻结范围与累计审查，当前已识别、尚未修复的官方职责实现差异为0。这不是所有输入或模型结果无缺陷保证。模型调用已停止；本文件所在提交的精确C/T、签收及正常推送回读随后核验，凭据随本次私有交付包保存并在当前对话报告。
+独立Controller对本轮九文件工程/测试/交付证据限定ACCEPT；按冻结范围与累计审查，当前已识别、尚未修复的官方职责实现差异为0。这不是所有输入或模型结果无缺陷保证。模型调用已停止。工程签收对象C=`bcc73679db9d3c270591ae812ec22b85344db571`、T=`ff1069271d3a05f1a1655186b58c19afecb03878`已正常推送，远端C/T回读一致，凭据为私有run的`artifacts/final_release_receipt.json`。外部当前ChatGPT源码/结果审查仍未取得，Writer和Controller不得代签。
 
 ## 与上次停止判断的量化比较
 
@@ -36,9 +36,9 @@
 | C12 | 跨Draft/Design/Canon/Plot审计 | `cnw_maintenance.py`；`CNW_C12_C13_MAINTENANCE_DIAGNOSTIC.md` | full正常Live，light/targeted/保护等离线，不保证审计判断全对 |
 | C13 | 八节当前Handoff与旧稿归档 | 同C12 | 真实输入/指针/日志/行动项/归档，不冒称规模Live交接 |
 | C14 | 多场Chapter/五话Sprint/批量门/Arc | `cnw_generate.py`、`cnw_sprint_live.py`、`cnw_arc.py`；`CNW_C10_C14_CHAPTER_ARC_DIAGNOSTIC.md` | 正式可执行路由和多场/五话/门控/Arc离线；EPISODE_LIVE_NOT_RUN、SPRINT_LIVE_NOT_RUN |
-| C15 | 恢复、身份失效、费用、导出、准确终态 | `cnw_recovery.py`、`cnw_export.py`、`p2_cost_guard.py`；恢复诊断及当前最终证据 | 缓存/保护/失效分支已验，当前待修订候选/费用取消正确；本次最终精确C/T签收推送待收尾 |
+| C15 | 恢复、身份失效、费用、导出、准确终态 | `cnw_recovery.py`、`cnw_export.py`、`p2_cost_guard.py`；恢复诊断及当前最终证据 | 缓存/保护/失效分支已验，当前待修订候选/费用取消正确；工程精确C/T已独立签收、推送回读，私有源码/结果包已生成；外部审查未通过 |
 
-表内诊断名相对 `evidence/`。各组历史签收、C/T及回读在原诊断和当前对话保留，不重复付费证明。C01–C14已具各自冻结范围的功能证据；C15只剩本次签收/推送/交付收尾。外部当前ChatGPT源码/结果审是既定Atom门，单独待定，不驱动文学重跑。
+表内诊断名相对 `evidence/`。各组历史签收、C/T及回读在原诊断和当前对话保留，不重复付费证明。C01–C14已具各自冻结范围的功能证据；C15工程签收/推送/本地交付已收尾。外部当前ChatGPT源码/结果审是既定Atom门，单独待定，不驱动文学重跑；停止准则第5项的该外部门尚未满足，不记录整体目标完成。
 
 ## 当前真实身份与调用
 

@@ -2,7 +2,7 @@
 
 ## 2026-10-11 用户取消金额上限后的收尾（最新）
 
-共享账本正式10→null并保留授权历史/费用/unknown；仅取消campaign金额比较。当前同一J19两轮复审20×3及19×3全部实跑，14项进入v2（1411字），15项进入v3有界恢复，3次尝试/2个唯一付费响应均不足1200，第三次缓存复用，未发布v3。Controller限定验收C10明确失败功能，候选仍 `REVISION_REQUIRED / UNREVIEWED_CANDIDATE`；不重启一组追CLEAN。量化清单/差距与限制见 `evidence/CNW_PUBLIC_EQUIVALENCE_STATUS_20261011.md`。162项相关offline通过，现费用15.250129 CNY；最终本轮C/T/推送待收尾，外部源码/结果审及用户创意亲读另待。下面预算中止段保留历史，不代表当前仍有10元限制。
+共享账本正式10→null并保留授权历史/费用/unknown；仅取消campaign金额比较。当前同一J19两轮复审20×3及19×3全部实跑，14项进入v2（1411字），15项进入v3有界恢复，3次尝试/2个唯一付费响应均不足1200，第三次缓存复用，未发布v3。Controller限定验收C10明确失败功能，候选仍 `REVISION_REQUIRED / UNREVIEWED_CANDIDATE`；不重启一组追CLEAN。量化清单/差距与限制见 `evidence/CNW_PUBLIC_EQUIVALENCE_STATUS_20261011.md`。162项相关offline通过，现费用15.250129 CNY；工程对象C=`bcc73679db9d3c270591ae812ec22b85344db571`、T=`ff1069271d3a05f1a1655186b58c19afecb03878`已独立限定ACCEPT、正常推送和远端回读。源码/真实结果私有审查包已在本地交付；外部ChatGPT审查结论仍缺，Writer/Controller不得代签，整体目标及用户创意接受未通过。下面预算中止段保留历史，不代表当前仍有10元限制。
 
 ## 2026-10-11 当前收敛状态（覆盖下方历史时点）
 
