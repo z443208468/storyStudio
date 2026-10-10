@@ -289,6 +289,15 @@ def validate_generated_scene(contract: dict, prose: str, *, finish_reason: str, 
     missing_beats = [beat["beat_id"] for beat in contract["story"]["required_beats"] if not beat_evidence.get(beat["beat_id"]) or beat_evidence[beat["beat_id"]] not in prose]
     if missing_beats:
         failures.append("RETURN_MISSING_BEAT")
+    # Contracts may list exact source-backed revelations the current POV cannot
+    # know yet. Treat them as deterministic hard blockers, not prompt advice.
+    forbidden_revelations = contract.get("story", {}).get("forbidden_future_revelations", [])
+    leaked_revelations = [item for item in forbidden_revelations
+                          if isinstance(item, str) and item.strip()
+                          and not item.lstrip().lower().startswith(("do not ", "不得", "禁止"))
+                          and item in prose]
+    if leaked_revelations:
+        failures.append("RETURN_KNOWLEDGE_BOUNDARY")
     if not any(span and span in prose for span in dialogue_evidence):
         failures.append("RETURN_MISSING_DIALOGUE")
     if not any(span and span in prose for span in action_evidence):
@@ -299,7 +308,10 @@ def validate_generated_scene(contract: dict, prose: str, *, finish_reason: str, 
         failures.append("RETURN_END_STATE_UNPROVEN")
     if finish_reason != "stop":
         failures.append("TRUNCATED_OR_UNFINISHED")
-    return {"status": "CONTENT_VALID" if not failures else "CONTENT_RETURN", "failure_codes": failures, "missing_beat_ids": missing_beats, "actual_visible_chars": visible, "finish_reason": finish_reason, "validation_scope": "CONTENT_ONLY_NO_COST_OR_PROVIDER_AUTHENTICATION"}
+    return {"status": "CONTENT_VALID" if not failures else "CONTENT_RETURN", "failure_codes": failures,
+            "missing_beat_ids": missing_beats, "leaked_revelations": leaked_revelations,
+            "actual_visible_chars": visible, "finish_reason": finish_reason,
+            "validation_scope": "CONTENT_ONLY_NO_COST_OR_PROVIDER_AUTHENTICATION"}
 
 
 def main(argv=None) -> int:

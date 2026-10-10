@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 from tools.cnw_contract import ContractError, validate_episode_budget
+from tools.cnw_generate import validate_generated_scene
 from tools.cnw_revision import validate_episode_assembly
 from tools.cnw_sprint import run_fixture_sprint
 from tools.cnw_runner import ROOT
@@ -50,6 +51,30 @@ class EpisodePipelineTests(unittest.TestCase):
         })
         self.assertEqual(result["status"], "CONTENT_RETURN")
         self.assertEqual(result["missing_scene_ids"], ["S2"])
+
+    def test_summary_only_scene_is_returned_by_length_and_beat_gates(self):
+        contract = {"unit": {"min_visible_chars": 700, "max_visible_chars": 1400},
+                    "story": {"required_beats": [{"beat_id": "B01"}, {"beat_id": "B02"}],
+                              "forbidden_future_revelations": []}}
+        prose = "后来一切都解决了。"
+        result = validate_generated_scene(contract, prose, finish_reason="stop", beat_evidence={},
+            dialogue_evidence=[], action_evidence=[], start_state_evidence="", end_state_evidence="")
+        self.assertEqual(result["status"], "CONTENT_RETURN")
+        self.assertIn("RETURN_UNDERPRODUCED", result["failure_codes"])
+        self.assertIn("RETURN_MISSING_BEAT", result["failure_codes"])
+
+    def test_forbidden_future_revelation_is_a_hard_episode_return(self):
+        contract = {"unit": {"min_visible_chars": 1, "max_visible_chars": 1000},
+                    "story": {"required_beats": [],
+                              "forbidden_future_revelations": ["阿岚其实是失踪船长的女儿"]}}
+        prose = "阿岚其实是失踪船长的女儿。"
+        scene = validate_generated_scene(contract, prose, finish_reason="stop", beat_evidence={},
+            dialogue_evidence=[prose], action_evidence=[prose], start_state_evidence=prose,
+            end_state_evidence=prose)
+        result = validate_episode_assembly(["S1"], {"S1": scene})
+        self.assertEqual(scene["failure_codes"], ["RETURN_KNOWLEDGE_BOUNDARY"])
+        self.assertEqual(result["status"], "CONTENT_RETURN")
+        self.assertEqual(result["missing_scene_ids"], ["S1"])
 
     def test_five_episode_sprint_fixture_produces_batch_summary_and_handoff(self):
         workspace = ROOT / "workspace"
