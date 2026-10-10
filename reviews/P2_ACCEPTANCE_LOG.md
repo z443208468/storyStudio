@@ -62,12 +62,12 @@
 
 ## P2-04
 
-- Status：三条真实调用链均已跑通，等待 Controller local acceptance。
+- Status：三条真实调用链均已跑通；Controller 限定复核 ACCEPT（只接受两项证据纠偏，不重复签收其他要件）。
 - Live run：`runs/p2-04-live-20261010/`；汇总：`evidence/p2-04-live-check.json`；跨 run 费用账本：`runtime/private/p2-cost-ledger.json`（本地私有）。
 - Plain text：DeepSeek Flash 请求成功；NK `generate-perspective`：真实 HTTP 200、Zod 接收 1 项；CritiCS `chatsettubg` / `ConversationChain`：真实调用成功且 memory 有 2 条消息。
 - NK 首次真实返回被 Zod 拒绝，根因是模型返回的顶层 JSON 键与 schema 不同。已明确 prompt schema，设置 `reasoning_effort=none` 并限输出 512 tokens；仅重跑 NK 调用后通过。原始错误调用仍按实际 usage 计费并保留。
 - 真实联调还确认 8 条生成路由中 reasoning 参数先前均未落实；现已全部设置 `reasoningEffort: none`，离线验收确认八条路由，`npm start` 的 loopback/no-key 检查、响应边界和 provider 参数均通过。此修正的 current patch SHA256 `289D6E5CA63C3B45D7BC2697A095E0344033482B0F5512E679E6ABF3A2E355B1`，runtime build `p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161`。
 - 当前累计估算费用 `¥0.004892 / ¥10`；估算采用当日官方峰值价、输入按 cache miss，并按 USD/CNY 6.70 换算。缺失 usage 的规则为 UNKNOWN_NOT_ZERO 并保留 reservation。未发送项目源稿。
 - 证据补充：首次 CritiCS 成功调用的 ledger 行 `critics-b6f3d53fcae34ffa8d7a578cc67140e9` 记录 71/7 tokens 与估算 `¥0.000199`，但供应商 request ID 未捕获；原始响应文件被后续有 ID 的仪表化调用覆盖。该请求已单独列入五笔供应商调用及总费用，并以 `runs/p2-04-live-20261010/critics-b6f3d53fcae34ffa8d7a578cc67140e9-reconciliation.json` 明示限制；不臆造 ID 或响应体。CritiCS 探针现按本地 request ID 分文件，避免覆盖。NK provider 失败响应记录已重新校验为有效 JSON，并确认不含 `reasoning_content` 字段。
-- 该阶段 candidate C/T 与 Controller verdict：冻结后追加。
+- Controller 复核候选 C=`816fed0a299fcd99473725486119691f070bc64e`，T=`b2a3131fc8ceedce1cd74a8a4de77e7f79642992`；限定 ACCEPT。
 
