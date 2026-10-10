@@ -1,0 +1,19 @@
+# P3 当前状态
+
+- 当前分支：`main`。W01 后基线 C=`d48a25627cfe604bc309cf0f6d9edfe56effa9cb`，T=`103dc782a5efdd5a450fe88eb53a3592b663dfcb`；W02 正在执行，尚未接受或推送。
+- 唯一活动计划：`plans/MASTER_PLAN_P3.md`。当前合法阶段：`W02`。
+- P3 工单包 SHA256：`E3D4E10B7C876A2F4F53B0BFC5560BB24419F975D4A88445FAED993A66BE3CAD`。CNW pin：`97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`；本地捕获 manifest SHA256：`E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983`，98 项。
+- 状态：`ENV_READY=ACCEPTED`; `NK_LIVE=ACCEPTED`; `CRITICS_LIVE=ACCEPTED`; `CNW_FULL_PRODUCTION=NOT_VERIFIED`; `PRODUCT_MILESTONE_REOPENED=YES`; `USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
+- W00 `ACCEPTED` 并已推送；W01 `ACCEPTED` 并已推送。详细 Controller 消息、精确候选 C/T 及远端回读见 `reviews/P2_ACCEPTANCE_LOG.md` 中追加的 P3 W00/W01 记录。
+- P2 的旧 EP001 与 `0b40876b` 历史签收标记为 `HISTORIC_SMOKE_SAMPLE`。这保留工程签收事实，但不作为 P3 正文质量或 CNW 全流程证据。
+- P3 第一轮只重做同一场《苍歧》J19 插场；不写第二场，不批量生成。W10 之前不进行本轮真实作品生成。
+- API 费用：P3 至今无新增调用；仅沿用已批准剩余预算和既有 `p2_cost_guard`。
+
+## 阶段记录
+
+| 阶段 | 状态 | 说明 |
+|---|---|---|
+| W00 | ACCEPTED | 固定 CNW 原件安全捕获；98 项 manifest；已推送 |
+| W01 | ACCEPTED | M01–M38 实际代码映射与方法覆盖差异；已推送 |
+| W02 | IN_PROGRESS | 活动治理与 P2/P3 状态分离；零 API |
+| W03–W11 | NOT_STARTED | 按 P3 依赖顺序继续 |

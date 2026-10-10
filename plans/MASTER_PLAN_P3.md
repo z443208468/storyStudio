@@ -1,6 +1,6 @@
 # StoryStudio P3 — 对照原作者完整公开生产方法的逐文件施工与产品验收计划
 
-**状态：待现有 Codex/Controller 执行的 P3 候选工单。本文不谎称已修改用户 Windows 本机仓库。**
+**状态：当前活动计划；阶段 W02 执行中。**
 
 > **唯一目标**：保留已经部署并接通 DeepSeek Flash 的 Narrative Keyframing 和 CritiCS，把原作者 `MintoTsukino/claude-novel-workflow` 公开的 **全套可见工作方法** 精确落成 StoryStudio 的可重复文学创作生产流。可接收新剧本/新 Scene/新 Episode，自动按照 Arc/Canon → Plot → Scene Cards → Writing Brief → 正文 → CNW 多层审稿 → 反证 → 遗漏检查 → 修订 → 复审 → 索引更新 → 导出执行。第一轮只重新生产一个已经批准的《苍歧》J19 插场，不扩写下一场；但系统本身必须实现可复用的下一场/下一话能力。
 >
@@ -316,4 +316,4 @@ W11 通过可以记录 `ENGINEERED_WORKFLOW_READY_FOR_USER_READING`；但在用�
 
 此包**已经**完成：远端固定源资料研究、Git blob/源码位置核查、逐行缺口映射、可运行的本机资料提取器、完整施工/角色/测试合同。
 
-此包**尚未**完成：用户 Windows 上的 W00 文档实地复制、当前实际 WIP 对照、P3 代码修改、真实新一场创作。因此不能以下载工单等价于“已部署原作者全套生产流”。这些是现有 Codex 下一轮唯一执行任务。
+此包的 P3 W00/W01 已在本地完成、经 Controller 接受并推送；W02–W11 仍按 `evidence/P3_CURRENT_STATE.md` 记录的状态执行。已下载工单不等价于“已部署原作者全套生产流”。

@@ -1,23 +1,21 @@
-# StoryStudio 执行入口 P2
+# StoryStudio 执行入口 P3
 
-本文件是 P2 工作规则，不是成果已通过声明。唯一活动计划为 `plans/MASTER_PLAN_P2.md`；当前阶段见 `evidence/P2_CURRENT_STATE.md`，实际签收见 `reviews/P2_ACCEPTANCE_LOG.md`。历史候选文件中的 NOT_ADOPTED/阻塞语句不具有本轮执行效力。
+本文件是当前执行规则，不是成果已通过声明。唯一活动计划为 `plans/MASTER_PLAN_P3.md`；当前阶段与验收凭据见 `evidence/P3_CURRENT_STATE.md` 和 `reviews/P2_ACCEPTANCE_LOG.md`（其中续记 P3 W00/W01）。P2 计划及签收保留为历史记录；其中 P2-06/07 的 ACCEPT 不代表 CNW 全流程或文学成品已完成。
 
 ## 目标
 
-把 CNW、Narrative Keyframing、CritiCS 部署并适配为《苍歧》文本生产能力，先用 DeepSeek Flash 完成一场君天离单 POV 日常戏，交付初稿、修订稿、前后文连读与可重复使用的入口。
+完成 CNW 固定公开方法映射到 StoryStudio 的可重复生产流水线，按 W00–W11 推进。当前只重做同一场 J19 插场，不扩写第二场；最终交付可运行入口和可读成果。NK 与 CritiCS 的已验证能力作为历史前置复用，CNW 全生产状态目前未验证。
 
-## 角色
+## 执行角色
 
-Writer 是唯一写文件、执行命令、调用生产 API、提交与推送的 Codex 主执行者。独立只读验收子智能体就是 Controller，负责读透完整计划、查原文件和真实证据、逐阶段签收、提出具体修复要求；其 ACCEPT 直接解锁已计划的后续工作。用户保留目标、商业发布、额外支出及最终作品满意度的决定权。Writer 不得自签。
+Writer 负责改代码、运行必要验证、调用已授权的生产 API、提交和推送。独立只读验收子智能体是 Controller：逐阶段审原作者来源、当前实现、真实证据和候选 C/T，给出 ACCEPT/RETURN 并指出最小修正。Writer 不得自签。Controller 的工程 ACCEPT 不等于用户创意接受。
 
-## 允许与禁止
+## 约束
 
-允许修复上游语法、漏传输入、导入、解析、依赖、接口和文件路径 bug；允许将模型/端点改为真实 Flash，适配 JSON、中文与本项目字段；允许做最小确定性调度。不得重写原批评算法冒名、删除必要批评维度、跳过原生产步骤却称完成，或复活旧的自造故事引擎。
-
-上游参考子模块保持原始锁定身份；**它是对照，不是禁止修复生产副本**。生产版本由参考快照加版本化补丁重建，补丁与依赖锁可修改、提交和复核。私有内容不提交公开仓库。
-
-从现有状态继续，保留 G00/G01/I00 已有事实和 I01 失败。P2 不要求清空仓库，不重做已有工作，不要求工作树在接续前天然干净。
-
-一般问题先修复、重验并由 Controller 判定；可恢复故障不再触发“上游不可变”的永久硬停。真正需要外部输入的事件只暂停受影响动作，见治理文件。不得无限重试、虚构证据或在额度耗尽时暗换模型。
-
-先读完整计划和 implementation 规范，再执行当前阶段。以当前输入及真实补丁版本判断是否需要重跑；没有变更的成功环节复用。只在首场成品交付后等待用户阅读，不在每个工程环节等待用户审批。
+- 先读 `reviews/P3_CODEX_START.md`、`reviews/P3_CONTROLLER.md`、P3 全计划和相关实现合同，再按阶段依赖推进。
+- 修复当前阶段可自行处理的机械问题；只扩大处理实际影响安全或功能的缺陷。已验证事项按身份复用，不重复证明。
+- 保留 CNW 的 Plot → Scene Cards → Writing Brief → Prose → 三层审稿、五 Lens、三 Verifier、Completeness、Refine、Re-review；NK/CritiCS 各按自身职责接入，不能相互冒充。
+- 不得以旧 EP001/checkpoint、合规短稿或历史 ACCEPT 声称新生产线完成；旧 P2 样本标为 `HISTORIC_SMOKE_SAMPLE`。
+- 用户亲读前不得记录 `USER_CREATIVE_ACCEPTED`。不生产第二场或批量正文。
+- 仅使用已授权 DeepSeek Flash 与剩余预算，复用既有成本护栏；密钥和私有稿件不得进入 Git。
+- 当前分支只有 `main`。沿 main 正常提交并推送，每阶段 Controller ACCEPT 后核对远端回读；不创建分支、不强推、不 reset/clean。

@@ -9,3 +9,6 @@
 - 成本：累计 17 次真实供应商请求、21 条账本记录、25,018 输入 / 9,055 输出 tokens，估算 ¥0.123297 / ¥10；账单未连接，故仅为估算。
 - 当前 P2-07 证据：`evidence/p2-07-delivery.json`。Controller 本地交付验收及远端回读均 ACCEPT；用户创意审阅仍待本人完成。
 - 私有源稿、完整 prompt/raw response、项目工作区、runs、成本账本和阅读版均被 Git 忽略；用户创意接受仍待用户阅读，不由 Controller 代签。
+## P3 接续说明
+
+本页以上内容保留 P2 当时记录，不再作为当前状态入口。P2 工程签收仍是历史事实；旧 EP001 定位为 `HISTORIC_SMOKE_SAMPLE`，不证明 CNW 全流程或文学质量完成。当前活动计划为 `plans/MASTER_PLAN_P3.md`，实时状态见 `evidence/P3_CURRENT_STATE.md`。当前唯一分支为 `main`。
