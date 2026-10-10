@@ -213,10 +213,6 @@ def locked_run(path: Path, *, lock_name: str = "run.lock"):
         raise ContractError("RUN_LOCK_SYMLINK_REJECTED", str(lock_path))
     stream = open(lock_path, "a+b")
     try:
-        stream.seek(0, os.SEEK_END)
-        if stream.tell() == 0:
-            stream.write(b"0")
-            stream.flush()
         deadline = time.monotonic() + 15
         while True:
             try:
@@ -1361,8 +1357,9 @@ def execute_refine(run_dir: Path) -> dict:
     completeness = json.loads(_read_stage_text(run_dir, state, "completeness_critic"))
     confirmed = pending if pending else _confirmed_findings(run_dir, state)
     candidates = [] if pending else list(completeness.get("candidate_findings", []))
+    supplement = None
     if not pending:
-        _critics_hook(run_dir, "prose")  # support hook, never an additional CNW stage
+        supplement = _critics_hook(run_dir, "prose")  # support hook, never an additional CNW stage
     if not confirmed and not candidates:
         plan = {"schema": 1, "status": "NO_CHANGE", "self_acceptance": False, "issues": []}
         _write_project_output(project_root, f"09_revision/{contract['unit']['id']}_revision_plan.json", json.dumps(plan, ensure_ascii=False, indent=2))
@@ -1371,6 +1368,8 @@ def execute_refine(run_dir: Path) -> dict:
             extra={"revision_number": revision_number, "affected_lenses": [], "pending_findings": [], "revision_base": None})
         return {"stage": "refine", "status": "NO_CHANGE"}
     feedback = {"confirmed": confirmed, "completeness_candidates": candidates}
+    if supplement and supplement.get("status") == "SUCCEEDED":
+        feedback["critics_supplement"] = supplement
     brief = _read_stage_text(run_dir, state, "writing_brief")
     input_identity = sha(json.dumps({"draft": v0, "feedback": feedback, "brief": brief, "contract": contract}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
     attempt = previous_revision.get("refinement_attempt")
@@ -1386,13 +1385,17 @@ def execute_refine(run_dir: Path) -> dict:
         affected = list(LENS_IDS)  # unknown historical provenance requires conservative coverage
     plan = {"schema": 2, "status": "READY_FOR_REFINE", "self_acceptance": False,
             "revision_number": revision_number, "draft_sha256": sha(v0.encode("utf-8")),
-            "affected_lenses": affected, "issues": confirmed + candidates}
+            "affected_lenses": affected, "issues": confirmed + candidates,
+            "supplementary_sources": [supplement] if supplement else [],
+            "supplement_policy": "CritiCS suggestions are unaccepted alternatives; use only to address listed CNW findings within Brief constraints. Reject new Canon, additional scenes and route changes."}
     plan_path = run_dir / f"artifacts/revisions/revision-{revision_number}.plan.json"
     plan_path.parent.mkdir(parents=True, exist_ok=True)
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     system = (
         "你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订整场中文正文，保留有效戏剧内容与所有必需节拍，"
         "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
+        "CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。"
+        "拒用其中增加场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。"
     )
     user = json.dumps({"v0": v0, "confirmed_findings": feedback, "brief_constraints": brief}, ensure_ascii=False, sort_keys=True)
     try:
@@ -1520,59 +1523,88 @@ def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
     return {"stage": "re_review", "lenses": len(results), "status": "CLEAN", "revision_number": revision_number}
 
 
-def _critics_excerpt(run_dir: Path, state: dict) -> Path:
+def _critics_excerpt(run_dir: Path, state: dict) -> Path | None:
     """Select a short, source-referenced excerpt for CritiCS text-refine."""
-    from .cnw_contract import assert_output_within_root as _within
-    prose_path = assert_output_within_root(run_dir, state["stages"]["prose"]["artifact"]["path"])
-    prose = prose_path.read_text(encoding="utf-8-sig")
-    quotes: list[str] = []
-    try:
-        verify = json.loads(_read_stage_text(run_dir, state, "adversarial_verify"))
-        for finding in verify.get("findings", []):
-            evidence = str(finding.get("evidence", "")).strip()
-            if evidence and evidence in prose and evidence not in quotes:
-                quotes.append(evidence)
-            if len(quotes) >= 5:
-                break
-    except (ContractError, OSError, json.JSONDecodeError):
-        pass
-    excerpt = "\n".join(quotes) if quotes else "\n".join(prose.splitlines()[:6])
+    prose = _read_stage_text(run_dir, state, "prose")
+    ranges = []
+    findings = _confirmed_findings(run_dir, state)
+    findings += json.loads(_read_stage_text(run_dir, state, "completeness_critic")).get("candidate_findings", [])
+    for finding in findings:
+        evidence = finding.get("evidence", "")
+        if isinstance(evidence, str) and evidence.strip() and evidence in prose:
+            start = prose.index(evidence)
+            ranges.append((start, start + len(evidence)))
+    selected = []
+    total = 0
+    for match in re.finditer(r'[^。！？.!?\n]+(?:[。！？.!?]+[”’"\']*|\n|$)', prose):
+        if not any(match.start() < end and match.end() > start for start, end in ranges):
+            continue
+        # Complete source sentences only; bound unusually long unpunctuated input.
+        if total + len(match[0]) > 1200:
+            continue
+        selected.append({"start": match.start(), "end": match.end(), "text": match[0]})
+        total += len(match[0])
+        if len(selected) == 5:
+            break
+    if not selected:
+        return None
+    excerpt = "\n".join(item["text"] for item in selected)
     target = run_dir / "artifacts/support/critics-excerpt.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(excerpt.rstrip() + "\n", encoding="utf-8")
+    target.with_suffix(".sources.json").write_text(json.dumps({"prose_sha256": sha(prose.encode("utf-8")),
+        "offset_unit": "decoded Unicode character index", "selected_sentences": selected,
+        "excerpt_sha256": sha(target.read_bytes())}, ensure_ascii=False, indent=2), encoding="utf-8")
     return target
 
 
-def _critics_hook(run_dir: Path, stage: str) -> None:
+def _critics_hook(run_dir: Path, stage: str) -> dict:
     """Attach the existing cost-guarded CritiCS bridge as a support hook."""
     import subprocess
+    try:
+        from .cnw_critics_adapter import read_native_result
+    except ImportError:
+        from cnw_critics_adapter import read_native_result
     action = "plan-critique" if stage == "plot" else "text-refine"
     hook_name = "critics_plot" if action == "plan-critique" else "critics_text"
     python = ROOT / "runtime/envs/critics-api/Scripts/python.exe"
-    if not python.is_file():
-        _record_hook(run_dir, hook_name, {"status": "CRITICS_ENV_MISSING"})
-        return
     state = load_state(run_dir)
     if stage == "plot":
         input_path = assert_output_within_root(run_dir, state["stages"]["plot"]["artifact"]["path"])
     else:
         # CritiCS text-refine only reviews the source-referenced key excerpt, not the whole scene.
         input_path = _critics_excerpt(run_dir, state)
+        if input_path is None:
+            evidence = {"status": "NO_RELEVANT_EXCERPT"}
+            _record_hook(run_dir, hook_name, evidence)
+            return evidence
     input_sha = sha(input_path.read_bytes())
     previous = state.get("support_hooks", {}).get(hook_name, {})
     if previous.get("status") == "SUCCEEDED" and previous.get("input_sha256") == input_sha:
-        return
+        evidence = read_native_result(previous["run_name"], action=action, input_path=input_path)
+        if previous.get("evidence_files") and previous["evidence_files"] != evidence["evidence_files"]:
+            raise ContractError("CRITICS_EVIDENCE_CHANGED", previous["run_name"])
+        _record_hook(run_dir, hook_name, evidence)
+        return evidence
+    if not python.is_file():
+        evidence = {"status": "CRITICS_ENV_MISSING"}
+        _record_hook(run_dir, hook_name, evidence)
+        return evidence
     run_name = f"{run_dir.name}-critics-{action}-{uuid.uuid4().hex[:8]}"
     command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action, "--input", str(input_path), "--run-name", run_name, "--ledger-run-id", run_dir.name]
     try:
         completed = subprocess.run(command, cwd=str(ROOT), capture_output=True, text=True, timeout=600)
     except Exception as exc:
-        _record_hook(run_dir, hook_name, {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__})
-        return
+        evidence = {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__, "run_name": run_name}
+        _record_hook(run_dir, hook_name, evidence)
+        return evidence
     evidence = {"status": "SUCCEEDED" if completed.returncode == 0 else "FAILED", "action": action, "run_name": run_name, "returncode": completed.returncode, "input_sha256": input_sha}
     if completed.returncode != 0:
         evidence["stderr_tail"] = (completed.stderr or "")[-300:]
+    else:
+        evidence = read_native_result(run_name, action=action, input_path=input_path)
     _record_hook(run_dir, hook_name, evidence)
+    return evidence
 
 
 def _record_hook(run_dir: Path, hook: str, evidence: dict) -> None:

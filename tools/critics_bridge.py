@@ -26,9 +26,9 @@ def project_path(value: str, *, directory: bool = False) -> Path:
     if directory and not resolved.is_relative_to((ROOT / "runs").resolve()):
         raise ValueError("RUN_DIR_MUST_BE_UNDER_RUNS")
     if not directory:
-        allowed = ((ROOT / "workspace" / "cangqi").resolve(), (ROOT / "runs").resolve())
+        allowed = ((ROOT / "workspace").resolve(), (ROOT / "runs").resolve())
         if not any(resolved.is_relative_to(base) for base in allowed):
-            raise ValueError("INPUT_MUST_BE_UNDER_CANGQI_WORKSPACE_OR_RUNS")
+            raise ValueError("INPUT_MUST_BE_UNDER_PRIVATE_WORKSPACE_OR_RUNS")
     if resolved == ROOT.resolve():
         raise ValueError("PROJECT_ROOT_IS_NOT_A_FILE")
     return resolved

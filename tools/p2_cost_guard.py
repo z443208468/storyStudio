@@ -49,10 +49,8 @@ def provider_slot():
             if path.is_symlink():
                 raise ValueError("PROVIDER_SLOT_PATH_UNSAFE")
             stream = open(path, "a+b")
-            stream.seek(0, os.SEEK_END)
-            if stream.tell() == 0:
-                stream.write(b"0")
-                stream.flush()
+            # Windows byte-range locks can cover EOF. Initializing a sentinel
+            # before locking races with another process already owning byte 0.
             try:
                 stream.seek(0)
                 if os.name == "nt":
@@ -102,10 +100,6 @@ def locked_ledger():
     lock_path = LEDGER.with_suffix(".lock")
     stream = open(lock_path, "a+b")
     try:
-        stream.seek(0, os.SEEK_END)
-        if stream.tell() == 0:
-            stream.write(b"0")
-            stream.flush()
         deadline = time.monotonic() + 15
         while True:
             try:

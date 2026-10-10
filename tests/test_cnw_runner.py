@@ -21,6 +21,102 @@ CONTRACT = ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contrac
 
 
 class RunnerTests(unittest.TestCase):
+    def test_native_critics_result_reaches_refine_and_is_verified_on_reuse(self):
+        from tools import cnw_critics_adapter as adapter
+        from types import SimpleNamespace
+        run = self.base / "runs/FICT_SCENE_A"
+        prose = "窗边脚步停了。" * 210
+        finding = {"finding_id": "C1", "lens_id": "style", "evidence": "窗边脚步停了。", "issue": "Repetition", "severity": "P2"}
+        for stage, value in (("prose", prose), ("writing_brief", "Keep the same scene and Canon."),
+                             ("adversarial_verify", json.dumps({"findings": [finding], "verdicts": {"C1": {"status": "CONFIRMED"}}})),
+                             ("completeness_critic", '{"candidate_findings":[]}')):
+            cnw_runner._persist_stage(run, stage, f"artifacts/{stage}.md", value)
+        executable = self.base / "runtime/envs/critics-api/Scripts/python.exe"
+        executable.parent.mkdir(parents=True)
+        executable.write_text("MOCK executable; never launched", encoding="utf-8")
+        native = {"voice": "MOCK voice alternative", "image": "MOCK imagery alternative", "select": "MOCK selected wording"}
+        templates = adapter.native_text_templates()
+        def subprocess_result(command, **kwargs):
+            source = Path(command[command.index("--input") + 1])
+            self.assertEqual(source.read_text(encoding="utf-8").strip(), finding["evidence"])
+            directory = self.base / "runs" / command[command.index("--run-name") + 1]
+            directory.mkdir()
+            output = directory / "text_refinement.json"
+            output.write_text(json.dumps(native), encoding="utf-8")
+            build = json.loads(adapter.PATCH_INDEX.read_text(encoding="utf-8"))["runtime_build_id"]
+            receipt = {"action": "text-refine", "status": "SUCCEEDED", "model": "deepseek-flash", "base_url": "https://api.deepseek.com/v1",
+                       "build": f"runtime/patched/CritiCS/{build}", "input_sha256": cnw_runner.sha(source.read_bytes()).upper(), "output_sha256": cnw_runner.sha(output.read_bytes()).upper()}
+            (directory / "run_receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            prompts = {"image": templates["refine_prompt_image"].format(story=source.read_text(encoding="utf-8")),
+                       "voice": templates["refine_prompt_voice"].format(story=source.read_text(encoding="utf-8")),
+                       "select": templates["choose_critic"].format(Image_refinement=native["image"], Voice_refinement=native["voice"])}
+            calls = [{"http_status": 200, "request": {"messages": [{"role": "user", "content": prompts[key]}]}, "response": {"id": f"MOCK-{key}", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": native[key]}}]}} for key in ("image", "voice", "select")]
+            (directory / "provider-calls.json").write_text(json.dumps(calls), encoding="utf-8")
+            return SimpleNamespace(returncode=0)
+        def refine_provider(*args, **kwargs):
+            request = json.loads(kwargs["messages"][1]["content"])
+            self.assertEqual(request["confirmed_findings"]["critics_supplement"]["result"], native)
+            self.assertEqual(request["confirmed_findings"]["confirmed"], [finding])
+            self.assertIn("尚未采纳", kwargs["messages"][0]["content"])
+            return prose.replace("窗边", "门边"), {"request_id": "MOCK-REFINE"}
+        with patch.object(adapter, "ROOT", self.base), patch.object(adapter, "native_text_templates", return_value=templates), patch("subprocess.run", side_effect=subprocess_result) as process, \
+                patch.object(cnw_runner, "cnw_live_call", side_effect=refine_provider):
+            cnw_runner.execute_refine(run)
+            supplement = cnw_runner.load_state(run)["support_hooks"]["critics_text"]
+            self.assertEqual(supplement["result"], native)
+            plan = json.loads((run / "artifacts/revisions/revision-1.plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(plan["supplementary_sources"][0]["result"], native)
+            cnw_runner._critics_hook(run, "prose")
+            self.assertEqual(process.call_count, 1)
+            path = self.base / "runs" / supplement["run_name"] / "text_refinement.json"
+            receipt_path = path.parent / "run_receipt.json"
+            saved_output, saved_receipt = path.read_bytes(), receipt_path.read_bytes()
+            swapped = dict(native, voice=native["image"], image=native["voice"])
+            path.write_text(json.dumps(swapped), encoding="utf-8")
+            changed_receipt = json.loads(saved_receipt)
+            changed_receipt["output_sha256"] = cnw_runner.sha(path.read_bytes()).upper()
+            receipt_path.write_text(json.dumps(changed_receipt), encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "CRITICS_RESULT_RESPONSE_MISMATCH"):
+                adapter.read_native_result(supplement["run_name"], action="text-refine", input_path=run / "artifacts/support/critics-excerpt.md")
+            path.write_bytes(saved_output)
+            receipt_path.write_bytes(saved_receipt)
+            calls_path = path.parent / "provider-calls.json"
+            saved_calls = calls_path.read_bytes()
+            calls = json.loads(saved_calls)
+            calls[1]["response"]["id"] = calls[0]["response"]["id"]
+            calls_path.write_text(json.dumps(calls), encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "CRITICS_PROVIDER_ID_DUPLICATED"):
+                adapter.read_native_result(supplement["run_name"], action="text-refine", input_path=run / "artifacts/support/critics-excerpt.md")
+            calls_path.write_bytes(saved_calls)
+            path.write_text('{}', encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "CRITICS_RECEIPT_HASH_MISMATCH"):
+                cnw_runner._critics_hook(run, "prose")
+            self.assertEqual(process.call_count, 1)
+
+    def test_critics_excerpt_limits_whole_scene_evidence_to_five_sentences(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        prose = "甲停步。乙回头！丙抬手？丁放下碗。戊开门。己关窗。庚离开。"
+        for stage, value in (("prose", prose),
+                             ("adversarial_verify", json.dumps({"findings": [{"finding_id": "S", "evidence": prose}], "verdicts": {"S": {"status": "CONFIRMED"}}})),
+                             ("completeness_critic", '{"candidate_findings":[]}')):
+            cnw_runner._persist_stage(run, stage, f"artifacts/{stage}.md", value)
+        path = cnw_runner._critics_excerpt(run, cnw_runner.load_state(run))
+        mapping = json.loads(path.with_suffix(".sources.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(mapping["selected_sentences"]), 5)
+        self.assertNotIn("己关窗", path.read_text(encoding="utf-8"))
+        for row in mapping["selected_sentences"]:
+            self.assertEqual(prose[row["start"]:row["end"]], row["text"])
+
+    def test_critics_text_skips_unrelated_or_refuted_findings(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        for stage, value in (("prose", "Existing prose."),
+                             ("adversarial_verify", json.dumps({"findings": [{"finding_id": "R", "evidence": "Existing prose."}], "verdicts": {"R": {"status": "REFUTED"}}})),
+                             ("completeness_critic", '{"candidate_findings":[{"evidence":"Absent quote"}]}')):
+            cnw_runner._persist_stage(run, stage, f"artifacts/{stage}.md", value)
+        with patch("subprocess.run") as process:
+            self.assertEqual(cnw_runner._critics_hook(run, "prose")["status"], "NO_RELEVANT_EXCERPT")
+            process.assert_not_called()
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="cnw-runner-")
         self.base = Path(self.temp.name)
