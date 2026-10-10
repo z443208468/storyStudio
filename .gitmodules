@@ -1,0 +1,9 @@
+[submodule "third_party/claude-novel-workflow"]
+	path = third_party/claude-novel-workflow
+	url = https://github.com/MintoTsukino/claude-novel-workflow.git
+[submodule "third_party/narrative-keyframing"]
+	path = third_party/narrative-keyframing
+	url = https://github.com/zhangchaodesign/narrative-keyframing.git
+[submodule "third_party/CritiCS"]
+	path = third_party/CritiCS
+	url = https://github.com/EMNLP-2024-CritiCS/Collective-Critics-for-Creative-Story-Generation.git
