@@ -26,7 +26,7 @@
 
 ## 验证
 
-- `python -m unittest discover -s tests -v`：41 tests，全部通过（完整 suite 包含历史 W00–W05、W06 未签收候选测试和 P3.1 导入差量测试）。
+- `python -m unittest discover -s tests -v`：46 tests，全部通过（完整 suite 包含 W06 候选与 P3.1 导入差量测试；W06 单独仍待 Controller 签收）。
 - PowerShell parser 检查 `tools/studio.ps1`：无语法错误。
 - 实际 PowerShell：`project-init`、`project-import`、`project-contract` 与新项目 `produce -Mode offline -ProjectRoot workspace/P31CLI` 成功；run 位于该项目私有 `runs/`，返回 `provider_call=none`。测试工作区已移除。
 - 未调用 DeepSeek/NK/CritiCS API；无新增费用；真实 W10 `NOT_RUN`。
