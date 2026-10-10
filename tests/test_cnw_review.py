@@ -1,4 +1,4 @@
-import sys, unittest
+import sys, unittest, tempfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
@@ -6,6 +6,40 @@ import cnw_lint, cnw_review
 ALL_SOURCES={key:key for keys in cnw_review.REQUIRED_SOURCES.values() for key in keys}
 
 class ReviewTests(unittest.TestCase):
+    def test_project_format_marker_rule_reports_only_candidates_with_context(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rules = Path(directory) / "rules.md"
+            rules.write_text(
+                "## Layer 1 — Format\n\n| Rule | Check | Source |\n|---|---|---|\n"
+                "| Existing semantic rule | Use semantic Lens | Existing source |\n\n"
+                "| Rule | Pattern | Cap | Notes |\n|---|---|---:|---|\n"
+                "| Marker candidate | `〔(?:镜头|空间|导演|切点)[^〕\\n]*〕` | 0 | Candidate only |\n",
+                encoding="utf-8")
+            text = "〔镜头：停〕\n〔空间：室内〕\n〔导演：停〕\n〔切点：转场〕\n普通对白。\n〔镜头\n跨行〕\n"
+            report = cnw_lint.lint(text, "surface", rules)
+            self.assertEqual(report["executable_rule_count"], 1)
+            self.assertEqual([f["line"] for f in report["findings"]], [1, 2, 3, 4])
+            self.assertTrue(all(f["disposition"] == "CANDIDATE_ONLY" and f["context"] for f in report["findings"]))
+            self.assertEqual(len(report["semantic_review_items"]), 1)
+            self.assertFalse(report["text_modified"])
+            self.assertEqual(report["rules_sha256"], __import__("hashlib").sha256(rules.read_bytes()).hexdigest())
+
+    def test_project_inner_statement_rule_keeps_speculation_as_a_candidate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rules = Path(directory) / "rules.md"
+            rules.write_text(
+                "## Layer 2 — Context\n\n| Rule | Pattern | Cap | Notes |\n|---|---|---:|---|\n"
+                "| Inner statement candidate | `(?:思柔|柳浅|明穗).{0,12}(?:心里|心中)(?:在)?(?:想|觉得|知道|明白)` | 0 | Candidate only |\n",
+                encoding="utf-8")
+            text = "思柔心里想先离开。\n柳浅心中知道答案。\n我猜明穗心里觉得不安。\n我心里想离开。\n思柔抬手。\n"
+            report = cnw_lint.lint(text, "structural", rules)
+            self.assertEqual(report["executable_rule_count"], 1)
+            self.assertEqual([f["line"] for f in report["findings"]], [1, 2, 3])
+            self.assertEqual(report["findings"][2]["matched_text"], "明穗心里觉得")
+            self.assertIn("我猜", "".join(report["findings"][2]["context"]))
+            self.assertTrue(all(f["disposition"] == "CANDIDATE_ONLY" for f in report["findings"]))
+            self.assertFalse(report["text_modified"])
+
     def test_lints_report_line_evidence_without_editing(self):
         text="第一行\n她感到悲伤。\nTODO 待补充  \n"
         before=text

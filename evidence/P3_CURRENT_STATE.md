@@ -1,5 +1,9 @@
 # P3 当前状态
 
+## 2026-10-11 C06 当前项目两层 Lint 离线补证（最新）
+
+真实J19规则文件Layer 1/2各补1条用户指定候选正则，原语义规则及Layer 3保留；现有加载器无需修改。保存v0/v2各跑两层，四份新报告均1条规则/0命中，12项测试通过，Controller限定ACCEPT。原历史Lint/run_state/v0/v2/账本字节哈希未变，新增模型调用0；不回溯修改旧生产记录。见 `evidence/CNW_C06_OFFLINE_LINT_20261011.md`。整体Atom、外部私有证据审查与用户创意接受仍未通过，候选仍待修订。
+
 ## 2026-10-11 外部 C02 / C08 RETURN（最新）
 
 外部源码审查发现两项定点问题：C02 CONFIRMED事实来源门、C08同Lens重复Finding ID覆盖裁决。已修对应来源/身份及消费者，106项相关离线通过，独立Controller对源码修正限定ACCEPT；本轮精确C/T与正常推送回读随交付核验，外部复审待定。详见 `evidence/CNW_C02_C08_EXTERNAL_RETURN_FIXES_20261011.md`。无新增模型调用，无正文/票/历史raw改写。私有ZIP及其SHA、219账本和v0→v3消费关系仍仅本机核验、外部未核验；整体Atom未通过，候选 `REVISION_REQUIRED`，15pending保留。下方历史限定接受和零已识别差异结论不覆盖此RETURN。
