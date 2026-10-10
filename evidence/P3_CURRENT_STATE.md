@@ -1,5 +1,9 @@
 # P3 当前状态
 
+## 2026-10-11 用户取消金额上限后的收尾（最新）
+
+共享账本正式10→null并保留授权历史/费用/unknown；仅取消campaign金额比较。当前同一J19两轮复审20×3及19×3全部实跑，14项进入v2（1411字），15项进入v3有界恢复，3次尝试/2个唯一付费响应均不足1200，第三次缓存复用，未发布v3。Controller限定验收C10明确失败功能，候选仍 `REVISION_REQUIRED / UNREVIEWED_CANDIDATE`；不重启一组追CLEAN。量化清单/差距与限制见 `evidence/CNW_PUBLIC_EQUIVALENCE_STATUS_20261011.md`。162项相关offline通过，现费用15.250129 CNY；最终本轮C/T/推送待收尾，外部源码/结果审及用户创意亲读另待。下面预算中止段保留历史，不代表当前仍有10元限制。
+
 ## 2026-10-11 当前收敛状态（覆盖下方历史时点）
 
 最新有限目标为 `plans/CNW_PUBLIC_REPLICATION_GOAL.md`。余项组1–5已独立限定签收、推送/回读；组6同一J19前10阶段真实完成，Re-review五Lens及20个Verifier成功后预算中止，缺40个Verifier及最终正常处置。当前共享CNY9.874291/10，剩余0.125709；不新增付费、不改票、不手修正文。运行持久化 `EXECUTION_INCOMPLETE`，导出 `UNREVIEWED_CANDIDATE`，verify-live拒绝不完整全链。146项相关离线通过。实证与功能限制见 `evidence/CNW_C04_C10_C15_CURRENT_CHAIN_DIAGNOSTIC.md`；完整方法/全生产仍未验收、Chapter/Sprint Live仍NOT_RUN、用户创意亲读及外部源码/结果审待定。下方W10 NOT_STARTED等保留历史，不描述当前已发生的付费运行。

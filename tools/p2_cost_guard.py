@@ -31,6 +31,21 @@ def money(value: Decimal) -> str:
     return str(value.quantize(MICRO, rounding=ROUND_CEILING))
 
 
+def campaign_limit(value) -> Decimal | None:
+    """JSON null means explicitly unlimited; malformed limits never disable it."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError("CAMPAIGN_LIMIT_INVALID")
+    try:
+        amount = Decimal(str(value))
+    except Exception as exc:
+        raise ValueError("CAMPAIGN_LIMIT_INVALID") from exc
+    if not amount.is_finite() or amount <= 0:
+        raise ValueError("CAMPAIGN_LIMIT_INVALID")
+    return amount
+
+
 @contextmanager
 def provider_slot():
     """Cross-process admission bound shared by CNW provider requests."""
@@ -84,6 +99,7 @@ def load_config():
     cfg = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
     pricing = json.loads(PRICING.read_text(encoding="utf-8-sig"))
     guard = cfg["cost_guard"]
+    campaign_limit(guard["estimated_campaign_limit"])
     if guard.get("currency") != "CNY" or guard.get("persist_across_run_ids") is not True:
         raise ValueError("COST_GUARD_CONFIG_INVALID")
     if pricing.get("requested_model") != cfg["provider"]["model"] or pricing.get("currency") != guard["currency"]:
@@ -124,7 +140,8 @@ def locked_ledger():
                     "schema": 1,
                     "campaign_id": guard["scope"],
                     "currency": guard["currency"],
-                    "limit": str(Decimal(str(guard["estimated_campaign_limit"]))),
+                    "limit": (str(campaign_limit(guard["estimated_campaign_limit"]))
+                              if guard["estimated_campaign_limit"] is not None else None),
                     "pricing_snapshot": pricing,
                     "created_at": now(),
                     "requests": [],
@@ -170,8 +187,8 @@ def command_reserve(args, *, emit=True):
         guard, pricing = load_config()
         reserve = estimate(args.input_token_cap, args.output_token_cap, pricing)
         committed = amounts(ledger)
-        limit = Decimal(ledger["limit"])
-        if committed + reserve > limit:
+        limit = campaign_limit(ledger["limit"])
+        if limit is not None and committed + reserve > limit:
             raise ValueError("CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED")
         row = {
             "request_id": args.request_id,
@@ -217,7 +234,8 @@ def command_settle(args, *, emit=True):
             over_caps = (args.input_tokens > row["reserved_input_token_cap"]
                          or args.output_tokens > row["reserved_output_token_cap"])
             projected_campaign = amounts(ledger) - Decimal(row["reserved_cny"]) + charge
-            over_campaign = projected_campaign > Decimal(ledger["limit"])
+            limit = campaign_limit(ledger["limit"])
+            over_campaign = limit is not None and projected_campaign > limit
             over_reservation = charge > Decimal(row["reserved_cny"])
             row["status"] = "SETTLED_OVER_BUDGET" if (over_caps or over_campaign or over_reservation) else "SETTLED"
             row["usage"] = {"input_tokens": args.input_tokens, "output_tokens": args.output_tokens}
@@ -243,6 +261,28 @@ def command_report(_args):
                           "requests": ledger["requests"]}, ensure_ascii=False, indent=2))
 
 
+def command_set_limit(args, *, emit=True):
+    """Change campaign admission policy while preserving every historical charge."""
+    if not isinstance(args.reason, str) or not args.reason.strip():
+        raise ValueError("CAMPAIGN_LIMIT_CHANGE_REASON_REQUIRED")
+    limit = None if args.unlimited else campaign_limit(args.limit_cny)
+    if not args.unlimited and limit is None:
+        raise ValueError("CAMPAIGN_LIMIT_INVALID")
+    value = str(limit) if limit is not None else None
+    with locked_ledger() as ledger:
+        old = ledger["limit"]
+        if old != value:
+            ledger.setdefault("limit_changes", []).append({"at": now(), "old_limit_cny": old,
+                "new_limit_cny": value, "reason": args.reason.strip()})
+            ledger["limit"] = value
+        result = {"status": "CAMPAIGN_LIMIT_UPDATED", "old_limit_cny": old,
+                  "limit_cny": value, "campaign_committed_cny": money(amounts(ledger)),
+                  "requests_preserved": len(ledger["requests"])}
+    if emit:
+        print(json.dumps(result, ensure_ascii=False))
+    return result
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action", required=True)
@@ -263,6 +303,12 @@ def main(argv=None):
     settle.set_defaults(func=command_settle)
     report = sub.add_parser("report")
     report.set_defaults(func=command_report)
+    change = sub.add_parser("set-limit")
+    option = change.add_mutually_exclusive_group(required=True)
+    option.add_argument("--unlimited", action="store_true")
+    option.add_argument("--limit-cny")
+    change.add_argument("--reason", required=True)
+    change.set_defaults(func=command_set_limit)
     args = parser.parse_args(argv)
     args.func(args)
     return 0

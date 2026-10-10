@@ -13,12 +13,12 @@
     "network_extra_attempts": 2,
     "format_repair_extra_attempts": 1,
     "read_timeout_seconds": 180,
-    "production_max_output_tokens_policy": "derive_from_provider_capability_and_remaining_estimated_budget",
+    "production_max_output_tokens_policy": "derive_from_provider_capability_and_work_unit_requirements",
     "literary_word_count_target": null
   },
   "cost_guard": {
     "currency": "CNY",
-    "estimated_campaign_limit": 10,
+    "estimated_campaign_limit": null,
     "scope": "P2_first_scene_campaign_including_diagnostics_and_retries",
     "persist_across_run_ids": true,
     "auto_top_up": false,

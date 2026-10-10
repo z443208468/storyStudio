@@ -75,7 +75,8 @@ def dry_run_cost_reservation(tasks: list[dict]) -> dict:
     for task in tasks:
         amount = guard.estimate(task["input_token_cap"], task["output_token_cap"], pricing)
         committed += amount
-        if committed > __import__("decimal").Decimal(str(ledger["limit"])):
+        limit = guard.campaign_limit(ledger["limit"])
+        if limit is not None and committed > limit:
             raise ValueError("COST_RESERVATION_WOULD_EXCEED_LIMIT")
         reserved.append({"task_key": task["task_key"], "purpose": task["purpose"], "input_token_cap": task["input_token_cap"], "output_token_cap": task["output_token_cap"], "reserved_cny": guard.money(amount), "reservation_status": "DRY_RUN_ONLY"})
     return {"interface": "tools/p2_cost_guard.py:estimate+amounts+campaign_limit", "execution_mode": "MOCK_ONLY", "ledger_written": False, "provider_request_ids": [], "reservations": reserved}
