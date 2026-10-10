@@ -12,8 +12,11 @@ method, not the author's unpublished automation.
 python tools/cnw_sprint.py --project-root workspace/my_project --sprint-id SPRINT-01 --plan contracts/sprint01.json --mode live
 ```
 
-The equivalent `cnw_runner.py sprint` command uses `--run-id SPRINT-01`
-instead of `--sprint-id SPRINT-01`; the remaining arguments are the same.
+The equivalent runner command is:
+
+```powershell
+python tools/cnw_runner.py sprint --project-root workspace/my_project --run-id SPRINT-01 --sprint-plan contracts/sprint01.json --mode live
+```
 Without `--mode live`, the existing fixture-only mode remains selected.
 Live mode uses the existing shared provider budget and request receipts; it
 does not create a new allowance. Use live mode only within authorized
