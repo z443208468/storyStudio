@@ -146,3 +146,4 @@
 - Controller 原消息：`ACCEPT — P3 W04`，确认 `ROLE_UNKNOWN` fail-closed 检查和拼错角色负例已补；仅接受 W04 离线岗位合同/适配器，不含实时角色执行、生成正文或 API 调用。
 - 两轮 RETURN 均已按点修复：Prose 来源同时记录 ai_roles 与 writing_brief 两个上游 blob；所有角色拒绝未授权输入字段；未知角色在输出校验开始处拒绝。最终验证：13 项 unittest、py_compile、`git diff --check` 通过；无供应商请求。
 - 推送及远端 readback：待完成。
+- 独立远端回读：`REMOTE_READBACK ACCEPT — P3 W04`；Controller 确认 `origin/main` 与本地追踪 ref 的 C=`dbbf73ad8b0a0f8b26b8aa2edc5b11d504409b8a`、T=`de81d92d46b86ab90998267d0428701dea78f4bb` 匹配，W04 接受候选为关闭提交直接父提交，工作树干净。

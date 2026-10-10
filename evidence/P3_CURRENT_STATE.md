@@ -19,5 +19,5 @@
 | W01 | ACCEPTED | M01–M38 实际代码映射与方法覆盖差异；已推送 |
 | W02 | ACCEPTED | Controller C/T ACCEPT；治理状态已分离；零 API；远端回读一致 |
 | W03 | ACCEPTED | Controller C/T ACCEPT；合同冻结（1500 字符；1200–1800）；6 项离线测试通过；零 API；远端回读一致 |
-| W04 | ACCEPTED | Controller C/T ACCEPT；四岗位离线合同与 NK/CritiCS adapters；13 项离线测试通过；无新 run 产物或 API；待远端回读 |
+| W04 | ACCEPTED | Controller C/T ACCEPT；远端 C/T readback 一致；四岗位离线合同与 NK/CritiCS adapters；13 项离线测试通过；无新 run 产物或 API |
 | W05–W11 | NOT_STARTED | 按 P3 依赖顺序继续 |
