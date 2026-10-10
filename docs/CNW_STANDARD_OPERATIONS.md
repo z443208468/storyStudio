@@ -19,6 +19,8 @@ pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot workspace
 
 模型返回文件映射与处理报告，执行器实际落盘；不是只导出提示词。完整官方方法与项目文件全文进入请求，归档原 request/raw。路径身份统一；选定原稿、master Canon、既有锁定记录及跨职责路径拒绝覆盖。报告/日志与选定原文碰撞在模型调用前拒绝。Canon/角色既有记录仅允许完整旧字节后追加，更正前的旧字节留历史。真正矛盾保留双方交作者决定。
 
+`extract_canon` / `character_os` 更新既存资料可返回 `append_sections`，只提供带日期/来源的新段落，执行器保留原字节（含混合换行）后追加。不能与 `documents` 使用同一路径，不能借此改变原稿、master Canon 或已锁定记录。锁定识别依据明确状态字段、标题、表格状态；官方人物表 `Canon Status=Canon` 也表示锁定。一般政策说明中提到 locked/Canon-promoted 不表示整个派生文件已锁定。
+
 所有操作复用 maintenance 事务、恢复、来源/适配身份、成功回执及成本护栏，并记录读了什么、创建/更新、假设、未决问题和一个下一动作。工作日志为操作记录，不作为标准操作故事输入；后续合法追加保留完整旧日志前缀，可复用不变结果，删除/替换旧记录仍拒绝。
 
 本轮 Canon Extraction / 普通 Revision Plan 有真实代表；其他三项为离线，Live 未运行。不得用计划生成成功声称批准、晋升或创意通过。

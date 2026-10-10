@@ -82,6 +82,37 @@ class OperationsTests(unittest.TestCase):
         self.run_operation("extract_canon", sources=["_INBOX/source.md"])
         self.assertEqual(len(self.requests), count)
 
+    def test_append_sections_preserve_mixed_line_endings_without_transcription(self):
+        name = "90_canon/character_bible.md"
+        path = self.root / name
+        old = b"# Derived\r\nOld record.\n"
+        path.write_bytes(old)
+        self.response = self.value({})
+        self.response["append_sections"] = {name: "## Correction 2026-10-11\nCONFIRMED: actor knows own history (_INBOX/source.md:2)."}
+        self.run_operation("extract_canon", sources=["_INBOX/source.md"])
+        self.assertEqual(path.read_bytes(), old + b"\n\n" + self.response["append_sections"][name].encode())
+        archives = list((self.root / "94_runtime/maintenance_history/extract_canon").rglob("character_bible.md"))
+        self.assertEqual(archives[0].read_bytes(), old)
+
+    def test_lock_states_follow_author_table_without_locking_policy_prose(self):
+        from tools.cnw_operations import has_locked_record
+        for value in ("# Canon-promoted\nFact", "## **LOCKED**\nFact", "Status: LOCKED",
+                      "- Canon Status: **Canon**", "## Canon Status\nCanon",
+                      "| Name | Canon Status |\n|---|---|\n| Alice | **Canon** |",
+                      "| Topic | 状态 |\n|---|---|\n| item | 锁定 |"):
+            with self.subTest(value=value):
+                self.assertTrue(has_locked_record(value))
+        for value in ("Do not override locked Canon. Never override Canon-promoted decisions.",
+                      "不得覆盖锁定决定。", "| Name | Canon Status |\n|---|---|\n| Alice | Provisional |",
+                      "Status: Deprecated", "# Canon\nSpecialized derived observations."):
+            with self.subTest(value=value):
+                self.assertFalse(has_locked_record(value))
+        name = "90_canon/character_bible.md"
+        self.write(name, "# Derived\nDo not override locked Canon.\n")
+        self.response = self.value({})
+        self.response["append_sections"] = {name: "## Correction\nCONFIRMED: source action (_INBOX/source.md:2)."}
+        self.run_operation("extract_canon", sources=["_INBOX/source.md"])
+
     def test_generic_revision_accepts_beta_without_receipts_and_does_not_edit_story(self):
         canon = (self.root / "90_canon/canon.md").read_bytes()
         prose = (self.root / "07_draft/episodes/ep01.md").read_bytes()
