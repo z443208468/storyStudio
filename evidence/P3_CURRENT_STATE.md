@@ -20,6 +20,6 @@
 | W02 | ACCEPTED | Controller C/T ACCEPT；治理状态已分离；零 API；远端回读一致 |
 | W03 | ACCEPTED | Controller C/T ACCEPT；合同冻结（1500 字符；1200–1800）；6 项离线测试通过；零 API；远端回读一致 |
 | W04 | ACCEPTED | Controller C/T ACCEPT；远端 C/T readback 一致；四岗位离线合同与 NK/CritiCS adapters；13 项离线测试通过；无新 run 产物或 API |
-| W05 | ACCEPTED | Controller C/T ACCEPT； 离线可恢复 run 调度与 hash/invalidation；23 项测试通过；实际 source-bound run/Plot request/history verify；无 provider request |
+| W05 | ACCEPTED | Controller C/T ACCEPT；远端 C/T readback 一致；离线可恢复 run 调度与 hash/invalidation；23 项测试通过；实际 source-bound run/Plot request/history verify；无 provider request |
 | W06 | CANDIDATE | 即将开始：篇幅合同驱动的新正文生成、有限续写和防缩水修订 |
 | W07–W11 | NOT_STARTED | 按 P3 依赖顺序继续 |
