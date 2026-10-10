@@ -1,5 +1,9 @@
 # 固定公开 CNW：量化收敛与最终待修订证据
 
+## 最新：外部源码 RETURN 两项定点修复
+
+外部对 `bcc73679db9d3c270591ae812ec22b85344db571` 返回 C02事实来源门、C08同Lens重复Finding ID 两项源码问题。现已定点修复，106项相关离线验证通过，独立Controller对源码修正限定ACCEPT；本轮精确C/T与正常推送回读随交付核验，外部复审待定。见 `evidence/CNW_C02_C08_EXTERNAL_RETURN_FIXES_20261011.md`。下方“尚未识别差异为0”是此前审查时点结论，不替代本次RETURN。私有包SHA、219账本/raw和版本消费保持本机核验、外部未核验；不因本次源码修复追认其已外部通过。
+
 2026-10-11，方法基准 `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`。范围、停止准则始终为 `plans/CNW_PUBLIC_REPLICATION_GOAL.md` C01–C15；没有追加创作阶段或文学质量门。本文不含私有稿件或密钥。下列为各项实际验证范围，不是全规模Live或成稿通过声明。
 
 独立Controller对本轮九文件工程/测试/交付证据限定ACCEPT；按冻结范围与累计审查，当前已识别、尚未修复的官方职责实现差异为0。这不是所有输入或模型结果无缺陷保证。模型调用已停止。工程签收对象C=`bcc73679db9d3c270591ae812ec22b85344db571`、T=`ff1069271d3a05f1a1655186b58c19afecb03878`已正常推送，远端C/T回读一致，凭据为私有run的`artifacts/final_release_receipt.json`。外部当前ChatGPT源码/结果审查仍未取得，Writer和Controller不得代签。

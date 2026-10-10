@@ -21,6 +21,82 @@ CONTRACT = ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contrac
 
 
 class RunnerTests(unittest.TestCase):
+    def test_duplicate_local_finding_ids_receive_stable_independent_votes(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        cnw_runner._persist_stage(run, "prose", "artifacts/prose.md", "MOCK full prose")
+        cnw_runner._persist_stage(run, "lint_layer2", "artifacts/lint.json", '{"findings":[]}')
+        sources = {key: "MOCK source" for key in ("scene_cards", "writing_brief", "character_bible", "timeline", "glossary")}
+        def lenses(run_dir, calls):
+            results = []
+            for call in calls:
+                lens = call["role_id"]
+                entries = [{"finding_id": "F1", "issue": "First issue"}, {"finding_id": "F1", "issue": "Second issue"}] if lens == "style" else [{"finding_id": "F1", "issue": "Character issue"}] if lens == "character" else []
+                results.append((json.dumps({"lens_id": lens, "findings": entries}),
+                    {"request_id": "MOCK-" + lens, "provider_request_id": "MOCK-PROVIDER-" + lens}))
+            return results
+        with patch.object(cnw_runner, "_review_sources", return_value=sources), \
+                patch("tools.cnw_review.build_lens_input", side_effect=lambda lens, draft, src: {"lens_id": lens, "input_sha256": "MOCK-SHA-" + lens}), \
+                patch("tools.cnw_review.lens_messages", return_value=[]), \
+                patch.object(cnw_runner, "_parallel_provider_calls", side_effect=lenses):
+            cnw_runner.execute_five_lenses(run)
+            first = json.loads(cnw_runner._read_stage_text(run, cnw_runner.load_state(run), "multi_lens_review"))
+            cnw_runner.execute_five_lenses(run)
+            repeated = json.loads(cnw_runner._read_stage_text(run, cnw_runner.load_state(run), "multi_lens_review"))
+        self.assertEqual(first["findings"], repeated["findings"])
+        findings = first["findings"]
+        self.assertEqual(len({row["finding_id"] for row in findings}), 3)
+        style = [row for row in findings if row["lens_id"] == "style"]
+        self.assertEqual([row["lens_finding_id"] for row in style], ["F1", "F1"])
+        self.assertEqual([row["lens_finding_index"] for row in style], [1, 2])
+        self.assertTrue(all(row["lens_provider_request_id"] == "MOCK-PROVIDER-style" for row in style))
+        refuted_id = style[1]["finding_id"]
+        sent = []
+        def verify(run_dir, calls):
+            sent.extend(calls)
+            return [(json.dumps({"verifier_id": call["role_id"], "votes": [{"finding_id": call["extra"]["finding_id"],
+                     "verdict": "refuted" if call["extra"]["finding_id"] == refuted_id else "not_refuted"}]}),
+                     {"request_id": f"MOCK-{call['extra']['finding_id']}-{call['role_id']}",
+                      "provider_request_id": f"MOCK-PROVIDER-{call['extra']['finding_id']}-{call['role_id']}"}) for call in calls]
+        with patch.object(cnw_runner, "_review_sources", return_value=sources), \
+                patch.object(cnw_runner, "_parallel_provider_calls", side_effect=verify):
+            cnw_runner.execute_three_verifiers(run)
+        report = json.loads(cnw_runner._read_stage_text(run, cnw_runner.load_state(run), "adversarial_verify"))
+        self.assertEqual(len(sent), 9)
+        self.assertEqual(len(report["verdicts"]), 3)
+        for finding in findings:
+            fid = finding["finding_id"]
+            calls = [call for call in sent if call["extra"]["finding_id"] == fid]
+            self.assertEqual({call["role_id"] for call in calls}, set(cnw_runner.VERIFIER_IDS))
+            for call in calls:
+                packet = json.loads(call["messages"][1]["content"])
+                self.assertEqual(packet["claim"], finding)
+            self.assertEqual(report["verdicts"][fid]["status"], "REFUTED_OR_UNCERTAIN" if fid == refuted_id else "CONFIRMED")
+        surviving = cnw_runner._confirmed_findings(run, cnw_runner.load_state(run))
+        self.assertEqual(len(surviving), 2)
+        self.assertNotIn(refuted_id, {row["finding_id"] for row in surviving})
+
+    def test_ambiguous_historical_finding_index_is_rejected_before_provider(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        cnw_runner._persist_stage(run, "prose", "artifacts/prose.md", "MOCK full prose")
+        cnw_runner._persist_stage(run, "lint_layer2", "artifacts/lint.json", '{"findings":[]}')
+        for ids in (("style-F1", "style-F1"), ("",), (None,)):
+            with self.subTest(ids=ids):
+                cnw_runner._persist_stage(run, "multi_lens_review", "artifacts/lens-index.json",
+                    json.dumps({"findings": [{"finding_id": fid} for fid in ids]}))
+                with patch.object(cnw_runner, "_parallel_provider_calls") as calls:
+                    with self.assertRaisesRegex(ContractError, "LIVE_FINDING_IDENTITY_INVALID"):
+                        cnw_runner.execute_three_verifiers(run)
+                    calls.assert_not_called()
+        cnw_runner._persist_stage(run, "adversarial_verify", "artifacts/verify.json",
+            json.dumps({"findings": [{"finding_id": "style-F1"}, {"finding_id": "style-F1"}],
+                        "verdicts": {"style-F1": {"status": "CONFIRMED"}}}))
+        with self.assertRaisesRegex(ContractError, "LIVE_FINDING_IDENTITY_INVALID"):
+            cnw_runner._confirmed_findings(run, cnw_runner.load_state(run))
+        with patch.object(cnw_runner, "cnw_live_call") as calls:
+            with self.assertRaisesRegex(ContractError, "LIVE_FINDING_IDENTITY_INVALID"):
+                cnw_runner.execute_completeness(run)
+            calls.assert_not_called()
+
     def test_native_critics_result_reaches_refine_and_is_verified_on_reuse(self):
         from tools import cnw_critics_adapter as adapter
         from types import SimpleNamespace

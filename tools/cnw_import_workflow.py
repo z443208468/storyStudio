@@ -33,6 +33,26 @@ UPDATE_FOLDERS = DESIGN_FOLDERS | {"05_scene_cards", "06_plot", "08_review"}
 # Adapter capacity, not an author method rule. The shared ledger reserves the
 # entire ceiling; truncated responses are retained and never parsed as success.
 IMPORT_OUTPUT_CAP = 12000
+FACT_SOURCE_KINDS = {"original", "confirmed_canon"}
+
+
+def _confirmed_canon_sources(previous: dict, existing: dict[str, str]) -> dict[str, dict]:
+    """Expose only retained, source-backed Canon claims, never a whole mixed file."""
+    result = {}
+    for claim_id, claim in previous.get("claims", {}).items():
+        name, text = claim.get("document", ""), claim.get("text", "")
+        if (claim.get("status") != "CONFIRMED" or claim.get("source_role", "story_fact") != "story_fact"
+                or not name.startswith("90_canon/")
+                or name == "90_canon/unresolved_questions.md" or not text
+                or f"{text}\n\nClassification: CONFIRMED\nSource:" not in existing.get(name, "")
+                or not any(kind in FACT_SOURCE_KINDS for ref, kind in claim.get("source_kinds", {}).items()
+                           if ref in claim.get("sources", {}))):
+            continue
+        ref = f"confirmed_canon:{name}:{claim_id}"
+        result[ref] = {"text": text, "sha256": sha(text.encode("utf-8")),
+                       "kind": "confirmed_canon", "document": name, "claim_id": claim_id,
+                       "document_text_sha256": sha(existing[name].encode("utf-8"))}
+    return result
 
 
 def _document_allowed(name: str, *, incremental=False) -> bool:
@@ -225,10 +245,21 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     for name, text in existing.items():
         if text:
             source_bindings[name] = {"text": text, "sha256": sha(assert_output_within_root(root, name).read_bytes()), "kind": "project_context"}
+    confirmed_canon = _confirmed_canon_sources(previous, existing)
+    source_bindings.update(confirmed_canon)
     messages = [
         {"role": "system", "content": instruction + extension + "\nOfficial workflow:\n" + upstream + '\nTransport format for the official workflow: read every supplied original in full and perform its internal passes, then return JSON {"source_notes":{"source path":"brief inventory description"},"documents":{"allowed/path.md":[{"status":"CONFIRMED|INFERRED|TODO_CONFIRM","text":"organized Markdown section","source_refs":["original source or author reference identifier"]}]},"conflicts":[{"old_file":"existing or generated document","old_quote":"literal old passage","new_file":"generated document path","new_entry":0,"reason":"actual contradiction"}],"next_action":"one specific action"}. No preliminary line-by-line transcription or separate claim inventory is required. Use the source language for Markdown prose; copy all file and source identifiers exactly without translating them. Bind story assertions to original_sources, and operating instructions to author_reference_sources; template placeholders are not story facts. Use each document\'s purpose: project index, rough concept/design, confirmed canon/character index and calling rules, complete chapter/scene structure, theme/logline, unresolved author decisions, work handoff. Classify information as the author specifies; faithful paraphrase is allowed. Canon sections must be CONFIRMED and supported by their original source_refs. Inferences and gaps belong in design or unresolved questions, not canon. Distinguish conditional routes/design instructions from events that happened; preserve actors, conditions, time, negation and attribution. Reconcile information across all originals before calling something an author question. Do not invent facts. For an update, append only relevant new conclusions and preserve old ones. Judge contradictions by meaning, not string differences, synonyms or distinct events; cite both versions and do not resolve them. For conflicts within new output also supply old_entry, the old section index in documents[old_file]. new_entry is the zero-based index of the new conflicting section within documents[new_file]; it will be withheld and logged as a conflict. Reference templates (placeholders/examples are not project facts):\n' + reference_templates},
-        {"role": "user", "content": json.dumps({**({"required_initial_documents": list(DOCUMENTS)} if not incremental else {}), "allowed_existing_documents": [name for name in existing if _document_allowed(name, incremental=incremental)], "allowed_new_markdown_folders": sorted(folders), "original_sources": selected, "author_reference_sources": author_sources, "existing_documents": existing}, ensure_ascii=False)},
+        {"role": "user", "content": json.dumps({**({"required_initial_documents": list(DOCUMENTS)} if not incremental else {}), "allowed_existing_documents": [name for name in existing if _document_allowed(name, incremental=incremental)], "allowed_new_markdown_folders": sorted(folders), "original_sources": selected, "author_reference_sources": author_sources, "existing_documents": existing, **({"confirmed_canon_sources": confirmed_canon} if confirmed_canon else {})}, ensure_ascii=False)},
     ]
+    messages[0]["content"] += (
+        "\nEach entry may include source_role=story_fact (default) or method_metadata; this is provenance scope, "
+        "not an extra certainty class or workflow stage. Story CONFIRMED requires original_sources or an exact "
+        "confirmed_canon_sources identifier. Ordinary existing_documents are context, not confirmed story facts. "
+        "confirmed_canon_sources contains only retained, previously confirmed source-backed Canon sections. "
+        "Method metadata may be CONFIRMED from author_reference_sources of kind public_method/project_instructions, "
+        "but must have source_role=method_metadata and be written only outside 90_canon. "
+        "Operating templates or project instructions never confirm story facts."
+    )
     _record_classification(run_dir, "import_request", {"messages": messages, "sources": {
         name: {key: value for key, value in row.items() if key != "text"} for name, row in source_bindings.items()}})
     reused_response = _reconsume_bookkeeping_response(run_dir, stage, messages)
@@ -257,15 +288,29 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
             if not isinstance(entry, dict):
                 raise ContractError("IMPORT_ENTRY_INVALID", name)
             status, refs, text = (entry.get(key) for key in ("status", "source_refs", "text"))
+            source_role = entry.get("source_role", "story_fact")
             if (status not in STATUSES or not isinstance(refs, list)
+                    or source_role not in {"story_fact", "method_metadata"}
                     or any(not isinstance(ref, str) or not ref.strip() for ref in refs)
                     or not isinstance(text, str) or not text.strip()
                     or (status != "TODO_CONFIRM" and not any(ref in source_bindings for ref in refs))):
                 raise ContractError("IMPORT_ENTRY_INVALID", name)
             if Path(name).parts[0] == "90_canon" and name != "90_canon/unresolved_questions.md" and status != "CONFIRMED":
                 raise ContractError("IMPORT_UNCONFIRMED_CANON", name)
-            claim = {"document": name, "entry": index, "status": status, "text": text,
+            fact_sources = {ref: source_bindings[ref]["sha256"] for ref in refs
+                            if ref in source_bindings and source_bindings[ref]["kind"] in FACT_SOURCE_KINDS}
+            method_sources = {ref: source_bindings[ref]["sha256"] for ref in refs
+                              if ref in source_bindings and source_bindings[ref]["kind"] in {"public_method", "project_instructions"}}
+            if source_role == "method_metadata" and Path(name).parts[0] == "90_canon":
+                raise ContractError("IMPORT_METHOD_METADATA_IN_CANON", name)
+            if status == "CONFIRMED" and source_role == "story_fact" and not fact_sources:
+                raise ContractError("IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED", name)
+            if status == "CONFIRMED" and source_role == "method_metadata" and not method_sources:
+                raise ContractError("IMPORT_CONFIRMED_METHOD_SOURCE_REQUIRED", name)
+            claim = {"document": name, "entry": index, "status": status, "source_role": source_role, "text": text,
                      "sources": {ref: source_bindings[ref]["sha256"] for ref in refs if ref in source_bindings},
+                     "story_fact_sources": fact_sources if source_role == "story_fact" else {},
+                     "operating_rule_sources": method_sources if source_role == "method_metadata" else {},
                      "source_kinds": {ref: source_bindings[ref]["kind"] for ref in refs if ref in source_bindings},
                      "unverified_source_refs": [ref for ref in refs if ref not in source_bindings]}
             claim["id"] = sha(json.dumps(claim, ensure_ascii=False, sort_keys=True).encode())[:24]

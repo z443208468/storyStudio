@@ -219,15 +219,101 @@ class SemanticImportTests(unittest.TestCase):
         def provider(run_dir, *, messages, **kwargs):
             raw, receipt = self.provider(run_dir, messages=messages, **kwargs)
             obj = json.loads(raw)
-            obj["documents"]["90_canon/canon.md"].append({"status": "CONFIRMED",
-                "text": "## Policy\nSource material must be preserved.", "source_refs": ["author:templates/CLAUDE.md"]})
+            obj["documents"]["00_meta/ai_work_log.md"] = [{"status": "CONFIRMED", "source_role": "method_metadata",
+                "text": "## Policy\nSource material must be preserved.", "source_refs": ["author:templates/CLAUDE.md"]}]
             return json.dumps(obj), receipt
         with patch.object(workflow, "cnw_live_call", side_effect=provider):
             result = workflow.run_import(self.root)
         state = json.loads((self.root / workflow.STATE).read_text(encoding="utf-8"))
         policy = next(row for row in state["claims"].values() if row["text"].startswith("## Policy"))
         self.assertEqual(policy["source_kinds"], {"author:templates/CLAUDE.md": "public_method"})
+        self.assertEqual(policy["story_fact_sources"], {})
+        self.assertEqual(policy["status"], "CONFIRMED")
+        self.assertEqual(policy["operating_rule_sources"], policy["sources"])
         self.assertTrue(list((Path(result["run_dir"]) / "artifacts").glob("import_request-*.json")))
+
+    def test_confirmed_canon_rejects_method_instructions_and_unconfirmed_context(self):
+        context = self.root / "03_project_design/project_design.md"
+        context.parent.mkdir(parents=True)
+        context.write_text("TODO_CONFIRM: A is a ruler.", encoding="utf-8")
+        (self.root / "AGENTS.md").write_text("Operating instructions only.", encoding="utf-8")
+        for ref in ("author:templates/CLAUDE.md", "project:AGENTS.md", "03_project_design/project_design.md"):
+            with self.subTest(ref=ref):
+                def provider(run_dir, *, messages, **kwargs):
+                    raw, receipt = self.provider(run_dir, messages=messages, **kwargs)
+                    obj = json.loads(raw)
+                    obj["documents"]["90_canon/canon.md"][0]["source_refs"] = [ref]
+                    return json.dumps(obj), receipt
+                with patch.object(workflow, "cnw_live_call", side_effect=provider):
+                    with self.assertRaisesRegex(ContractError, "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED"):
+                        workflow.run_import(self.root)
+                self.assertFalse((self.root / workflow.STATE).exists())
+                self.assertFalse((self.root / "90_canon/canon.md").exists())
+
+    def test_method_metadata_cannot_enter_canon_or_launder_a_story_fact_in_a_log(self):
+        for name, role, expected in (("90_canon/canon.md", "method_metadata", "IMPORT_METHOD_METADATA_IN_CANON"),
+                                     ("00_meta/ai_work_log.md", "story_fact", "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED")):
+            with self.subTest(name=name, role=role):
+                def provider(run_dir, *, messages, **kwargs):
+                    raw, receipt = self.provider(run_dir, messages=messages, **kwargs)
+                    self.assertIn("source_role=story_fact", messages[0]["content"])
+                    obj = json.loads(raw)
+                    obj["documents"][name] = [{"status": "CONFIRMED", "source_role": role,
+                        "text": "Template-only assertion.", "source_refs": ["author:templates/CLAUDE.md"]}]
+                    return json.dumps(obj), receipt
+                with patch.object(workflow, "cnw_live_call", side_effect=provider):
+                    with self.assertRaisesRegex(ContractError, expected):
+                        workflow.run_import(self.root)
+                self.assertFalse((self.root / workflow.STATE).exists())
+
+    def test_confirmed_canon_uses_only_source_backed_retained_claims_from_mixed_file(self):
+        with patch.object(workflow, "cnw_live_call", side_effect=self.provider):
+            workflow.run_import(self.root)
+        canon = self.root / "90_canon/canon.md"
+        canon.write_text(canon.read_text(encoding="utf-8") + "\nTODO_CONFIRM: A is a ruler.\n", encoding="utf-8")
+        self.source.write_text("B arrives.", encoding="utf-8")
+        def provider(run_dir, *, messages, **kwargs):
+            payload = json.loads(messages[-1]["content"])
+            bindings = payload["confirmed_canon_sources"]
+            refs = [ref for ref, row in bindings.items() if row["document"] == "90_canon/canon.md"]
+            self.assertEqual(len(refs), 1)
+            self.assertNotIn("ruler", bindings[refs[0]]["text"])
+            self.assertIn("confirmed_canon_sources", messages[0]["content"])
+            return json.dumps({"source_notes": {"_INBOX/notes.md": "New event"},
+                "documents": {"90_canon/character_bible.md": [{"status": "CONFIRMED",
+                    "text": "A's eyes are blue.", "source_refs": refs}]},
+                "conflicts": [], "next_action": "Read the new source."}), {}
+        with patch.object(workflow, "cnw_live_call", side_effect=provider):
+            workflow.run_import(self.root, incremental=True)
+        state = json.loads((self.root / workflow.STATE).read_text(encoding="utf-8"))
+        claim = next(row for row in state["claims"].values() if row["text"] == "A's eyes are blue.")
+        self.assertEqual(set(claim["source_kinds"].values()), {"confirmed_canon"})
+        self.assertEqual(claim["story_fact_sources"], claim["sources"])
+
+    def test_whole_mixed_canon_context_cannot_support_confirmed_claim(self):
+        with patch.object(workflow, "cnw_live_call", side_effect=self.provider):
+            workflow.run_import(self.root)
+        canon = self.root / "90_canon/canon.md"
+        canon.write_text(canon.read_text(encoding="utf-8") + "\nTODO_CONFIRM: A is a ruler.\n", encoding="utf-8")
+        before = canon.read_bytes()
+        self.source.write_text("B arrives.", encoding="utf-8")
+        output = {"source_notes": {"_INBOX/notes.md": "New event"},
+            "documents": {"90_canon/canon.md": [{"status": "CONFIRMED", "text": "A is a ruler.",
+                "source_refs": ["90_canon/canon.md"]}]}, "conflicts": [], "next_action": "Read source."}
+        with patch.object(workflow, "cnw_live_call", return_value=(json.dumps(output), {})):
+            with self.assertRaisesRegex(ContractError, "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED"):
+                workflow.run_import(self.root, incremental=True)
+        self.assertEqual(canon.read_bytes(), before)
+
+    def test_old_method_only_or_removed_canon_claim_is_not_a_fact_source(self):
+        text = "Template character owns a castle."
+        previous = {"claims": {"old": {"document": "90_canon/canon.md", "status": "CONFIRMED",
+            "text": text, "sources": {"author:templates/CLAUDE.md": "hash"},
+            "source_kinds": {"author:templates/CLAUDE.md": "public_method"}}}}
+        existing = {"90_canon/canon.md": text + "\n\nClassification: CONFIRMED\nSource: author:templates/CLAUDE.md@hash"}
+        self.assertEqual(workflow._confirmed_canon_sources(previous, existing), {})
+        previous["claims"]["old"].update(sources={"_INBOX/notes.md": "hash"}, source_kinds={"_INBOX/notes.md": "original"})
+        self.assertEqual(workflow._confirmed_canon_sources(previous, {"90_canon/canon.md": "TODO_CONFIRM: " + text}), {})
 
     def test_unknown_source_reference_cannot_commit(self):
         def provider(run_dir, *, messages, **kwargs):

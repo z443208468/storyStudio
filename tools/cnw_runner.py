@@ -1365,14 +1365,30 @@ def execute_five_lenses(run_dir: Path) -> dict:
         target.write_text(json.dumps({"lens_id": lens_id, "input_sha256": packet["input_sha256"], "provider_request_id": receipt["provider_request_id"], "findings": parsed["findings"]}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         artifacts[lens_id] = {"path": rel, "sha256": sha(target.read_bytes())}
         receipt_ids.append(receipt["request_id"])
-        for finding in parsed["findings"]:
-            local_id = str(finding.get("finding_id", ""))
-            all_findings.append({**finding, "lens_id": lens_id, "lens_finding_id": local_id, "finding_id": f"{lens_id}-{local_id}"})
+        for index, finding in enumerate(parsed["findings"], 1):
+            if not isinstance(finding, dict):
+                raise ContractError("LIVE_LENS_OUTPUT_INVALID", lens_id)
+            # Position in this immutable Lens response identifies the actual
+            # issue even when the model repeats or omits its local label.
+            all_findings.append({**finding, "lens_id": lens_id,
+                "lens_finding_id": finding.get("finding_id"), "lens_finding_index": index,
+                "lens_provider_request_id": receipt["provider_request_id"],
+                "finding_id": f"{lens_id}-{index}"})
     index_path = run_dir / "artifacts/multi_lens_review.index.json"
     index_path.parent.mkdir(parents=True, exist_ok=True)
     index_path.write_text(json.dumps({"stage": "multi_lens_review", "lenses": artifacts, "findings": all_findings}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     _persist_stage(run_dir, "multi_lens_review", "artifacts/multi_lens_review.index.json", index_path.read_text(encoding="utf-8"), receipt_ids=receipt_ids, role_id=None)
     return {"stage": "multi_lens_review", "lenses": len(artifacts), "findings": len(all_findings)}
+
+
+def _validate_finding_identities(findings: list[dict]) -> None:
+    """Reject ambiguous historical indices before any vote can overwrite another."""
+    seen = set()
+    for finding in findings:
+        fid = finding.get("finding_id") if isinstance(finding, dict) else None
+        if not isinstance(fid, str) or not fid.strip() or fid in seen:
+            raise ContractError("LIVE_FINDING_IDENTITY_INVALID", str(fid))
+        seen.add(fid)
 
 
 def execute_three_verifiers(run_dir: Path) -> dict:
@@ -1385,6 +1401,7 @@ def execute_three_verifiers(run_dir: Path) -> dict:
     findings = list(lens_index.get("findings", []))
     for index, candidate in enumerate(lint2.get("findings", []), 1):
         findings.append({"finding_id": f"L2-{index}", "lens_id": "lint_layer2", "severity": "minor", "evidence": candidate.get("matched_text", ""), "issue": candidate.get("rule_id", ""), "recommendation": "人工复核该本地候选", "candidate_only": True})
+    _validate_finding_identities(findings)
     if not findings:
         report = {"stage": "adversarial_verify", "status": "NO_FINDINGS_TO_VERIFY", "receipts": [], "verdicts": {}}
         _persist_stage(run_dir, "adversarial_verify", "artifacts/adversarial_verify.json", json.dumps(report, ensure_ascii=False, indent=2))
@@ -1428,6 +1445,7 @@ def execute_completeness(run_dir: Path) -> dict:
     project_root = _run_dir_base(run_dir)
     draft = _read_stage_text(run_dir, state, "prose")
     verify = json.loads(_read_stage_text(run_dir, state, "adversarial_verify"))
+    _validate_finding_identities(verify.get("findings", []))
     confirmed = [f for f in verify.get("findings", []) if verify.get("verdicts", {}).get(f.get("finding_id"), {}).get("status") == "CONFIRMED"]
     rejected = [f for f in verify.get("findings", []) if verify.get("verdicts", {}).get(f.get("finding_id"), {}).get("status") != "CONFIRMED"]
     sources = _review_sources(run_dir, state, contract, project_root)
@@ -1467,6 +1485,7 @@ def execute_completeness(run_dir: Path) -> dict:
 def _confirmed_findings(run_dir: Path, state: dict) -> list[dict]:
     verify = json.loads(_read_stage_text(run_dir, state, "adversarial_verify"))
     findings = verify.get("findings", [])
+    _validate_finding_identities(findings)
     verdicts = verify.get("verdicts", {})
     return [f for f in findings if verdicts.get(f.get("finding_id"), {}).get("status") == "CONFIRMED"]
 
@@ -1966,6 +1985,7 @@ def verify_live(args) -> dict:
     # Actual findings from the materialized lens index + structural lint candidates.
     lens_index = json.loads(_read_stage_text(run_root, state, "multi_lens_review"))
     findings = lens_index.get("findings", [])
+    _validate_finding_identities(findings)
     lint2 = json.loads(_read_stage_text(run_root, state, "lint_layer2"))
     has_candidates = bool(findings) or bool(lint2.get("findings"))
     verifier_rows = [row for row in state["provider_requests"] if row.get("stage") == "adversarial_verify"]
