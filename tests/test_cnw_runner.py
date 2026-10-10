@@ -36,6 +36,7 @@ class RunnerTests(unittest.TestCase):
         executable.write_text("MOCK executable; never launched", encoding="utf-8")
         native = {"voice": "MOCK voice alternative", "image": "MOCK imagery alternative", "select": "MOCK selected wording"}
         templates = adapter.native_text_templates()
+        conversation_template = adapter.native_conversation_template()
         def subprocess_result(command, **kwargs):
             source = Path(command[command.index("--input") + 1])
             self.assertEqual(source.read_text(encoding="utf-8").strip(), finding["evidence"])
@@ -50,7 +51,7 @@ class RunnerTests(unittest.TestCase):
             prompts = {"image": templates["refine_prompt_image"].format(story=source.read_text(encoding="utf-8")),
                        "voice": templates["refine_prompt_voice"].format(story=source.read_text(encoding="utf-8")),
                        "select": templates["choose_critic"].format(Image_refinement=native["image"], Voice_refinement=native["voice"])}
-            calls = [{"http_status": 200, "request": {"messages": [{"role": "user", "content": prompts[key]}]}, "response": {"id": f"MOCK-{key}", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": native[key]}}]}} for key in ("image", "voice", "select")]
+            calls = [{"http_status": 200, "request": {"messages": [{"role": "user", "content": conversation_template.format(history="", input=prompts[key])}]}, "response": {"id": f"MOCK-{key}", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": native[key]}}]}} for key in ("image", "voice", "select")]
             (directory / "provider-calls.json").write_text(json.dumps(calls), encoding="utf-8")
             return SimpleNamespace(returncode=0)
         def refine_provider(*args, **kwargs):
@@ -59,8 +60,12 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(request["confirmed_findings"]["confirmed"], [finding])
             self.assertIn("尚未采纳", kwargs["messages"][0]["content"])
             return prose.replace("窗边", "门边"), {"request_id": "MOCK-REFINE"}
-        with patch.object(adapter, "ROOT", self.base), patch.object(adapter, "native_text_templates", return_value=templates), patch("subprocess.run", side_effect=subprocess_result) as process, \
+        with patch.object(adapter, "ROOT", self.base), patch.object(adapter, "native_text_templates", return_value=templates), patch.object(adapter, "native_conversation_template", return_value=conversation_template), patch("subprocess.run", side_effect=subprocess_result) as process, \
                 patch.object(cnw_runner, "cnw_live_call", side_effect=refine_provider):
+            with patch.object(adapter, "read_native_result", side_effect=ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", "MOCK validator failure")):
+                with self.assertRaisesRegex(ContractError, "CRITICS_NATIVE_DEPENDENCY_MISMATCH"):
+                    cnw_runner._critics_hook(run, "prose")
+            self.assertEqual(cnw_runner.load_state(run)["support_hooks"]["critics_text"]["status"], "NATIVE_RESULT_PENDING")
             cnw_runner.execute_refine(run)
             supplement = cnw_runner.load_state(run)["support_hooks"]["critics_text"]
             self.assertEqual(supplement["result"], native)
@@ -150,6 +155,52 @@ class RunnerTests(unittest.TestCase):
         path = self._write_contract(value, name)
         args = argparse.Namespace(run_id=run_id, work_id=value["unit"]["id"], unit="scene", contract=str(path), project_root=str(self.project), mode="offline")
         return cnw_runner.produce(args)
+
+    def test_create_only_live_run_reports_no_provider_call(self):
+        path = self._write_contract(self.contract, "create-only.json")
+        result = cnw_runner.produce(argparse.Namespace(run_id="CREATE-ONLY", work_id=self.contract["unit"]["id"],
+            unit="scene", contract=str(path), project_root=str(self.project), mode="live", create_only=True))
+        self.assertEqual(result["provider_call"], "none")
+        self.assertEqual(cnw_runner.load_state(Path(result["path"]))["provider_requests"], [])
+
+    def test_over_limit_prose_recovers_with_same_brief_and_voices_without_splicing(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        maximum = self.contract["unit"]["max_visible_chars"]
+        minimum = self.contract["unit"]["min_visible_chars"]
+        messages = [{"role": "system", "content": "Only prose"}, {"role": "user", "content": '{"writing_brief":"brief","voice_samples":"selected"}'}]
+        sent = []
+        def provider(*args, **kwargs):
+            sent.append(kwargs["messages"])
+            return ("甲" * (maximum + 1) if len(sent) == 1 else "乙" * minimum), {"request_id": f"MOCK-{len(sent)}"}
+        with patch.object(cnw_runner, "_role_sources", return_value={}), patch.object(cnw_runner, "_author_messages", return_value=messages), patch.object(cnw_runner, "cnw_live_call", side_effect=provider):
+            result = cnw_runner.execute_prose(run)
+        self.assertEqual(result["visible_chars"], minimum)
+        self.assertEqual(len(sent), 2)
+        self.assertEqual(sent[0][1], sent[1][1])
+        self.assertIn("Length validation rejected", sent[1][0]["content"])
+        self.assertEqual((run / "artifacts/prose.v0.md").read_text(encoding="utf-8"), "乙" * minimum)
+        self.assertEqual(result["receipts"], ["MOCK-1", "MOCK-2"])
+
+    def test_over_limit_recovery_exhausts_same_three_calls_without_publishing(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        value = "甲" * (self.contract["unit"]["max_visible_chars"] + 1)
+        messages = [{"role": "system", "content": "Only prose"}, {"role": "user", "content": '{"writing_brief":"brief","voice_samples":"selected"}'}]
+        with patch.object(cnw_runner, "_role_sources", return_value={}), patch.object(cnw_runner, "_author_messages", return_value=messages), patch.object(cnw_runner, "cnw_live_call", return_value=(value, {"request_id": "MOCK-OVER"})) as provider:
+            with self.assertRaisesRegex(ContractError, "RETURN_OVER_LIMIT"):
+                cnw_runner.execute_prose(run)
+        self.assertEqual(provider.call_count, 3)
+        self.assertFalse((run / "artifacts/prose.v0.md").exists())
+
+    def test_completeness_capacity_tracks_actual_review_set_with_fixed_ceiling(self):
+        run = self.base / "runs/FICT_SCENE_A"
+        cnw_runner._persist_stage(run, "prose", "artifacts/prose.md", "MOCK prose")
+        for count, expected in ((0, 2500), (22, 8000), (100, 8000)):
+            findings = [{"finding_id": f"F{i}"} for i in range(count)]
+            verify = {"findings": findings, "verdicts": {f["finding_id"]: {"status": "CONFIRMED"} for f in findings}}
+            cnw_runner._persist_stage(run, "adversarial_verify", "artifacts/verify.json", json.dumps(verify))
+            with patch.object(cnw_runner, "_review_sources", return_value={"scene_cards": "cards", "writing_brief": "brief", "project_specific_canon": "canon"}), patch.object(cnw_runner, "cnw_live_call", return_value=('{"candidate_findings":[]}', {"request_id": "MOCK-COMPLETE"})) as provider:
+                cnw_runner.execute_completeness(run)
+            self.assertEqual(provider.call_args.kwargs["output_cap"], expected)
 
     def _fixture_first_roles(self, run_id):
         contract = json.loads((self.base / "runs" / run_id / "artifacts/contract.json").read_text(encoding="utf-8"))

@@ -113,6 +113,8 @@ def read_native_result(run_name: str, *, action: str, input_path: Path, critique
         if not isinstance(request, dict) or not isinstance(request.get("messages"), list):
             raise ContractError("CRITICS_REQUEST_EVIDENCE_INVALID", run_name)
         messages = request["messages"]
+        if action in ("text-refine", "plan-revise") and (len(messages) != 1 or not isinstance(messages[0], dict) or messages[0].get("role") != "user"):
+            raise ContractError("CRITICS_REQUEST_EVIDENCE_INVALID", run_name)
         users = [item.get("content") for item in messages if isinstance(item, dict) and item.get("role") == "user"]
         if not users or not isinstance(users[-1], str):
             raise ContractError("CRITICS_REQUEST_EVIDENCE_INVALID", run_name)
@@ -123,12 +125,12 @@ def read_native_result(run_name: str, *, action: str, input_path: Path, critique
         expected = [templates["refine_prompt_image"].format(story=source),
                     templates["refine_prompt_voice"].format(story=source),
                     templates["choose_critic"].format(Image_refinement=payload["image"], Voice_refinement=payload["voice"])]
-        if prompts != expected:
+        if not native_prompt_dependencies_match(prompts, expected):
             raise ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", run_name)
     elif action == "plan-revise":
         critique = json.loads(critique_path.read_text(encoding="utf-8"))
         template = native_templates("storyline_template.py", {"applyQA"})["applyQA"]
-        if prompts != [template.format(final_critic=critique, storyline=source)]:
+        if not native_prompt_dependencies_match(prompts, [template.format(final_critic=critique, storyline=source)]):
             raise ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", run_name)
     else:
         # The pinned inspector returns the selected Question, not its full raw response.
@@ -154,6 +156,26 @@ def read_native_result(run_name: str, *, action: str, input_path: Path, critique
 def native_text_templates() -> dict[str, str]:
     """Read literal templates from the deployed pinned build without importing it."""
     return native_templates("story_template.py", {"refine_prompt_image", "refine_prompt_voice", "choose_critic"})
+
+
+def native_conversation_template() -> str:
+    """Read the deployed ConversationChain default; each native call starts empty."""
+    path = ROOT / "runtime/envs/critics-api/Lib/site-packages/langchain/chains/conversation/prompt.py"
+    for node in ast.parse(path.read_text(encoding="utf-8")).body:
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "DEFAULT_TEMPLATE" for target in node.targets):
+            value = ast.literal_eval(node.value)
+            if isinstance(value, str) and "{history}" in value and "{input}" in value:
+                return value
+    raise ContractError("CRITICS_NATIVE_TEMPLATES_MISSING", str(path))
+
+
+def native_prompt_dependencies_match(prompts: list[str], expected: list[str]) -> bool:
+    # Bare archived transport and the actual fresh ConversationChain transport
+    # are each checked in full. Mixed or modified framing is never stripped.
+    if prompts == expected:
+        return True
+    template = native_conversation_template()
+    return prompts == [template.format(history="", input=prompt) for prompt in expected]
 
 
 def native_templates(filename: str, wanted: set[str]) -> dict[str, str]:

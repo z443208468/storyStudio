@@ -211,10 +211,24 @@ class RecoveryTests(unittest.TestCase):
         self.fail_after_transport = True
         with self.assertRaisesRegex(OSError, "MOCK interruption"):
             self.execute()
+        partial = r.load_state(self.run)
+        self.assertEqual(partial["status"], "EXECUTION_INCOMPLETE")
+        self.assertEqual(partial["stages"]["scene_cards"]["status"], "EXECUTION_INCOMPLETE")
+        self.assertEqual(partial["stages"]["scene_cards"]["execution_failures"][-1]["error_type"], "OSError")
         count = len([row for row in self.sent if row[0] == "scene_cards"])
         self.execute()
         self.assertEqual(len([row for row in self.sent if row[0] == "scene_cards"]), count)
         recovery.verify_evidence(self.run, r.load_state(self.run))
+
+    def test_budget_failure_records_incomplete_execution_without_success(self):
+        with patch.object(r, "_dispatch_cnw_stage", side_effect=ValueError("CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED")):
+            with self.assertRaisesRegex(ValueError, "CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED"):
+                recovery.execute_checked(self.run, "plot")
+        state = r.load_state(self.run)
+        self.assertEqual(state["next_stage"], "plot")
+        self.assertEqual(state["stages"]["plot"]["status"], "EXECUTION_INCOMPLETE")
+        self.assertEqual(state["stages"]["plot"]["execution_failures"][-1]["error_code"], "CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED")
+        self.assertNotIn("artifact", state["stages"]["plot"])
 
     def test_explicit_invalidation_preserves_versions_and_exact_transport_cache(self):
         self.execute()

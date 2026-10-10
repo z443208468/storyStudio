@@ -1,5 +1,9 @@
 # 当前完整复现的有限余项
 
+## 2026-10-11 最新覆盖记录
+
+以下原表保留为历史诊断。组1–5已有各自限定签收、正常main推送及精确回读；当前只留组6最终闭环未完成。当前J19前10阶段实际materialized，Re-review五Lens与20路Verifier已成功，但共享CNY10预算护栏停止其余40路反证，不能记完整LiveE2E。占用9.874291，剩余0.125709；未验收候选已无API导出。实际消费、失败、模型及资料遗漏、独立判断见 `evidence/CNW_C04_C10_C15_CURRENT_CHAIN_DIAGNOSTIC.md`。Chapter/Sprint Live仍NOT_RUN；外部源码/结果审待定，完整等价终验仍NO。
+
 只读审计日期：2026-10-11。源码基准 C=`fe3b2e1f47dc425267120dcbed73b5491cab3b93`，T=`345d3468e188370656d34a4c1a7d586fc05e762e`，正常 main 推送及远端回读一致。方法基准仍为固定 CNW `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`。
 
 独立 `convergence_audit` 对 C01–C15 与现实现/证据核对，`story_state_fit` 对同一 J19 当前资料及原来源核对；均只读，无新增付费或正文。本文件列下一步范围，不是整体 ACCEPT。

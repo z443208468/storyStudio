@@ -1,5 +1,9 @@
 # P3 当前状态
 
+## 2026-10-11 当前收敛状态（覆盖下方历史时点）
+
+最新有限目标为 `plans/CNW_PUBLIC_REPLICATION_GOAL.md`。余项组1–5已独立限定签收、推送/回读；组6同一J19前10阶段真实完成，Re-review五Lens及20个Verifier成功后预算中止，缺40个Verifier及最终正常处置。当前共享CNY9.874291/10，剩余0.125709；不新增付费、不改票、不手修正文。运行持久化 `EXECUTION_INCOMPLETE`，导出 `UNREVIEWED_CANDIDATE`，verify-live拒绝不完整全链。146项相关离线通过。实证与功能限制见 `evidence/CNW_C04_C10_C15_CURRENT_CHAIN_DIAGNOSTIC.md`；完整方法/全生产仍未验收、Chapter/Sprint Live仍NOT_RUN、用户创意亲读及外部源码/结果审待定。下方W10 NOT_STARTED等保留历史，不描述当前已发生的付费运行。
+
 - 当前唯一分支 `main` 已将 P3.1 差异修复和 Controller ACCEPT 正常推送；远端/本地回读一致。用户明确只保留 main，不创建候选分支；不强推、不 reset/clean、不删除既有工作。
 - 唯一活动计划：`plans/MASTER_PLAN_P3_1.md`。P3.1 ZIP SHA256=`2550F43B266BFDCAC324F9C24E4DCC7E86B6AA38462B32310A203F54BD6FFDF3`。P3.1 W04/W05 差异修复及 W06–W09 均已同一独立 Controller ACCEPT；下一阶段为 W10 唯一真实场景复测。
 - P3 工单包 SHA256：`E3D4E10B7C876A2F4F53B0BFC5560BB24419F975D4A88445FAED993A66BE3CAD`。CNW pin：`97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`；本地捕获 manifest SHA256：`E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983`，98 项。

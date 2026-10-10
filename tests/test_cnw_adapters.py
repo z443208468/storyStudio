@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from tools.cnw_contract import ContractError, load_contract, check_required_fields, validate_work_unit
-from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt, read_native_result, native_templates
+from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt, read_native_result, native_templates, native_conversation_template, native_prompt_dependencies_match
 from tools.cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
 from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation, role_metadata, plot_structure
 
@@ -20,6 +20,16 @@ def sha(data: bytes) -> str:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_native_empty_conversation_framing_preserves_exact_dependencies(self):
+        expected = ["MOCK imagery input", "MOCK voice input", "MOCK selected prior outputs"]
+        template = native_conversation_template()
+        wrapped = [template.format(history="", input=value) for value in expected]
+        self.assertTrue(native_prompt_dependencies_match(expected, expected))
+        self.assertTrue(native_prompt_dependencies_match(wrapped, expected))
+        self.assertFalse(native_prompt_dependencies_match([wrapped[0], expected[1], wrapped[2]], expected))
+        self.assertFalse(native_prompt_dependencies_match([value + " altered" for value in wrapped], expected))
+        self.assertFalse(native_prompt_dependencies_match([template.format(history="MOCK old conversation", input=value) for value in expected], expected))
+
     def test_native_plan_revise_binds_original_plot_and_critique_request(self):
         with tempfile.TemporaryDirectory(prefix=".native-proposal-", dir=ROOT / "runs") as temp:
             run = Path(temp)

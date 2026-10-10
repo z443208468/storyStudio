@@ -278,7 +278,26 @@ def execute_checked(run_dir: Path, stage: str) -> dict:
     if previous.get("artifact"):
         archive_stage(run_dir, state, stage, "EXECUTION_INPUT_OR_METHOD_CHANGED")
         r.save_state(run_dir, state)
-    result = r._dispatch_cnw_stage(run_dir, stage)
+    try:
+        result = r._dispatch_cnw_stage(run_dir, stage)
+    except Exception as exc:
+        # Paid requests can exist even when no final stage report was produced.
+        # Preserve their cache and explicitly mark the execution incomplete.
+        with r.locked_run(run_dir):
+            failed = r.load_state(run_dir)
+            record = failed["stages"][stage]
+            code = getattr(exc, "code", None)
+            if str(exc) == "CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED":
+                code = str(exc)
+            failure = {"at": r.now(), "error_type": type(exc).__name__, "error_code": code,
+                       "provider_receipts_retained": sum(row.get("stage") == stage for row in failed.get("provider_requests", []))}
+            record.setdefault("execution_failures", []).append(failure)
+            if record.get("status") != "REVISION_REQUIRED":
+                record["status"] = "EXECUTION_INCOMPLETE"
+                failed["status"] = "EXECUTION_INCOMPLETE"
+            failed["next_stage"] = stage
+            r.save_state(run_dir, failed)
+        raise
     fresh = r.load_state(run_dir)
     if fresh["stages"][stage].get("status") in r._MATERIALIZED:
         fresh["stages"][stage]["execution_input_identity"] = identity

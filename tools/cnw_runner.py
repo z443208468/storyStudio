@@ -669,7 +669,7 @@ def produce(args) -> dict:
             raise ContractError("DEEPSEEK_API_KEY_REQUIRED", "live production requires the provider key")
         run_remaining_stages(path)
         state = load_state(path)
-    return {"status": "LIVE_RUN_READY" if args.mode == "live" else "RUN_CREATED", "run_id": run_id, "work_id": unit_id, "contract_sha256": state["contract_sha256"], "path": str(path), "next_stage": state.get("next_stage", CNW_STAGES[0]), "provider_call": "performed" if args.mode == "live" else "none"}
+    return {"status": "LIVE_RUN_READY" if args.mode == "live" else "RUN_CREATED", "run_id": run_id, "work_id": unit_id, "contract_sha256": state["contract_sha256"], "path": str(path), "next_stage": state.get("next_stage", CNW_STAGES[0]), "provider_call": "performed" if args.mode == "live" and not getattr(args, "create_only", False) else "none"}
 
 
 def run_remaining_stages(run_dir: Path) -> None:
@@ -1205,10 +1205,22 @@ def execute_prose(run_dir: Path) -> dict:
     parts: list[str] = []
     receipt_ids: list[str] = []
     validation = None
-    # At most an initial write plus two bounded continuation attempts.
+    over_limit = None
+    # Local recovery for the project's hard length contract, not a CNW stage.
+    # Initial write and any continuation/full regeneration share three calls.
     for attempt in range(3):
         if attempt == 0:
             messages = base_messages
+        elif over_limit is not None:
+            messages = [dict(message) for message in base_messages]
+            messages[0]["content"] += (
+                f"\nLength validation rejected the previous output: {over_limit} visible characters exceeds "
+                f"the Writing Brief maximum {contract['unit']['max_visible_chars']}. "
+                "Regenerate the complete prose within the Writing Brief's target/minimum/maximum. "
+                "Do not append to, refer to, or repeat an earlier attempt. This is length recovery only."
+            )
+            parts = []
+            over_limit = None
         else:
             already = "\n".join(parts)
             remaining = contract["unit"]["min_visible_chars"] - count_visible_chars(already)
@@ -1229,7 +1241,13 @@ def execute_prose(run_dir: Path) -> dict:
         parts.append(strip_envelope(content).strip())
         merged = "\n\n".join(part for part in parts if part)
         if count_visible_chars(merged) >= contract["unit"]["min_visible_chars"]:
-            validation = validate_output_length(contract, merged)
+            try:
+                validation = validate_output_length(contract, merged)
+            except ContractError as exc:
+                if exc.code != "RETURN_OVER_LIMIT" or attempt == 2:
+                    raise
+                over_limit = count_visible_chars(merged)
+                continue
             parts = [merged]
             break
     content = "\n\n".join(part for part in parts if part)
@@ -1418,7 +1436,9 @@ def execute_completeness(run_dir: Path) -> dict:
     except ImportError:
         from cnw_review import build_completeness_input, completeness_messages
     packet = build_completeness_input(draft, confirmed, rejected, {"scene_cards": sources["scene_cards"], "writing_brief": sources["writing_brief"], "project_specific_canon": sources["project_specific_canon"]})
-    content, receipt = cnw_live_call(run_dir, stage="completeness_critic", role_id="completeness", messages=completeness_messages(packet), output_cap=2500)
+    # Capacity for the actual review set; no new literary duty or retry loop.
+    output_cap = min(8000, 2500 + 256 * (len(confirmed) + len(rejected)))
+    content, receipt = cnw_live_call(run_dir, stage="completeness_critic", role_id="completeness", messages=completeness_messages(packet), output_cap=output_cap)
     parsed = _parse_json_content(content, "completeness_critic")
     if not isinstance(parsed.get("candidate_findings"), list):
         raise ContractError("LIVE_COMPLETENESS_OUTPUT_INVALID", "candidate_findings required")
@@ -1705,7 +1725,7 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
     input_snapshot.write_bytes(input_path.read_bytes())
     input_path = input_snapshot
     input_artifact = {"path": input_snapshot.relative_to(run_dir).as_posix(), "sha256": input_sha}
-    if previous.get("status") == "SUCCEEDED" and previous.get("input_sha256") == input_sha:
+    if previous.get("status") in ("SUCCEEDED", "NATIVE_RESULT_PENDING") and previous.get("input_sha256") == input_sha:
         evidence = read_native_result(previous["run_name"], action=action, input_path=input_path)
         if previous.get("evidence_files") and previous["evidence_files"] != evidence["evidence_files"]:
             raise ContractError("CRITICS_EVIDENCE_CHANGED", previous["run_name"])
@@ -1728,6 +1748,9 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
     if completed.returncode != 0:
         evidence["stderr_tail"] = (completed.stderr or "")[-300:]
     else:
+        # Persist the successful native invocation before dependency validation.
+        # A validator repair can re-read its paid evidence without another call.
+        _record_hook(run_dir, hook_name, {**evidence, "status": "NATIVE_RESULT_PENDING", "input_artifact": input_artifact})
         evidence = read_native_result(run_name, action=action, input_path=input_path)
     evidence["input_artifact"] = input_artifact
     _record_hook(run_dir, hook_name, evidence)
@@ -1857,6 +1880,13 @@ def promote_run(args) -> dict:
 def export_run(args) -> dict:
     path = run_path(args.run_id, runs_root_for(args))
     state = load_state(path)
+    if state.get("mode") == "live":
+        try:
+            from .cnw_recovery import verify_contract, verify_evidence
+        except ImportError:
+            from cnw_recovery import verify_contract, verify_evidence
+        verify_contract(path, state)
+        verify_evidence(path, state)
     try:
         from .cnw_export import export_reading_package
     except ImportError:
