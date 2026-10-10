@@ -12,7 +12,7 @@
 
 ## 实际离线证据
 
-- `tests.test_cnw_contract`, `tests.test_cnw_adapters`, `tests.test_cnw_runner`：22 项通过；覆盖合同/来源、不同 fixture run ID、角色调度请求、Prompt/合同缓存失效、阶段顺序、历史与 live 区分、路径与重复 ID 拒绝、run 内输入 symlink/绝对路径拒绝、同 run 并发写入串行化、既有 NK/CritiCS adapters。
+- `tests.test_cnw_contract`, `tests.test_cnw_adapters`, `tests.test_cnw_runner`：23 项通过；覆盖合同/来源、不同 fixture run ID、角色调度请求、Prompt/合同/workflow 缓存失效、阶段顺序、历史与 live 区分、路径与重复 ID 拒绝、run 内输入 symlink/绝对路径拒绝、同 run 并发写入串行化、既有 NK/CritiCS adapters。
 - `py_compile`、`git diff --check` 和 `studio.ps1` PowerShell Parser 均通过；`studio.ps1 doctor` 返回 workspace/private source/Python 均可用，唯一活动分支为 `main`。
 - 实际 run `P3-W05-CQ-J19-OFFLINE-20261010` 绑定冻结合同 SHA256 `e5ef4ce8d4468756021b8b7a8e10dd3cff0b9445e25a6a399f3cc683bb0978d0`。Plot 请求首次为 `READY_FOR_EXECUTION`，同 fingerprint 再执行为 `STAGE_REUSED`；`verify-history` 为 `HISTORICAL_EVIDENCE_FOUND`；provider request 数为 0。
 - 实际 `verify-live` 在没有 provider receipt 时退出失败，错误为 `LIVE_PROVIDER_EVIDENCE_MISSING`。没有读取或发起新 API 请求；费用账本未由 runner 改写。

@@ -301,7 +301,7 @@ def _step_locked(args, path: Path) -> dict:
         input_hashes["provided_input"] = sha(requested_input.read_bytes())
     existing = state["stages"][stage]
     prompt_hash = stage_prompt_hash(stage)
-    fingerprint = sha(json.dumps({"stage": stage, "contract": state["contract_sha256"], "dependencies": input_hashes, "prompt_sha256": prompt_hash, "provider_config_sha256": state["provider_config_sha256"], "cost_guard_runner_sha256": state["cost_guard_runner_sha256"]}, sort_keys=True).encode())
+    fingerprint = sha(json.dumps({"stage": stage, "contract": state["contract_sha256"], "dependencies": input_hashes, "prompt_sha256": prompt_hash, "workflow_template_sha256": state["workflow_template_sha256"], "provider_config_sha256": state["provider_config_sha256"], "cost_guard_runner_sha256": state["cost_guard_runner_sha256"]}, sort_keys=True).encode())
     if existing.get("fingerprint") == fingerprint and existing["status"] == "ACCEPTED":
         return {"status": "STAGE_REUSED", "run_id": args.run_id, "stage": stage, "fingerprint": fingerprint, "provider_call": "none"}
     if existing.get("fingerprint") == fingerprint and existing["status"] == "READY_FOR_EXECUTION":

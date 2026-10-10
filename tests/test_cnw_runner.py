@@ -133,6 +133,23 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(record["status"], "READY_FOR_EXECUTION")
             self.assertEqual(cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="plot", input=None))["status"], "STAGE_REUSED")
 
+    def test_workflow_template_change_invalidates_stage_and_downstream_only(self):
+        self._fixture_first_roles("FICT_SCENE_A")
+        run_path = self.base / "runs/FICT_SCENE_A"
+        state = cnw_runner.load_state(run_path)
+        prior_cards_fingerprint = state["stages"]["cards"]["fingerprint"]
+        prior_brief_artifact = state["stages"]["brief"]["artifact"]["path"]
+        state["workflow_template_sha256"] = "changed-pinned-workflow-hash"
+        cnw_runner.save_state(run_path, state)
+        result = cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="cards", input=None))
+        refreshed = cnw_runner.load_state(run_path)
+        self.assertEqual(refreshed["stages"]["plot"]["status"], "ACCEPTED")
+        self.assertEqual(refreshed["stages"]["cards"]["status"], "READY_FOR_EXECUTION")
+        self.assertNotEqual(refreshed["stages"]["cards"]["fingerprint"], prior_cards_fingerprint)
+        self.assertEqual(refreshed["stages"]["brief"]["status"], "INVALIDATED")
+        self.assertTrue((run_path / prior_brief_artifact).is_file())
+        self.assertEqual(result["status"], "READY_FOR_EXECUTION")
+
     def test_run_id_collision_and_path_traversal_fail_closed(self):
         with patch.object(cnw_runner, "ROOT", self.base):
             args = argparse.Namespace(run_id="FICT_SCENE_A", work_id=self.contract["unit"]["id"], unit="scene", contract=str(self.contract_dir / "fixture-a.json"), project_root=str(self.project), mode="offline")
