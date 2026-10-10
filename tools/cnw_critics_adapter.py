@@ -60,12 +60,12 @@ def verify_plan_receipt(receipt: dict, *, action: str, input_path: str | Path, o
     return {"action": action, "input_sha256": expected, "output_sha256": actual, "build": expected_build, "status": "FOUND_AND_HASH_VERIFIED"}
 
 
-def read_native_result(run_name: str, *, action: str, input_path: Path) -> dict:
+def read_native_result(run_name: str, *, action: str, input_path: Path, critique_path: Path | None = None) -> dict:
     """Read the native result and bind it to its original receipt and responses."""
     if Path(run_name).name != run_name or run_name in ("", ".", ".."):
         raise ContractError("CRITICS_RUN_ID_INVALID", run_name)
     directory = assert_output_within_root(ROOT / "runs", run_name)
-    names = {"plan-critique": "critique.json", "text-refine": "text_refinement.json"}
+    names = {"plan-critique": "critique.json", "text-refine": "text_refinement.json", "plan-revise": "modified_plot.md"}
     if action not in names:
         raise ContractError("CRITICS_ACTION_INVALID", action)
     output = assert_output_within_root(directory, names[action])
@@ -73,12 +73,15 @@ def read_native_result(run_name: str, *, action: str, input_path: Path) -> dict:
     calls_path = assert_output_within_root(directory, "provider-calls.json")
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     verified = verify_plan_receipt(receipt, action=action, input_path=input_path, output_path=output)
-    payload = json.loads(output.read_text(encoding="utf-8"))
+    payload = output.read_text(encoding="utf-8") if action == "plan-revise" else json.loads(output.read_text(encoding="utf-8"))
     keys = ("structure", "ending", "original", "inspector") if action == "plan-critique" else ("voice", "image", "select")
-    if not isinstance(payload, dict) or set(payload) != set(keys) or any(not isinstance(payload[key], str) or not payload[key].strip() for key in keys):
+    if action == "plan-revise":
+        if not payload.strip() or critique_path is None:
+            raise ContractError("CRITICS_NATIVE_OUTPUT_INVALID", action)
+    elif not isinstance(payload, dict) or set(payload) != set(keys) or any(not isinstance(payload[key], str) or not payload[key].strip() for key in keys):
         raise ContractError("CRITICS_NATIVE_OUTPUT_INVALID", action)
     calls = json.loads(calls_path.read_text(encoding="utf-8"))
-    if not isinstance(calls, list) or len(calls) != (5 if action == "plan-critique" else 3):
+    if not isinstance(calls, list) or len(calls) != {"plan-critique": 5, "text-refine": 3, "plan-revise": 1}[action]:
         raise ContractError("CRITICS_PROVIDER_EVIDENCE_MISSING", run_name)
     contents, provider_ids = [], []
     for call in calls:
@@ -99,7 +102,10 @@ def read_native_result(run_name: str, *, action: str, input_path: Path) -> dict:
         raise ContractError("CRITICS_PROVIDER_ID_DUPLICATED", run_name)
     ordered = ("structure", "ending", "original") if action == "plan-critique" else ("image", "voice", "select")
     offset = 1 if action == "plan-critique" else 0
-    if any(payload[key] != contents[index + offset] for index, key in enumerate(ordered)):
+    if action == "plan-revise":
+        if payload != contents[0]:
+            raise ContractError("CRITICS_RESULT_RESPONSE_MISMATCH", run_name)
+    elif any(payload[key] != contents[index + offset] for index, key in enumerate(ordered)):
         raise ContractError("CRITICS_RESULT_RESPONSE_MISMATCH", run_name)
     prompts = []
     for call in calls:
@@ -119,6 +125,11 @@ def read_native_result(run_name: str, *, action: str, input_path: Path) -> dict:
                     templates["choose_critic"].format(Image_refinement=payload["image"], Voice_refinement=payload["voice"])]
         if prompts != expected:
             raise ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", run_name)
+    elif action == "plan-revise":
+        critique = json.loads(critique_path.read_text(encoding="utf-8"))
+        template = native_templates("storyline_template.py", {"applyQA"})["applyQA"]
+        if prompts != [template.format(final_critic=critique, storyline=source)]:
+            raise ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", run_name)
     else:
         # The pinned inspector returns the selected Question, not its full raw response.
         inspector = contents[4]
@@ -132,6 +143,8 @@ def read_native_result(run_name: str, *, action: str, input_path: Path) -> dict:
         if any(source not in prompt for prompt in prompts):
             raise ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", run_name)
     files = [output, receipt_path, calls_path]
+    if critique_path is not None:
+        files.append(critique_path.resolve(strict=True))
     return {"status": "SUCCEEDED", "action": action, "run_name": run_name,
             "input_sha256": verified["input_sha256"].lower(), "result": payload,
             "provider_request_ids": provider_ids,
@@ -140,9 +153,12 @@ def read_native_result(run_name: str, *, action: str, input_path: Path) -> dict:
 
 def native_text_templates() -> dict[str, str]:
     """Read literal templates from the deployed pinned build without importing it."""
+    return native_templates("story_template.py", {"refine_prompt_image", "refine_prompt_voice", "choose_critic"})
+
+
+def native_templates(filename: str, wanted: set[str]) -> dict[str, str]:
     build = json.loads(PATCH_INDEX.read_text(encoding="utf-8"))["runtime_build_id"]
-    path = ROOT / "runtime/patched/CritiCS" / build / "critics/setting/promptDesign/story_template.py"
-    wanted = {"refine_prompt_image", "refine_prompt_voice", "choose_critic"}
+    path = ROOT / "runtime/patched/CritiCS" / build / "critics/setting/promptDesign" / filename
     values = {}
     for node in ast.parse(path.read_text(encoding="utf-8")).body:
         if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and node.targets[0].id in wanted:

@@ -896,8 +896,8 @@ def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, outp
     project_root = _run_dir_base(run_dir)
     materials = _role_sources(role, run_dir, state, contract, project_root)
     messages = _author_messages(role, contract, materials, extra)
-    content, receipt = cnw_live_call(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap)
     meta = _role_meta(role, contract)
+    content, receipt = cnw_live_call(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap)
     _validate_role(role, contract, content, meta)
     if role == "plot" and contract["unit"].get("planning_mode") == "author_plot":
         try:
@@ -933,9 +933,13 @@ def execute_plot(run_dir: Path) -> dict:
     context_path = run_dir / "artifacts/production_preparation.json"
     context_path.parent.mkdir(parents=True, exist_ok=True)
     context_path.write_text(json.dumps(preparation, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with locked_run(run_dir):
+        current = load_state(run_dir)
+        current["production_preparation"] = {"path": "artifacts/production_preparation.json", "sha256": sha(context_path.read_bytes())}
+        save_state(run_dir, current)
     result = _planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000,
                             extra={"production_preparation": preparation}, project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent")
-    _critics_hook(run_dir, "plot")
+    _critics_hook(run_dir, "plot")  # user-authorized supplement, not a CNW completion gate
     return result
 
 

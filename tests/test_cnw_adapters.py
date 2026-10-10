@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from tools.cnw_contract import ContractError, load_contract, check_required_fields, validate_work_unit
-from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt
+from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt, read_native_result, native_templates
 from tools.cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
 from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation, role_metadata, plot_structure
 
@@ -20,6 +20,32 @@ def sha(data: bytes) -> str:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_native_plan_revise_binds_original_plot_and_critique_request(self):
+        with tempfile.TemporaryDirectory(prefix=".native-proposal-", dir=ROOT / "runs") as temp:
+            run = Path(temp)
+            source = run / "original.md"
+            source.write_text("MOCK original scene", encoding="utf-8")
+            critique_path = run / "critique.json"
+            critique = {"inspector": "MOCK tighten the same scene"}
+            critique_path.write_text(json.dumps(critique), encoding="utf-8")
+            output = run / "modified_plot.md"
+            output.write_text("MOCK native proposed scene", encoding="utf-8")
+            build = json.loads((ROOT / "patches/critics/PATCH_INDEX.json").read_text(encoding="utf-8"))["runtime_build_id"]
+            receipt = {"action": "plan-revise", "status": "SUCCEEDED", "model": "deepseek-flash", "base_url": "https://api.deepseek.com/v1",
+                       "build": f"runtime/patched/CritiCS/{build}", "input_sha256": sha(source.read_bytes()).upper(), "output_sha256": sha(output.read_bytes()).upper()}
+            (run / "run_receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            template = native_templates("storyline_template.py", {"applyQA"})["applyQA"]
+            call = {"http_status": 200, "request": {"messages": [{"role": "user", "content": template.format(final_critic=critique, storyline=source.read_text(encoding="utf-8"))}]},
+                    "response": {"id": "MOCK-PROPOSAL", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": output.read_text(encoding="utf-8")}}]}}
+            calls = run / "provider-calls.json"
+            calls.write_text(json.dumps([call]), encoding="utf-8")
+            result = read_native_result(run.name, action="plan-revise", input_path=source, critique_path=critique_path)
+            self.assertEqual(result["result"], "MOCK native proposed scene")
+            call["request"]["messages"][0]["content"] = "Unrelated proposal request"
+            calls.write_text(json.dumps([call]), encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "CRITICS_NATIVE_DEPENDENCY_MISMATCH"):
+                read_native_result(run.name, action="plan-revise", input_path=source, critique_path=critique_path)
+
     def test_author_plot_design_needs_no_prefilled_beats_or_scenes(self):
         contract = load_contract(CONTRACT_PATH)
         contract["unit"].update(planning_mode="author_plot", kind="episode")
@@ -40,8 +66,8 @@ class AdapterTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "NK_EVENT_SEQUENCE_MISSING"):
             build_nk_payload(contract, "## Scene 1\nNo events")
         contract["unit"]["kind"] = "scene"
-        with self.assertRaisesRegex(ContractError, "PLOT_SCOPE_EXPANSION"):
-            validate_role_output("plot", contract, plot, meta)
+        # List count alone cannot establish narrative scope against the source.
+        validate_role_output("plot", contract, plot, meta)
         contract["story"]["required_beats"] = [{"beat_id": "B01", "goal": "Required outcome"}]
         validate_work_unit(contract)
         contract["story"]["required_beats"].append({"beat_id": "B01", "goal": "Duplicate"})

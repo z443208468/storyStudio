@@ -262,8 +262,6 @@ def plot_structure(output: str, contract: dict[str, Any]) -> dict[str, Any]:
                 sections[current].append(item.group(1).strip())
     if not sections.get("key scenes") or not sections.get("required story beats"):
         raise ContractError("PLOT_DESIGN_MISSING", "Plot must design nonempty Key Scenes and Required Story Beats lists")
-    if contract["unit"]["kind"] == "scene" and len(sections["key scenes"]) != 1:
-        raise ContractError("PLOT_SCOPE_EXPANSION", "single-scene assignment must remain one Key Scene")
     return {"source": "plot_markdown", "plot_sha256": sha256_bytes(output.encode("utf-8")),
             "key_scenes": sections["key scenes"], "required_story_beats": sections["required story beats"]}
 
@@ -312,6 +310,12 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
             "不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。"
             "遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。"
             "scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。"
+            "按作者模板区分 Key Scenes（场景概要）与 Required Story Beats（必须发生的事件），"
+            "本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。"
+            "输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；"
+            "不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。"
+            "所有动作必须与所给前后原文连续；不得把来源中已有的位置和动作改写成未经支持的离场或返场。"
+            "他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。"
             "不得从执行器的记账元数据推导创作要求。\n"
         )
     payload = {
