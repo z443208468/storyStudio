@@ -122,3 +122,9 @@
 - 最终候选：branch `codex/g00-governance-candidate`，C=`ef76fb329a10e22284de9701b94cb99d690b19bb`，T=`91ceb9b822815e824d358a5fff82e14137efe3f5`；main C=`06c66de7c7f18263039ea19a47e84c29716cde4b`，tree=`4b825dc642cb6eb9a060e54bf8d69288fbee4904`。
 - Controller `/root/g00_reviewer` 最终本地候选 ACCEPT；推送后独立 fetch 与 `ls-remote` 回读均为 `REMOTE_READBACK ACCEPT`，远端 C/T 与本地候选一致。
 - P2-05 最终交付候选 C=`ef76fb329a10e22284de9701b94cb99d690b19bb`、T=`91ceb9b822815e824d358a5fff82e14137efe3f5` 通过 Controller 最终本地 ACCEPT 与远端 `REMOTE_READBACK ACCEPT`；同一候选包含 P2-06/P2-07 完整产物。
+
+## P3 W02 — 活动治理与状态分离
+
+- Verdict：`ACCEPT`，独立只读 Controller `/root/g00_reviewer`；审查范围仅限 W02。
+- 候选：C=`c01713882900d630358c4681856ef6fb0158fb3d`，T=`dfdfb9bafe59af96a2e93a4893de99e01b180dca`；父提交为 W01 C=`d48a25627cfe604bc309cf0f6d9edfe56effa9cb`。
+- Controller 原消息：W02 ACCEPT，确认七文件提交与已审工作树候选相同、P2 签收和计划全文保留，P3 状态分开记录，旧 EP001 明确为历史 smoke 样本；旧 `studio.ps1` 恢复/checkpoint 命令仍可用。该 ACCEPT 尚待正常推送和远端回读。
