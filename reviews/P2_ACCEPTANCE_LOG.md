@@ -53,7 +53,10 @@
 
 ## P2-03
 
-- Status：补丁、锁、生产 build 与离线 HTTP 验收已收敛；等待 Controller local acceptance。
+- Verdict：`REMOTE_READBACK ACCEPT`（Controller local ACCEPT 后远端回读一致）。
+- Candidate：C=`bbdfbc6b477e0c800a2b7bd02cf6a181b880a266`，T=`5a7128f437713a03e730d95a4a40a78b51891baf`。
 - Source commit/tree：`b857f34b7d371ae82c30e00eb021884c14d08ae9` / `3960b25cb52265933e0fa4897d1319ad6161bf9c`；archive SHA256：`921B92480300FC2EDF484108E936E01BC97D938A28A17829F90133CE28A9E9C6`。
-- Patch SHA256：`B45F13266100F66DAAB7C441944EAD2A5352FE6C615241164208430EE9396A31`；lock SHA256：`8D6EF80B3161DDDA089DF6EB83AB986326370E9F0F97041E516DD478A0C8E9A4`；runtime build：`p2-03-b857f34b-b45f13266100-8d6ef80b3161`。
-- Candidate C/T、Controller verdict 与远端回读：冻结/验收后追加。
+- Patch SHA256：`F468219F2A0BC8D9D5205DEF48D245896CD1DF19D84FD9BA5C4DBB141C06963E`; manifest SHA256 `249BF34AA2B53701832B2BFC760797E365841A6CB2FEF42440AA1FC9CF62DAE5`; lock SHA256：`8D6EF80B3161DDDA089DF6EB83AB986326370E9F0F97041E516DD478A0C8E9A4`; runtime build：`p2-03-b857f34b-f468219f2a0b-8d6ef80b3161`。
+- Build and ordinary `npm start` offline HTTP evidence passed. Both normal start instances bound loopback; 8 no-key routes returned 401; mock/invalid-result cases matched contract; 0 external provider calls.
+- Controller `/root/g00_reviewer` local ACCEPT and remote readback ACCEPT; remote candidate C/T matched.
+
