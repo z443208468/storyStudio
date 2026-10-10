@@ -33,15 +33,34 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(cnw_review.tally_verifiers(votes)["f1"]["status"],"REFUTED_OR_UNCERTAIN")
         votes[1]["votes"][0]["verdict"]="not_refuted"
         self.assertEqual(cnw_review.tally_verifiers(votes)["f1"]["status"],"CONFIRMED")
+    def test_verifier_packets_are_inspectable_and_vote_once(self):
+        findings=[{"finding_id":"f1"}]; sources={"canon":"source evidence"}
+        packets=cnw_review.verifier_packets(findings,"complete scene",sources)
+        self.assertTrue(all(p["draft"]=="complete scene" and p["findings"]==findings and p["sources"]==sources for p in packets))
+        self.assertEqual(len({p["input_sha256"] for p in packets}),3)
+        malicious=[]
+        for p in packets:
+            malicious.append({**p,"votes":[{"finding_id":"f1","verdict":"not_refuted"},{"finding_id":"f1","verdict":"not_refuted"}]})
+        with self.assertRaisesRegex(ValueError,"duplicate vote"):
+            cnw_review.tally_verifiers(malicious)
     def test_mock_cannot_claim_real_request_id(self):
         packets=cnw_review.verifier_packets([],"draft")
         packets[0]["provider_request_id"]="fake-live-id"
         with self.assertRaises(ValueError): cnw_review.tally_verifiers(packets)
     def test_completeness_reads_full_text_and_prior_dispositions(self):
-        p=cnw_review.completeness_packet("full scene text",[{"id":"confirmed"}],[{"id":"rejected"}])
+        p=cnw_review.completeness_packet("full scene text",[{"id":"confirmed"}],[{"id":"rejected"}],{"canon":"source"})
         self.assertEqual(p["draft"],"full scene text")
         self.assertEqual(p["confirmed_findings"][0]["id"],"confirmed")
         self.assertEqual(p["rejected_findings"][0]["id"],"rejected")
         self.assertEqual(p["provider_request_id"],None)
+        self.assertEqual(p["sources"],{"canon":"source"})
+    def test_completeness_receives_only_vote_dispositions_and_hashes_all_fields(self):
+        result=cnw_review.review_offline("TODO\nfull prose",{"canon":"canon material"})
+        packet=result["completeness"]
+        self.assertEqual(packet["confirmed_findings"],[])
+        self.assertTrue(all(x["verifier_votes"]==["uncertain"]*3 for x in packet["rejected_findings"]))
+        self.assertEqual(packet["sources"],{"canon":"canon material"})
+        self.assertIn("full prose",packet["draft"])
+        self.assertEqual(packet["input_sha256"],cnw_review.digest(__import__("json").dumps({k:v for k,v in packet.items() if k!="input_sha256"},ensure_ascii=False,sort_keys=True)))
 
 if __name__=="__main__": unittest.main()
