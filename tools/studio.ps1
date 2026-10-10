@@ -16,6 +16,8 @@ param(
     [string]$StepName,
     [string]$Candidate,
     [string]$ReviewEvidence,
+    [string]$SprintId,
+    [string]$SprintPlan,
     [int]$Port = 3175
 )
 $ErrorActionPreference = 'Stop'
@@ -202,7 +204,13 @@ switch ($Command) {
     'show-run' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('show-run','--run-id',$RunId) }
     'verify-history' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('verify-history','--run-id',$RunId) }
     'verify-live' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('verify-live','--run-id',$RunId) }
-    'sprint' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('sprint','--run-id',$RunId) }
+    'sprint' {
+        if (-not $SprintId -or -not $SprintPlan) { throw 'SPRINT_REQUIRES_SPRINT_ID_AND_FIXTURE_PLAN' }
+        $PlanPath=(Resolve-Path -LiteralPath $SprintPlan).Path
+        $SprintScript=Join-Path $Root 'tools/cnw_sprint.py'
+        & $Python $SprintScript --project-root $ProjectRootPath --sprint-id $SprintId --plan $PlanPath
+        if ($LASTEXITCODE -ne 0) { throw "CNW_SPRINT_FAILED:$LASTEXITCODE" }
+    }
     'resume' {
         if (-not $RunId -or $RunId -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$') { throw 'VALID_RUN_ID_REQUIRED' }
         $Run=Join-Path $Root ("runs/$RunId")
