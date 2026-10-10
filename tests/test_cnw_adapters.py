@@ -79,6 +79,8 @@ class AdapterTests(unittest.TestCase):
 
     def test_plot_card_brief_cannot_drop_beat_ids_or_budget(self):
         contract = load_contract(CONTRACT_PATH)
+        with self.assertRaisesRegex(ContractError, "ROLE_UNKNOWN"):
+            validate_role_output("typo", contract, "nonempty output")
         valid = "\n".join([
             "## Quick Header", "## Active Canon", "## Scene-by-Scene Instructions", "## Voice References",
             "## Hard Constraints", "## Style Targets", "## What NOT to include in the prose", "NK Perspective Reflection",

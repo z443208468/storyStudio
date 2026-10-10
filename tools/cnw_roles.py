@@ -143,6 +143,8 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
 
 
 def validate_role_output(role: str, contract: dict[str, Any], output: str) -> None:
+    if role not in {"plot", "cards", "brief", "prose"}:
+        raise ContractError("ROLE_UNKNOWN", role)
     if not output.strip() or output.lstrip().startswith("RETURN:"):
         raise ContractError("ROLE_OUTPUT_INVALID", "empty output or role returned a failure")
     beat_ids = [beat["beat_id"] for beat in contract["story"].get("required_beats", [])]
