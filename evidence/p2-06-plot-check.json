@@ -1,6 +1,6 @@
 {
   "stage": "P2-06_PLOT_GATE",
-  "status": "WAITING_CONTROLLER_PLOT_ACCEPTANCE",
+  "status": "ACCEPTED_PLOT_GATE",
   "run_ids": [
     "p2-06-critique-20261010",
     "p2-06-critique-20261010-02",
@@ -22,9 +22,9 @@
   "finish_reason": "stop",
   "stage_estimated_cost_cny": "0.077503",
   "campaign": {
-    "actual_provider_requests": 12,
-    "request_records": 14,
-    "committed_estimate_cny": "0.096389",
+    "actual_provider_requests": 17,
+    "request_records": 21,
+    "committed_estimate_cny": "0.123297",
     "limit_cny": "10"
   },
   "max_output_tokens_enforced_per_call": 2048,
@@ -50,7 +50,11 @@
     "runtime/private/p2-cost-ledger.json": "E6DE21CAF257477DD11A9D13B1C7D68CBD143106A09C2B352F7AC2AFB8C1B3D6",
     "runs/p2-06-critique-20261010/provider-calls.json": "A5338D955B09046EC0B16F3A9625B7955C763AAE07DC722E474E6078745F932F",
     "runs/p2-06-critique-20261010/p2-cost-ledger.json": "9ACE1D402FE8CE46454B4ABE0CF4F2FBEE8DCB1CBEBA497B8E323A906CC3A045",
-    "runs/p2-06-critique-20261010/runner-error.json": "2989347E03566660C141B8E2521222D51E08F28AFB178BB498F16CC466C98995"
+    "runs/p2-06-critique-20261010/runner-error.json": "2989347E03566660C141B8E2521222D51E08F28AFB178BB498F16CC466C98995",
+    "workspace/cangqi/05_scene_cards/ep001_scene_cards.md": "F4DA2B01749CF3911E1E73B99B9CEDE438D91772C7AA37B1477C84486139193A",
+    "workspace/cangqi/05_scene_cards/ep001_nk_perspective.md": "5DB97B0DD162CC7AEEA203274E119160095219E0D4E14BCCD1C4DFCE810D8CEE",
+    "runs/p2-06-nk-20261010/nk-http-response-nk-aa4c0965fa8747718b3543b2d58bcab4.json": "384C7A149DB5ED72B6B834D32948205CCA1C0798E63D05EF9BE59FFA478AC97C",
+    "runs/p2-06-nk-20261010/nk-provider-nk-aa4c0965fa8747718b3543b2d58bcab4.jsonl": "F8F958D7204FBD2E1B83BA396D51A6AC6C313A981CC838451D43AAD5EB2F88C9"
   },
   "non_billable_attempts": [
     {
@@ -60,5 +64,22 @@
       "provider_calls": 0,
       "estimated_cost_cny": "0"
     }
-  ]
+  ],
+  "plot_gate_status": "ACCEPT",
+  "scene_card": "workspace/cangqi/05_scene_cards/ep001_scene_cards.md",
+  "nk_live_call": {
+    "run_id": "p2-06-nk-20261010",
+    "request_id": "nk-aa4c0965fa8747718b3543b2d58bcab4",
+    "provider_request_id": "232f4613-855a-4199-a91a-f9bfdae3e8b3",
+    "http_status": 200,
+    "model": "deepseek-flash",
+    "finish_reason": "stop",
+    "input_tokens": 604,
+    "output_tokens": 53,
+    "estimated_cost_cny": "0.001641",
+    "validated_perspective_count": 1,
+    "failed_payload_attempts": 1,
+    "failed_attempt_provider_calls": 0,
+    "failed_attempt_cost_cny": "0"
+  }
 }

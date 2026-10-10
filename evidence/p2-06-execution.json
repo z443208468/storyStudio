@@ -1,0 +1,159 @@
+{
+  "stage": "P2-06",
+  "status": "ACCEPTED_BY_CONTROLLER",
+  "accepted_checkpoints": [
+    "PLOT_GATE",
+    "SCENE_CARD_AND_NK_PERSPECTIVE"
+  ],
+  "scene_card": "workspace/cangqi/05_scene_cards/ep001_scene_cards.md",
+  "writing_brief": "workspace/cangqi/07_draft/ep001_writing_brief.md",
+  "draft_v0": "workspace/cangqi/07_draft/ep001_v0.md",
+  "refinement_excerpt": "workspace/cangqi/07_draft/excerpts/ep001_v0_excerpt.md",
+  "refinement_scope": "CritiCS Refinement.Two_refinement() evaluated only the continuous three-sentence excerpt; not the complete scene.",
+  "refinement_run": "runs/p2-06-text-refine-20261010-02",
+  "refinement_call_count": 3,
+  "revision_classification": "workspace/cangqi/08_review/ep001_refinement_triage.md",
+  "draft_v1": "workspace/cangqi/09_revision/ep001_v1.md",
+  "v1_editorial_notes": "workspace/cangqi/09_revision/ep001_v1_editorial_notes.md",
+  "stage_provider_requests": 12,
+  "stage_provider_request_ids": [
+    "cf9e312d-4133-4f35-a4e4-de662327afc9",
+    "c2d9d7f3-756a-49d7-826d-34dad913fd2f",
+    "100ee269-75e3-4fdf-b7df-e1996e548abf",
+    "4e1116a4-5ac9-4346-85c3-13b08b6eb8f3",
+    "85a154d4-a137-42f1-a431-eabbe17ce78c",
+    "4dea42c3-18f0-4416-8e05-08b9be0b1c8f",
+    "232f4613-855a-4199-a91a-f9bfdae3e8b3",
+    "045c1dc1-8b91-4349-82aa-fb3bfab68ccc",
+    "3b7e572e-4bb7-4cd5-8e76-f5d3a71269e2",
+    "c70453a4-ccc3-4a61-bd25-8aa4fc4aa092",
+    "e44c1ce5-4354-4a45-911c-6210024e63d0",
+    "0e98530b-2638-4107-a886-89ef032be230"
+  ],
+  "stage_usage_and_cost_rows": [
+    {
+      "request_id": "nk-aa4c0965fa8747718b3543b2d58bcab4",
+      "run_id": "p2-06-nk-20261010",
+      "provider_request_id": "232f4613-855a-4199-a91a-f9bfdae3e8b3",
+      "status": "SETTLED",
+      "usage": {
+        "input_tokens": 604,
+        "output_tokens": 53
+      },
+      "estimated_actual_cny": "0.001641"
+    },
+    {
+      "request_id": "p206-draft-cf4194ebb9864c7bbdecb3531bb64cbc",
+      "run_id": "p2-06-draft-20261010",
+      "provider_request_id": "045c1dc1-8b91-4349-82aa-fb3bfab68ccc",
+      "status": "SETTLED",
+      "usage": {
+        "input_tokens": 1433,
+        "output_tokens": 259
+      },
+      "estimated_actual_cny": "0.004963"
+    },
+    {
+      "request_id": "p206-text-refine-dbc4881c223144a6ae259d47d697afdc",
+      "run_id": "p2-06-text-refine-20261010-02",
+      "provider_request_id": "3b7e572e-4bb7-4cd5-8e76-f5d3a71269e2",
+      "status": "SETTLED",
+      "usage": {
+        "input_tokens": 408,
+        "output_tokens": 355
+      },
+      "estimated_actual_cny": "0.003675"
+    },
+    {
+      "request_id": "p206-text-refine-af9be9a01a4c4149aaf7c11ffe89b343",
+      "run_id": "p2-06-text-refine-20261010-02",
+      "provider_request_id": "c70453a4-ccc3-4a61-bd25-8aa4fc4aa092",
+      "status": "SETTLED",
+      "usage": {
+        "input_tokens": 334,
+        "output_tokens": 395
+      },
+      "estimated_actual_cny": "0.003848"
+    },
+    {
+      "request_id": "p206-text-refine-c0292d60f4b849db9798f363eb53d582",
+      "run_id": "p2-06-text-refine-20261010-02",
+      "provider_request_id": "e44c1ce5-4354-4a45-911c-6210024e63d0",
+      "status": "SETTLED",
+      "usage": {
+        "input_tokens": 1395,
+        "output_tokens": 454
+      },
+      "estimated_actual_cny": "0.006455"
+    },
+    {
+      "request_id": "p206-revise-f7e68ce095fa4229a4b2c77d14838bc7",
+      "run_id": "p2-06-revise-20261010",
+      "provider_request_id": "0e98530b-2638-4107-a886-89ef032be230",
+      "status": "SETTLED",
+      "usage": {
+        "input_tokens": 2111,
+        "output_tokens": 259
+      },
+      "estimated_actual_cny": "0.006326"
+    }
+  ],
+  "non_billable_attempts": [
+    {
+      "run_id": "p2-06-critique-20261010",
+      "reason": "global Python lacked pinned CritiCS dependencies",
+      "provider_requests": 0,
+      "cost_cny": "0"
+    },
+    {
+      "run_id": "p2-06-nk-20261010",
+      "reason": "first candidate payload rejected by route schema (HTTP 400)",
+      "provider_requests": 0,
+      "cost_cny": "0"
+    },
+    {
+      "run_id": "p2-06-text-refine-20261010",
+      "reason": "precreated run directory caused local path-collision ValueError before provider request",
+      "provider_requests": 0,
+      "cost_cny": "0"
+    }
+  ],
+  "campaign": {
+    "actual_provider_requests": 17,
+    "request_records": 21,
+    "committed_estimate_cny": "0.123297",
+    "limit_cny": "10"
+  },
+  "safety_controls": {
+    "model": "deepseek-flash",
+    "max_output_tokens_per_native_critic_call": 2048,
+    "nk_max_output_tokens": 512,
+    "reasoning_content_persisted": false,
+    "api_key_persisted": false,
+    "raw_provider_evidence_private": true
+  },
+  "artifact_sha256": {
+    "workspace/cangqi/05_scene_cards/ep001_scene_cards.md": "0D9AFA393360773DA41C66B7C9732CE43ED54F132D01C823658EA68341BF7D8A",
+    "workspace/cangqi/05_scene_cards/ep001_nk_perspective.md": "5DB97B0DD162CC7AEEA203274E119160095219E0D4E14BCCD1C4DFCE810D8CEE",
+    "workspace/cangqi/07_draft/ep001_writing_brief.md": "60A052043CA63063A41452B54247B3CC6B12A2C87987262010ABF6C7375DEFE4",
+    "workspace/cangqi/07_draft/ep001_v0.md": "0921F7C6E77F046909D5AD66966DDBBC69CD7322913D6F3DD19371E15A0A3ACF",
+    "workspace/cangqi/07_draft/excerpts/ep001_v0_excerpt.md": "C782B4DC946C096EEA63D47D31B5064AF23E9DE5922099653CF38A2C2D23D65F",
+    "runs/p2-06-text-refine-20261010-02/text_refinement.json": "FBA67492F410868180D5CEE71CC65BAE6C8093C52FE6846606F15A64B232459A",
+    "runs/p2-06-text-refine-20261010-02/provider-calls.json": "A0765E407BD30C536073A01F72BDC41E69B228EA29F447CA02D1EBA6F948D5EF",
+    "runs/p2-06-draft-20261010/provider-call.json": "ECAA606785369958738F514C6AB803528507FFA3BA147883D3ACF4C185B05993",
+    "runs/p2-06-draft-20261010/run_receipt.json": "B3B11F99F6FB39F299B95637170DED7764A1588319D3B37E987718AECA632F74",
+    "runs/p2-06-revise-20261010/provider-call.json": "2A82EDF8D20CC6A6E8D7EED18AB65512931CCDAEEEFC65B10CCDA2AE76CACDC1",
+    "runs/p2-06-revise-20261010/run_receipt.json": "F350B810657305269516C6C4D9675692E0ADE599E1F6C8D2237B715351BBFC11",
+    "runs/p2-06-nk-20261010/nk-http-response-nk-aa4c0965fa8747718b3543b2d58bcab4.json": "384C7A149DB5ED72B6B834D32948205CCA1C0798E63D05EF9BE59FFA478AC97C",
+    "runs/p2-06-nk-20261010/nk-provider-nk-aa4c0965fa8747718b3543b2d58bcab4.jsonl": "F8F958D7204FBD2E1B83BA396D51A6AC6C313A981CC838451D43AAD5EB2F88C9",
+    "runtime/private/p2-cost-ledger.json": "13760931C4A6A948D45B7880B376121C76819008BAF2384E44BD990134C261BE",
+    "workspace/cangqi/08_review/ep001_refinement_triage.md": "7EA45E708AC0188C7932C9F84B14BDB3BDF54A103513626257C884125FC1D9CC",
+    "workspace/cangqi/09_revision/revision_plan.md": "CB54FE69CACEAEF0ED6FCA015A309C24E22D4591F01C1684B5008853EAAB18B9",
+    "workspace/cangqi/09_revision/revision_log.md": "105C17B6C5E1BBCE63AEDD72A283E5866E3BCC31CF4A3F91A5013D1C2F9EA28E",
+    "workspace/cangqi/09_revision/ep001_v1.md": "973F54AF8FD03041A98D9282794A81F84A7984C1432B9B712485ACA9265BEA60",
+    "workspace/cangqi/09_revision/ep001_v1_editorial_notes.md": "43461697DE39E03A5626755860E44159249E98EC423CF387ACFC7EE73E13FA7F"
+  },
+  "revision_plan": "workspace/cangqi/09_revision/revision_plan.md",
+  "revision_log": "workspace/cangqi/09_revision/revision_log.md",
+  "stage_estimated_cost_cny": "0.104411"
+}

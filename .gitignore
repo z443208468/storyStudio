@@ -6,3 +6,4 @@
 /.env.*
 !/.env.example
 /deliverables/
+**/__pycache__/

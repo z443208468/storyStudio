@@ -1,18 +1,11 @@
 # P2 当前状态
 
-本文件是**阶段快照**，所有工作树/提交字段均以快照基准提交为准；候选冻结和远端回读以 `reviews/P2_ACCEPTANCE_LOG.md` 中对应候选记录为准。不要将此历史快照误读为候选提交之后的实时状态。
-
-- SNAPSHOT_BASE_C: `bbdfbc6b477e0c800a2b7bd02cf6a181b880a266`
-- SNAPSHOT_BASE_T: `5a7128f437713a03e730d95a4a40a78b51891baf`
-- BRANCH: `codex/g00-governance-candidate`
-- SNAPSHOT_WORKTREE: P2-04 live integration artifacts and route correction are assembled for Controller review.
-- CURRENT_STAGE: `P2-06` production/revision; P2-05 single-scene Plot received Controller boundary-limited ACCEPT after one continuity correction. P2-04/P2-05 acceptances are recorded in `reviews/P2_ACCEPTANCE_LOG.md`.
-- LAST_ACCEPTED: P2-05 Controller boundary-limited local ACCEPT; P2-04 remote readback ACCEPT; P2-03/02/01/00 remain accepted.
-- SOURCE_ZIP_SHA256: `300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2`
-- SOURCE_VERSION: `JUN-SINGLE-02.3`
-- PRIVATE_SOURCE_ROOT: `inputs/private/release/300a829c7524d620ab89177afcf52c03dffea633392c632f69a943f798dad3b2/Cangqi_Jun_Release_2_3/`
-- PRIVATE_CNW_PROJECT: `workspace/cangqi/`
-- ORIGINAL_FAILURE: P1 `B11 / BLOCKED_UPSTREAM_IMMUTABLE` was a pre-repair fact; P2 permits production-copy repair. Original raw evidence remains at `runtime/build/CritiCS/741b5bd13c8d44dca84f74854ab6bf00/py_compile.stdout-stderr.txt`, SHA256 `3E5E4B0FA7360AD4C793406D0FAF3E1E6062CCD21D0BA40CB1EED273A8ADCBBA`.
-- NEXT: continue P2-06 using the accepted single-scene Plot and sample contract; reuse successful P2-05 provider result.
-
-The private release's `source_manifest.json` and `source_index.json` are stored beside the imported source; the primary script is immutable and read-only. Their candidate SHA256 values are supplied to the Controller at review time and in the acceptance log after verdict.
+- Branch: `codex/g00-governance-candidate`
+- 代码冻结候选 C/T：将在 P2-07 交付证据与日志写入后提交并记录。
+- 源版本：`JUN-SINGLE-02.3`；ZIP SHA256 `300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2`。
+- 私有源稿：`inputs/private/release/300a829c7524d620ab89177afcf52c03dffea633392c632f69a943f798dad3b2/Cangqi_Jun_Release_2_3/`；CNW 项目：`workspace/cangqi/`。
+- 已完成：P2-01/02/03/04/05；P2-06 全阶段经 Controller 本地 ACCEPT。P2-06 证据索引 `evidence/p2-06-execution.json`。
+- 当前阶段：P2-07 本地交付已由 Controller `/root/g00_reviewer` ACCEPT。阅读版位于私有忽略目录 `deliverables/EP001/`；统一命令入口 `tools/studio.ps1`。保留无密钥复用/导出 transcript 与 NK 生命周期 stdout，账本未变化、停机后无监听。
+- 成本：累计 17 次真实供应商请求、21 条账本记录、25,018 输入 / 9,055 输出 tokens，估算 ¥0.123297 / ¥10；账单未连接，故仅为估算。
+- 当前 P2-07 证据：`evidence/p2-07-delivery.json`。Controller 本地交付验收 ACCEPT；最终 C/T 冻结和远端回读待完成。
+- 私有源稿、完整 prompt/raw response、项目工作区、runs、成本账本和阅读版均被 Git 忽略；用户创意接受仍待用户阅读，不由 Controller 代签。

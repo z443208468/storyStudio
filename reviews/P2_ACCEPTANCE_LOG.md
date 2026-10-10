@@ -93,3 +93,29 @@
 - 该子阶段六次真实 DeepSeek 请求均有 ID、stop、usage 与估算；该子阶段 `¥0.077503`。累计 campaign 12 笔真实 provider 请求、14 ledger 行，估算 `¥0.096389 / ¥10`；两次零调用服务器启动与一次 P2-06 导入失败均不冒充真实请求。
 - 逐调用私有原始请求/响应在各 run 的 `provider-calls.json`；reasoning 字段被剥除；源稿和提示不进入公开 Git。当前阶段 evidence/hash：`evidence/p2-06-plot-check.json`。
 - Plot Gate candidate C=`05a08ba10cf416b06121a2a365b784b92a33c6f5`，T=`13c6e2ff1a5cfda98d2bdda065c792c6d53e6d5e`；限定 ACCEPT，开放 Scene Card 阶段，不等同于 P2-06 全阶段 ACCEPT。
+
+## P2-06 — 全链生产与修订（阶段内容 ACCEPT）
+
+- Verdict：`ACCEPT`（Controller `/root/g00_reviewer`）；接受 Plot Gate、Scene Card/NK 检查点，并在全文核对 v0→v1、修订计划及前后锚后签收 P2-06 内容。此为工程/内容边界验收，不代签用户创作满意度。
+- 实际产物：私有 `workspace/cangqi/05_scene_cards/ep001_scene_cards.md`、`07_draft/ep001_writing_brief.md`、完整 v0 `07_draft/ep001_v0.md`、`08_review/ep001_refinement_triage.md`、CNW 计划/日志与 `09_revision/ep001_v1.md`。Controller 确认一场连续动作、君天离限制 POV、J19:555 后插入并恢复 J19:557/559 与原 J20 路由。
+- NK → Brief：真实 `/api/generate-perspective` 成功，provider ID `232f4613-855a-4199-a91a-f9bfdae3e8b3`；HTTP 200，604/53 tokens，估算 ¥0.001641。Reflection 只作为观察范围素材。
+- CritiCS：Plot Gate 五个原生批评调用 + `modifiedStoryline()` 一次，估算 ¥0.077503；`Refinement.Two_refinement()` 实际三次原生 Image/Voice/Leader 调用，只审连续三句摘录，不声称全文审读。完整 v0 至 v1 经 Flash 同场修订，v1 删去未列入卡片的附加物件/动作。
+- 本阶段总真实 provider 请求 12 次。累计账本 17 次真实请求、21 条记录，估算 ¥0.123297 / ¥10；usage 总计 25,018 输入 / 9,055 输出 tokens。明细和私有 SHA-256：`evidence/p2-06-execution.json`。
+- 三项不计费失败均明示：未装载锁定依赖的初次 CritiCS 导入、首次 NK schema 不匹配（HTTP 400、未到 provider）、预建 run 目录造成的本地路径冲突；均已修复并在不同 run 完成对应阶段。
+- 本地 Controller 内容 ACCEPT 已完成；绑定的候选 C/T 和远端回读将在本次交付候选冻结后追加。
+
+## P2-07 — 阅读交付与可复用入口（本地候选，待 Controller）
+
+- 当前私有阅读包：`deliverables/EP001/`，含初稿/修订稿 Markdown+TXT、前后文连读 Markdown/TXT/离线 HTML、修改说明、本地使用说明、production preset 与文件 SHA-256 manifest。
+- 统一入口：`tools/studio.ps1`。新 PowerShell `doctor → prepare → import-source → scene plot/draft/revise → resume → export` 均通过；读取锁定源/补丁/运行环境，已有生成步骤复用。P2-07 冷启动检查确认成本账本 SHA 不变。
+- `nk-start`/`nk-stop` 使用精确 NK build、localhost loopback 并等候就绪；冷启动及停止成功，未产生 provider 请求。两次早期启动路径尝试在本机 npm 启动阶段失败，根因为工作目录未传递；已以 `npm --prefix` 和就绪检查修复。
+- HTML 内嵌样式、无外部脚本/资源；私有 J20 分支细节、源稿和密钥未进入阅读导出或公共索引。交付状态为 `READY_FOR_USER_REVIEW`，不写 `USER_CREATIVE_ACCEPTED`。
+- Controller 对 P2-07 本地交付、提交 C/T 与远端 readback 待验收。
+
+## P2-07
+
+- Verdict：`ACCEPT`（Controller `/root/g00_reviewer`，本地交付范围）。
+- Controller 明确确认：入口脚本、交付文件及 manifest 文件哈希均与当前内容匹配；独立 PowerShell 回放覆盖只读定位、导出和 NK 生命周期；NK 启动到 `127.0.0.1:3175`、停止后无监听器；账本前后 SHA-256 一致且没有新增供应商调用。
+- 交付 HTML 无外部资源；连读摘录只含指定 J19 前后锚，不展开 J20 分支正文。用户创意签收保持 pending。
+- 证据：`evidence/p2-07-delivery.json`；私有回放与原始生命周期输出位于 `runs/p2-07-replay-20261010/`。
+- 本地 ACCEPT 已完成；提交候选 C/T 与远端只读回读待完成。
