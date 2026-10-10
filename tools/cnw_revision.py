@@ -50,14 +50,25 @@ def build_revision_plan(accepted_review: dict, *, allow_fixture:bool=False) -> d
     if fixture and not allow_fixture: raise ContractError("MOCK_REVIEW_CANNOT_CREATE_PRODUCTION_PLAN","fixture evidence is test-only")
     for key in ("candidate_sha256","contract_sha256","source_identity_sha256","controller_acceptance_ref"):
         if not accepted_review.get(key): raise ContractError("ACCEPTED_REVIEW_BINDING_MISSING",key)
-    expected_lenses={"style","character","plot","canon","story_specific"}; expected_verifiers={"verifier_1","verifier_2","verifier_3"}
+    expected_lenses={"style","character","plot","canon","story_specific"}
     requests=accepted_review.get("provider_requests",[])
-    lens_rows=[x for x in requests if x.get("stage")=="lens5"]; verifier_rows=[x for x in requests if x.get("stage")=="verifier3"]
-    if ({x.get("lens_id") for x in lens_rows}!=expected_lenses or len(lens_rows)!=5 or {x.get("verifier_id") for x in verifier_rows}!=expected_verifiers or len(verifier_rows)!=3):
-        raise ContractError("ACCEPTED_REVIEW_CALL_SET_INVALID","five Lens and three Verifier receipts are required")
+    current = any(x.get("stage") == "multi_lens_review" for x in requests)
+    lens_stage, verifier_stage = ("multi_lens_review", "adversarial_verify") if current else ("lens5", "verifier3")
+    expected_verifiers = {"correctness", "character_consistency", "continuity_plausibility"} if current else {"verifier_1", "verifier_2", "verifier_3"}
+    lens_rows=[x for x in requests if x.get("stage")==lens_stage]; verifier_rows=[x for x in requests if x.get("stage")==verifier_stage]
+    if {x.get("lens_id") for x in lens_rows}!=expected_lenses or len(lens_rows)!=5:
+        raise ContractError("ACCEPTED_REVIEW_CALL_SET_INVALID","five independent Lens receipts are required")
+    if current:
+        finding_ids = {item.get("finding_id") or item.get("issue_id") for item in accepted_review.get("findings", [])}
+        tasks = [(row.get("finding_id"), row.get("verifier_id")) for row in verifier_rows]
+        expected_tasks = {(finding_id, verifier_id) for finding_id in finding_ids for verifier_id in expected_verifiers}
+        if set(tasks) != expected_tasks or len(tasks) != len(expected_tasks):
+            raise ContractError("ACCEPTED_REVIEW_CALL_SET_INVALID", "three distinct verifier tasks per finding required")
+    elif {x.get("verifier_id") for x in verifier_rows}!=expected_verifiers or len(verifier_rows)!=3:
+        raise ContractError("ACCEPTED_REVIEW_CALL_SET_INVALID","historical review requires three Verifier receipts")
     provider_ids=[x.get("provider_request_id") for x in lens_rows+verifier_rows]
-    if not all(isinstance(x,str) and x for x in provider_ids) or len(set(provider_ids))!=8: raise ContractError("ACCEPTED_REVIEW_CALL_ID_INVALID","eight distinct provider request IDs required")
-    verifier_by_id={x["verifier_id"]:x["provider_request_id"] for x in verifier_rows}
+    if not all(isinstance(x,str) and x for x in provider_ids) or len(set(provider_ids))!=len(provider_ids): raise ContractError("ACCEPTED_REVIEW_CALL_ID_INVALID","distinct provider request IDs required for every task")
+    verifier_by_id={(x.get("finding_id") if current else None, x["verifier_id"]):x["provider_request_id"] for x in verifier_rows}
     verifier_outputs={}
     for row in verifier_rows:
         content=row.get("response_content")
@@ -68,10 +79,12 @@ def build_revision_plan(accepted_review: dict, *, allow_fixture:bool=False) -> d
         if parsed.get("verifier_id")!=row["verifier_id"] or not isinstance(parsed.get("votes"),list): raise ContractError("VERIFIER_OUTPUT_SCHEMA_INVALID",row["verifier_id"])
         vote_ids=[vote.get("finding_id") for vote in parsed["votes"]]
         if len(vote_ids)!=len(set(vote_ids)) or any(vote.get("verdict") not in {"not_refuted","refuted","uncertain"} for vote in parsed["votes"]): raise ContractError("VERIFIER_OUTPUT_SCHEMA_INVALID",row["verifier_id"])
-        verifier_outputs[row["verifier_id"]]={vote.get("finding_id"):vote.get("verdict") for vote in parsed["votes"]}
+        if current and vote_ids != [row.get("finding_id")]:
+            raise ContractError("VERIFIER_OUTPUT_SCHEMA_INVALID", "per-finding receipt must contain exactly its own vote")
+        verifier_outputs[(row.get("finding_id") if current else None, row["verifier_id"]) ]={vote.get("finding_id"):vote.get("verdict") for vote in parsed["votes"]}
     source_catalog=accepted_review.get("source_catalog",{}); allowed={"P0","P1","P2","P3"}; seen=set(); items=[]
     for item in accepted_review.get("findings",[]):
-        issue_id=str(item.get("issue_id","")).strip()
+        issue_id=str(item.get("finding_id") or item.get("issue_id","")).strip()
         if not issue_id or issue_id in seen or item.get("severity") not in allowed: raise ContractError("REVISION_ISSUE_INVALID",issue_id or "missing or duplicate issue id/severity")
         seen.add(issue_id)
         source=item.get("source"); source_record=source_catalog.get(source)
@@ -85,9 +98,10 @@ def build_revision_plan(accepted_review: dict, *, allow_fixture:bool=False) -> d
         if len(votes)!=3 or {v.get("verifier_id") for v in votes}!=expected_verifiers or len({v.get("verifier_id") for v in votes})!=3:
             raise ContractError("REVISION_ISSUE_VOTES_INCOMPLETE",issue_id)
         for vote in votes:
-            if vote.get("provider_request_id")!=verifier_by_id.get(vote.get("verifier_id")) or vote.get("verdict") not in {"not_refuted","refuted","uncertain"}:
+            task = (issue_id if current else None, vote.get("verifier_id"))
+            if vote.get("provider_request_id")!=verifier_by_id.get(task) or vote.get("verdict") not in {"not_refuted","refuted","uncertain"}:
                 raise ContractError("REVISION_ISSUE_VOTE_UNBOUND",issue_id)
-            if verifier_outputs.get(vote["verifier_id"],{}).get(issue_id)!=vote["verdict"]: raise ContractError("REVISION_ISSUE_VOTE_NOT_IN_RAW_OUTPUT",issue_id)
+            if verifier_outputs.get(task,{}).get(issue_id)!=vote["verdict"]: raise ContractError("REVISION_ISSUE_VOTE_NOT_IN_RAW_OUTPUT",issue_id)
         if sum(v["verdict"]=="not_refuted" for v in votes)<2: continue
         required=("owner","fix","acceptance"); missing=[key for key in required if not str(item.get(key,"")).strip()]
         if missing: raise ContractError("REVISION_ISSUE_INCOMPLETE",f"{issue_id}: {', '.join(missing)}")

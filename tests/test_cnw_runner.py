@@ -305,6 +305,34 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(cnw_runner.normalize_stage(source), target)
         self.assertEqual(cnw_runner.stage_predecessors("writing_brief", "scene"), ("plot", "scene_cards"))
 
+    def test_successful_provider_task_is_reused_after_restart_and_hash_checked(self):
+        from decimal import Decimal
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        run_dir = self.base / "runs/FICT_SCENE_A"
+        guard = SimpleNamespace(
+            command_reserve=lambda args: print(json.dumps({"status": "RESERVED"})),
+            command_settle=lambda args: print(json.dumps({"status": "SETTLED", "request_id": args.request_id})),
+            load_config=lambda: ({}, {}), estimate=lambda *args: Decimal("0.001"))
+        body = {"id": "MOCK_PROVIDER_RESPONSE", "model": cnw_runner.MODEL,
+                "choices": [{"finish_reason": "stop", "message": {"content": "fixture output"}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 10}}
+        response = Mock(status_code=200)
+        response.json.return_value = body
+        messages = [{"role": "user", "content": "fixture prompt"}]
+        with patch.object(cnw_runner, "_p2_guard", return_value=guard), \
+                patch.dict(cnw_runner.os.environ, {"DEEPSEEK_API_KEY": "MOCK_ONLY_NOT_A_REAL_KEY_12345"}), \
+                patch.object(cnw_runner.httpx, "post", return_value=response) as post:
+            first = cnw_runner.cnw_live_call(run_dir, stage="re_review", role_id="style", messages=messages, output_cap=100)
+            again = cnw_runner.cnw_live_call(run_dir, stage="re_review", role_id="style", messages=messages, output_cap=100)
+            self.assertEqual(first, again)
+            self.assertEqual(post.call_count, 1)
+            self.assertEqual(len(cnw_runner.load_state(run_dir)["provider_requests"]), 1)
+            (run_dir / first[1]["raw_response_path"]).write_text("tampered", encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "LIVE_RAW_RESPONSE_HASH_MISMATCH"):
+                cnw_runner.cnw_live_call(run_dir, stage="re_review", role_id="style", messages=messages, output_cap=100)
+            self.assertEqual(post.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

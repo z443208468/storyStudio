@@ -353,6 +353,11 @@ def _sanitize(value):
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
     if stage not in PROVIDER_STAGES:
         raise ContractError("LIVE_STAGE_INVALID", stage)
+    fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
+        "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+    for previous in load_state(run_dir).get("provider_requests", []):
+        if previous.get("request_fingerprint") == fingerprint and previous.get("status") == "SUCCEEDED":
+            return _receipt_content(run_dir, previous), previous
     guard = _p2_guard()
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key or len(key.strip()) < 20:
@@ -408,6 +413,7 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
     cost = guard.estimate(usage["prompt_tokens"], usage["completion_tokens"], pricing)
     receipt = {
         "stage": stage, "role_id": role_id, "request_id": request_id,
+        "request_fingerprint": fingerprint,
         "provider_request_id": payload.get("id"), "model": payload.get("model"), "status": "SUCCEEDED",
         "http_status": status_code, "finish_reason": choice.get("finish_reason"),
         "usage": {"prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"]},
@@ -427,6 +433,19 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
         current["updated_at"] = now()
         save_state(run_dir, current)
     return content, receipt
+
+
+def _receipt_content(run_dir: Path, receipt: dict) -> str:
+    """Read a successful response only when both stored hashes still match."""
+    path = assert_output_within_root(run_dir, receipt["raw_response_path"])
+    if sha(path.read_bytes()) != receipt["raw_response_sha256"]:
+        raise ContractError("LIVE_RAW_RESPONSE_HASH_MISMATCH", receipt["request_id"])
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    body = raw.get("response", raw)
+    content = body["choices"][0]["message"]["content"]
+    if not isinstance(content, str) or sha(content.encode("utf-8")) != receipt["output_sha256"]:
+        raise ContractError("LIVE_RESPONSE_CONTENT_CHANGED", receipt["request_id"])
+    return content
 
 
 def _validate_raw_live_response(raw_path: Path, receipt: dict, usage: dict, index: int) -> None:
@@ -1264,27 +1283,55 @@ def execute_refine(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
     project_root = _run_dir_base(run_dir)
-    v0 = _read_stage_text(run_dir, state, "prose")
+    previous_revision = state["stages"]["refine"]
+    pending = previous_revision.get("pending_findings")
+    v0 = _read_stage_text(run_dir, state, "refine" if pending else "prose")
+    occupied = [int(match.group(1)) for path in (run_dir / "artifacts").glob("prose.v*.md")
+                if (match := re.fullmatch(r"prose\.v(\d+)\.md", path.name))]
+    occupied += [int(match.group(1)) for path in (run_dir / "artifacts/revisions").glob("revision-*.plan.json")
+                 if (match := re.fullmatch(r"revision-(\d+)\.plan\.json", path.name))]
+    revision_number = max(occupied, default=0) + 1
     completeness = json.loads(_read_stage_text(run_dir, state, "completeness_critic"))
-    confirmed = _confirmed_findings(run_dir, state)
-    candidates = [f for f in completeness.get("candidate_findings", [])]
-    _critics_hook(run_dir, "prose")  # CritiCS text-refine support material, attached before refine
+    confirmed = pending if pending else _confirmed_findings(run_dir, state)
+    candidates = [] if pending else list(completeness.get("candidate_findings", []))
+    if not pending:
+        _critics_hook(run_dir, "prose")  # support hook, never an additional CNW stage
     if not confirmed and not candidates:
         plan = {"schema": 1, "status": "NO_CHANGE", "self_acceptance": False, "issues": []}
         _write_project_output(project_root, f"09_revision/{contract['unit']['id']}_revision_plan.json", json.dumps(plan, ensure_ascii=False, indent=2))
-        _persist_stage(run_dir, "refine", "artifacts/prose.v1.md", v0, validation={"status": "NO_CHANGE", "v0_sha256": sha(v0.encode("utf-8"))})
+        _persist_stage(run_dir, "refine", f"artifacts/prose.v{revision_number}.md", v0,
+            validation={"status": "NO_CHANGE", "v0_sha256": sha(v0.encode("utf-8"))},
+            extra={"revision_number": revision_number, "affected_lenses": [], "pending_findings": [], "revision_base": None})
         return {"stage": "refine", "status": "NO_CHANGE"}
     feedback = {"confirmed": confirmed, "completeness_candidates": candidates}
     brief = _read_stage_text(run_dir, state, "writing_brief")
+    input_identity = sha(json.dumps({"draft": v0, "feedback": feedback, "brief": brief, "contract": contract}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+    attempt = previous_revision.get("refinement_attempt")
+    if attempt and attempt.get("input_identity") == input_identity:
+        revision_number = attempt["revision_number"]
+    else:
+        with locked_run(run_dir):
+            current = load_state(run_dir)
+            current["stages"]["refine"]["refinement_attempt"] = {"input_identity": input_identity, "revision_number": revision_number}
+            save_state(run_dir, current)
+    affected = sorted({f.get("lens_id", f.get("owner")) for f in confirmed + candidates} & set(LENS_IDS))
+    if any(f.get("lens_id", f.get("owner")) not in LENS_IDS for f in confirmed + candidates):
+        affected = list(LENS_IDS)  # unknown historical provenance requires conservative coverage
+    plan = {"schema": 2, "status": "READY_FOR_REFINE", "self_acceptance": False,
+            "revision_number": revision_number, "draft_sha256": sha(v0.encode("utf-8")),
+            "affected_lenses": affected, "issues": confirmed + candidates}
+    plan_path = run_dir / f"artifacts/revisions/revision-{revision_number}.plan.json"
+    plan_path.parent.mkdir(parents=True, exist_ok=True)
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     system = (
         "你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订整场中文正文，保留有效戏剧内容与所有必需节拍，"
         "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
     )
     user = json.dumps({"v0": v0, "confirmed_findings": feedback, "brief_constraints": brief}, ensure_ascii=False, sort_keys=True)
     try:
-        from .cnw_contract import count_visible_chars
+        from .cnw_contract import count_visible_chars, validate_output_length
     except ImportError:
-        from cnw_contract import count_visible_chars
+        from cnw_contract import count_visible_chars, validate_output_length
     base_messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
     receipt_ids: list[str] = []
     content = ""
@@ -1299,51 +1346,109 @@ def execute_refine(run_dir: Path) -> dict:
                 )},
                 {"role": "user", "content": json.dumps({"under_length_draft": content, "target_visible_chars": contract["unit"]["target_visible_chars"], "min_visible_chars": contract["unit"]["min_visible_chars"], "confirmed_findings": feedback}, ensure_ascii=False, sort_keys=True)},
             ]
-        content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=4096)
+        content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=4096, extra={"revision_number": revision_number})
         receipt_ids.append(receipt["request_id"])
         if count_visible_chars(content) >= contract["unit"]["min_visible_chars"]:
             break
     if count_visible_chars(content) < contract["unit"]["min_visible_chars"]:
         raise ContractError("REVISION_REGRESSION", f"v1 underproduced after bounded restoration: {count_visible_chars(content)}")
+    validate_output_length(contract, content)
     diff = {"v0_sha256": sha(v0.encode("utf-8")), "v1_sha256": sha(content.encode("utf-8")), "v0_visible_chars": count_visible_chars(v0), "v1_visible_chars": count_visible_chars(content)}
-    _persist_stage(run_dir, "refine", "artifacts/prose.v1.md", content, receipt_ids=receipt_ids, role_id="refine", validation=diff)
-    _write_project_output(project_root, f"09_revision/{contract['unit']['id']}_v1.md", content)
+    base_path = run_dir / f"artifacts/revisions/revision-{revision_number}.base.md"
+    base_path.write_text(v0, encoding="utf-8")
+    _persist_stage(run_dir, "refine", f"artifacts/prose.v{revision_number}.md", content, receipt_ids=receipt_ids, role_id="refine", validation=diff,
+                   extra={"revision_number": revision_number, "affected_lenses": affected, "pending_findings": [], "refinement_attempt": None,
+                          "revision_base": {"path": base_path.relative_to(run_dir).as_posix(), "sha256": sha(base_path.read_bytes())}})
+    _write_project_output(project_root, f"09_revision/{run_dir.name}/{contract['unit']['id']}_v{revision_number}.md", content)
     return {"stage": "refine", "receipts": receipt_ids, "changed": diff["v0_sha256"] != diff["v1_sha256"], **diff}
 
 
-def execute_re_review(run_dir: Path) -> dict:
+def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
     state = load_state(run_dir)
+    if state["stages"]["refine"].get("pending_findings"):
+        execute_refine(run_dir)
+        state = load_state(run_dir)
     contract = _contract_for(run_dir)
     project_root = _run_dir_base(run_dir)
     v0 = _read_stage_text(run_dir, state, "prose")
     v1 = _read_stage_text(run_dir, state, "refine")
-    if sha(v0.encode("utf-8")) == sha(v1.encode("utf-8")):
-        report = {"stage": "re_review", "status": "NO_CHANGED_TEXT", "receipts": []}
+    revision = state["stages"]["refine"]
+    revision_number = revision.get("revision_number", 1)
+    if revision.get("revision_base"):
+        base = revision["revision_base"]
+        base_path = assert_output_within_root(run_dir, base["path"])
+        if sha(base_path.read_bytes()) != base["sha256"]:
+            raise ContractError("REVISION_BASE_CHANGED", base["path"])
+        v0 = base_path.read_text(encoding="utf-8")
+    if sha(v0.encode("utf-8")) == sha(v1.encode("utf-8")) and revision.get("validation", {}).get("status") == "NO_CHANGE":
+        report = {"stage": "re_review", "status": "NO_CHANGED_TEXT", "receipts": [], "candidate_sha256": sha(v1.encode("utf-8"))}
         _persist_stage(run_dir, "re_review", "artifacts/re_review.json", json.dumps(report, ensure_ascii=False, indent=2))
         return {"stage": "re_review", "status": "NO_CHANGED_TEXT"}
     expected = state["stages"]["re_review"].get("expected_role_ids")
-    affected = list(expected) if isinstance(expected, list) and expected else list(LENS_IDS)
+    affected = list(expected) if isinstance(expected, list) and expected else revision.get("affected_lenses", list(LENS_IDS))
     if len(set(affected)) != len(affected) or set(affected) - set(LENS_IDS):
         raise ContractError("LIVE_REREVIEW_CALL_SET_INVALID", str(affected))
     sources = _review_sources(run_dir, state, contract, project_root)
     try:
-        from .cnw_review import build_lens_input, lens_messages
+        from .cnw_review import build_lens_input, lens_messages, build_verifier_packet, verifier_messages
     except ImportError:
-        from cnw_review import build_lens_input, lens_messages
+        from cnw_review import build_lens_input, lens_messages, build_verifier_packet, verifier_messages
+    import difflib
+    changed_hunks = "".join(difflib.unified_diff(v0.splitlines(keepends=True), v1.splitlines(keepends=True), fromfile="before", tofile="after", n=3))
     results = {}
     receipt_ids = []
+    findings = []
+    candidate_sha = sha(v1.encode("utf-8"))
     for lens_id in affected:
         packet = build_lens_input(lens_id, v1, sources)
-        packet["changed_context"] = {"v0_sha256": sha(v0.encode("utf-8")), "v1_sha256": sha(v1.encode("utf-8"))}
-        content, receipt = cnw_live_call(run_dir, stage="re_review", role_id=lens_id, messages=lens_messages(packet), output_cap=2500, extra={"lens_id": lens_id})
+        packet["changed_context"] = {"v0_sha256": sha(v0.encode("utf-8")), "v1_sha256": candidate_sha,
+                                     "diff": changed_hunks, "instruction": "Review changed passages and their consequences in the full draft; do not reopen unchanged unrelated passages."}
+        content, receipt = cnw_live_call(run_dir, stage="re_review", role_id=lens_id, messages=lens_messages(packet), output_cap=2500,
+                                        extra={"lens_id": lens_id, "task_kind": "lens", "revision_number": revision_number, "candidate_sha256": candidate_sha})
         parsed = _parse_json_content(content, f"re_review:{lens_id}")
-        if parsed.get("lens_id") != lens_id:
+        if parsed.get("lens_id") != lens_id or not isinstance(parsed.get("findings"), list):
             raise ContractError("LIVE_LENS_OUTPUT_INVALID", f"re_review:{lens_id}")
         results[lens_id] = {"findings": parsed.get("findings", []), "provider_request_id": receipt["provider_request_id"]}
         receipt_ids.append(receipt["request_id"])
-    report = {"stage": "re_review", "status": "REVIEWED", "affected_lenses": affected, "lenses": results}
+        for index, finding in enumerate(parsed["findings"], 1):
+            findings.append({**finding, "lens_id": lens_id, "finding_id": f"R{revision_number}-{lens_id}-{index}"})
+    confirmed, dispositions = [], []
+    for finding in findings:
+        votes = []
+        for verifier_id in VERIFIER_IDS:
+            packet = build_verifier_packet(finding, verifier_id, v1, sources)
+            content, receipt = cnw_live_call(run_dir, stage="re_review", role_id=verifier_id, messages=verifier_messages(packet), output_cap=1200,
+                extra={"task_kind": "verifier", "verifier_id": verifier_id, "finding_id": finding["finding_id"], "revision_number": revision_number, "candidate_sha256": candidate_sha})
+            parsed = _parse_json_content(content, "re_review:verify")
+            rows = parsed.get("votes", [])
+            if (parsed.get("verifier_id") != verifier_id or len(rows) != 1
+                    or rows[0].get("finding_id") != finding["finding_id"] or rows[0].get("verdict") not in {"not_refuted", "refuted", "uncertain"}):
+                raise ContractError("LIVE_VERIFIER_VOTES_INVALID", finding["finding_id"])
+            votes.append({**rows[0], "verifier_id": verifier_id, "request_id": receipt["request_id"], "provider_request_id": receipt["provider_request_id"]})
+            receipt_ids.append(receipt["request_id"])
+        survives = sum(vote["verdict"] == "not_refuted" for vote in votes) >= 2
+        dispositions.append({"finding": finding, "votes": votes, "confirmed": survives})
+        if survives:
+            confirmed.append(finding)
+    report = {"stage": "re_review", "status": "REVISION_REQUIRED" if confirmed else "CLEAN", "affected_lenses": affected, "lenses": results,
+              "revision_number": revision_number, "candidate_sha256": candidate_sha, "dispositions": dispositions, "confirmed_findings": confirmed}
+    archive = run_dir / f"artifacts/revisions/review-{revision_number}.json"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    archive.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if confirmed:
+        with locked_run(run_dir):
+            current = load_state(run_dir)
+            current["stages"]["refine"]["pending_findings"] = confirmed
+            current["stages"]["re_review"].update(status="REVISION_REQUIRED", artifact={"path": archive.relative_to(run_dir).as_posix(), "sha256": sha(archive.read_bytes())})
+            current["status"] = "REVISION_REQUIRED"
+            current["next_stage"] = "re_review"
+            save_state(run_dir, current)
+        if remaining_passes <= 1:
+            raise ContractError("REREVIEW_REQUIRES_REVISION", "confirmed findings preserved for the next revision; no final acceptance")
+        execute_refine(run_dir)
+        return execute_re_review(run_dir, remaining_passes=remaining_passes - 1)
     _persist_stage(run_dir, "re_review", "artifacts/re_review.json", json.dumps(report, ensure_ascii=False, indent=2), receipt_ids=receipt_ids)
-    return {"stage": "re_review", "lenses": len(results)}
+    return {"stage": "re_review", "lenses": len(results), "status": "CLEAN", "revision_number": revision_number}
 
 
 def _critics_excerpt(run_dir: Path, state: dict) -> Path:
@@ -1384,6 +1489,10 @@ def _critics_hook(run_dir: Path, stage: str) -> None:
     else:
         # CritiCS text-refine only reviews the source-referenced key excerpt, not the whole scene.
         input_path = _critics_excerpt(run_dir, state)
+    input_sha = sha(input_path.read_bytes())
+    previous = state.get("support_hooks", {}).get(hook_name, {})
+    if previous.get("status") == "SUCCEEDED" and previous.get("input_sha256") == input_sha:
+        return
     run_name = f"{run_dir.name}-critics-{action}-{uuid.uuid4().hex[:8]}"
     command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action, "--input", str(input_path), "--run-name", run_name, "--ledger-run-id", run_dir.name]
     try:
@@ -1391,7 +1500,7 @@ def _critics_hook(run_dir: Path, stage: str) -> None:
     except Exception as exc:
         _record_hook(run_dir, hook_name, {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__})
         return
-    evidence = {"status": "SUCCEEDED" if completed.returncode == 0 else "FAILED", "action": action, "run_name": run_name, "returncode": completed.returncode}
+    evidence = {"status": "SUCCEEDED" if completed.returncode == 0 else "FAILED", "action": action, "run_name": run_name, "returncode": completed.returncode, "input_sha256": input_sha}
     if completed.returncode != 0:
         evidence["stderr_tail"] = (completed.stderr or "")[-300:]
     _record_hook(run_dir, hook_name, evidence)
@@ -1564,6 +1673,14 @@ def verify_live(args) -> dict:
             continue
         if stage == "adversarial_verify":
             continue
+        if not matching and stage == "refine" and record.get("validation", {}).get("status") == "NO_CHANGE":
+            if _read_stage_text(run_root, state, "prose") != _read_stage_text(run_root, state, "refine"):
+                raise ContractError("LIVE_NO_CHANGE_MISMATCH", stage)
+            continue
+        if not matching and stage == "re_review":
+            report = json.loads(_read_stage_text(run_root, state, "re_review"))
+            if report.get("status") == "NO_CHANGED_TEXT" and state["stages"]["refine"].get("validation", {}).get("status") == "NO_CHANGE":
+                continue
         if not matching:
             raise ContractError("LIVE_PIPELINE_INCOMPLETE", f"{stage}: provider receipt missing")
     project_root = _run_dir_base(run_root)
@@ -1595,10 +1712,53 @@ def verify_live(args) -> dict:
     if "candidate_findings" not in completeness:
         raise ContractError("LIVE_COMPLETENESS_OUTPUT_INVALID", "candidate_findings required")
     # Re-review receipts are distinct lens ids from the current revised draft.
-    rereview_ids = [row.get("lens_id") or row.get("role_id") for row in state["provider_requests"] if row.get("stage") == "re_review"]
-    if rereview_ids:
-        if len(set(rereview_ids)) != len(rereview_ids) or set(rereview_ids) - set(LENS_IDS):
+    rereview_report = json.loads(_read_stage_text(run_root, state, "re_review"))
+    final_sha = sha(_read_stage_text(run_root, state, "refine").encode("utf-8"))
+    if rereview_report.get("candidate_sha256") != final_sha or rereview_report.get("status") not in {"CLEAN", "NO_CHANGED_TEXT"}:
+        raise ContractError("LIVE_REREVIEW_NOT_CLEAN", "current candidate requires a clean, hash-bound re-review")
+    if rereview_report.get("status") == "CLEAN":
+        round_number = rereview_report.get("revision_number")
+        round_rows = [row for row in state["provider_requests"] if row.get("stage") == "re_review" and row.get("revision_number") == round_number and row.get("candidate_sha256") == final_sha]
+        rereview_ids = [row.get("lens_id") for row in round_rows if row.get("task_kind") == "lens"]
+        if len(set(rereview_ids)) != len(rereview_ids) or set(rereview_ids) != set(rereview_report.get("affected_lenses", [])) or not rereview_ids:
             raise ContractError("LIVE_REREVIEW_CALL_SET_INVALID", str(rereview_ids))
+        actual_findings = {}
+        for row in round_rows:
+            if row.get("task_kind") != "lens":
+                continue
+            lens_id = row["lens_id"]
+            parsed = _parse_json_content(_receipt_content(run_root, row), "re_review:raw-lens")
+            reported = rereview_report.get("lenses", {}).get(lens_id, {})
+            if (parsed.get("lens_id") != lens_id or not isinstance(parsed.get("findings"), list)
+                    or reported.get("findings") != parsed["findings"] or reported.get("provider_request_id") != row["provider_request_id"]):
+                raise ContractError("LIVE_REREVIEW_OUTPUT_UNBOUND", lens_id)
+            for number, finding in enumerate(parsed["findings"], 1):
+                fid = f"R{round_number}-{lens_id}-{number}"
+                actual_findings[fid] = {**finding, "lens_id": lens_id, "finding_id": fid}
+        dispositions = rereview_report.get("dispositions", [])
+        disposition_ids = [item.get("finding", {}).get("finding_id") for item in dispositions]
+        if set(disposition_ids) != set(actual_findings) or len(disposition_ids) != len(actual_findings):
+            raise ContractError("LIVE_REREVIEW_OUTPUT_UNBOUND", "finding dispositions differ from original Lens output")
+        for disposition in rereview_report.get("dispositions", []):
+            finding_id = disposition["finding"]["finding_id"]
+            if disposition["finding"] != actual_findings[finding_id]:
+                raise ContractError("LIVE_REREVIEW_OUTPUT_UNBOUND", finding_id)
+            votes = disposition.get("votes", [])
+            tasks = [row for row in round_rows if row.get("task_kind") == "verifier" and row.get("finding_id") == finding_id]
+            if len(tasks) != 3 or {row.get("verifier_id") for row in tasks} != set(VERIFIER_IDS) or len(votes) != 3:
+                raise ContractError("LIVE_REREVIEW_CALL_SET_INVALID", finding_id)
+            if {v.get("provider_request_id") for v in votes} != {row["provider_request_id"] for row in tasks}:
+                raise ContractError("LIVE_REREVIEW_CALL_SET_INVALID", finding_id)
+            for task in tasks:
+                raw_vote = _parse_json_content(_receipt_content(run_root, task), "re_review:raw-verifier")
+                rows = raw_vote.get("votes", [])
+                reported = next(v for v in votes if v["provider_request_id"] == task["provider_request_id"])
+                if (raw_vote.get("verifier_id") != task["verifier_id"] or len(rows) != 1
+                        or rows[0].get("finding_id") != finding_id or rows[0].get("verdict") != reported.get("verdict")
+                        or reported.get("verifier_id") != task["verifier_id"]):
+                    raise ContractError("LIVE_REREVIEW_OUTPUT_UNBOUND", finding_id)
+            if sum(v.get("verdict") == "not_refuted" for v in votes) >= 2:
+                raise ContractError("LIVE_REREVIEW_NOT_CLEAN", finding_id)
     # Each provider receipt is authenticated against its raw response and ledger.
     required = {"stage", "request_id", "provider_request_id", "model", "status", "http_status", "finish_reason", "usage", "input_sha256", "output_sha256", "raw_response_path", "raw_response_sha256", "cost_cny", "ledger_settlement"}
     ledger_path = ROOT / "runtime/private/p2-cost-ledger.json"

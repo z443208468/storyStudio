@@ -71,3 +71,12 @@
 - 唯一独立只读 Controller `/root/controller` 复核结论：**ACCEPT，仅限本轮代码增量**。不是整项工作流验收、真实生产证明或用户创意接受。
 - 本轮无新增模型调用。只读账本显示累计占用 ¥3.663326/¥10，后续仍沿用同一费用护栏。
 - 尚待继续：项目导入语义产物、创作前资料准备、Plot 结构职责、当前修订协议、受影响复审与继续修订、并行调度及真实作品生产。不得以本次增量声称完整完成。
+
+## 原作者源码重新研究：修订与复审闭环（2026-10-11）
+
+- `cnw_revision.build_revision_plan` 兼容当前 `multi_lens_review/adversarial_verify`，逐 Finding 三种反证身份与原始票值绑定；保留历史旧协议的读取兼容。零 Finding 不要求三条虚构调用。
+- `cnw_runner.execute_refine/execute_re_review` 保存逐版计划、修订前正文和修订稿；复审附真实 diff，只请求受影响 Lens。新发现经三种反证后进入下一版修订并再次复审。一次执行最多三轮，仍有确认问题时保存 `REVISION_REQUIRED`，不得作为最终完成。
+- `verify_live` 将最终修订正文 hash、Lens 原始 findings 全集和 Verifier 原始票值与报告逐项绑定；不接受只有 `REVIEWED` 的旧报告作为最终 clean 证明。
+- 成功供应商调用按完整请求身份复用，并核对原始响应及正文 hash；未完成 Refine 保存输入身份与版本号，恢复相同输入不更换版本号。新修订单调分配版本，按 run 隔离项目修订文件。
+- 验证：既有 generation 22 项、runner 17 项通过。执行过明确 `MOCK_ONLY` 闭环：style 复审发现问题、三个独立反证模拟响应、v2 修订、干净复审，旧稿和两轮报告保留。另验证 5+6 当前协议、零 Finding、重复任务拒绝；网络 transport 模拟验证成功响应重用且 raw 篡改后拒绝发送。
+- 独立只读 Controller `/root/controller` 在修正中断恢复、原始结果绑定、版本覆盖问题后给出本批 **ACCEPT**；未把该结论记为新 Live 或全项目完成。本批无新增真实供应商调用。
