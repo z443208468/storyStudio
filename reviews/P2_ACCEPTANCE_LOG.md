@@ -138,3 +138,11 @@
 - 离线结果：`tests.test_cnw_contract` 6 项通过；覆盖缺失/0 目标、Episode 分场预算、120 字短稿 `RETURN_UNDERPRODUCED`、必需节拍证据、Markdown/NFC 可见字符、source manifest/脚本/锚身份与 manifest 篡改拒绝；`py_compile` 和真实私有源预检通过。无供应商请求。
 - Controller 原消息：`ACCEPT — P3 W03`，精确绑定上述 C/T；确认合同 SHA、source manifest、policy、脚本和前后锚哈希相符，事件目标及 1500 / 1200–1800 预生成范围有充分依据；“No generation is authorized by this acceptance.”
 - 远端回读：候选提交接受后正常推送，等待记录。
+
+## P3 W04 — 四岗位结构合同与工具适配（离线）
+
+- Verdict：`ACCEPT`，独立只读 Controller `/root/g00_reviewer`；接受范围限于离线岗位合同、Prompt/source mapping 与 NK/CritiCS adapters，不代表真实角色执行、正文生成或供应商调用已验证。
+- 最终候选：C=`112186c5fc79914c6ee93560d9a6db8528d6a6ac`，T=`4605e1ae5a7b2081b0ce40da13502ec6e98f8406`；父提交为 W04 实现候选修正 C=`33db89cdec55e12d0db054a46a6a865216b6376e`。
+- Controller 原消息：`ACCEPT — P3 W04`，确认 `ROLE_UNKNOWN` fail-closed 检查和拼错角色负例已补；仅接受 W04 离线岗位合同/适配器，不含实时角色执行、生成正文或 API 调用。
+- 两轮 RETURN 均已按点修复：Prose 来源同时记录 ai_roles 与 writing_brief 两个上游 blob；所有角色拒绝未授权输入字段；未知角色在输出校验开始处拒绝。最终验证：13 项 unittest、py_compile、`git diff --check` 通过；无供应商请求。
+- 推送及远端 readback：待完成。
