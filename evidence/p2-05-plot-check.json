@@ -4,7 +4,7 @@
   "run_id": "p2-05-live-20261010",
   "source_version": "JUN-SINGLE-02.3",
   "source_zip_sha256": "300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2",
-  "insert_window": "after J19 release and before J20 route selection",
+  "insert_window": "within J19 after line 555 dialogue and before line 557 gameplay opens; before line 559 immediate-confession option and before any player interaction",
   "scene_count": 1,
   "provider": {
     "model": "deepseek-flash",
@@ -25,11 +25,13 @@
     "p2_05_actual_provider_requests": 1
   },
   "artifacts": {
-    "workspace/cangqi/sample_contract.json": "1D51D6FE09B7915D3FE26862FF2636F7FED8CBD6152302BA5A2F1E5A7ACF5138",
-    "workspace/cangqi/06_plot/ep001_plot.v0.md": "F4A49D19EA64B73966231BC6FEDF528E9E0FB6CE75E40AB2FEBA99A021BB09BF",
-    "workspace/cangqi/06_plot/ep001_source_anchors.md": "84705500E286D5A30BF5801F1D5D372225E2466CAD84B7EC6C3874E506B451AD",
+    "workspace/cangqi/sample_contract.json": "652157EE7F7F17924ACDE368B2DBA04A55A3E9ECBEE91D83159099D986DBF3DF",
+    "workspace/cangqi/06_plot/ep001_plot.v0.md": "83F2BABDD3C6674D38FE5DDBF80D79D6E31492971512445BCEA0D1CB446DBECA",
+    "workspace/cangqi/06_plot/ep001_source_anchors.md": "A5B2BF3EDD64225339B4B79AFC49082C62D345AFA435374B994F42F0731BCB5E",
     "runs/p2-05-live-20261010/plot-prompt.txt": "4B391BB79746E7B87872DC8DD5459555C01B505CB7AF2390FF735E8E98BF9293",
     "runs/p2-05-live-20261010/plot-provider-response.json": "D687253BA61B5906F5C3A6174E3B78DD692EC79E0F8BEB5F398B95DFD10EAD77",
-    "runs/p2-05-live-20261010/p2-cost-ledger.json": "9ACE1D402FE8CE46454B4ABE0CF4F2FBEE8DCB1CBEBA497B8E323A906CC3A045"
-  }
+    "runs/p2-05-live-20261010/p2-cost-ledger.json": "9ACE1D402FE8CE46454B4ABE0CF4F2FBEE8DCB1CBEBA497B8E323A906CC3A045",
+    "runs/p2-05-live-20261010/controller-return-correction.md": "2F58179BAF58A4997D35E7C483FE7D62DE47D0592C38F405183047B7EEDCA452"
+  },
+  "return_flow": "After the insert, resume J19 gameplay and immediate-confession options unchanged; then continue the existing J20 route flow."
 }
