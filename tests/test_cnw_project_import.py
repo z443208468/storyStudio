@@ -82,10 +82,11 @@ class NewProjectImportTests(unittest.TestCase):
         return {"manifest": manifest, "contract": contract, "brief_packet": brief_packet, "project": project}
 
     def test_two_different_raw_scripts_reach_distinct_contracts_and_role_inputs(self):
-        md = "# Harbor at dusk\nMira opens the west gate.\nA bell sounds twice.\nThe ferry leaves before dawn.\n"
-        structured = '{\n  "title": "Glass Orchard",\n  "scene": "Ren finds the winter ledger.",\n  "event": "The lantern goes dark.",\n  "ending": "The bridge remains closed."\n}\n'
-        first = self.import_case("FICT_HARBOR", "harbor.md", md.encode("utf-8"), "md", (1, 4))
-        second = self.import_case("FICT_ORCHARD", "orchard.json", structured.encode("utf-8"), "json", (1, 6))
+        fixtures = ROOT / "tests" / "fixtures"
+        md = (fixtures / "pipeline_script_harbor.md").read_bytes()
+        structured = (fixtures / "pipeline_script_orchard.json").read_bytes()
+        first = self.import_case("FICT_HARBOR", "harbor.md", md, "md", (1, 4))
+        second = self.import_case("FICT_ORCHARD", "orchard.json", structured, "json", (1, 6))
         self.assertNotEqual(first["manifest"]["import_id"], second["manifest"]["import_id"])
         self.assertNotEqual(first["contract"]["unit"]["id"], second["contract"]["unit"]["id"])
         self.assertNotEqual(first["brief_packet"]["input_hashes"], second["brief_packet"]["input_hashes"])
