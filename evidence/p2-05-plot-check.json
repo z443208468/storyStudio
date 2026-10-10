@@ -1,0 +1,35 @@
+{
+  "stage": "P2-05",
+  "status": "PLOT_DRAFT_FOR_CONTROLLER_REVIEW",
+  "run_id": "p2-05-live-20261010",
+  "source_version": "JUN-SINGLE-02.3",
+  "source_zip_sha256": "300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2",
+  "insert_window": "after J19 release and before J20 route selection",
+  "scene_count": 1,
+  "provider": {
+    "model": "deepseek-flash",
+    "provider_request_id": "02ed6533-354f-432d-8bd7-25a1774f4122",
+    "local_request_id": "plot-18d1b1eda69e40a780ef07cff2dbe162",
+    "finish_reason": "stop",
+    "input_tokens": 3142,
+    "output_tokens": 955,
+    "estimated_cost_cny": "0.013994",
+    "reasoning": "disabled"
+  },
+  "campaign": {
+    "limit_cny": "10",
+    "committed_estimate_cny": "0.018886",
+    "actual_provider_requests": 6,
+    "request_records": 8,
+    "p2_04_actual_provider_requests": 5,
+    "p2_05_actual_provider_requests": 1
+  },
+  "artifacts": {
+    "workspace/cangqi/sample_contract.json": "1D51D6FE09B7915D3FE26862FF2636F7FED8CBD6152302BA5A2F1E5A7ACF5138",
+    "workspace/cangqi/06_plot/ep001_plot.v0.md": "F4A49D19EA64B73966231BC6FEDF528E9E0FB6CE75E40AB2FEBA99A021BB09BF",
+    "workspace/cangqi/06_plot/ep001_source_anchors.md": "84705500E286D5A30BF5801F1D5D372225E2466CAD84B7EC6C3874E506B451AD",
+    "runs/p2-05-live-20261010/plot-prompt.txt": "4B391BB79746E7B87872DC8DD5459555C01B505CB7AF2390FF735E8E98BF9293",
+    "runs/p2-05-live-20261010/plot-provider-response.json": "D687253BA61B5906F5C3A6174E3B78DD692EC79E0F8BEB5F398B95DFD10EAD77",
+    "runs/p2-05-live-20261010/p2-cost-ledger.json": "9ACE1D402FE8CE46454B4ABE0CF4F2FBEE8DCB1CBEBA497B8E323A906CC3A045"
+  }
+}

@@ -71,3 +71,13 @@
 - 证据补充：首次 CritiCS 成功调用的 ledger 行 `critics-b6f3d53fcae34ffa8d7a578cc67140e9` 记录 71/7 tokens 与估算 `¥0.000199`，但供应商 request ID 未捕获；原始响应文件被后续有 ID 的仪表化调用覆盖。该请求已单独列入五笔供应商调用及总费用，并以 `runs/p2-04-live-20261010/critics-b6f3d53fcae34ffa8d7a578cc67140e9-reconciliation.json` 明示限制；不臆造 ID 或响应体。CritiCS 探针现按本地 request ID 分文件，避免覆盖。NK provider 失败响应记录已重新校验为有效 JSON，并确认不含 `reasoning_content` 字段。
 - Controller 复核候选 C=`816fed0a299fcd99473725486119691f070bc64e`，T=`b2a3131fc8ceedce1cd74a8a4de77e7f79642992`；限定 ACCEPT。
 
+
+
+## P2-05
+
+- Status：单场 CNW Plot 草案已由 DeepSeek Flash 生成；等待 Controller local acceptance。
+- 合同：`workspace/cangqi/sample_contract.json`；源锚：`workspace/cangqi/06_plot/ep001_source_anchors.md`；Plot：`workspace/cangqi/06_plot/ep001_plot.v0.md`。
+- 插入窗口：J19 释放行动后、J20 任一路线开始前；单场连续讲堂空间。新增细节均标记为候选，未写回 Canon；保持知识与路线状态。
+- 真实调用：`runs/p2-05-live-20261010/`；provider request `02ed6533-354f-432d-8bd7-25a1774f4122`，DeepSeek Flash，finish=stop，3142/955 tokens，估算 `¥0.013994`。全 campaign 六笔真实 provider 请求估算 `¥0.018886/¥10`；其中 P2-04 五笔事实保持原记录。无项目 Key 写入证据。
+- 脱敏/私有证据清单：`evidence/p2-05-plot-check.json`；其记录的六项产物哈希已核对。
+- 该阶段 candidate C/T 与 Controller verdict：冻结后追加。
