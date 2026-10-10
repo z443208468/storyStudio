@@ -1,7 +1,7 @@
 # P3 当前状态
 
 - 当前唯一分支 `main` 已将 P3.1 差异修复和 Controller ACCEPT 正常推送；远端/本地回读一致。用户明确只保留 main，不创建候选分支；不强推、不 reset/clean、不删除既有工作。
-- 唯一活动计划：`plans/MASTER_PLAN_P3_1.md`。P3.1 ZIP SHA256=`2550F43B266BFDCAC324F9C24E4DCC7E86B6AA38462B32310A203F54BD6FFDF3`。P3.1 W04/W05 差异修复及 W06–W08 均已同一独立 Controller ACCEPT；下一阶段为 W09。
+- 唯一活动计划：`plans/MASTER_PLAN_P3_1.md`。P3.1 ZIP SHA256=`2550F43B266BFDCAC324F9C24E4DCC7E86B6AA38462B32310A203F54BD6FFDF3`。P3.1 W04/W05 差异修复及 W06–W09 均已同一独立 Controller ACCEPT；下一阶段为 W10 唯一真实场景复测。
 - P3 工单包 SHA256：`E3D4E10B7C876A2F4F53B0BFC5560BB24419F975D4A88445FAED993A66BE3CAD`。CNW pin：`97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`；本地捕获 manifest SHA256：`E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983`，98 项。
 - 状态：`ENV_READY=ACCEPTED`; `NK_LIVE=ACCEPTED`; `CRITICS_LIVE=ACCEPTED`; `CNW_FULL_PRODUCTION=NOT_VERIFIED`; `PRODUCT_MILESTONE_REOPENED=YES`; `USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
 - W00 `ACCEPTED` 并已推送；W01 `ACCEPTED` 并已推送。详细 Controller 消息、精确候选 C/T 及远端回读见 `reviews/P2_ACCEPTANCE_LOG.md` 中追加的 P3 W00/W01/W04 记录。
@@ -27,4 +27,5 @@
 | W06 | ACCEPTED | 同一 Controller ACCEPT C=`a31c91451dc6e67b714dae434ff0a9ebd765a5d2` / T=`7b7a5859bbf06befea8ebad7e4af2ba7ad981de2`；47 项测试通过；仅构造离线请求与验收门，未生成新正文/未调用模型 |
 | W07 | ACCEPTED | 同一 Controller ACCEPT C=`366b296392b432b4a0a82643566b5df42b3b50e0` / T=`257148031c2d2ed9b0984132304196e2be86172e`；57 tests 通过；完整必需来源、隔离五 Lens/三 Verifier、真实投票分类后的全文 Completeness、P2 cost guard dry-run 预算接口；未写账本/无 provider ID/零模型调用 |
 | W08 | ACCEPTED | 同一 Controller ACCEPT C=`0b9ce210d2d348e2da6dc8a93171611cbdf02123` / T=`fbc317a5333a42e2dea8a5f35d85f3b76da0f81d`；64 tests 通过；修订验收绑定原始 verifier 响应、来源片段与 manifest，晋升前重算 W06 合同验证、差异记录及已接受计划；未进行真实模型调用 |
-| W09–W11 | NOT_STARTED | W10 才允许本轮唯一一场真实模型端到端验收；W07 mock 不能计入 |
+| W09 | ACCEPTED | 同一 Controller ACCEPT C=`0940668825e95067cc803eaad962b3d603ab5856` / T=`abf18a7a542068d6c97999d7600ff23987ee2718`；71 项全套测试本机通过；双原稿导入、Episode 长度/节拍/知识边界/缺场退回、五份虚构 Episode Sprint 均为离线；无模型调用/无费用 |
+| W10–W11 | NOT_STARTED | W10 才允许本轮唯一一场真实模型端到端验收；W07/W09 mock 不能计入 |
