@@ -16,7 +16,7 @@
 | P-A2-02 | 标明 NK 生成模型与 schema 原样限制 | UPSTREAM | NK @ `b857f34b7d371ae82c30e00eb021884c14d08ae9`: `app/api/generate-perspective/route.ts` blob `d3ec1181cd94553126673e515bfe24ce611f6511`, L256–258 (`generateObject`, `ResponseSchema`, `gpt-4.1`) | I01隔离核验 URL/模型兼容；不改源码/PROMPT/schema | plan §A2/I01 | 可能阻断 Flash 兼容 | PENDING |
 | P-A2-03 | 将 NK 外置 base URL/结构化输出标未验证 | USER | ZIP计划 §A2.1 明令不得假定 SDK 环境变量支持 | 只在 I01 给出原始证据，不预判兼容 | plan | 禁止越权真实调用 | PENDING |
 | P-A2-04 | 记录 CritiCS 默认 GPT 模型 | UPSTREAM | CritiCS @ `fbf66cbc913012c6f80af1687e27f0ce350475e3`: `critics/setting/chatsetting/gptsetting.py` blob `848802dae2fcd2cf29769dc06b539f106ca1b8af`, L12/L15 | 记录硬编码，不擅自替换模型 | plan §A2 | 可能阻断只用 Flash | PENDING |
-| P-A2-05 | 对 CritiCS 可疑语法做隔离实证 | USER | ZIP计划 §A2.2/§I01；原文件 blob `848802dae2fcd2cf29769dc06b539f106ca1b8af`, L43 `verbose=True                       s` | 仅报告源文本异常；I01 对原字节副本 py_compile 后定论 | plan §A2/I01 | 禁止未证实称 SyntaxError | PENDING |
+| P-A2-05 | 对 CritiCS 可疑语法做隔离实证 | USER | ZIP计划 §A2.2/§I01；CritiCS @ `fbf66cbc913012c6f80af1687e27f0ce350475e3`: `critics/setting/chatsetting/gptsetting.py` blob `848802dae2fcd2cf29769dc06b539f106ca1b8af`, L43 `verbose=True                       s` | 仅报告源文本异常；I01 对原字节副本 py_compile 后定论 | plan §A2/I01 | 禁止未证实称 SyntaxError | PENDING |
 | P-A2-06 | 记录 CritiCS OpenAI endpoint 与依赖 | UPSTREAM | CritiCS @ `fbf66cbc913012c6f80af1687e27f0ce350475e3`: `storygen/common/llm/llm.py` blob `ceea77242eb35b3061cfb86654a625bbc86c8325`; requirements blob `97861b02df31a9092d8bf42bc143230bd1d6a11a` | 记录精确版本及 endpoint，不安装 | plan §A2 | 兼容性与平台风险 | PENDING |
 | P-A2-07 | 将 CNW 界定为人工 prompt/procedure 工作流 | UPSTREAM | CNW @ `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`: `templates/_workflows/README.md` blob `afe16e553bef171f551c4f82c43a14f86c0aad71`, L3；`01_first_import.md` blob `56148578d91d55e492a6913b4d73cbe529c34ecf` | 只读原文执行，不造 Story Agent | plan §A2/I03 | 创作流程来源 | PENDING |
 | P-A3-01 | 不恢复旧S/AT计划或未授权的生成规模设计 | USER | ZIP计划 §A3；包内 `reviews/DESIGN_AUDIT.md` SHA256 `adfd2887d7e4fead7ca45afe421b84c1381834bef0c7f155d3bad6a187f49f65` | 仅保留本轮单场边界 | plan §A3/I04 | 防止旧工作流与批量扩量 | PENDING |
@@ -46,7 +46,7 @@
 | P-I00-07 | 保留三上游许可证并记录归属 | UPSTREAM | CNW @ `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`: `LICENSE` blob `e900c48410bda2c2eb5a3d780d3c8ffc6e6d12ca`; NK @ `b857f34b7d371ae82c30e00eb021884c14d08ae9`: `LICENSE` blob `d6cca24a828d468505a26e5185f9bb5b195d0d22`; CritiCS @ `fbf66cbc913012c6f80af1687e27f0ce350475e3`: `LICENSE` blob `61ea5cb2832e6d3e99da5b9b81952031f91de7a5` | 纳入许可/来源说明，不复制受限作品 | plan | 许可证归属 | PENDING |
 | P-I01-01 | 原字节复制到隔离 runtime 再安装/编译 | USER | ZIP计划 §I01 与 G00治理 §06 明确要求 | 只在副本生成构建物 | plan | 防污染 Vendor | PENDING |
 | P-I01-02 | 只读探测本机环境，不装大型依赖 | USER | ZIP计划 §I01 第4条 | 先查 Node/npm/Python/WSL/硬件 | plan/evidence | 不改变环境 | PENDING |
-| P-I01-03 | 实测 CritiCS 语法异常但不修源 | USER | ZIP计划 §I01 第5条；CritiCS blob `848802dae2fcd2cf29769dc06b539f106ca1b8af` L43 | 运行原字节副本 py_compile 并保留原错 | plan/evidence | 归因 upstream | PENDING |
+| P-I01-03 | 实测 CritiCS 语法异常但不修源 | USER | ZIP计划 §I01 第5条；CritiCS @ `fbf66cbc913012c6f80af1687e27f0ce350475e3`: `critics/setting/chatsetting/gptsetting.py` blob `848802dae2fcd2cf29769dc06b539f106ca1b8af` L43 | 运行原字节副本 py_compile 并保留原错 | plan/evidence | 归因 upstream | PENDING |
 | P-I01-04 | 实证 NK Flash 路由与原 schema，不发真实创作调用 | USER | ZIP计划 §A2.1、§I01 | 有实证前保持 NOT_TESTED | plan/evidence | 控制模型与费用 | PENDING |
 | P-I01-05 | 保存命令、退出码、错误和哈希 | USER | ZIP计划 §I01交付；GOVERNANCE §03/B08 | 原始失败与成功证据对应工具 | evidence | 可审计 | PENDING |
 | P-I01-06 | 逐工具报告原版兼容状态 | USER | ZIP计划 §I01交付状态枚举 | 不宣称全栈成功 | evidence | 结论准确 | PENDING |
@@ -72,8 +72,8 @@
 | P-D-02 | 只用有效 MVP 活动治理分支 | USER | ZIP计划 §D第2行/A1 | 机制参考，不搬业务条款 | plan | 授权边界 | PENDING |
 | P-D-03 | 固定三个上游版本 | USER | ZIP计划 §D第3行/A1 | 任何变更重新签收 | plan | 可复现 | PENDING |
 | P-D-04 | CNW 仅按人工流程操作 | UPSTREAM | CNW @ `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`: workflow README blob `afe16e553bef171f551c4f82c43a14f86c0aad71`, L3 | 禁止造第二套 agent 工作流 | plan | 流程一致性 | PENDING |
-| P-D-05 | NK Flash 兼容性必须离线核实 | USER | ZIP计划 §D第5行/I01; NK route blob `d3ec1181cd94553126673e515bfe24ce611f6511` L256–258 | 未验证不调用 | plan | 模型边界 | PENDING |
-| P-D-06 | CritiCS 可解析性需要实际实证 | USER | ZIP计划 §D第6行/I01; CritiCS blob `848802dae2fcd2cf29769dc06b539f106ca1b8af` L43 | 不把文本异常写为运行失败事实 | plan | 失败归因 | PENDING |
+| P-D-05 | NK Flash 兼容性必须离线核实 | USER | ZIP计划 §D第5行/I01; NK @ `b857f34b7d371ae82c30e00eb021884c14d08ae9`: `app/api/generate-perspective/route.ts` blob `d3ec1181cd94553126673e515bfe24ce611f6511` L256–258 | 未验证不调用 | plan | 模型边界 | PENDING |
+| P-D-06 | CritiCS 可解析性需要实际实证 | USER | ZIP计划 §D第6行/I01; CritiCS @ `fbf66cbc913012c6f80af1687e27f0ce350475e3`: `critics/setting/chatsetting/gptsetting.py` blob `848802dae2fcd2cf29769dc06b539f106ca1b8af` L43 | 不把文本异常写为运行失败事实 | plan | 失败归因 | PENDING |
 | P-D-07 | 未证明三工具完整调用前不宣称全栈 | USER | ZIP计划 §D第7行/I04 | 限定结论强度 | plan | 功能真实 | PENDING |
 | P-D-08 | ZIP 未定位前不声称在 Downloads | USER | ZIP计划 §D第8行/I02 | 只记录未观察 | plan | 输入身份 | PENDING |
 | P-D-09 | 一场样本不代表全篇质量 | USER | ZIP计划 §D第9行/I04 | 结论局限明示 | plan | 防泛化结论 | PENDING |
