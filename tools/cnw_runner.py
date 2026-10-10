@@ -1081,11 +1081,11 @@ def execute_lint(run_dir: Path, stage: str) -> dict:
     except ImportError:
         from cnw_lint import lint
     layer = "surface" if stage == "lint_layer1" else "structural"
-    report = lint(text, layer)
+    report = lint(text, layer, _run_dir_base(run_dir) / "92_style_engine/forbidden_patterns.md")
     report["stage"] = stage
     report["role"] = "local_deterministic_runner"
     rel = f"artifacts/{stage}.json"
-    _persist_stage(run_dir, stage, rel, json.dumps(report, ensure_ascii=False, indent=2), validation={"status": "LINT_CLEAN" if not report["findings"] else "LINT_COMPLETE", "source_sha256": report["source_sha256"], "findings": len(report["findings"])})
+    _persist_stage(run_dir, stage, rel, json.dumps(report, ensure_ascii=False, indent=2), validation={"status": report["status"], "source_sha256": report["source_sha256"], "findings": len(report["findings"]), "executable_rule_count": report["executable_rule_count"]})
     return {"stage": stage, "findings": len(report["findings"]), "provider_call": "none"}
 
 
@@ -1102,6 +1102,11 @@ def _review_sources(run_dir: Path, state: dict, contract: dict, project_root: Pa
         "writing_brief": _read_stage_text(run_dir, state, "writing_brief"),
         "project_specific_canon": (project_root / "90_canon/canon.md").read_text(encoding="utf-8-sig"),
     }
+    for lens_id in LENS_IDS:
+        feedback = project_root / "08_review/lens_feedback" / f"{lens_id}.json"
+        if feedback.is_file():
+            updates = json.loads(feedback.read_text(encoding="utf-8"))
+            sources[f"lens_feedback:{lens_id}"] = "\n".join(item["instruction"] for item in updates)
     return sources
 
 
@@ -1226,6 +1231,21 @@ def execute_completeness(run_dir: Path) -> dict:
     parsed = _parse_json_content(content, "completeness_critic")
     if not isinstance(parsed.get("candidate_findings"), list):
         raise ContractError("LIVE_COMPLETENESS_OUTPUT_INVALID", "candidate_findings required")
+    for finding in parsed["candidate_findings"]:
+        if (not isinstance(finding, dict) or finding.get("lens_id") not in LENS_IDS
+                or not isinstance(finding.get("prompt_update"), str) or not finding["prompt_update"].strip()):
+            raise ContractError("LIVE_COMPLETENESS_OUTPUT_INVALID", "each omission needs a relevant lens and reusable prompt_update")
+    feedback_dir = project_root / "08_review/lens_feedback"
+    for finding in parsed["candidate_findings"]:
+        feedback_dir.mkdir(parents=True, exist_ok=True)
+        path = feedback_dir / f"{finding['lens_id']}.json"
+        updates = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+        instruction = finding["prompt_update"].strip()
+        if not any(item["instruction"] == instruction for item in updates):
+            updates.append({"instruction": instruction, "category": finding.get("category"),
+                            "run_id": run_dir.name, "finding_id": finding.get("finding_id"),
+                            "provider_request_id": receipt["provider_request_id"]})
+            path.write_text(json.dumps(updates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     parsed["stage"] = "completeness_critic"
     parsed["confirmed_findings"] = [f.get("finding_id") for f in confirmed]
     parsed["rejected_findings"] = [f.get("finding_id") for f in rejected]

@@ -77,11 +77,14 @@ class AdapterTests(unittest.TestCase):
                 path = workdir / f"{name}.md"
                 path.write_text(content, encoding="utf-8")
                 paths[name] = path
-            view = build_prose_input_view(contract, "BRIEF", "VOICES")
+            voices = "\n\n".join(f"### {name}\nSample voice" for name in contract["story"]["characters_in_scene"])
+            voices += "\n\n### Unrelated character\nPrivate unrelated sample"
+            view = build_prose_input_view(contract, "BRIEF", voices)
             self.assertEqual(set(view["inputs"]), {"brief", "voice_samples"})
             self.assertNotIn("contract", view)
             self.assertEqual(view["execution_contract"]["target_visible_chars"], 1500)
             self.assertNotIn("character_knowledge_boundary_ref", json.dumps(view, ensure_ascii=False))
+            self.assertNotIn("Private unrelated sample", view["inputs"]["voice_samples"])
             with self.assertRaisesRegex(ContractError, "ROLE_INPUT_SCOPE_VIOLATION"):
                 build_role_packet("plot", CONTRACT_PATH, {"canon_scope": paths["canon"], "source_anchors": paths["anchors"], "future_route": paths["canon"]})
         finally:

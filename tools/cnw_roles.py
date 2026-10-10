@@ -130,9 +130,32 @@ def read_actual_texts(project_root: Path, role: str, work_id: str) -> dict[str, 
     return {template: path.read_text(encoding="utf-8-sig") for template, path in resolve_author_reads(role, project_root, work_id).items()}
 
 
+def relevant_voice_samples(text: str, characters: list[str]) -> str:
+    """Select character sections, retaining their nested sample headings only."""
+    if not characters:
+        raise ContractError("PROSE_CAST_MISSING", "participating characters are required")
+    headings = list(re.finditer(r"^(#{1,6})\s+(.+?)\s*$", text, re.MULTILINE))
+    sections = []
+    found = set()
+    for index, heading in enumerate(headings):
+        title = heading.group(2).strip().strip("*")
+        if title not in characters:
+            continue
+        level = len(heading.group(1))
+        end = next((other.start() for other in headings[index + 1:]
+                    if len(other.group(1)) <= level), len(text))
+        sections.append(text[heading.start():end].strip())
+        found.add(title)
+    missing = set(characters) - found
+    if missing:
+        raise ContractError("VOICE_SAMPLE_CHARACTER_MISSING", ", ".join(sorted(missing)))
+    return "\n\n".join(sections)
+
+
 def build_prose_input_view(contract: dict[str, Any], brief: str, voice_samples: str) -> dict[str, Any]:
     """Return only the brief, relevant voices, and minimum execution bounds."""
     unit = contract["unit"]
+    voice_samples = relevant_voice_samples(voice_samples, contract["story"].get("characters_in_scene", []))
     return {
         "execution_contract": {
             "unit_id": unit["id"],
@@ -164,6 +187,16 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
     """Reproduce the author template + reading list, then the project values."""
     if role not in ROLE_TO_AUTHOR_TEMPLATE:
         raise ContractError("ROLE_UNKNOWN", role)
+    if role == "prose":
+        brief_key, voice_key = AUTHOR_ROLE_READS["prose"]
+        brief = materials[brief_key]
+        voices = relevant_voice_samples(materials[voice_key], contract["story"]["characters_in_scene"])
+        # Canon, plot, contract.story, and review rules must reach prose only
+        # through the Brief. The orchestrator retains validation metadata.
+        return [
+            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the participating characters' voice samples. Output only the prose, without planning notes or commentary."},
+            {"role": "user", "content": json.dumps({"writing_brief": brief, "voice_samples": voices}, ensure_ascii=False)},
+        ]
     template_text, blob = _pinned_upstream(ROLE_TO_AUTHOR_TEMPLATE[role])
     reads_text, _ = _pinned_upstream("templates/config/ai_roles.template.yml")
     header = f"[pinned_author_template: {ROLE_TO_AUTHOR_TEMPLATE[role]} blob={blob}]\n"

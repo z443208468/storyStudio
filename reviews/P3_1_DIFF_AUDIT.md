@@ -58,3 +58,16 @@
 | S30 | `AGENTS.md`、`evidence/P3_CURRENT_STATE.md`、`plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md` 记录本 Atom 为 P3.1 覆盖条款 |
 
 真实 Run：`CNW1TO1-CQ-J19-20261010-01`，11 阶段全部 `STAGE_MATERIALIZED`，`verify-live` 返回 `LIVE_EVIDENCE_VALIDATED`（83 receipts，全部 SETTLED）。`EPISODE_LIVE_NOT_RUN`、`SPRINT_LIVE_NOT_RUN`、`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
+
+## 原作者源码重新研究：首批修复（2026-10-11）
+
+用户要求自行研究并实现原作者公开工作流，不再将旧施工单作为实施方案。本节记录当前实际代码增量；上文历史记录不构成新实现完成证明。
+
+- 对照固定参考 `templates/_workflows/02_incremental_update.md`：导入追加来源、索引及候选，保留既有确认状态；相同内容重复导入不重写项目。信息分类、设计文件维护及语义冲突处理尚待完成。
+- 对照 `templates/config/ai_roles.template.yml`：主生产 Prose 消息仅包含 Brief 和参与人物声音分节，删除完整剧情合同注入；共享 Prose 包构建也筛选声音。旧 executor 兼容问题尚未修复。
+- 对照 `docs/THREE_LAYER_REVIEW.md`：Completeness 遗漏带所属 Lens 与后续检查指令，项目持久保存并由对应 Lens 读取。写入前检查全部条目类型。
+- 对照 `templates/92_style_engine/forbidden_patterns.template.md`：本地 Lint 从项目 Markdown Pattern/Cap 列读取确定性规则；非正则描述保留为语义审查项。无可执行规则明确返回 `NO_EXECUTABLE_RULES`，不报告 clean。
+- 验证：现有导入 2 项、适配 8 项、审稿 10 项测试通过；直接执行验证了累计来源、确认状态不变、唯一候选 ID、重复导入文件字节不变、Prose 无关声音隔离、原作者模板正则读取与次数上限。`git diff --check` 无空白错误。
+- 唯一独立只读 Controller `/root/controller` 复核结论：**ACCEPT，仅限本轮代码增量**。不是整项工作流验收、真实生产证明或用户创意接受。
+- 本轮无新增模型调用。只读账本显示累计占用 ¥3.663326/¥10，后续仍沿用同一费用护栏。
+- 尚待继续：项目导入语义产物、创作前资料准备、Plot 结构职责、当前修订协议、受影响复审与继续修订、并行调度及真实作品生产。不得以本次增量声称完整完成。

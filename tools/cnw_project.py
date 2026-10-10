@@ -80,6 +80,22 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
     else:
         parsed = None
     init_project(workspace_root, project_id)
+    inbox = root / "_INBOX"
+    manifest_path = inbox / "source_manifest.json"
+    index_path = inbox / "source_index.json"
+    canon_path = root / "90_canon" / "canon_candidates.json"
+    previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else None
+    previous_index = json.loads(index_path.read_text(encoding="utf-8")) if previous else None
+    previous_canon = json.loads(canon_path.read_text(encoding="utf-8")) if previous else None
+    if previous:
+        for source in previous["sources"]:
+            if source["sha256"] == digest:
+                stored = root / source["stored_path"]
+                if not stored.is_file() or sha(stored.read_bytes()) != digest:
+                    raise ContractError("EXISTING_SOURCE_COLLISION", source["stored_path"])
+                return {"status": "SOURCE_ALREADY_IMPORTED", "project_id": project_id,
+                        "project_root": str(root), "source_sha256": digest,
+                        "provider_call": "none"}
     original_rel = Path("_INBOX/originals") / f"{digest[:16]}_{source_path.name}"
     original = root / original_rel
     if original.exists() and sha(original.read_bytes()) != digest:
@@ -113,11 +129,35 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
         "sources": [{"source_id": digest[:16], "original_path": str(source_path), "stored_path": original_rel.as_posix(), "format": source_path.suffix.lower().lstrip("."), "sha256": digest, "bytes": len(raw), "encoding": "utf-8", "location_count": len(locations)}],
     }
     index = {"schema_version": "cnw_source_index_v1", "project_id": project_id, "source_sha256": digest, "locations": locations}
-    inbox = root / "_INBOX"
+    for location in locations:
+        location["source_id"] = digest[:16]
+        location["source_file"] = original_rel.as_posix()
+    if previous:
+        # Keep the first-import identity and every previous source revision.
+        # Changed files append a new revision; prior conclusions stay intact.
+        manifest = {**previous, "sources": previous["sources"] + manifest["sources"],
+                    "updated_at": manifest["imported_at"]}
+        manifest["source_count"] = len(manifest["sources"])
+        old_locations = previous_index["locations"]
+        if len(previous["sources"]) == 1:
+            first = previous["sources"][0]
+            old_locations = [{"source_id": first["source_id"],
+                              "source_file": first["stored_path"], **item}
+                             for item in old_locations]
+        index = {**previous_index, "locations": old_locations + locations}
+        used_ids = {item["candidate_id"] for item in previous_canon["candidates"]}
+        next_id = 1
+        for candidate in candidates:
+            while f"C{next_id:04d}" in used_ids:
+                next_id += 1
+            candidate["candidate_id"] = f"C{next_id:04d}"
+            used_ids.add(candidate["candidate_id"])
+        candidates = previous_canon["candidates"] + candidates
     (inbox / "source_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (inbox / "source_index.json").write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    canon_path = root / "90_canon" / "canon_candidates.json"
-    canon_path.write_text(json.dumps({"schema_version": "cnw_canon_candidates_v1", "project_id": project_id, "source_manifest_sha256": sha((inbox / "source_manifest.json").read_bytes()), "policy": "Every entry requires human confirmation; importer makes no Canon inference.", "candidates": candidates}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    canon_document = previous_canon or {"schema_version": "cnw_canon_candidates_v1", "project_id": project_id, "policy": "Every entry requires human confirmation; importer makes no Canon inference."}
+    canon_document.update(source_manifest_sha256=sha(manifest_path.read_bytes()), candidates=candidates)
+    canon_path.write_text(json.dumps(canon_document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"status": "SOURCE_IMPORTED_FOR_REVIEW", "project_id": project_id, "project_root": str(root), "source_manifest": "_INBOX/source_manifest.json", "source_index": "_INBOX/source_index.json", "canon_candidates": "90_canon/canon_candidates.json", "source_sha256": digest, "source_locations": len(locations), "canon_candidate_count": len(candidates), "canon_status": "TODO_CONFIRM", "provider_call": "none"}
 
 
@@ -198,6 +238,8 @@ def incremental_update(workspace_root: str | Path, project_id: str, input_file: 
     if not manifest_file.is_file():
         raise ContractError("INCREMENTAL_REQUIRES_EXISTING_PROJECT", "run Workflow 01 first")
     imported = import_source(workspace_root, project_id, input_file)
+    if imported["status"] == "SOURCE_ALREADY_IMPORTED":
+        return imported
     source_log = root / "00_meta" / "source_log.md"
     source_log.parent.mkdir(parents=True, exist_ok=True)
     with source_log.open("a", encoding="utf-8", newline="\n") as stream:

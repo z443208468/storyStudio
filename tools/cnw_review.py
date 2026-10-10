@@ -189,6 +189,9 @@ def build_lens_input(lens_id: str, full_draft: str, sources: dict[str, str]) -> 
         "author_lens_definition": LENS_GOALS[lens_id],
         "execution_mode": "LIVE_REQUEST_READY",
     }
+    feedback = sources.get(f"lens_feedback:{lens_id}")
+    if feedback:
+        packet["additional_review_instructions"] = feedback
     packet["input_sha256"] = digest(json.dumps(packet, ensure_ascii=False, sort_keys=True))
     return packet
 
@@ -199,6 +202,7 @@ def lens_messages(packet: dict) -> list[dict]:
         " 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON："
         '{"lens_id":"<id>","findings":[{"finding_id":"F1","severity":"major|minor","evidence":"原文短引","issue":"具体问题","recommendation":"可执行修改"}]}。'
         "无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。"
+        "如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
     )
     user = json.dumps({k: v for k, v in packet.items() if k != "input_sha256"}, ensure_ascii=False, sort_keys=True)
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
@@ -246,8 +250,8 @@ def completeness_messages(packet: dict) -> list[dict]:
     system = (
         "你是 Completeness Critic，负责找出前面 Lens 设计遗漏的问题类别。"
         "读完整 draft 与已确认/已驳回 findings，输出 JSON："
-        '{"inspected_full_text_sha256":"<draft sha256>","candidate_findings":[{"finding_id":"C1","category":"遗漏类别","issue":"缺口","evidence":"正文位置或引文","recommendation":"补入修订队列的动作"}]}。'
-        "候选补充不等于已确认缺陷，也不得直接改写正文。"
+        '{"inspected_full_text_sha256":"<draft sha256>","candidate_findings":[{"finding_id":"C1","lens_id":"style|character|plot|canon|story_specific","category":"遗漏类别","issue":"缺口","evidence":"正文位置或引文","recommendation":"补入修订队列的动作","prompt_update":"对应 Lens 今后检查这类遗漏的具体指令"}]}。'
+        "每个遗漏同时进入本章修订队列并更新对应 Lens 后续提示。prompt_update 只描述可复用的检查类别，不包含本章结论或其他 Lens 的意见。不得直接改写正文。"
     )
     user = json.dumps({k: v for k, v in packet.items() if k != "input_sha256"}, ensure_ascii=False, sort_keys=True)
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
