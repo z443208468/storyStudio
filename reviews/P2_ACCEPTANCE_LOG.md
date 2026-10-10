@@ -82,7 +82,7 @@
 - 脱敏/私有证据清单：`evidence/p2-05-plot-check.json`；其记录的六项产物哈希已核对。
 - 首轮 RETURN：J19 第559行仍允许即时坦白，首版锚点截断在第557行。修正后精确插点为第555行对白之后、玩法开启（557）之前；场景后原样恢复 J19 玩法与坦白选项，再继续 J20。修正说明与补齐的私有源锚已加入 hash 清单；没有重发模型请求。
 - 插入边界复核候选 C=`cc30e9d7b7a3966a71279e6dfb5eb9c3905067b0`，T=`645fb4ba8c174f18866e6c5fff39975a86a999f6`；限定 ACCEPT（只接受 J19/J20 连续性纠偏）。
-- 最终带验收记录的提交与远端 readback：推送后追加。
+- 阶段验收最终纳入候选 C=`ef76fb329a10e22284de9701b94cb99d690b19bb`、T=`91ceb9b822815e824d358a5fff82e14137efe3f5`；此候选经最终本地 ACCEPT 与远端 `REMOTE_READBACK ACCEPT`。当前关闭记录见 P2-07。
 
 
 ## P2-06 — Plot Gate（阶段中间门）
@@ -102,9 +102,9 @@
 - CritiCS：Plot Gate 五个原生批评调用 + `modifiedStoryline()` 一次，估算 ¥0.077503；`Refinement.Two_refinement()` 实际三次原生 Image/Voice/Leader 调用，只审连续三句摘录，不声称全文审读。完整 v0 至 v1 经 Flash 同场修订，v1 删去未列入卡片的附加物件/动作。
 - 本阶段总真实 provider 请求 12 次。累计账本 17 次真实请求、21 条记录，估算 ¥0.123297 / ¥10；usage 总计 25,018 输入 / 9,055 输出 tokens。明细和私有 SHA-256：`evidence/p2-06-execution.json`。
 - 三项不计费失败均明示：未装载锁定依赖的初次 CritiCS 导入、首次 NK schema 不匹配（HTTP 400、未到 provider）、预建 run 目录造成的本地路径冲突；均已修复并在不同 run 完成对应阶段。
-- 本地 Controller 内容 ACCEPT 已完成；绑定的候选 C/T 和远端回读将在本次交付候选冻结后追加。
+- 本地 Controller 内容 ACCEPT 已完成；完整阶段产物纳入 P2-07 最终候选 C=`ef76fb329a10e22284de9701b94cb99d690b19bb`、T=`91ceb9b822815e824d358a5fff82e14137efe3f5`，并随该候选通过本地 ACCEPT 与远端 readback。
 
-## P2-07 — 阅读交付与可复用入口（本地候选，待 Controller）
+## P2-07 — 阅读交付与可复用入口（中间状态，已由下方最终记录取代）
 
 - 当前私有阅读包：`deliverables/EP001/`，含初稿/修订稿 Markdown+TXT、前后文连读 Markdown/TXT/离线 HTML、修改说明、本地使用说明、production preset 与文件 SHA-256 manifest。
 - 统一入口：`tools/studio.ps1`。新 PowerShell `doctor → prepare → import-source → scene plot/draft/revise → resume → export` 均通过；读取锁定源/补丁/运行环境，已有生成步骤复用。P2-07 冷启动检查确认成本账本 SHA 不变。
@@ -118,6 +118,7 @@
 - Controller 明确确认：入口脚本、交付文件及 manifest 文件哈希均与当前内容匹配；独立 PowerShell 回放覆盖只读定位、导出和 NK 生命周期；NK 启动到 `127.0.0.1:3175`、停止后无监听器；账本前后 SHA-256 一致且没有新增供应商调用。
 - 交付 HTML 无外部资源；连读摘录只含指定 J19 前后锚，不展开 J20 分支正文。用户创意签收保持 pending。
 - 证据：`evidence/p2-07-delivery.json`；私有回放与原始生命周期输出位于 `runs/p2-07-replay-20261010/`。
-- 本地 ACCEPT 已完成；提交候选 C/T 与远端只读回读待完成。
+- 本地 ACCEPT 与远端 readback 均已完成：阶段候选 ef76fb3...91ceb9b... 获 Controller ACCEPT；包含本记录的关闭提交 `0b40876b2f90cfc88c700f5d651719fa214d58af` / `eb23c4b4a8e48bf966845e339ab6bfc62ed88b98` 亦获独立 `REMOTE_READBACK ACCEPT`。Writer 与 Controller fetch 及 ls-remote 一致，工作树干净。
 - 最终候选：branch `codex/g00-governance-candidate`，C=`ef76fb329a10e22284de9701b94cb99d690b19bb`，T=`91ceb9b822815e824d358a5fff82e14137efe3f5`；main C=`06c66de7c7f18263039ea19a47e84c29716cde4b`，tree=`4b825dc642cb6eb9a060e54bf8d69288fbee4904`。
 - Controller `/root/g00_reviewer` 最终本地候选 ACCEPT；推送后独立 fetch 与 `ls-remote` 回读均为 `REMOTE_READBACK ACCEPT`，远端 C/T 与本地候选一致。
+- P2-05 最终交付候选 C=`ef76fb329a10e22284de9701b94cb99d690b19bb`、T=`91ceb9b822815e824d358a5fff82e14137efe3f5` 通过 Controller 最终本地 ACCEPT 与远端 `REMOTE_READBACK ACCEPT`；同一候选包含 P2-06/P2-07 完整产物。

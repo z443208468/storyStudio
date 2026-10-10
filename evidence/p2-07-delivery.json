@@ -139,7 +139,11 @@
     "verdict": "ACCEPT",
     "scope": "P2-07 local delivery only",
     "remote_readback": "REMOTE_READBACK_ACCEPT",
-    "remote_commit": "ef76fb329a10e22284de9701b94cb99d690b19bb",
-    "remote_tree": "91ceb9b822815e824d358a5fff82e14137efe3f5"
-  }
+    "remote_commit": "0b40876b2f90cfc88c700f5d651719fa214d58af",
+    "remote_tree": "eb23c4b4a8e48bf966845e339ab6bfc62ed88b98",
+    "final_local_candidate": "ef76fb329a10e22284de9701b94cb99d690b19bb",
+    "final_local_tree": "91ceb9b822815e824d358a5fff82e14137efe3f5"
+  },
+  "delivery_state": "READY_FOR_USER_REVIEW",
+  "user_creative_acceptance": "PENDING_USER_REVIEW"
 }
