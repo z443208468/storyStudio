@@ -20,10 +20,29 @@ def sha(data: bytes) -> str:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_live_role_packet_requires_live_mode_and_frozen_contract(self):
+        contract = load_contract(CONTRACT_PATH)
+        packet = build_role_packet("plot", CONTRACT_PATH, {
+            "canon_scope": ROOT / "workspace/cangqi/90_canon/canon.md",
+            "source_anchors": ROOT / "workspace/cangqi/06_plot/ep001_source_anchors.md",
+        }, mode="live")
+        self.assertEqual(packet["execution_mode"], "LIVE_REQUEST_READY")
+        self.assertEqual(packet["contract_sha256"], sha(CONTRACT_PATH.read_bytes()))
+        with self.assertRaisesRegex(ContractError, "ROLE_MODE_INVALID"):
+            build_role_packet("plot", CONTRACT_PATH, {
+                "canon_scope": ROOT / "workspace/cangqi/90_canon/canon.md",
+                "source_anchors": ROOT / "workspace/cangqi/06_plot/ep001_source_anchors.md",
+            }, mode="pretend-live")
+
     def test_nk_receives_ordered_events_and_reflection_enters_brief(self):
         contract = load_contract(CONTRACT_PATH)
-        payload = build_nk_payload(contract)
-        self.assertEqual([event["label"] for event in payload["eventSequence"]], ["B01", "B02", "B03", "B04"])
+        cards = (
+            "# Scene Cards — CQ-J19-INSERT-01\n\n## Scene 1\n\n### Required beats\n"
+            "- 明穗开口又停住\n- 君天离试着开口\n- 柳浅望向窗外\n- 林思柔低头\n"
+        )
+        payload = build_nk_payload(contract, cards)
+        self.assertEqual(len(payload["eventSequence"]), 4)
+        self.assertIn("明穗开口又停住", payload["eventSequence"][0]["description"])
         self.assertEqual(len(payload["perspectives"]), 1)
         task = payload["perspectives"][0]
         self.assertEqual(task["narrator"], "君天离")

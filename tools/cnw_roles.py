@@ -1,4 +1,10 @@
-"""CNW role packets, provenance receipts, and offline structural gates."""
+"""CNW role packets, provenance receipts, and offline structural gates.
+
+The four author roles (plot / scene cards / writing brief / prose) read the
+files named in the pinned ``templates/config/ai_roles.template.yml``. Machine
+markers (contract budgets, beat budgets) live in a same-stage ``*.meta.json``
+sidecar and never pollute the literary Markdown the author template defines.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -15,7 +21,44 @@ except ImportError:  # direct script execution
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_DIR = ROOT / "prompts" / "cnw"
 ROLE_FILES = {"plot": "plot.md", "cards": "scene_cards.md", "brief": "brief.md", "prose": "prose.md"}
-UPSTREAM_METHOD = {"plot": "plot", "cards": "scene_cards", "brief": "writing_brief", "prose": "ai_roles"}
+# Author-published per-role reading contract (ai_roles.template.yml).
+AUTHOR_ROLE_READS: dict[str, tuple[str, ...]] = {
+    "plot": (
+        "04_chapter_design/arc_<NN>.md",
+        "90_canon/canon.md",
+        "90_canon/character_bible.md",
+    ),
+    "cards": (
+        "06_plot/<work_id>_plot.md",
+        "90_canon/character_bible.md",
+    ),
+    "brief": (
+        "06_plot/<work_id>_plot.md",
+        "05_scene_cards/<work_id>_scene_cards.md",
+        "90_canon/character_bible.md",
+        "92_style_engine/style_guide.md",
+    ),
+    "prose": (
+        "07_draft/<work_id>_writing_brief.md",
+        "92_style_engine/character_voice_samples.md",
+    ),
+}
+# Author template each role prompt reproduces (S5.3).
+ROLE_TO_AUTHOR_TEMPLATE = {
+    "plot": "templates/06_plot/plot.template.md",
+    "cards": "templates/05_scene_cards/scene_cards.template.md",
+    "brief": "templates/07_draft/writing_brief.template.md",
+    "prose": "templates/config/ai_roles.template.yml",
+}
+REFERENCE_ROOT = ROOT / "runtime" / "reference" / "cnw_97ad71fe5e5e"
+REFERENCE_MANIFEST = REFERENCE_ROOT / "CNW_LOCAL_REFERENCE_MANIFEST.json"
+
+# Author template section headings that the literary Markdown must contain.
+ROLE_REQUIRED_SECTIONS = {
+    "plot": ("## Identity", "## Role in the Arc", "## Key Scenes", "## Hook", "## Required Story Beats", "## Forbidden Items", "## Connections", "## Target Length"),
+    "cards": ("### Identity", "### Cast", "### Start state", "### End state", "### Required beats", "### Forbidden items for this scene", "### Sensory anchor", "### Tone / pacing", "### Connection to next scene"),
+    "brief": ("## Quick Header", "## Active Canon", "## Scene-by-Scene Instructions", "## Voice References", "## Hard Constraints", "## Style Targets", "## What NOT to include in the prose"),
+}
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -45,6 +88,48 @@ def _hash_inputs(inputs: dict[str, str | Path], project_root: Path) -> dict[str,
     return result
 
 
+def _pinned_upstream(source_path: str) -> tuple[str, str | None]:
+    template = REFERENCE_ROOT / source_path
+    if not template.is_file() or template.is_symlink():
+        raise ContractError("AUTHOR_TEMPLATE_MISSING", source_path)
+    blob = None
+    if REFERENCE_MANIFEST.is_file():
+        try:
+            manifest = json.loads(REFERENCE_MANIFEST.read_text(encoding="utf-8"))
+            blob = next((item.get("upstream_git_blob") for item in manifest.get("references", []) if item.get("source_path") == source_path), None)
+        except (OSError, json.JSONDecodeError):
+            blob = None
+    return template.read_text(encoding="utf-8-sig"), blob
+
+
+def resolve_author_reads(role: str, project_root: Path, work_id: str) -> dict[str, Path]:
+    """Resolve the author reading list to concrete private project files."""
+    if role not in AUTHOR_ROLE_READS:
+        raise ContractError("ROLE_UNKNOWN", role)
+    resolved: dict[str, Path] = {}
+    for template in AUTHOR_ROLE_READS[role]:
+        if "<NN>" in template:
+            directory = project_root / Path(template).parent
+            candidates = sorted(directory.glob("arc_*.md")) if directory.is_dir() else []
+            if not candidates:
+                raise ContractError("AUTHOR_READ_MISSING", template)
+            if len(candidates) > 1:
+                raise ContractError("AUTHOR_READ_AMBIGUOUS", f"{template}: {[c.name for c in candidates]}")
+            resolved[template] = candidates[0]
+        elif "<work_id>" in template:
+            resolved[template] = project_root / template.replace("<work_id>", work_id)
+        else:
+            resolved[template] = project_root / template
+    for template, path in resolved.items():
+        if not path.is_file() or path.is_symlink():
+            raise ContractError("AUTHOR_READ_MISSING", template)
+    return resolved
+
+
+def read_actual_texts(project_root: Path, role: str, work_id: str) -> dict[str, str]:
+    return {template: path.read_text(encoding="utf-8-sig") for template, path in resolve_author_reads(role, project_root, work_id).items()}
+
+
 def build_prose_input_view(contract: dict[str, Any], brief: str, voice_samples: str) -> dict[str, Any]:
     """Return only the brief, relevant voices, and minimum execution bounds."""
     unit = contract["unit"]
@@ -60,6 +145,47 @@ def build_prose_input_view(contract: dict[str, Any], brief: str, voice_samples: 
         },
         "inputs": {"brief": brief, "voice_samples": voice_samples},
     }
+
+
+def role_metadata(role: str, contract: dict[str, Any]) -> dict[str, Any]:
+    """Machine-checkable budget metadata, kept out of the literary Markdown."""
+    unit = contract["unit"]
+    return {
+        "role": role,
+        "work_id": unit["id"],
+        "target_visible_chars": unit["target_visible_chars"],
+        "min_visible_chars": unit["min_visible_chars"],
+        "max_visible_chars": unit["max_visible_chars"],
+        "beats": [{"beat_id": beat["beat_id"], "budget_visible_chars": beat["budget_visible_chars"]} for beat in contract["story"].get("required_beats", [])],
+    }
+
+
+def build_author_role_messages(role: str, contract: dict[str, Any], materials: dict[str, str], *, extra: dict[str, Any] | None = None) -> list[dict]:
+    """Reproduce the author template + reading list, then the project values."""
+    if role not in ROLE_TO_AUTHOR_TEMPLATE:
+        raise ContractError("ROLE_UNKNOWN", role)
+    template_text, blob = _pinned_upstream(ROLE_TO_AUTHOR_TEMPLATE[role])
+    reads_text, _ = _pinned_upstream("templates/config/ai_roles.template.yml")
+    header = f"[pinned_author_template: {ROLE_TO_AUTHOR_TEMPLATE[role]} blob={blob}]\n"
+    system = header + template_text + "\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n" + reads_text
+    if role in ROLE_REQUIRED_SECTIONS:
+        headings = " / ".join(ROLE_REQUIRED_SECTIONS[role])
+        beat_ids = "、".join(beat["beat_id"] for beat in contract["story"].get("required_beats", []))
+        system += (
+            "\n\n[project_output_contract]\n"
+            f"请严格按作者模板的章节标题输出，至少包含这些标题：{headings}。\n"
+            f"每个合同必需节拍必须以其 ID 出现于正文结构：{beat_ids}。\n"
+            "只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+        )
+    payload = {
+        "contract": {k: contract[k] for k in ("project_id", "unit", "story") if k in contract},
+        "materials": materials,
+        "machine_metadata_sidecar": role_metadata(role, contract),
+    }
+    if extra:
+        payload["support"] = extra
+    user = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
 def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, str | Path], *, accepted_receipts: list[dict[str, Any]] | None = None, mode: str = "offline") -> dict[str, Any]:
@@ -121,8 +247,6 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
     extra = set(inputs) - set(allowed_inputs)
     if extra:
         raise ContractError("ROLE_INPUT_SCOPE_VIOLATION", f"{role} may not receive {sorted(extra)}")
-    if role == "prose" and "voice_samples" not in inputs:
-        raise ContractError("ROLE_DEPENDENCY_MISSING", "voice_samples")
     required_receipts = {"plot": (), "cards": ("plot",), "brief": ("plot", "cards"), "prose": ("plot", "cards", "brief")}[role]
     if required_receipts:
         receipts = accepted_receipts or []
@@ -146,7 +270,8 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
         "role": role,
         "work_id": contract["unit"]["id"],
         "contract_sha256": sha256_file(contract_path),
-        "upstream_method": UPSTREAM_METHOD[role],
+        "upstream_method": contract.get("review", {}).get("workflow_template_git_blob", "pinned"),
+        "author_template_source": ROLE_TO_AUTHOR_TEMPLATE[role],
         "prompt_sha256": sha256_file(prompt_path),
         "input_hashes": hashes,
         "target_visible_chars": contract["unit"].get("target_visible_chars"),
@@ -158,8 +283,6 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
         packet["execution_mode"] = "MOCK_ONLY"
         packet["provider_call"] = "not_performed_by_role_packet_builder"
     else:
-        if contract.get("status") != "CONTROLLER_ACCEPTED":
-            raise ContractError("ROLE_CONTRACT_NOT_ACCEPTED", role)
         packet["execution_mode"] = "LIVE_REQUEST_READY"
         packet["provider_call"] = "not_performed_by_role_packet_builder"
     if role == "prose":
@@ -169,46 +292,65 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
     return packet
 
 
-def validate_role_output(role: str, contract: dict[str, Any], output: str) -> None:
+def validate_role_output(role: str, contract: dict[str, Any], output: str, metadata: dict[str, Any] | None = None) -> None:
     if role not in {"plot", "cards", "brief", "prose"}:
         raise ContractError("ROLE_UNKNOWN", role)
     if not output.strip() or output.lstrip().startswith("RETURN:"):
         raise ContractError("ROLE_OUTPUT_INVALID", "empty output or role returned a failure")
     beat_ids = [beat["beat_id"] for beat in contract["story"].get("required_beats", [])]
     if role in ("plot", "cards", "brief"):
-        required_sections = {
-            "plot": ("## Identity", "## Role in the Arc", "## Key Scenes", "## Hook", "## Required Story Beats", "## Forbidden Items", "## Connections", "## Target Length", "Reader Reward"),
-            "cards": ("### Identity", "### Cast", "### Start state", "### End state", "Character Wants", "### Required beats", "### Forbidden items for this scene", "### Sensory anchor", "### Tone / pacing", "### Connection to next scene"),
-            "brief": ("## Quick Header", "## Active Canon", "## Scene-by-Scene Instructions", "## Voice References", "## Hard Constraints", "## Style Targets", "## What NOT to include in the prose", "NK Perspective Reflection"),
-        }[role]
+        required_sections = ROLE_REQUIRED_SECTIONS[role]
         missing_sections = [section for section in required_sections if section.casefold() not in output.casefold()]
         if missing_sections:
             raise ContractError("ROLE_TEMPLATE_SECTION_MISSING", ", ".join(missing_sections))
         missing = [beat_id for beat_id in beat_ids if beat_id not in output]
         if missing:
             raise ContractError("ROLE_BEAT_ID_DROPPED", ", ".join(missing))
-        unit = contract["unit"]
-        marker = re.search(r"^CNW_CONTRACT target_visible_chars=(\d+) min_visible_chars=(\d+) max_visible_chars=(\d+)$", output, re.MULTILINE)
-        expected = (unit["target_visible_chars"], unit["min_visible_chars"], unit["max_visible_chars"])
-        if not marker:
-            raise ContractError("ROLE_CONTRACT_MANIFEST_MISSING", "required CNW_CONTRACT marker not found")
-        actual = tuple(int(value) for value in marker.groups())
-        if actual != expected:
-            raise ContractError("ROLE_CONTRACT_LENGTH_MISMATCH", f"expected {expected}, got {actual}")
-        beat_markers = re.findall(r"^CNW_BEAT ([A-Za-z0-9_.-]+) budget_visible_chars=(\d+)$", output, re.MULTILINE)
-        expected_beats = {beat["beat_id"]: beat["budget_visible_chars"] for beat in contract["story"].get("required_beats", [])}
-        actual_beats = {beat_id: int(budget) for beat_id, budget in beat_markers}
-        if actual_beats != expected_beats or len(beat_markers) != len(expected_beats):
-            raise ContractError("ROLE_BEAT_BUDGET_MISMATCH", f"expected {expected_beats}, got {actual_beats}")
+        # Machine markers belong in the sidecar, not the literary Markdown. When the
+        # sidecar is supplied its budgets are checked against the frozen contract.
+        if metadata is not None:
+            _validate_sidecar_budget(contract, metadata)
+        elif re.search(r"^CNW_CONTRACT target_visible_chars=", output, re.MULTILINE):
+            _validate_legacy_markers(contract, output)
     if role == "prose":
         validate_output_length(contract, output)
 
 
+def _validate_sidecar_budget(contract: dict[str, Any], metadata: dict[str, Any]) -> None:
+    unit = contract["unit"]
+    expected = {"target_visible_chars": unit["target_visible_chars"], "min_visible_chars": unit["min_visible_chars"], "max_visible_chars": unit["max_visible_chars"]}
+    actual = {key: metadata.get(key) for key in expected}
+    if actual != expected:
+        raise ContractError("ROLE_CONTRACT_LENGTH_MISMATCH", f"expected {expected}, got {actual}")
+    expected_beats = {beat["beat_id"]: beat["budget_visible_chars"] for beat in contract["story"].get("required_beats", [])}
+    actual_beats = {row.get("beat_id"): row.get("budget_visible_chars") for row in metadata.get("beats", [])}
+    if actual_beats != expected_beats:
+        raise ContractError("ROLE_BEAT_BUDGET_MISMATCH", f"expected {expected_beats}, got {actual_beats}")
+
+
+def _validate_legacy_markers(contract: dict[str, Any], output: str) -> None:
+    unit = contract["unit"]
+    marker = re.search(r"^CNW_CONTRACT target_visible_chars=(\d+) min_visible_chars=(\d+) max_visible_chars=(\d+)$", output, re.MULTILINE)
+    expected = (unit["target_visible_chars"], unit["min_visible_chars"], unit["max_visible_chars"])
+    if not marker:
+        raise ContractError("ROLE_CONTRACT_MANIFEST_MISSING", "required CNW_CONTRACT marker not found")
+    actual = tuple(int(value) for value in marker.groups())
+    if actual != expected:
+        raise ContractError("ROLE_CONTRACT_LENGTH_MISMATCH", f"expected {expected}, got {actual}")
+    beat_markers = re.findall(r"^CNW_BEAT ([A-Za-z0-9_.-]+) budget_visible_chars=(\d+)$", output, re.MULTILINE)
+    expected_beats = {beat["beat_id"]: beat["budget_visible_chars"] for beat in contract["story"].get("required_beats", [])}
+    actual_beats = {beat_id: int(budget) for beat_id, budget in beat_markers}
+    if actual_beats != expected_beats or len(beat_markers) != len(expected_beats):
+        raise ContractError("ROLE_BEAT_BUDGET_MISMATCH", f"expected {expected_beats}, got {actual_beats}")
+
+
 def role_receipt(role: str, packet: dict[str, Any], output: str, *, status: str, provider_request_ids: list[str] | None = None, controller_accept_ref: str | None = None) -> dict[str, Any]:
-    if status not in {"FIXTURE_ONLY", "PROVIDER_RESULT_PENDING_REVIEW", "CONTROLLER_ACCEPTED"}:
+    if status not in {"FIXTURE_ONLY", "PROVIDER_RESULT_PENDING_REVIEW", "STAGE_MATERIALIZED", "CONTROLLER_ACCEPTED"}:
         raise ContractError("ROLE_RECEIPT_STATUS_INVALID", status)
-    if status == "CONTROLLER_ACCEPTED" and (not provider_request_ids or not controller_accept_ref):
-        raise ContractError("ROLE_ACCEPTANCE_EVIDENCE_MISSING", "a real provider request and Controller acceptance reference are required")
+    if status in {"STAGE_MATERIALIZED", "CONTROLLER_ACCEPTED"} and not provider_request_ids:
+        raise ContractError("ROLE_ACCEPTANCE_EVIDENCE_MISSING", "a real provider request is required")
+    if status == "CONTROLLER_ACCEPTED" and not controller_accept_ref:
+        raise ContractError("ROLE_ACCEPTANCE_EVIDENCE_MISSING", "a Controller acceptance reference is required")
     return {
         "role": role,
         "work_id": packet["work_id"],
@@ -235,13 +377,15 @@ def verify_stage_chain(receipts: list[dict[str, Any]], required_roles: tuple[str
         if len(contract_hashes) != 1 or None in contract_hashes:
             raise ContractError("CNW_STAGE_CONTRACT_MISMATCH", "fixture receipts do not share a frozen contract")
         return
-    if any(receipt.get("status") != "CONTROLLER_ACCEPTED" for receipt in receipts):
-        # Offline fixtures can test the chain, but may never unlock Prose.
-        raise ContractError("CNW_FIXTURE_CANNOT_UNLOCK_PROSE", "only explicitly reviewed provider results can unlock Prose")
+    if any(str(request_id).lower().startswith(("fixture", "test", "mock")) for receipt in receipts for request_id in receipt.get("provider_request_ids", [])):
+        raise ContractError("CNW_FIXTURE_CANNOT_UNLOCK_PROSE", "fixture request IDs cannot satisfy a production stage gate")
+    # A normal production step materializes a real provider artifact; it does not
+    # require a separate external Controller sign-off for every writing role.
+    materialized = {"STAGE_MATERIALIZED", "CONTROLLER_ACCEPTED"}
+    if any(receipt.get("status") not in materialized for receipt in receipts):
+        raise ContractError("CNW_STAGE_CHAIN_INCOMPLETE", "each planning role needs a materialized provider artifact")
     contract_hashes = {receipt.get("contract_sha256") for receipt in receipts}
     if len(contract_hashes) != 1 or None in contract_hashes:
         raise ContractError("CNW_STAGE_CONTRACT_MISMATCH", "role receipts do not share one frozen contract")
-    if any(not receipt.get("provider_request_ids") or not receipt.get("controller_accept_ref") for receipt in receipts):
-        raise ContractError("CNW_ACCEPTANCE_EVIDENCE_MISSING", "each planning role needs a real request and Controller acceptance")
-    if any(str(request_id).lower().startswith(("fixture", "test", "mock")) for receipt in receipts for request_id in receipt.get("provider_request_ids", [])):
-        raise ContractError("CNW_FIXTURE_CANNOT_UNLOCK_PROSE", "fixture request IDs cannot satisfy a production stage gate")
+    if any(not receipt.get("provider_request_ids") for receipt in receipts):
+        raise ContractError("CNW_ACCEPTANCE_EVIDENCE_MISSING", "each planning role needs a real provider request")

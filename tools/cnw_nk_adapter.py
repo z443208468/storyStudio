@@ -11,12 +11,42 @@ except ImportError:  # direct script execution
     from cnw_contract import ContractError
 
 
-def build_nk_payload(contract: dict[str, Any]) -> dict[str, Any]:
+def _card_beat_descriptions(cards_markdown: str, fallback_beats: list[dict]) -> list[dict]:
+    """Extract ordered, observable events from the accepted Scene Cards.
+
+    The NK event sequence must come from the cards that were actually written,
+    not from the contract goal text alone.
+    """
+    events: list[dict] = []
+    current_scene = None
+    in_beats = False
+    for raw_line in cards_markdown.splitlines():
+        line = raw_line.rstrip()
+        if line.startswith("## Scene"):
+            current_scene = line.lstrip("# ").strip()
+            in_beats = False
+        elif line.startswith("### Required beats"):
+            in_beats = True
+        elif in_beats and line.startswith("###"):
+            in_beats = False
+        elif in_beats and line.lstrip().startswith(("-", "*")):
+            text = line.lstrip("-* ").strip()
+            if text:
+                events.append({"label": (current_scene or "SCENE") + f"-{len(events) + 1:02d}", "description": text})
+    if events:
+        return events
+    return [{"label": beat["beat_id"], "description": beat.get("goal", "")} for beat in fallback_beats]
+
+
+def build_nk_payload(contract: dict[str, Any], accepted_cards_markdown: str, accepted_cards_metadata: dict[str, Any] | None = None) -> dict[str, Any]:
     story = contract["story"]
     unit = contract["unit"]
     beats = story.get("required_beats", [])
     if not beats:
         raise ContractError("NK_EVENT_SEQUENCE_MISSING", "Scene Card has no ordered events")
+    if not isinstance(accepted_cards_markdown, str) or not accepted_cards_markdown.strip():
+        raise ContractError("NK_CARDS_REQUIRED", "accepted Scene Cards text is required")
+    events = _card_beat_descriptions(accepted_cards_markdown, beats)
     snapshots = []
     for name in story.get("characters_in_scene", []):
         traits = story.get("nk_character_traits", {}).get(name, {})
@@ -28,16 +58,12 @@ def build_nk_payload(contract: dict[str, Any]) -> dict[str, Any]:
                 "sociology": traits.get("sociology", []),
             },
         })
-    events = [
-        {"label": beat["beat_id"], "description": beat["goal"]}
-        for beat in beats
-    ]
     payload = {
         "eventSequence": events,
         "perspectives": [{
             "id": f"{unit['id']}-pov-01",
             "narrator": unit["pov"],
-            "eventLabel": story["role_in_story"],
+            "eventLabel": (events[0]["label"] if events else unit["id"]),
             "eventObjective": (
                 f"POV={unit['pov']}. Scene scope: {story['role_in_story']} "
                 "Reflect only on the narrator's own experience and directly observable or heard events. "

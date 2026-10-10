@@ -111,7 +111,7 @@ def amounts(ledger):
     for request in ledger["requests"]:
         if request["status"] in ("PENDING", "UNKNOWN_NOT_ZERO"):
             committed += Decimal(request["reserved_cny"])
-        elif request["status"] == "SETTLED":
+        elif request["status"] in ("SETTLED", "SETTLED_OVER_BUDGET"):
             committed += Decimal(request["estimated_actual_cny"])
     return committed
 
@@ -166,9 +166,19 @@ def command_settle(args):
                 raise ValueError("USAGE_TOKENS_MUST_BE_NONNEGATIVE")
             _, pricing = load_config()
             charge = estimate(args.input_tokens, args.output_tokens, pricing)
-            row["status"] = "SETTLED"
+            over_caps = (args.input_tokens > row["reserved_input_token_cap"]
+                         or args.output_tokens > row["reserved_output_token_cap"])
+            projected_campaign = amounts(ledger) - Decimal(row["reserved_cny"]) + charge
+            over_campaign = projected_campaign > Decimal(ledger["limit"])
+            over_reservation = charge > Decimal(row["reserved_cny"])
+            row["status"] = "SETTLED_OVER_BUDGET" if (over_caps or over_campaign or over_reservation) else "SETTLED"
             row["usage"] = {"input_tokens": args.input_tokens, "output_tokens": args.output_tokens}
             row["estimated_actual_cny"] = money(charge)
+            row["budget_exceeded"] = {
+                "token_caps": over_caps,
+                "reservation": over_reservation,
+                "campaign_limit": over_campaign,
+            }
         committed = amounts(ledger)
         print(json.dumps({"status": row["status"], "request_id": args.request_id,
                           "estimated_request_cny": money(charge),

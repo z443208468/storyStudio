@@ -15,14 +15,14 @@ class ReviewTests(unittest.TestCase):
         self.assertTrue(any(x["rule_id"]=="ABSTRACT_EMOTION" and x["line"]==2 for x in b["findings"]))
         self.assertTrue(all(x["disposition"]=="CANDIDATE_ONLY" for x in b["findings"]))
     def test_five_lenses_are_isolated_and_mock_only(self):
-        sources={"style_guide":"STYLE","language_rules":"LANG","character_bible":"CHAR","voice_samples":"VOICE","address_terms":"TERMS","plot":"PLOT","scene_cards":"CARDS","brief":"BRIEF","canon":"CANON","source_anchors":"ANCHORS","knowledge_boundaries":"BOUNDARIES","story_contract":"CANGQI"}
+        sources={"style_guide":"STYLE","forbidden_patterns":"LANG","character_bible":"CHAR","voice_samples":"VOICE","glossary":"GLOSS","timeline":"TIME","world_bible":"WORLD","scene_cards":"CARDS","writing_brief":"BRIEF","project_specific_canon":"CANGQI"}
         result=cnw_review.review_offline("她推开门。",sources)
         lenses=result["lenses"]
         self.assertEqual({x["lens_id"] for x in lenses},set(cnw_review.LENSES))
         self.assertEqual(len({x["input_sha256"] for x in lenses}),5)
         self.assertEqual(len({x["simulated_output"]["scope"] for x in lenses}),5)
-        self.assertEqual(lenses[0]["input_packet"]["sources"],{"style_guide":"STYLE","language_rules":"LANG"})
-        self.assertEqual(lenses[1]["input_packet"]["sources"],{"character_bible":"CHAR","voice_samples":"VOICE","address_terms":"TERMS"})
+        self.assertEqual(lenses[0]["input_packet"]["sources"],{"style_guide":"STYLE","forbidden_patterns":"LANG"})
+        self.assertEqual(lenses[1]["input_packet"]["sources"],{"character_bible":"CHAR","voice_samples":"VOICE"})
         self.assertTrue(all(x["provider_request_id"] is None and x["execution_mode"]=="MOCK_ONLY" for x in lenses))
         self.assertEqual(result["provider_request_ids"],[])
         self.assertFalse(result["text_modified"])
@@ -54,7 +54,7 @@ class ReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"LENS_SOURCES_MISSING:character"):
             cnw_review.lens_packet("character","draft",{"character_bible":"bible"})
         with self.assertRaisesRegex(ValueError,"LENS_SOURCES_MISSING:character"):
-            cnw_review.review_offline("draft",{"style_guide":"s","language_rules":"l"})
+            cnw_review.review_offline("draft",{"style_guide":"s","forbidden_patterns":"l"})
     def test_review_requires_cost_reservation_and_refuses_fake_live_receipt(self):
         sources=ALL_SOURCES
         def missing(_): raise AssertionError("must not proceed without reservation adapter")

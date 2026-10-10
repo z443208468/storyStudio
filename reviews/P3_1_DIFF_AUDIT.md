@@ -35,3 +35,26 @@
 ## 阶段决定
 
 历史 W00–W05 ACCEPT 记录不变。P3.1 对 W04/W05 的新增差异与 W06 已由 Controller 分别签收；双源离线链路不代表 Canon 获确认、不代表模型写作或生产系统完成。现继续 W07，且之后阶段仍须分别验收；不得把 W07 mock 或代码门称作 W10 Live。
+
+## ATOM-CNW-PUBLIC-1TO1-RESTORE 差异（2026-10-10）
+
+本节只追加本 Atom 的实际差异；不改写上文历史。状态：**已施工并完成一次真实单场 Run，但独立 Controller 工程复核与当前 ChatGPT 审查尚未进行**，因此不记 Atom ACCEPT。
+
+| S 项 | 实际改动 | 证据 |
+|---|---|---|
+| S01/S02 | `tools/cnw_runner.py`：`CNW_STAGES` 改为作者 11 阶段；`pov` 移出阶段序列成为 `support_hooks.nk_pov`；`promote/export/resume/sprint` 为后处理动作；`stage_predecessors` 按作者全顺序 |
+| S03–S06 | `tools/cnw_roles.py`：新增 `AUTHOR_ROLE_READS`，四岗位按作者 `ai_roles.template.yml` 读取 `04_chapter_design/arc_*.md`、`90_canon/*`、`06_plot/*`、`05_scene_cards/*`、`92_style_engine/*`；实测四个岗位材料均可解析 |
+| S07–S09 | `prompts/cnw/{plot,scene_cards,brief}.md`：机器预算标记移入同阶段 `*.meta.json` sidecar，文学 Markdown 不再内嵌 `CNW_CONTRACT/CNW_BEAT` |
+| S10/S11 | `tools/cnw_nk_adapter.py`：NK `eventSequence` 从已接受 Scene Cards 的 Required beats 构造；`cnw_runner.execute_writing_brief` 在 Brief 冻结前真实调用本地 NK 并映射 reflection |
+| S12 | `tools/cnw_runner.py:execute_prose`：按合同长度生成并允许最多两次有界续写；实测 v0=1261 可见字符 |
+| S13 | `tools/cnw_lint.py` 两层纯本地 regex；本轮 L1/L2 命中 0，未删除正文 |
+| S14/S15/S16 | `tools/cnw_review.py`：五 Lens 来源按作者文档；`VERIFIERS=(correctness,character_consistency,continuity_plausibility)`；每个真实 finding×3 独立反证；Completeness 读全文与处置 |
+| S17/S22 | `tools/cnw_runner.py:execute_refine/execute_re_review`：按确认 finding 修订并保留 v0；受影响的 Lens 复审；有界恢复避免缩水 |
+| S18/S19 | `verify_live` 分离本地 lint 与供应商阶段；不要求每阶段 Controller 个人签收；零 finding 时保留空集合 |
+| S20–S24 | `tools/cnw_project.py`：01 导入、02 增量更新、04 Canon 审计、05 handoff、support-workflow 提示导出；`tools/studio.ps1` 增加对应命令 |
+| S25/S26 | 复用 W08/W09 `cnw_revision.py`/`cnw_sprint.py`；sprint 仍为离线 fixture，本 Atom 不发五话 Live |
+| S27 | 新增 `tools/cnw_export.py`：从 run manifest 动态导出初稿/修订稿/连读 HTML/MD/TXT，无 EP001 硬编码 |
+| S29 | 复用唯一 `p2_cost_guard.py` 与同一账本；本轮真实 Run 152 次 provider 呼叫全部 reserve→send→settle |
+| S30 | `AGENTS.md`、`evidence/P3_CURRENT_STATE.md`、`plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md` 记录本 Atom 为 P3.1 覆盖条款 |
+
+真实 Run：`CNW1TO1-CQ-J19-20261010-01`，11 阶段全部 `STAGE_MATERIALIZED`，`verify-live` 返回 `LIVE_EVIDENCE_VALIDATED`（83 receipts，全部 SETTLED）。`EPISODE_LIVE_NOT_RUN`、`SPRINT_LIVE_NOT_RUN`、`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。

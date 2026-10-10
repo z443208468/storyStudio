@@ -57,7 +57,7 @@ class RunnerTests(unittest.TestCase):
 
     def _fixture_first_roles(self, run_id):
         contract = json.loads((self.base / "runs" / run_id / "artifacts/contract.json").read_text(encoding="utf-8"))
-        for stage in ("plot", "cards", "brief"):
+        for stage in ("plot", "scene_cards", "writing_brief"):
             result = cnw_runner.step(argparse.Namespace(run_id=run_id, work_id=None, stage=stage, input=None))
             fixture = self.base / "runs" / run_id / "artifacts" / f"{stage}-fixture.json"
             fixture.write_text(json.dumps({"fixture_only": True, "stage": stage, "work_id": contract["unit"]["id"], "target_visible_chars": contract["unit"]["target_visible_chars"], "beat_budgets": [beat["budget_visible_chars"] for beat in contract["story"]["required_beats"]]}, ensure_ascii=False), encoding="utf-8")
@@ -81,7 +81,7 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue((self.base / "runs/FICT_SCENE_B/artifacts/contract.json").is_file())
         first = self._fixture_first_roles("FICT_SCENE_A")
         second = self._fixture_first_roles("FICT_SCENE_B")
-        for stage in ("plot", "cards", "brief"):
+        for stage in ("plot", "scene_cards", "writing_brief"):
             self.assertEqual(first["stages"][stage], "ACCEPTED")
             self.assertEqual(second["stages"][stage], "ACCEPTED")
         self.assertNotEqual((self.base / "runs/FICT_SCENE_A/artifacts/plot-fixture.json").read_bytes(), (self.base / "runs/FICT_SCENE_B/artifacts/plot-fixture.json").read_bytes())
@@ -121,12 +121,34 @@ class RunnerTests(unittest.TestCase):
             cnw_runner.save_state(self.base / "runs/FICT_SCENE_A", state)
             with self.assertRaisesRegex(ContractError, "MOCK_RECEIPT_CANNOT_PROVE_LIVE"):
                 cnw_runner.verify_live(argparse.Namespace(run_id="FICT_SCENE_A"))
-            state["stages"]["re-review"]["status"] = "ACCEPTED"
+            state["stages"]["re_review"]["status"] = "ACCEPTED"
             cnw_runner.save_state(self.base / "runs/FICT_SCENE_A", state)
             with self.assertRaisesRegex(ContractError, "EXTERNAL_REVIEW_EVIDENCE_REQUIRED"):
                 cnw_runner.promote_run(argparse.Namespace(run_id="FICT_SCENE_A"))
             with self.assertRaisesRegex(ContractError, "STAGE_DEPENDENCY_NOT_ACCEPTED"):
                 cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="cards", input=None))
+
+    def test_scene_cards_change_invalidates_brief_and_downstream(self):
+        self._fixture_first_roles("FICT_SCENE_A")
+        path = self.base / "runs/FICT_SCENE_A"
+        changed = path / "cards-input.json"
+        changed.write_text('{"revision":2}', encoding="utf-8")
+        cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="scene_cards", input=str(changed)))
+        state = cnw_runner.load_state(path)
+        self.assertEqual(state["stages"]["scene_cards"]["status"], "READY_FOR_EXECUTION")
+        self.assertEqual(state["stages"]["writing_brief"]["status"], "INVALIDATED")
+
+    def test_rereview_stage_persists_affected_lens_set(self):
+        path = self.base / "runs/FICT_SCENE_A"
+        state = cnw_runner.load_state(path)
+        for stage in ("plot", "scene_cards", "writing_brief", "prose", "lint_layer1", "lint_layer2", "multi_lens_review", "adversarial_verify", "completeness_critic", "refine"):
+            state["stages"][stage]["status"] = "ACCEPTED"
+        cnw_runner.save_state(path, state)
+        with self.assertRaisesRegex(ContractError, "REREVIEW_ROLE_SET_REQUIRED"):
+            cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="re_review", input=None))
+        ready = cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="re_review", input=None, expected_role_ids=["style", "character"]))
+        self.assertEqual(ready["status"], "READY_FOR_EXECUTION")
+        self.assertEqual(cnw_runner.load_state(path)["stages"]["re_review"]["expected_role_ids"], ["style", "character"])
 
     def test_prompt_change_invalidates_only_affected_stage_and_preserves_old_artifact(self):
         prompt_root = self.base / "prompts"
@@ -153,16 +175,16 @@ class RunnerTests(unittest.TestCase):
         self._fixture_first_roles("FICT_SCENE_A")
         run_path = self.base / "runs/FICT_SCENE_A"
         state = cnw_runner.load_state(run_path)
-        prior_cards_fingerprint = state["stages"]["cards"]["fingerprint"]
-        prior_brief_artifact = state["stages"]["brief"]["artifact"]["path"]
+        prior_cards_fingerprint = state["stages"]["scene_cards"]["fingerprint"]
+        prior_brief_artifact = state["stages"]["writing_brief"]["artifact"]["path"]
         state["workflow_template_sha256"] = "changed-pinned-workflow-hash"
         cnw_runner.save_state(run_path, state)
-        result = cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="cards", input=None))
+        result = cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="scene_cards", input=None))
         refreshed = cnw_runner.load_state(run_path)
         self.assertEqual(refreshed["stages"]["plot"]["status"], "ACCEPTED")
-        self.assertEqual(refreshed["stages"]["cards"]["status"], "READY_FOR_EXECUTION")
-        self.assertNotEqual(refreshed["stages"]["cards"]["fingerprint"], prior_cards_fingerprint)
-        self.assertEqual(refreshed["stages"]["brief"]["status"], "INVALIDATED")
+        self.assertEqual(refreshed["stages"]["scene_cards"]["status"], "READY_FOR_EXECUTION")
+        self.assertNotEqual(refreshed["stages"]["scene_cards"]["fingerprint"], prior_cards_fingerprint)
+        self.assertEqual(refreshed["stages"]["writing_brief"]["status"], "INVALIDATED")
         self.assertTrue((run_path / prior_brief_artifact).is_file())
         self.assertEqual(result["status"], "READY_FOR_EXECUTION")
 
@@ -174,11 +196,13 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(ContractError, "VALID_RUN_ID_REQUIRED"):
                 cnw_runner.run_path("../outside")
 
-    def test_live_mode_is_gated_before_creating_a_run(self):
+    def test_live_mode_requires_provider_key_before_any_request(self):
         args = argparse.Namespace(run_id="NO-LIVE-CALL", work_id=self.contract["unit"]["id"], unit="scene", contract=str(self.contract_dir / "fixture-a.json"), project_root=str(self.project), mode="live")
-        with self.assertRaisesRegex(ContractError, "LIVE_EXECUTOR_NOT_AVAILABLE"):
-            cnw_runner.produce(args)
-        self.assertFalse((self.base / "runs/NO-LIVE-CALL").exists())
+        with patch.dict("os.environ", {}, clear=False):
+            import os as _os
+            _os.environ.pop("DEEPSEEK_API_KEY", None)
+            with self.assertRaisesRegex(ContractError, "DEEPSEEK_API_KEY_REQUIRED"):
+                cnw_runner.produce(args)
 
     def test_live_candidate_requires_complete_contract_pipeline(self):
         run = self.base / "runs/FICT_SCENE_A"
@@ -192,9 +216,10 @@ class RunnerTests(unittest.TestCase):
 
     def test_raw_provider_payload_must_match_receipt_fields(self):
         raw = self.base / "raw.json"
-        receipt = {"request_id": "req-1", "provider_request_id": "provider-1", "model": "deepseek-flash", "finish_reason": "stop"}
+        content = "raw assistant output"
+        receipt = {"request_id": "req-1", "provider_request_id": "provider-1", "model": "deepseek-flash", "finish_reason": "stop", "output_sha256": hashlib.sha256(content.encode()).hexdigest()}
         usage = {"prompt_tokens": 12, "completion_tokens": 8}
-        body = {"id": "provider-1", "model": "deepseek-flash", "choices": [{"finish_reason": "stop"}], "usage": usage}
+        body = {"id": "provider-1", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": content}}], "usage": usage}
         raw.write_text(json.dumps({"request_id": "req-1", "status": 200, "requested_model": "deepseek-flash", "response": body}), encoding="utf-8")
         cnw_runner._validate_raw_live_response(raw, receipt, usage, 1)
         body["id"] = "other-provider"
@@ -204,35 +229,35 @@ class RunnerTests(unittest.TestCase):
 
     def test_live_review_coverage_requires_five_lenses_and_three_verifiers(self):
         lenses = [
-            {"stage": "lens5", "lens_id": name}
+            {"stage": "multi_lens_review", "lens_id": name}
             for name in ("style", "character", "plot", "canon", "story_specific")
         ]
         verifiers = [
-            {"stage": "verifier3", "verifier_id": f"verifier_{number}"}
-            for number in range(1, 4)
+            {"stage": "adversarial_verify", "verifier_id": name, "finding_id": "F1"}
+            for name in ("correctness", "character_consistency", "continuity_plausibility")
         ]
-        cnw_runner._validate_review_call_coverage(lenses + verifiers)
+        cnw_runner._validate_review_call_coverage(lenses + verifiers, {"F1": set(cnw_runner.VERIFIER_IDS)})
         with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
-            cnw_runner._validate_review_call_coverage(lenses[:-1] + verifiers)
-        duplicate = lenses[:-1] + [{"stage": "lens5", "lens_id": "canon"}] + verifiers
+            cnw_runner._validate_review_call_coverage(lenses[:-1] + verifiers, {"F1": set(cnw_runner.VERIFIER_IDS)})
+        duplicate = lenses[:-1] + [{"stage": "multi_lens_review", "lens_id": "canon"}] + verifiers
         with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
-            cnw_runner._validate_review_call_coverage(duplicate)
+            cnw_runner._validate_review_call_coverage(duplicate, {"F1": set(cnw_runner.VERIFIER_IDS)})
         with self.assertRaisesRegex(ContractError, "LIVE_REVIEW_CALL_SET_INCOMPLETE"):
-            cnw_runner._validate_review_call_coverage(lenses + verifiers[:-1] + [verifiers[-2]])
+            cnw_runner._validate_review_call_coverage(lenses + verifiers[:-1], {"F1": set(cnw_runner.VERIFIER_IDS)})
 
     def test_accepted_review_votes_must_match_verified_raw_response_content(self):
         run=self.base/"runs/R1"; artifacts=run/"artifacts"; artifacts.mkdir(parents=True)
         review_rows=[]; provider_rows=[]
         for lens in ("style","character","plot","canon","story_specific"):
-            pid=f"L-{lens}"; review_rows.append({"stage":"lens5","lens_id":lens,"provider_request_id":pid})
-            provider_rows.append({"stage":"lens5","lens_id":lens,"provider_request_id":pid})
-        for i,verifier in enumerate(("verifier_1","verifier_2","verifier_3"),1):
+            pid=f"L-{lens}"; review_rows.append({"stage":"multi_lens_review","lens_id":lens,"provider_request_id":pid})
+            provider_rows.append({"stage":"multi_lens_review","lens_id":lens,"provider_request_id":pid})
+        for i,verifier in enumerate(("correctness","character_consistency","continuity_plausibility"),1):
             pid=f"V-{i}"; content=json.dumps({"verifier_id":verifier,"votes":[{"finding_id":"I1","verdict":"not_refuted"}]},sort_keys=True)
             raw={"id":pid,"model":"deepseek-flash","choices":[{"finish_reason":"stop","message":{"content":content}}],"usage":{"prompt_tokens":10,"completion_tokens":10}}
             path=artifacts/f"{pid}.json"; path.write_text(json.dumps(raw),encoding="utf-8")
-            review_rows.append({"stage":"verifier3","verifier_id":verifier,"provider_request_id":pid,"response_content":content,"output_sha256":hashlib.sha256(content.encode()).hexdigest()})
-            provider_rows.append({"stage":"verifier3","verifier_id":verifier,"provider_request_id":pid,"raw_response_path":path.relative_to(run).as_posix()})
-        accepted={"provider_requests":review_rows}
+            review_rows.append({"stage":"adversarial_verify","verifier_id":verifier,"provider_request_id":pid,"finding_id":"I1","response_content":content,"output_sha256":hashlib.sha256(content.encode()).hexdigest()})
+            provider_rows.append({"stage":"adversarial_verify","verifier_id":verifier,"provider_request_id":pid,"finding_id":"I1","raw_response_path":path.relative_to(run).as_posix()})
+        accepted={"provider_requests":review_rows,"findings":[{"finding_id":"I1"}]}
         cnw_runner.bind_accepted_review_outputs(accepted,provider_rows,run)
         accepted["provider_requests"][-1]["response_content"]="{\"votes\":[]}"
         with self.assertRaisesRegex(ContractError,"ACCEPTED_VERIFIER_OUTPUT_MISMATCH"):
@@ -278,6 +303,7 @@ class RunnerTests(unittest.TestCase):
             self.assertIn(f"- {source_stage}", workflow)
         for source, target in cnw_runner.STAGE_ALIASES.items():
             self.assertEqual(cnw_runner.normalize_stage(source), target)
+        self.assertEqual(cnw_runner.stage_predecessors("writing_brief", "scene"), ("plot", "scene_cards"))
 
 
 if __name__ == "__main__":

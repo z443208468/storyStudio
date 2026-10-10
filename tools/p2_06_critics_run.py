@@ -37,6 +37,7 @@ def main(argv=None) -> int:
     parser.add_argument("--input", required=True, help="Plot or key excerpt under workspace/cangqi or runs")
     parser.add_argument("--critique", help="CritiCS feedback JSON for plan-revise")
     parser.add_argument("--run-name", required=True)
+    parser.add_argument("--ledger-run-id", help="Optional parent production run ID for shared campaign settlement")
     args = parser.parse_args(argv)
 
     if not os.environ.get("DEEPSEEK_API_KEY"):
@@ -77,7 +78,7 @@ def main(argv=None) -> int:
 
         reserve = argparse.Namespace(
             request_id=request_id,
-            run_id=run_name,
+            run_id=args.ledger_run_id or run_name,
             purpose=f"P2-06 native CritiCS {args.action} provider call",
             input_token_cap=CAP_INPUT,
             output_token_cap=CAP_OUTPUT,

@@ -158,3 +158,13 @@
 - 限制：真实 Plot/Card/Brief/Prose 执行、reserve/settle 接入、五 Lens、三 Verifier、Completeness、Refine、Re-review、Promote、动态 Export、Sprint 仍未实现或验证；W05 live 保持关闭，后续依计划推进。
 - 推送及远端 readback：待完成。
 - 独立远端回读：`REMOTE_READBACK ACCEPT — P3 W05`；Controller 确认 remote `main` 与 local tracking ref C=`d965b449898a209b1ce6f75b506599c0dc53408e`、T=`87bc6999887a44196532506f2d6ceecd4cd137fd` 一致；W05 接受候选为关闭提交直接父提交，工作树干净。
+
+## ATOM-CNW-PUBLIC-1TO1-RESTORE — 工程状态（2026-10-10）
+
+- Verdict：**`AWAITING_INDEPENDENT_CONTROLLER`**（Writer 不自签）。本会话未具备可调用的独立只读 Controller 子智能体，故不伪造 `ACCEPT`。
+- 施工文件：`plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md`（SHA256=`14E2E0A8B5C2FE2DC39944FF167FA6086283C5B3D08039A9F3996D9F63493846`）。
+- 离线验证：`python -m pytest tests` 80 项通过。
+- 真实单场 Run：`CNW1TO1-CQ-J19-20261010-01`（私有，Git 忽略）。11 个 CNW 阶段全部 `STAGE_MATERIALIZED`；`verify-live` 返回 `LIVE_EVIDENCE_VALIDATED`（83 条 provider 收据，全部 SETTLED）。真实 provider 呼叫含：plot/scene_cards/writing_brief/prose、5 Lens、每 finding×3 反证、Completeness、Refine、受影响 Re-review；NK POV 与 CritiCS plan-critique/text-refine 各自真实运行。
+- 本轮费用：本 Run 估算 ¥3.5258，唯一账本累计 ¥3.6491 / ¥10 上限；无并行计费系统。
+- 覆盖限制：`EPISODE_LIVE_NOT_RUN`；`SPRINT_LIVE_NOT_RUN`；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
+- 尚未完成的治理门：独立 Controller 工程 ACCEPT、推送与远端回读、当前 ChatGPT 的源码/结果审查。因此不得记 Atom 终验通过。

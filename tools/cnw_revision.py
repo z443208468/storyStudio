@@ -131,7 +131,8 @@ def promote_revision(project_root:str|Path,run_dir:str|Path,candidate_path:str|P
         if not project.is_relative_to(fixture_root): raise ContractError("FIXTURE_PROMOTION_OUTSIDE_ISOLATED_TEST_ROOT",str(project))
     else:
         project=_private_project_root(project)
-    if not run.is_relative_to((project/"runs").resolve()): raise ContractError("PROMOTION_RUN_PATH_UNSAFE",str(run))
+    allowed_run_roots = [(project / "runs").resolve(), (Path(__file__).resolve().parents[1] / "runs").resolve()]
+    if not any(run.is_relative_to(root) for root in allowed_run_roots): raise ContractError("PROMOTION_RUN_PATH_UNSAFE",str(run))
     candidate=Path(candidate_path)
     if not candidate.is_absolute(): candidate=run/candidate
     cursor=candidate

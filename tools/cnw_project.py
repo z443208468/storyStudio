@@ -173,6 +173,120 @@ def write_contract_draft(project_root: str | Path, draft_path: str | Path) -> di
     return {"status": "CONTRACT_DRAFT_READY_FOR_HUMAN_PREFLIGHT", "project_id": contract["project_id"], "contract": str(output), "contract_sha256": sha(output.read_bytes()), "source_manifest_sha256": contract["source"]["source_manifest_sha256"], "provider_call": "none"}
 
 
+SUPPORT_WORKFLOW_SOURCE = {
+    "01": "templates/_workflows/01_first_import.md",
+    "02": "templates/_workflows/02_incremental_update.md",
+    "03": "templates/_workflows/03_revision.md",
+    "04": "templates/_workflows/04_canon_audit.md",
+    "05": "templates/_workflows/05_handoff.md",
+}
+REFERENCE_ROOT = ROOT / "runtime/reference/cnw_97ad71fe5e5e"
+
+
+def _append_log(project_root: Path, message: str) -> None:
+    log = project_root / "00_meta" / "ai_work_log.md"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    with log.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(f"- {stamp} {message}\n")
+
+
+def incremental_update(workspace_root: str | Path, project_id: str, input_file: str | Path) -> dict:
+    """Workflow 02: add new material without overwriting prior imports or resolving conflicts."""
+    root = project_directory(workspace_root, project_id)
+    manifest_file = root / "_INBOX/source_manifest.json"
+    if not manifest_file.is_file():
+        raise ContractError("INCREMENTAL_REQUIRES_EXISTING_PROJECT", "run Workflow 01 first")
+    imported = import_source(workspace_root, project_id, input_file)
+    source_log = root / "00_meta" / "source_log.md"
+    source_log.parent.mkdir(parents=True, exist_ok=True)
+    with source_log.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(f"- {imported['source_sha256'][:16]} {Path(input_file).name} imported via Workflow 02 (existing canon untouched)\n")
+    _append_log(root, f"Workflow 02 incremental update added {Path(input_file).name}")
+    return {"status": "INCREMENTAL_UPDATE_RECORDED", "project_id": project_id, "source_sha256": imported["source_sha256"], "canon_status": "TODO_CONFIRM", "provider_call": "none"}
+
+
+def canon_audit(project_root: str | Path) -> dict:
+    """Workflow 04: deterministic conflict/ambiguity report. Never modifies canon."""
+    root = Path(project_root).resolve(strict=True)
+    if not root.is_relative_to((ROOT / "workspace").resolve()):
+        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+    glossary = root / "90_canon/glossary.md"
+    entries: dict[str, set] = {}
+    if glossary.is_file():
+        for line in glossary.read_text(encoding="utf-8-sig").splitlines():
+            if line.startswith("|") and "---" not in line:
+                cells = [cell.strip() for cell in line.strip("|").split("|")]
+                if len(cells) >= 2 and cells[0] and cells[0] != "术语":
+                    entries.setdefault(cells[0], set()).add(cells[1])
+    findings = []
+    for term, definitions in entries.items():
+        if len(definitions) > 1:
+            findings.append({"severity": "HARD CONFLICT", "term": term, "definitions": sorted(definitions), "suggested_resolution": "人工确认该术语的唯一权威定义"})
+    review_dir = root / "08_review"
+    review_dir.mkdir(parents=True, exist_ok=True)
+    report = root / "08_review/continuity_audit.md"
+    body = ["# Continuity Audit", "", f"- Project: {root.name}", f"- Findings: {len(findings)}", "", "> 该审计只报告，不修改 Canon；AI 深度审计按 workflow 04 提示词由操作者运行。", ""]
+    for item in findings:
+        body.append(f"- [{item['severity']}] {item['term']}: {item['definitions']} → {item['suggested_resolution']}")
+    report.write_text("\n".join(body) + "\n", encoding="utf-8")
+    unresolved = root / "90_canon/unresolved_questions.md"
+    if findings:
+        with unresolved.open("a", encoding="utf-8", newline="\n") as stream:
+            for item in findings:
+                stream.write(f"- [{item['severity']}] {item['term']}: {item['definitions']}\n")
+    _append_log(root, f"Workflow 04 canon audit recorded {len(findings)} deterministic finding(s)")
+    return {"status": "CANON_AUDIT_RECORDED", "findings": len(findings), "report": "08_review/continuity_audit.md", "canon_modified": False, "provider_call": "none"}
+
+
+def handoff(project_root: str | Path) -> dict:
+    """Workflow 05: compact handoff brief with pointers, not duplicated canon."""
+    root = Path(project_root).resolve(strict=True)
+    if not root.is_relative_to((ROOT / "workspace").resolve()):
+        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+    exports = root / "93_exports"
+    exports.mkdir(parents=True, exist_ok=True)
+    def first_lines(relative: str, count: int) -> str:
+        path = root / relative
+        if not path.is_file():
+            return f"(missing: {relative})"
+        return "\n".join(path.read_text(encoding="utf-8-sig").splitlines()[:count])
+    open_questions = root / "90_canon/unresolved_questions.md"
+    next_action = "运行 workflow 03 修订或继续下一场；如需 AI 摘要请按 workflow 05 提示词执行。"
+    body = "\n".join([
+        "# AI Handoff Brief", "",
+        "## Project one-liner", f"{root.name} — CNW 生产项目；状态文件见 00_meta/ 与 90_canon/。", "",
+        "## Protected core", "- 不改已确认 Canon；不越过读者知识边界；不改原玩法路由。", "",
+        "## Canon pointers", "- 90_canon/canon.md", "- 90_canon/character_bible.md", "- 90_canon/glossary.md", "- 90_canon/timeline.md", "- 90_canon/world_bible.md", "",
+        "## Open questions", (open_questions.read_text(encoding='utf-8-sig') if open_questions.is_file() else "(none recorded)"), "",
+        "## Next best action", next_action, "",
+        "## File index", "- 06_plot/ / 05_scene_cards/ / 07_draft/ / 08_review/ / 09_revision/", "",
+        "## Canon excerpt (pointer aid only)", first_lines("90_canon/canon.md", 6),
+    ])
+    (exports / "handoff_brief.md").write_text(body + "\n", encoding="utf-8")
+    _append_log(root, "Workflow 05 handoff brief written to 93_exports/handoff_brief.md")
+    return {"status": "HANDOFF_WRITTEN", "path": "93_exports/handoff_brief.md", "provider_call": "none"}
+
+
+def support_workflow_prompt(project_root: str | Path, number: str) -> dict:
+    """Emit the pinned author prompt for operator/AI use. No AI result is fabricated."""
+    if number not in SUPPORT_WORKFLOW_SOURCE:
+        raise ContractError("SUPPORT_WORKFLOW_UNKNOWN", number)
+    root = Path(project_root).resolve(strict=True)
+    if not root.is_relative_to((ROOT / "workspace").resolve()):
+        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+    source = REFERENCE_ROOT / SUPPORT_WORKFLOW_SOURCE[number]
+    if not source.is_file():
+        raise ContractError("SUPPORT_WORKFLOW_SOURCE_MISSING", str(source))
+    prompt = source.read_text(encoding="utf-8-sig")
+    out_dir = root / "93_exports/support_workflows"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    output = out_dir / f"{number}_prompt.md"
+    output.write_text(prompt, encoding="utf-8")
+    _append_log(root, f"Workflow {number} prompt exported for operator/AI run")
+    return {"status": "SUPPORT_WORKFLOW_PROMPT_EXPORTED", "workflow": number, "source": SUPPORT_WORKFLOW_SOURCE[number], "path": output.relative_to(root).as_posix(), "note": "AI 归纳步骤由操作者按原作者提示词运行；本工具不伪造其结果。", "provider_call": "none"}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -187,6 +301,17 @@ def main(argv=None) -> int:
     draft = sub.add_parser("draft-contract")
     draft.add_argument("--project-root", required=True)
     draft.add_argument("--draft", required=True, help="private JSON containing source line anchors, explicit beat budgets, and scene facts")
+    incr = sub.add_parser("incremental-update")
+    incr.add_argument("--project-id", required=True)
+    incr.add_argument("--workspace-root", required=True)
+    incr.add_argument("--input", required=True)
+    audit = sub.add_parser("canon-audit")
+    audit.add_argument("--project-root", required=True)
+    hoff = sub.add_parser("handoff")
+    hoff.add_argument("--project-root", required=True)
+    support = sub.add_parser("support-workflow")
+    support.add_argument("--project-root", required=True)
+    support.add_argument("--number", required=True, choices=tuple(SUPPORT_WORKFLOW_SOURCE))
     args = parser.parse_args(argv)
     if args.command == "init":
         result = init_project(args.workspace_root, args.project_id)
@@ -194,6 +319,14 @@ def main(argv=None) -> int:
         if args.format and Path(args.input).suffix.lower().lstrip(".") != args.format:
             raise ContractError("IMPORT_FORMAT_MISMATCH", args.format)
         result = import_source(args.workspace_root, args.project_id, args.input)
+    elif args.command == "incremental-update":
+        result = incremental_update(args.workspace_root, args.project_id, args.input)
+    elif args.command == "canon-audit":
+        result = canon_audit(args.project_root)
+    elif args.command == "handoff":
+        result = handoff(args.project_root)
+    elif args.command == "support-workflow":
+        result = support_workflow_prompt(args.project_root, args.number)
     else:
         result = write_contract_draft(args.project_root, args.draft)
     print(json.dumps(result, ensure_ascii=False, indent=2))

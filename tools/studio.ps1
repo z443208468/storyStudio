@@ -1,10 +1,10 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0,Mandatory=$true)]
-    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','verify','scene','legacy-scene','resume','produce','step','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
+    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','project-incremental','canon-audit','handoff','support-workflow','verify','scene','legacy-scene','resume','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
     [string]$Command,
     [ValidateSet('offline','live')][string]$Mode,
-    [ValidateSet('plot','draft','revise')][string]$Stage,
+    [ValidateSet('plot','scene_cards','writing_brief','prose','lint_layer1','lint_layer2','multi_lens_review','adversarial_verify','completeness_critic','refine','re_review','cards','brief','pov','draft','lint1','lint2','lens5','verifier3','completeness','re-review','revise')][string]$Stage,
     [string]$RunId,
     [string]$ProjectRoot,
     [ValidateSet('scene','episode')][string]$Unit,
@@ -16,8 +16,16 @@ param(
     [string]$StepName,
     [string]$Candidate,
     [string]$ReviewEvidence,
+    [string]$W10Preflight,
+    [string]$ControllerEvidence,
+    [string]$RoleId,
+    [string]$KeyPath,
+    [int]$InputTokenCap,
+    [int]$OutputTokenCap,
     [string]$SprintId,
     [string]$SprintPlan,
+    [ValidateSet('01','02','03','04','05')][string]$WorkflowNumber,
+    [switch]$CreateOnly,
     [int]$Port = 3175
 )
 $ErrorActionPreference = 'Stop'
@@ -179,6 +187,24 @@ switch ($Command) {
         & $Python (Join-Path $Root 'tools/cnw_project.py') draft-contract --project-root $ProjectRootPath --draft $DraftPath
         if ($LASTEXITCODE -ne 0) { throw "CNW_CONTRACT_DRAFT_FAILED:$LASTEXITCODE" }
     }
+    'project-incremental' {
+        if (-not $ProjectId -or -not $InputFile) { throw 'PROJECT_INCREMENTAL_REQUIRES_PROJECT_ID_AND_INPUT_FILE' }
+        & $Python (Join-Path $Root 'tools/cnw_project.py') incremental-update --project-id $ProjectId --workspace-root $WorkspaceRoot --input (Resolve-Path -LiteralPath $InputFile).Path
+        if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_INCREMENTAL_FAILED:$LASTEXITCODE" }
+    }
+    'canon-audit' {
+        & $Python (Join-Path $Root 'tools/cnw_project.py') canon-audit --project-root $ProjectRootPath
+        if ($LASTEXITCODE -ne 0) { throw "CNW_CANON_AUDIT_FAILED:$LASTEXITCODE" }
+    }
+    'handoff' {
+        & $Python (Join-Path $Root 'tools/cnw_project.py') handoff --project-root $ProjectRootPath
+        if ($LASTEXITCODE -ne 0) { throw "CNW_HANDOFF_FAILED:$LASTEXITCODE" }
+    }
+    'support-workflow' {
+        if (-not $WorkflowNumber) { throw 'SUPPORT_WORKFLOW_REQUIRES_NUMBER' }
+        & $Python (Join-Path $Root 'tools/cnw_project.py') support-workflow --project-root $ProjectRootPath --number $WorkflowNumber
+        if ($LASTEXITCODE -ne 0) { throw "CNW_SUPPORT_WORKFLOW_FAILED:$LASTEXITCODE" }
+    }
     'legacy-scene' { & $PSCommandPath scene -Stage $Stage }
     'produce' {
         if (-not $Contract -or -not $RunId -or -not $Mode) { throw 'PRODUCE_REQUIRES_MODE_CONTRACT_AND_NEW_RUN_ID' }
@@ -187,6 +213,7 @@ switch ($Command) {
         $RunnerArgs=@('produce','--mode',$Mode,'--contract',$ContractPath,'--run-id',$RunId)
         if ($Unit) { $RunnerArgs += @('--unit',$Unit) }
         if ($WorkId) { $RunnerArgs += @('--work-id',$WorkId) }
+        if ($Mode -eq 'live' -and $CreateOnly) { $RunnerArgs += @('--create-only') }
         $RunnerArgs += @('--project-root',$ProjectRootPath)
         Invoke-CnwRunner $RunnerArgs
     }
@@ -195,6 +222,72 @@ switch ($Command) {
         $RunnerArgs=@('step','--run-id',$RunId,'--stage',$StepName)
         if ($WorkId) { $RunnerArgs += @('--work-id',$WorkId) }
         Invoke-CnwRunner $RunnerArgs
+    }
+    'prepare-live' {
+        if (-not $RunId -or -not $Stage) { throw 'PREPARE_LIVE_REQUIRES_RUN_AND_STAGE' }
+        $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
+        $Executor = Join-Path $Root 'tools/cnw_live_executor.py'
+        if ($Stage -in @('lens5','verifier3','completeness','refine','re-review')) {
+            $PrepareArgs = @($Executor,'--run-dir',$RunPath,'--prepare-stage',$Stage)
+            if ($RoleId) { $PrepareArgs += @('--role-id',$RoleId) }
+        } else {
+            $Role = switch ($Stage) { plot {'plot'} cards {'cards'} brief {'brief'} draft {'prose'} default { throw "LIVE_ROLE_STAGE_INVALID:$Stage" } }
+            if (-not $InputFile -or -not $W10Preflight) { throw 'PREPARE_LIVE_ROLE_REQUIRES_INPUT_MAP_AND_W10_PREFLIGHT' }
+            $PrepareArgs = @($Executor,'--run-dir',$RunPath,'--prepare-role',$Role,'--project-root',$ProjectRootPath,'--inputs-json',(Resolve-Path -LiteralPath $InputFile).Path,'--preflight',(Resolve-Path -LiteralPath $W10Preflight).Path)
+        }
+        & $Python @PrepareArgs
+        if ($LASTEXITCODE -ne 0) { throw "CNW_LIVE_PREPARE_FAILED:$LASTEXITCODE" }
+    }
+    'accept-role' {
+        if (-not $RunId -or -not $Stage -or -not $ControllerEvidence) { throw 'ACCEPT_ROLE_REQUIRES_RUN_STAGE_AND_CONTROLLER_EVIDENCE' }
+        $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
+        & $Python (Join-Path $Root 'tools/cnw_live_executor.py') --run-dir $RunPath --stage $Stage --accept-controller-role-output --controller-evidence (Resolve-Path -LiteralPath $ControllerEvidence).Path
+        if ($LASTEXITCODE -ne 0) { throw "CNW_CONTROLLER_ROLE_ACCEPT_FAILED:$LASTEXITCODE" }
+    }
+    'live-call' {
+        if (-not $RunId -or -not $Stage) { throw 'LIVE_CALL_REQUIRES_RUN_AND_STAGE' }
+        if (-not $ProjectRoot) { $ProjectRootPath = Join-Path $WorkspaceRoot 'cangqi' }
+        $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
+        $Executor = Join-Path $Root 'tools/cnw_live_executor.py'
+        if ($Stage -in @('lint1','lint2')) {
+            if ($InputFile -or $RoleId -or $InputTokenCap -gt 0 -or $OutputTokenCap -gt 0) { throw 'LOCAL_LINT_TAKES_NO_PACKET_OR_PROVIDER_CAPS' }
+            $LiveArgs = @($Executor,'--run-dir',$RunPath,'--stage',$Stage)
+        } else {
+            if (-not $InputFile -or $InputTokenCap -lt 1 -or $OutputTokenCap -lt 1) { throw 'LIVE_CALL_REQUIRES_RUN_STAGE_PACKET_AND_POSITIVE_CAPS' }
+            $LiveArgs = @($Executor,'--run-dir',$RunPath,'--stage',$Stage,'--packet',$InputFile,'--input-token-cap',"$InputTokenCap",'--output-token-cap',"$OutputTokenCap")
+            if ($RoleId) { $LiveArgs += @('--role-id',$RoleId) }
+        }
+        & $Python @LiveArgs
+        if ($LASTEXITCODE -ne 0) { throw "CNW_LIVE_CALL_FAILED:$LASTEXITCODE" }
+    }
+    'w10-nk-live' {
+        if (-not $RunId -or -not $InputFile) { throw 'W10_NK_LIVE_REQUIRES_RUN_ID_AND_PAYLOAD' }
+        if (-not $ProjectRoot) { $ProjectRootPath = Join-Path $WorkspaceRoot 'cangqi' }
+        $Pwsh = (Get-Command pwsh -ErrorAction Stop).Source
+        $NkScript = Join-Path $Root 'tools/cnw_w10_nk_live.ps1'
+        $NkArgs = @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$NkScript,'-RunId',$RunId,'-ProjectRoot',$ProjectRootPath,'-PayloadPath',$InputFile)
+        if ($KeyPath) { $NkArgs += @('-KeyPath',$KeyPath) }
+        & $Pwsh @NkArgs
+        if ($LASTEXITCODE -ne 0) { throw "W10_NK_LIVE_FAILED:$LASTEXITCODE" }
+    }
+    'w10-critics-live' {
+        if (-not $RunId -or $Stage -notin @('plot','draft')) { throw 'W10_CRITICS_LIVE_REQUIRES_RUN_AND_STAGE_plot_or_draft' }
+        $OldKey = $env:DEEPSEEK_API_KEY
+        try {
+            if (-not $env:DEEPSEEK_API_KEY -and $KeyPath) {
+                $RawKey = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $KeyPath))
+                if ($RawKey -match '(?im)^\s*(?:DEEPSEEK_API_KEY\s*=\s*)?["'']?(sk-[A-Za-z0-9_-]{20,})') { $env:DEEPSEEK_API_KEY = $Matches[1] }
+                else { $env:DEEPSEEK_API_KEY = $RawKey.Trim().Trim('"', "'") }
+                $RawKey = $null
+            }
+            $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
+            $CriticsAction = if ($Stage -eq 'plot') { 'plan-critique' } else { 'text-refine' }
+            & $Python (Join-Path $Root 'tools/cnw_w10_critics.py') --run-dir $RunPath --action $CriticsAction
+            if ($LASTEXITCODE -ne 0) { throw "W10_CRITICS_FAILED:$LASTEXITCODE" }
+        } finally {
+            $env:DEEPSEEK_API_KEY = $OldKey
+            $RawKey = $null
+        }
     }
     'review' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('review','--run-id',$RunId) }
     'promote' {

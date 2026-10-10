@@ -40,3 +40,23 @@
 - 原项目单话 rubric 的示例通过线是 80 分；通用 `workflow.template.yml` 的 Sprint `min_score` 是 75。项目配置必须明确选定适用阈值，并继续执行致命项一票否决，不能把两处数字写成同一个上游硬规则。
 - 作者方法把 Lens 的 `pass / revise / rewrite` 用作后续动作判断；Sprint 示例、单话 rubric、handoff 对 revise/rewrite 的停止时点存在上下文差异。P3 执行配置要明确当前 StoryStudio 采用的门和下一状态，不能模糊地说“失败后继续”或声称上下文完全相同。
 - 原作者公开的是工作方法、模板和示例，并未公开可直接复刻的内部专用多 Agent 执行器。P3 实现应称为固定来源的项目适配，不宣称复现原作者私有执行器、并行性能或读者成绩。
+
+## P3.1 Atom 真实单场 Live 证据更新（2026-10-10）
+
+以上历史状态保留。下列为 `CNW1TO1-CQ-J19-20261010-01` 单场真实运行后的实际覆盖，`verify-live` 返回 `LIVE_EVIDENCE_VALIDATED`。这些状态只覆盖单场 Scene Live，不代表完整 Episode Live 或五话 Sprint Live。
+
+| 环节 | 作者来源 | 当前实现 | 更新状态（真实单场证据） |
+|---|---|---|---|
+| Plot / Scene Cards / Writing Brief | plot/scene_cards/writing_brief 模板 + ai_roles | `cnw_runner._planning_stage` 真实调用，产物入项目目录 | `TESTED`（3 次真实 provider 收据） |
+| Prose | writing_brief + voice_samples | `execute_prose` 按合同长度、最多两次有界续写 | `TESTED`（v0=1261 可见字符） |
+| Layer 1 / Layer 2 | THREE_LAYER_REVIEW L1/L2 | `cnw_lint` 本地两层，不删正文 | `TESTED`（本地，0 命中也保留候选语义） |
+| 5 Lens | THREE_LAYER_REVIEW:69–77 | `cnw_review` 五 Lens 独立来源与独立请求 | `TESTED`（5 次真实请求，21 findings） |
+| 3 反证 | THREE_LAYER_REVIEW:112 | 每 finding × correctness/character_consistency/continuity_plausibility | `TESTED`（63 次真实请求；15 confirmed / 6 refuted） |
+| Completeness Critic | THREE_LAYER_REVIEW:124–136 | 读全文 + 已确认/驳回处置 | `TESTED`（1 次真实请求） |
+| Refine / Re-review | THREE_LAYER_REVIEW:140–169 | 按确认 finding 修订，受影响 Lens 复审 | `TESTED`（v1=1219 可见字符；5 次复审请求） |
+| NK POV hook | NK 固定路由 | `support_hooks.nk_pov` 在 Brief 前真实调用 | `LIVE_ACCEPTED`（1 次真实 NK provider 收据） |
+| CritiCS 附加 | critics_bridge + p2_06_critics_run | plot 计划批评、正文句段 text-refine 支持材料 | `SUCCEEDED`（各自真实运行，不替代五 Lens） |
+| 五话 Sprint | batch_review + sprint | 复用 W09 离线 fixture | `SPRINT_LIVE_NOT_RUN` |
+| Multi-scene Episode | ARCHITECTURE 每话正本 | 离线组装门存在 | `EPISODE_LIVE_NOT_RUN` |
+
+`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`；独立 Controller 工程复核与当前 ChatGPT 审查仍未完成。

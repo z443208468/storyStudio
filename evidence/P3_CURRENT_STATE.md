@@ -29,3 +29,12 @@
 | W08 | ACCEPTED | 同一 Controller ACCEPT C=`0b9ce210d2d348e2da6dc8a93171611cbdf02123` / T=`fbc317a5333a42e2dea8a5f35d85f3b76da0f81d`；64 tests 通过；修订验收绑定原始 verifier 响应、来源片段与 manifest，晋升前重算 W06 合同验证、差异记录及已接受计划；未进行真实模型调用 |
 | W09 | ACCEPTED | 同一 Controller ACCEPT C=`0940668825e95067cc803eaad962b3d603ab5856` / T=`abf18a7a542068d6c97999d7600ff23987ee2718`；71 项全套测试本机通过；双原稿导入、Episode 长度/节拍/知识边界/缺场退回、五份虚构 Episode Sprint 均为离线；无模型调用/无费用 |
 | W10–W11 | NOT_STARTED | W10 才允许本轮唯一一场真实模型端到端验收；W07/W09 mock 不能计入 |
+
+## ATOM-CNW-PUBLIC-1TO1-RESTORE（P3.1 定点恢复覆盖条款）
+
+- 施工文件：`plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md`（原样存档，SHA256=`14E2E0A8B5C2FE2DC39944FF167FA6086283C5B3D08039A9F3996D9F63493846`）。基线 C=`de49ef2760cfe0c6bee36db0582b7cbef67d825b`，T=`038449ca902bd4523728ad13e83761f2c6d0243e`。
+- 代码语义恢复：`CNW_STAGES` 改为原作者 11 阶段（plot → scene_cards → writing_brief → prose → lint_layer1 → lint_layer2 → multi_lens_review → adversarial_verify → completeness_critic → refine → re_review）；`pov` 移出 CNW 阶段，NK 作为 `support_hooks.nk_pov` 在 Brief 前消费；`promote/export/resume/sprint` 为后处理动作。移除“每个写作岗位需外部 Controller 单独批准”的额外门；Controller 只在 Atom 结束做一次工程复核。
+- 五 Lens 来源按作者公开文档：style=style_guide+forbidden_patterns；character=character_bible+voice_samples；plot=scene_cards+writing_brief；canon=glossary+timeline+world_bible；story_specific=project_specific_canon。三反证 Verifier 身份改为 correctness / character_consistency / continuity_plausibility，按每个真实 finding × 3 独立请求，零问题时保留 `NO_FINDINGS_TO_VERIFY` 空集合。
+- 唯一真实单场 Run：`workspace/cangqi/runs/CNW1TO1-CQ-J19-20261010-01`（私有，Git 忽略），合同 SHA256=`e5ef4ce8d4468756021b8b7a8e10dd3cff0b9445e25a6a399f3cc683bb0978d0`。所有 provider 调用经既有 `p2_cost_guard.py` reserve→send→settle，计入同一 ¥10 账本。
+- 覆盖声明：`CNW_PUBLIC_WORKFLOW_STAGE_STRUCTURE=implemented_to_11_public_stages`；`CNW_EPISODE_MULTI_SCENE_LIVE=NOT_RUN`；`CNW_FIVE_EPISODE_SPRINT_LIVE=NOT_RUN`；`CNW_PRIVATE_AUTHOR_AUTOMATION_CODE=NOT_PUBLICLY_AVAILABLE`；`USER_CREATIVE_ACCEPTED=PENDING_USER_READING`。
+- 未取得的门：本 Atom 尚无独立只读 Controller 的工程 ACCEPT，也未经当前 ChatGPT 对已推送源码/结果的审查；因此不以本文件声称 Atom 终验通过。
