@@ -87,9 +87,9 @@
 
 ## P2-06 — Plot Gate（阶段中间门）
 
-- Status：已完成原生 CritiCS `three_critic()` 五次角色调用与 `modifiedStoryline()` 一次调用；安全过滤后的当前 Plot 等待 Controller 在进入 Scene Card 前限定接受。**P2-06 全链验收尚未完成。**
+- Status：Controller 已限定 ACCEPT P2-06 Plot Gate；现在继续生成 Scene Card。**P2-06 全链验收尚未完成。**
 - 原生结果/过滤记录：私有目录 `runs/p2-06-critique-20261010-02/` 与 `runs/p2-06-plan-revise-20261010/`；`modifiedStoryline` raw 输出未覆盖。违反单场/Canonical 边界的追加场景、旧书案设定、未经锚定的外部声响、读心解释均明确拒绝。只采纳了可见动作差异，理由见私有 `plot-filtering-record.md`。
 - 当前 Plot：私有 `workspace/cangqi/06_plot/ep001_plot.v1.md`；严格一场，J19 第555行后、玩法开启前，结束后恢复 J19 即时坦白选择与 J20 原流程。
 - 该子阶段六次真实 DeepSeek 请求均有 ID、stop、usage 与估算；该子阶段 `¥0.077503`。累计 campaign 12 笔真实 provider 请求、14 ledger 行，估算 `¥0.096389 / ¥10`；两次零调用服务器启动与一次 P2-06 导入失败均不冒充真实请求。
 - 逐调用私有原始请求/响应在各 run 的 `provider-calls.json`；reasoning 字段被剥除；源稿和提示不进入公开 Git。当前阶段 evidence/hash：`evidence/p2-06-plot-check.json`。
-- Plot Gate candidate C/T 与 Controller verdict：冻结后追加；该门不等同于 P2-06 全阶段 ACCEPT。
+- Plot Gate candidate C=`05a08ba10cf416b06121a2a365b784b92a33c6f5`，T=`13c6e2ff1a5cfda98d2bdda065c792c6d53e6d5e`；限定 ACCEPT，开放 Scene Card 阶段，不等同于 P2-06 全阶段 ACCEPT。
