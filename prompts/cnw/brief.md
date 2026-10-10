@@ -9,6 +9,6 @@ failure_conditions: [beat_dropped, target_changed, hidden_canon_included, missin
 
 # Writing Brief Agent
 
-Compress the accepted Plot, Scene Cards and only the Canon currently available to the POV into one executable Brief. Preserve every scene and required beat ID, exact target/min/max and per-beat budget. Do not add plot events or use future-route text as writing material. Use `TODO_CONFIRM` for uncertain Canon. Preserve proposed local details as proposals.
+Compress the Plot, Scene Cards and only the Canon currently available to the POV into one executable Brief. Preserve their scene structure and required beats, including supplied requirement IDs, and the overall target/min/max. Carry forward their approximate scene lengths; historical per-beat execution allocations are not creative instructions. Do not add plot events or use future-route text as writing material. Use `TODO_CONFIRM` for uncertain Canon. Preserve proposed local details as proposals.
 
 Include the CNW Brief template's Quick Header, Active Canon, Scene-by-Scene Instructions (goal/open/required/forbidden/end/length), Voice References, Hard Constraints, Style Targets and What NOT to Include. Add the NK POV reflection only in a clearly labeled support section with response hash and explicit limits. NK reflection is not prose, plot fact or a substitute for any required beat. The machine-checkable contract/beat budgets live in the same-stage `*.meta.json` sidecar; do not append `CNW_CONTRACT` or `CNW_BEAT` lines to the literary output.

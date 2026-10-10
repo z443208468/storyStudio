@@ -242,6 +242,15 @@ def role_metadata(role: str, contract: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def creative_assignment(contract: dict[str, Any]) -> dict[str, Any]:
+    """Separate literary requirements from historical execution allocations."""
+    assignment = json.loads(json.dumps({k: contract[k] for k in ("project_id", "unit", "story") if k in contract}))
+    assignment["unit"].pop("scenes", None)
+    for beat in assignment["story"].get("required_beats", []):
+        beat.pop("budget_visible_chars", None)
+    return assignment
+
+
 def build_author_role_messages(role: str, contract: dict[str, Any], materials: dict[str, str], *, extra: dict[str, Any] | None = None) -> list[dict]:
     """Reproduce the author template + reading list, then the project values."""
     if role not in ROLE_TO_AUTHOR_TEMPLATE:
@@ -269,10 +278,19 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
             f"每个合同必需节拍必须以其 ID 出现于正文结构：{beat_ids}。\n"
             "只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
         )
+    if role == "plot":
+        system += (
+            "\n[plot_design_responsibility]\n"
+            "依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、"
+            "Required Story Beats、Hook、伏笔与章节衔接。已有必需节拍是必须覆盖的要求，"
+            "不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。"
+            "遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。"
+            "scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。"
+            "不得从执行器的记账元数据推导创作要求。\n"
+        )
     payload = {
-        "contract": {k: contract[k] for k in ("project_id", "unit", "story") if k in contract},
+        "assignment": creative_assignment(contract),
         "materials": materials,
-        "machine_metadata_sidecar": role_metadata(role, contract),
     }
     if extra:
         payload["support"] = extra
@@ -380,7 +398,7 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
     if role == "prose":
         packet.update(build_prose_input_view(contract, packet["inputs"]["brief"], packet["inputs"]["voice_samples"]))
     else:
-        packet["contract"] = contract
+        packet["assignment"] = creative_assignment(contract)
     return packet
 
 

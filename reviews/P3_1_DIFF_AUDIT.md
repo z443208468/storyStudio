@@ -89,3 +89,13 @@
 - 当前私有《苍歧》项目根据既有合同、Arc 和历史状态补齐三份缺失准备资料并追加工作日志；未改变原稿或 Canon，未调用模型。
 - 验证：adapters 9 项、runner 17 项通过；多 Arc ep007 定位至第二 Arc、读取 ep006、话数越界/前话缺失均已覆盖。真实 J19 准备文件集合读取及冻结通过。
 - 独立只读 Controller `/root/controller` 修复来源集合变更缺口后给出 **ACCEPT，仅限本轮准备资料与 Arc 定位改动**。完整工作流及新作品仍未验收。
+
+
+## 2026-10-11 — Plot design instructions and planning input separation
+
+- Compared pinned author `templates/06_plot/plot.template.md`: Key Scenes, Required Story Beats, Hook, Foreshadowing and Connections belong to Plot design.
+- Plot now explicitly designs structure, actions and additional beats while preserving source facts, required outcomes, overall length and the authorized single-scene scope.
+- Plot/Cards/Brief live requests and role packets use a deep-copied creative assignment without historical scene allocations, per-beat budgets or model-side accounting metadata. Original contracts and provenance hashes remain intact. Cards/Brief prompts no longer prescribe historical beat budgets.
+- Validation: existing adapter 9 tests and generation 22 tests PASS; direct MOCK_ONLY request checks for all three planning roles confirm preserved required outcomes/disclosure boundaries, removed allocations, and unchanged original contract. No paid API call.
+- Independent read-only Controller: ACCEPT for this input/prompt increment; checked known packet consumers. This does not accept full Plot autonomy, preflight, full Episode production or new Live results.
+- Still open: preflight currently requires predefined beats/scenes; execution sidecars retain historical allocations. Full author-equivalent planning must remove that prerequisite and consume actual Plot structure before claiming completion. USER_CREATIVE_ACCEPTED remains PENDING_USER_READING.
