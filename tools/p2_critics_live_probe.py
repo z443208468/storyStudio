@@ -28,6 +28,8 @@ from langchain_core.callbacks import BaseCallbackHandler
 from critics.setting.chatsetting.gptsetting import chatsettubg
 
 request_id = "critics-" + uuid.uuid4().hex
+provider_evidence_path = OUTPUT / f"{request_id}-provider-response.json"
+conversation_evidence_path = OUTPUT / f"{request_id}-conversation-response.json"
 cap_in, cap_out = 10000, 8192
 
 
@@ -75,7 +77,7 @@ def capture_provider_response(client, request, *args, **kwargs):
                 "output_tokens": usage_payload.get("completion_tokens"),
             },
         })
-        (OUTPUT / "critics-provider-response.json").write_text(
+        provider_evidence_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
     return response
@@ -139,7 +141,7 @@ try:
             "transport": transport_record,
         },
     }
-    (OUTPUT / "critics-conversation-response.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+    conversation_evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
     if not text.strip() or len(messages) < 2:
         raise RuntimeError("CRITICS_CONVERSATION_MEMORY_OR_OUTPUT_MISSING")
     print(json.dumps({
@@ -153,7 +155,7 @@ try:
         "output_tokens": output_tokens,
         "memory_message_count": len(messages),
         "response_chars": len(text),
-        "evidence": str(OUTPUT / "critics-conversation-response.json"),
+        "evidence": str(conversation_evidence_path),
     }))
 except Exception as error:
     settle = Args()
