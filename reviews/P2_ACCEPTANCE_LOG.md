@@ -128,3 +128,13 @@
 - Verdict：`ACCEPT`，独立只读 Controller `/root/g00_reviewer`；审查范围仅限 W02。
 - 候选：C=`c01713882900d630358c4681856ef6fb0158fb3d`，T=`dfdfb9bafe59af96a2e93a4893de99e01b180dca`；父提交为 W01 C=`d48a25627cfe604bc309cf0f6d9edfe56effa9cb`。
 - Controller 原消息：W02 ACCEPT，确认七文件提交与已审工作树候选相同、P2 签收和计划全文保留，P3 状态分开记录，旧 EP001 明确为历史 smoke 样本；旧 `studio.ps1` 恢复/checkpoint 命令仍可用。该 ACCEPT 尚待正常推送和远端回读。
+
+## P3 W03 — 源身份与场景预算合同（零 API）
+
+- Verdict：`ACCEPT`，独立只读 Controller `/root/g00_reviewer`；接受仅限合同/validator 与预生成文学合同预审，不等于正文生成或文学成品接受。
+- 候选：C=`249283f864056fcdd13c60956710feaaa794c30b`，T=`76d5a8d2a7277dc9b8823312515ba924ef0e832d`；私有合同 SHA256=`e5ef4ce8d4468756021b8b7a8e10dd3cff0b9445e25a6a399f3cc683bb0978d0`。
+- Controller 独立确认《苍歧》source_manifest SHA256=`D3A15ECB58D1ECB01CDB7B97054A274773B146ED46B10E72F05F8EA3117233CF`，CNW 捕获 manifest 另记为 `E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983`；生产脚本与 J19 前后锚哈希相符。初轮 RETURN 指出两种 manifest 身份混用；已改为分别记录，并让 validator 对实际 source_manifest 文件做 SHA 验证。
+- 场景合同：J19 555 后至原 557/559 之前；从原文可见的沉默/未说完开口发展成一次短暂、可见的交谈尝试，不揭示分支内容、不决定玩家选项。目标 1500、范围 1200–1800；4 个动作/对白节拍分配 300+400+500+300。Controller 认为来源、知识边界与规模建议合理，并明确不代表授权生成。
+- 离线结果：`tests.test_cnw_contract` 6 项通过；覆盖缺失/0 目标、Episode 分场预算、120 字短稿 `RETURN_UNDERPRODUCED`、必需节拍证据、Markdown/NFC 可见字符、source manifest/脚本/锚身份与 manifest 篡改拒绝；`py_compile` 和真实私有源预检通过。无供应商请求。
+- Controller 原消息：`ACCEPT — P3 W03`，精确绑定上述 C/T；确认合同 SHA、source manifest、policy、脚本和前后锚哈希相符，事件目标及 1500 / 1200–1800 预生成范围有充分依据；“No generation is authorized by this acceptance.”
+- 远端回读：候选提交接受后正常推送，等待记录。
