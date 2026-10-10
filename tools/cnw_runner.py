@@ -374,14 +374,29 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
         return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
 
 
+def cached_receipts(state: dict) -> list[dict]:
+    return state.get("provider_requests", []) + [attempt["prior_receipt"]
+        for attempt in state.get("provider_attempts", []) if attempt.get("prior_receipt")]
+
+
+def reactivate_receipt(run_dir: Path, receipt: dict) -> None:
+    with locked_run(run_dir):
+        state = load_state(run_dir)
+        if not any(row.get("request_id") == receipt["request_id"] for row in state.get("provider_requests", [])):
+            state.setdefault("provider_requests", []).append(receipt)
+            save_state(run_dir, state)
+
+
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
     if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
-    for previous in load_state(run_dir).get("provider_requests", []):
+    for previous in cached_receipts(load_state(run_dir)):
         if previous.get("request_fingerprint") == fingerprint and previous.get("status") == "SUCCEEDED":
-            return _receipt_content(run_dir, previous), previous
+            content = _receipt_content(run_dir, previous)
+            reactivate_receipt(run_dir, previous)
+            return content, previous
     guard = _p2_guard()
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key or len(key.strip()) < 20:
@@ -659,9 +674,6 @@ def produce(args) -> dict:
 
 def run_remaining_stages(run_dir: Path) -> None:
     for stage in CNW_STAGES:
-        state = load_state(run_dir)
-        if state["stages"][stage]["status"] in {"ACCEPTED", "STAGE_MATERIALIZED"}:
-            continue
         execute_cnw_stage(run_dir, stage)
 
 
@@ -683,7 +695,17 @@ def _step_locked(args, path: Path) -> dict:
     if args.work_id and args.work_id != state["work_id"]:
         raise ContractError("WORK_ID_MISMATCH", args.work_id)
     if state.get("mode") == "live" and not state.get("fixture_only"):
-        source_hash = validate_literary_source_freeze(state, path.parent.parent)
+        # Live step, produce and resume share the actual-consumption identity.
+        # The packet-only fingerprint below remains the offline fixture path.
+        if getattr(args, "input", None):
+            raise ContractError("LIVE_STAGE_INPUT_NOT_SUPPORTED", "edit the designated project source and explicitly reopen references")
+        expected = getattr(args, "expected_role_ids", None)
+        if stage == "re_review" and expected is not None:
+            if not expected or len(expected) != len(set(expected)) or set(expected) - set(LENS_IDS):
+                raise ContractError("REREVIEW_ROLE_SET_REQUIRED", str(expected))
+            state["stages"][stage]["expected_role_ids"] = expected
+            save_state(path, state)
+        return {"run_id": args.run_id, **execute_cnw_stage(path, stage)}
     else:
         source_hash = None
     expected_role_ids = None
@@ -882,7 +904,15 @@ def _execute_cnw_stage_locked(run_dir: Path, stage: str) -> dict:
     stage = normalize_stage(stage)
     state = load_state(run_dir)
     if state.get("mode") == "live" and not state.get("fixture_only"):
-        validate_literary_source_freeze(state, _run_dir_base(run_dir))
+        try:
+            from .cnw_recovery import execute_checked
+        except ImportError:
+            from cnw_recovery import execute_checked
+        return execute_checked(run_dir, stage)
+    return _dispatch_cnw_stage(run_dir, stage)
+
+
+def _dispatch_cnw_stage(run_dir: Path, stage: str) -> dict:
     if stage == "plot":
         return execute_plot(run_dir)
     if stage == "scene_cards":
@@ -1645,6 +1675,13 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
     hook_name = "critics_plot" if action == "plan-critique" else "critics_text"
     python = ROOT / "runtime/envs/critics-api/Scripts/python.exe"
     state = load_state(run_dir)
+    previous = state.get("support_hooks", {}).get(hook_name, {})
+    if previous.get("status") == "SUCCEEDED" and not previous.get("input_artifact"):
+        try:
+            from .cnw_recovery import support_input_snapshot
+        except ImportError:
+            from cnw_recovery import support_input_snapshot
+        support_input_snapshot(run_dir, state, hook_name, previous)
     if stage == "plot":
         input_path = assert_output_within_root(run_dir, state["stages"]["plot"]["artifact"]["path"])
     else:
@@ -1655,11 +1692,18 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
             _record_hook(run_dir, hook_name, evidence)
             return evidence
     input_sha = sha(input_path.read_bytes())
-    previous = state.get("support_hooks", {}).get(hook_name, {})
+    input_snapshot = run_dir / f"artifacts/support/critics-input-{input_sha}.md"
+    input_snapshot.parent.mkdir(parents=True, exist_ok=True)
+    if input_snapshot.exists() and sha(input_snapshot.read_bytes()) != input_sha:
+        raise ContractError("CRITICS_INPUT_CHANGED", hook_name)
+    input_snapshot.write_bytes(input_path.read_bytes())
+    input_path = input_snapshot
+    input_artifact = {"path": input_snapshot.relative_to(run_dir).as_posix(), "sha256": input_sha}
     if previous.get("status") == "SUCCEEDED" and previous.get("input_sha256") == input_sha:
         evidence = read_native_result(previous["run_name"], action=action, input_path=input_path)
         if previous.get("evidence_files") and previous["evidence_files"] != evidence["evidence_files"]:
             raise ContractError("CRITICS_EVIDENCE_CHANGED", previous["run_name"])
+        evidence["input_artifact"] = input_artifact
         _record_hook(run_dir, hook_name, evidence)
         return evidence
     if not python.is_file():
@@ -1679,6 +1723,7 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         evidence["stderr_tail"] = (completed.stderr or "")[-300:]
     else:
         evidence = read_native_result(run_name, action=action, input_path=input_path)
+    evidence["input_artifact"] = input_artifact
     _record_hook(run_dir, hook_name, evidence)
     return evidence
 
@@ -1686,6 +1731,9 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
 def _record_hook(run_dir: Path, hook: str, evidence: dict) -> None:
     with locked_run(run_dir):
         state = load_state(run_dir)
+        previous = state.get("support_hooks", {}).get(hook)
+        if previous and previous != evidence:
+            state.setdefault("support_hook_attempts", []).append({"hook": hook, "evidence": previous, "superseded_at": now()})
         state.setdefault("support_hooks", {})[hook] = evidence
         save_state(run_dir, state)
 
@@ -1697,6 +1745,16 @@ def show_run(args) -> dict:
     path = run_path(args.run_id, runs_root_for(args))
     state = load_state(path)
     return {"status": state["status"], "run_id": state["run_id"], "work_id": state["work_id"], "contract_sha256": state["contract_sha256"], "stages": {key: value["status"] for key, value in state["stages"].items()}, "support_hooks": {k: v.get("status", v) if isinstance(v, dict) else v for k, v in state.get("support_hooks", {}).items()}, "provider_requests": len(state["provider_requests"])}
+
+
+def resume_run(args) -> dict:
+    path = run_path(args.run_id, runs_root_for(args))
+    state = load_state(path)
+    if state.get("mode") != "live" or state.get("fixture_only"):
+        return {**show_run(args), "resume_execution": "OFFLINE_FIXTURE_REQUIRES_EXPLICIT_STEP", "provider_call": "none"}
+    with locked_run(path, lock_name="execution.lock"):
+        run_remaining_stages(path)
+    return {**show_run(args), "resume_execution": "EXECUTED_WITH_IDENTITY_VALIDATION"}
 
 
 def review_run(args) -> dict:
@@ -1734,20 +1792,15 @@ def invalidate_run(args) -> dict:
         state = load_state(path)
         start = CNW_STAGES.index(normalize_stage(args.from_stage))
         reopened = CNW_STAGES[start:]
+        try:
+            from .cnw_recovery import archive_stage, verify_evidence
+        except ImportError:
+            from cnw_recovery import archive_stage, verify_evidence
+        verify_evidence(path, state)
         for stage in reopened:
             record = state["stages"][stage]
             if record.get("status") != "NOT_RUN" or record.get("artifact"):
-                record.setdefault("invalidated_attempts", []).append({key: value for key, value in record.items() if key != "invalidated_attempts"})
-            record["status"] = "NOT_RUN"
-            record.pop("artifact", None)
-            record.pop("fingerprint", None)
-        kept = []
-        for receipt in state.get("provider_requests", []):
-            if receipt.get("stage") in set(reopened):
-                state.setdefault("provider_attempts", []).append({"stage": receipt.get("stage"), "status": "INVALIDATED_FOR_RECODE", "prior_receipt": receipt, "invalidated_at": now()})
-            else:
-                kept.append(receipt)
-        state["provider_requests"] = kept
+                archive_stage(path, state, stage, "EXPLICIT_STAGE_REOPEN")
         state["next_stage"] = next((stage for stage in CNW_STAGES if state["stages"][stage]["status"] not in _MATERIALIZED), None)
         state["updated_at"] = now()
         save_state(path, state)
@@ -2032,7 +2085,16 @@ def make_parser() -> argparse.ArgumentParser:
     reopen.add_argument("--from-stage", required=True)
     reopen.add_argument("--project-root")
     reopen.set_defaults(func=invalidate_run)
-    for command, func in (("show-run", show_run), ("resume", show_run), ("verify-history", verify_history), ("verify-live", verify_live)):
+    references = sub.add_parser("refresh-references")
+    references.add_argument("--run-id", required=True)
+    references.add_argument("--project-root")
+    references.add_argument("--reason", required=True)
+    try:
+        from .cnw_recovery import refresh_references
+    except ImportError:
+        from cnw_recovery import refresh_references
+    references.set_defaults(func=refresh_references)
+    for command, func in (("show-run", show_run), ("resume", resume_run), ("verify-history", verify_history), ("verify-live", verify_live)):
         item = sub.add_parser(command)
         item.add_argument("--run-id", required=True)
         item.add_argument("--project-root")

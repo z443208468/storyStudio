@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0,Mandatory=$true)]
-    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','project-incremental','canon-audit','handoff','support-workflow','verify','scene','legacy-scene','resume','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
+    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','project-incremental','canon-audit','handoff','support-workflow','verify','scene','legacy-scene','resume','refresh-references','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
     [string]$Command,
     [ValidateSet('offline','live')][string]$Mode,
     [ValidateSet('plot','scene_cards','writing_brief','prose','lint_layer1','lint_layer2','multi_lens_review','adversarial_verify','completeness_critic','refine','re_review','cards','brief','pov','draft','lint1','lint2','lens5','verifier3','completeness','re-review','revise')][string]$Stage,
@@ -28,6 +28,7 @@ param(
     [ValidateSet('full','light','targeted')][string]$AuditScope = 'full',
     [string[]]$AuditChapter,
     [string]$AuditTarget,
+    [string]$Reason,
     [switch]$Pipeline,
     [switch]$CreateOnly,
     [int]$Port = 3175
@@ -315,12 +316,18 @@ switch ($Command) {
     }
     'resume' {
         if (-not $RunId -or $RunId -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$') { throw 'VALID_RUN_ID_REQUIRED' }
-        $Run=Join-Path $Root ("runs/$RunId")
+        $RunProjectRoot=$ProjectRootPath
+        $Run=Join-Path $RunProjectRoot ("runs/$RunId")
+        if (-not (Test-Path -LiteralPath $Run -PathType Container)) { $RunProjectRoot=$Root; $Run=Join-Path $RunProjectRoot ("runs/$RunId") }
         if (-not (Test-Path -LiteralPath $Run -PathType Container)) { throw 'RUN_NOT_FOUND' }
-        if (Test-Path -LiteralPath (Join-Path $Run 'run_state.json') -PathType Leaf) { Invoke-CnwRunner @('resume','--run-id',$RunId); break }
+        if (Test-Path -LiteralPath (Join-Path $Run 'run_state.json') -PathType Leaf) { Invoke-CnwRunner @('resume','--run-id',$RunId,'--project-root',$RunProjectRoot); break }
         $Ledger=Read-Json (Join-Path $Root 'runtime/private/p2-cost-ledger.json')
         $Rows=@($Ledger.requests | Where-Object run_id -eq $RunId)
         [ordered]@{status='RUN_REOPENED_READ_ONLY';run_id=$RunId;path=$Run;ledger_rows=$Rows.Count;provider_requests=@($Rows | Where-Object provider_request_id).Count;no_replay=$true} | ConvertTo-Json -Depth 4
+    }
+    'refresh-references' {
+        if (-not $RunId -or -not $Reason) { throw 'REFERENCE_REOPEN_REQUIRES_RUN_ID_AND_REASON' }
+        Invoke-CnwRunner @('refresh-references','--run-id',$RunId,'--reason',$Reason)
     }
     'export' { if ($RunId) { Invoke-CnwRunner @('export','--run-id',$RunId) } else { Export-ReadingPackage | ConvertTo-Json -Depth 6 } }
     'nk-start' {
