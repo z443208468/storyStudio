@@ -56,12 +56,17 @@ class EpisodePipelineTests(unittest.TestCase):
         contract = {"unit": {"min_visible_chars": 700, "max_visible_chars": 1400},
                     "story": {"required_beats": [{"beat_id": "B01"}, {"beat_id": "B02"}],
                               "forbidden_future_revelations": []}}
-        prose = "后来一切都解决了。"
-        result = validate_generated_scene(contract, prose, finish_reason="stop", beat_evidence={},
+        beat1 = "港门在黄昏时打开"
+        beat2 = "渡船在天亮前离开"
+        prose = ("本场梗概：" + beat1 + "；随后钟声响起，众人决定等待；最后" + beat2 + "。") + "背景与经过的概述。" * 110
+        result = validate_generated_scene(contract, prose, finish_reason="stop", beat_evidence={"B01": beat1, "B02": beat2},
             dialogue_evidence=[], action_evidence=[], start_state_evidence="", end_state_evidence="")
         self.assertEqual(result["status"], "CONTENT_RETURN")
-        self.assertIn("RETURN_UNDERPRODUCED", result["failure_codes"])
-        self.assertIn("RETURN_MISSING_BEAT", result["failure_codes"])
+        self.assertGreaterEqual(result["actual_visible_chars"], 700)
+        self.assertNotIn("RETURN_UNDERPRODUCED", result["failure_codes"])
+        self.assertNotIn("RETURN_MISSING_BEAT", result["failure_codes"])
+        self.assertIn("RETURN_MISSING_DIALOGUE", result["failure_codes"])
+        self.assertIn("RETURN_MISSING_ACTION", result["failure_codes"])
 
     def test_forbidden_future_revelation_is_a_hard_episode_return(self):
         contract = {"unit": {"min_visible_chars": 1, "max_visible_chars": 1000},
@@ -85,9 +90,13 @@ class EpisodePipelineTests(unittest.TestCase):
             for index in range(1, 6):
                 episode_id = f"FICT_EP{index}"
                 contract = {"schema_version": "cnw_work_unit_v1", "project_id": "FICT_SPRINT",
-                    "source": {}, "unit": {"id": episode_id, "kind": "scene", "language": "zh-CN",
-                    "pov": "Mira", "target_visible_chars": 10, "min_visible_chars": 8,
-                    "max_visible_chars": 12, "policy_sha256": "fixture",},
+                    "source": {}, "unit": {"id": episode_id, "kind": "episode", "language": "zh-CN",
+                    "pov": "Mira", "target_visible_chars": 300, "min_visible_chars": 200,
+                    "max_visible_chars": 400, "policy_sha256": "fixture",
+                    "chapter_target_visible_chars": 300, "scenes": [
+                        {"id": f"{episode_id}_S1", "target_visible_chars": 100},
+                        {"id": f"{episode_id}_S2", "target_visible_chars": 100},
+                        {"id": f"{episode_id}_S3", "target_visible_chars": 100}]},
                     "story": {"required_beats": [{"beat_id": "B1", "budget_visible_chars": 10}]}, "review": {}}
                 contract_path = project / f"{episode_id}.json"
                 contract_path.write_text(json.dumps(contract), encoding="utf-8")
