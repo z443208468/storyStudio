@@ -55,6 +55,58 @@ def sha256(path: Path) -> str:
     return h.hexdigest().upper()
 
 
+def is_link_or_junction(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    is_junction = getattr(path, "is_junction", None)
+    if is_junction and is_junction():
+        return True
+    if os.name == "nt":
+        try:
+            # Python < 3.12 has no Path.is_junction(); Windows marks both
+            # symlinks and junctions with FILE_ATTRIBUTE_REPARSE_POINT.
+            return bool(path.lstat().st_file_attributes & 0x400)
+        except (AttributeError, OSError):
+            return False
+    return False
+
+
+def ensure_no_redirect(root: Path, path: Path) -> None:
+    """Reject symlink/junction ancestors before creating or writing a target."""
+    root = root.resolve(strict=True)
+    absolute = Path(os.path.abspath(path))
+    try:
+        relative = absolute.relative_to(root)
+    except ValueError as err:
+        raise RuntimeError(f"OUTPUT_PATH_ESCAPE:{path}") from err
+    current = root
+    for part in relative.parts:
+        current = current / part
+        if is_link_or_junction(current):
+            raise RuntimeError(f"OUTPUT_PATH_REDIRECT:{current}")
+        if current.exists() and not current.is_dir() and current != absolute:
+            raise RuntimeError(f"OUTPUT_PARENT_NOT_DIRECTORY:{current}")
+    resolved = absolute.resolve(strict=False)
+    try:
+        resolved.relative_to(root)
+    except ValueError as err:
+        raise RuntimeError(f"OUTPUT_PATH_ESCAPE:{path}") from err
+
+
+def assert_git_ignored(root: Path, path: Path) -> None:
+    relative = path.relative_to(root).as_posix()
+    result = subprocess.run(
+        ["git", "-C", str(root), "check-ignore", "--quiet", "--", relative],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="strict",
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"REFERENCE_OUTPUT_NOT_IGNORED:{relative}")
+
+
 def capture(root: Path) -> dict:
     root = root.resolve(strict=True)
     source = root / "third_party" / "claude-novel-workflow"
@@ -71,10 +123,14 @@ def capture(root: Path) -> dict:
     if tracked_dirty:
         raise RuntimeError(f"UPSTREAM_TRACKED_WIP_PRESENT:{tracked_dirty[:500]}")
 
-    output = root / "runtime" / "reference" / ("cnw_" + PIN[:12])
-    out_resolved = output.resolve(strict=False)
-    if not str(out_resolved).startswith(str((root / "runtime" / "reference").resolve(strict=False)) + os.sep):
-        raise RuntimeError("OUTPUT_PATH_ESCAPE")
+    reference_root = root / "runtime" / "reference"
+    output = reference_root / ("cnw_" + PIN[:12])
+    for directory in (root / "runtime", reference_root, output):
+        ensure_no_redirect(root, directory)
+        if not directory.exists():
+            directory.mkdir()
+        ensure_no_redirect(root, directory)
+    assert_git_ignored(root, output / "CNW_LOCAL_REFERENCE_MANIFEST.json")
 
     allpaths = git(source, "ls-tree", "-r", "--name-only", PIN).splitlines()
     selected = sorted(
@@ -90,6 +146,9 @@ def capture(root: Path) -> dict:
             raise RuntimeError(f"UNSAFE_UPSTREAM_PATH:{relative}")
         src = source / relative
         dst = output / relative
+        ensure_no_redirect(output, dst.parent)
+        if dst.exists() or is_link_or_junction(dst):
+            ensure_no_redirect(output, dst)
         if not src.is_file() or src.is_symlink():
             raise RuntimeError(f"UPSTREAM_SOURCE_MISSING_OR_SYMLINK:{relative}")
         commit_blob = git(source, "rev-parse", f"{PIN}:{relative}")
@@ -101,7 +160,17 @@ def capture(root: Path) -> dict:
             if not dst.is_file() or dst.is_symlink() or sha256(dst) != before:
                 raise RuntimeError(f"EXISTING_REFERENCE_COLLISION:{relative}")
         else:
-            dst.parent.mkdir(parents=True, exist_ok=True)
+            # Create each missing directory only after its full ancestor chain
+            # has been checked. Recheck after creation before writing bytes.
+            missing: list[Path] = []
+            parent = dst.parent
+            while not parent.exists():
+                missing.append(parent)
+                parent = parent.parent
+            for directory in reversed(missing):
+                ensure_no_redirect(output, directory)
+                directory.mkdir()
+                ensure_no_redirect(output, directory)
             shutil.copyfile(src, dst)
         if sha256(dst) != before:
             raise RuntimeError(f"REFERENCE_COPY_MISMATCH:{relative}")
