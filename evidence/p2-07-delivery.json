@@ -138,6 +138,8 @@
     "reviewer": "/root/g00_reviewer",
     "verdict": "ACCEPT",
     "scope": "P2-07 local delivery only",
-    "remote_readback": "pending"
+    "remote_readback": "REMOTE_READBACK_ACCEPT",
+    "remote_commit": "ef76fb329a10e22284de9701b94cb99d690b19bb",
+    "remote_tree": "91ceb9b822815e824d358a5fff82e14137efe3f5"
   }
 }

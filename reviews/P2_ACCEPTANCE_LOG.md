@@ -119,3 +119,5 @@
 - 交付 HTML 无外部资源；连读摘录只含指定 J19 前后锚，不展开 J20 分支正文。用户创意签收保持 pending。
 - 证据：`evidence/p2-07-delivery.json`；私有回放与原始生命周期输出位于 `runs/p2-07-replay-20261010/`。
 - 本地 ACCEPT 已完成；提交候选 C/T 与远端只读回读待完成。
+- 最终候选：branch `codex/g00-governance-candidate`，C=`ef76fb329a10e22284de9701b94cb99d690b19bb`，T=`91ceb9b822815e824d358a5fff82e14137efe3f5`；main C=`06c66de7c7f18263039ea19a47e84c29716cde4b`，tree=`4b825dc642cb6eb9a060e54bf8d69288fbee4904`。
+- Controller `/root/g00_reviewer` 最终本地候选 ACCEPT；推送后独立 fetch 与 `ls-remote` 回读均为 `REMOTE_READBACK ACCEPT`，远端 C/T 与本地候选一致。

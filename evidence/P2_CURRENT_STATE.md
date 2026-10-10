@@ -9,3 +9,4 @@
 - 成本：累计 17 次真实供应商请求、21 条账本记录、25,018 输入 / 9,055 输出 tokens，估算 ¥0.123297 / ¥10；账单未连接，故仅为估算。
 - 当前 P2-07 证据：`evidence/p2-07-delivery.json`。Controller 本地交付验收 ACCEPT；最终 C/T 冻结和远端回读待完成。
 - 私有源稿、完整 prompt/raw response、项目工作区、runs、成本账本和阅读版均被 Git 忽略；用户创意接受仍待用户阅读，不由 Controller 代签。
+- P2-07 已完成 Controller 本地 ACCEPT 与远端 readback ACCEPT；候选 C=`ef76fb329a10e22284de9701b94cb99d690b19bb`，T=`91ceb9b822815e824d358a5fff82e14137efe3f5`。
