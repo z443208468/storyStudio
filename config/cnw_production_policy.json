@@ -1,0 +1,28 @@
+{
+  "schema_version": "cnw_production_policy_v1",
+  "method_reference": {
+    "repository": "MintoTsukino/claude-novel-workflow",
+    "commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+    "workflow_template_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+    "scene_card_template": "templates/05_scene_cards/scene_cards.template.md",
+    "writing_brief_template": "templates/07_draft/writing_brief.template.md"
+  },
+  "local_reference_manifest_sha256": "E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983",
+  "project_adaptation": {
+    "project_id": "cangqi",
+    "language": "zh-CN",
+    "length_unit": "unicode_visible_characters",
+    "length_algorithm": "NFC-normalized Unicode code points, excluding whitespace and Markdown control syntax; count Chinese letters, other letters, digits and punctuation as visible characters.",
+    "allow_output_without_frozen_contract": false,
+    "required_scene_fields": [
+      "source", "unit", "story", "review"
+    ],
+    "required_story_fields": [
+      "role_in_story", "reader_reward", "entry_state", "exit_state",
+      "before_anchor", "after_anchor", "required_beats",
+      "characters_in_scene", "character_knowledge_boundary_ref",
+      "forbidden_future_revelations", "voice_sample_refs"
+    ],
+    "require_exact_beat_budget_sum": true
+  }
+}
