@@ -102,20 +102,50 @@ def _pinned_upstream(source_path: str) -> tuple[str, str | None]:
     return template.read_text(encoding="utf-8-sig"), blob
 
 
-def resolve_author_reads(role: str, project_root: Path, work_id: str) -> dict[str, Path]:
+def resolve_arc(project_root: Path, work_id: str, arc_ref: str | None = None) -> Path:
+    """Resolve the work's Arc from an explicit reference or the author's index."""
+    directory = project_root / "04_chapter_design"
+    if arc_ref:
+        candidate = (project_root / arc_ref).resolve(strict=True)
+        if (not candidate.is_relative_to(directory.resolve()) or not candidate.is_file()
+                or not re.fullmatch(r"arc_[A-Za-z0-9_-]+\.md", candidate.name)
+                or candidate.name == "arc_index.md" or candidate.stem.endswith("_episode_details")):
+            raise ContractError("ARC_REFERENCE_UNSAFE", arc_ref)
+        return candidate
+    episode = re.fullmatch(r"(?:ep|ch)(\d+)", work_id, re.I)
+    index = directory / "arc_index.md"
+    matches = []
+    indexed_ranges = 0
+    if episode and index.is_file():
+        for line in index.read_text(encoding="utf-8-sig").splitlines():
+            cells = [part.strip() for part in line.strip().strip("|").split("|")]
+            if len(cells) < 3 or not re.fullmatch(r"\d+", cells[0]):
+                continue
+            bounds = re.fullmatch(r"(?:ep)?(\d+)(?:\s*[-–—]\s*(?:ep)?(\d+))?", cells[2], re.I)
+            if bounds:
+                indexed_ranges += 1
+            if bounds and int(bounds.group(1)) <= int(episode.group(1)) <= int(bounds.group(2) or bounds.group(1)):
+                matches.append(directory / f"arc_{cells[0]}.md")
+        if len(matches) == 1 and matches[0].is_file():
+            return matches[0]
+        if matches or indexed_ranges:
+            raise ContractError("ARC_INDEX_INVALID", f"{work_id}: missing or overlapping Arc reference")
+    candidates = sorted(path for path in directory.glob("arc_*.md")
+                        if path.name != "arc_index.md" and not path.stem.endswith("_episode_details"))
+    if len(candidates) == 1:
+        return candidates[0]
+    raise ContractError("AUTHOR_READ_AMBIGUOUS" if candidates else "AUTHOR_READ_MISSING",
+                        f"Arc for {work_id}; supply story.arc_ref or an Arc Index episode range")
+
+
+def resolve_author_reads(role: str, project_root: Path, work_id: str, *, arc_ref: str | None = None) -> dict[str, Path]:
     """Resolve the author reading list to concrete private project files."""
     if role not in AUTHOR_ROLE_READS:
         raise ContractError("ROLE_UNKNOWN", role)
     resolved: dict[str, Path] = {}
     for template in AUTHOR_ROLE_READS[role]:
         if "<NN>" in template:
-            directory = project_root / Path(template).parent
-            candidates = sorted(directory.glob("arc_*.md")) if directory.is_dir() else []
-            if not candidates:
-                raise ContractError("AUTHOR_READ_MISSING", template)
-            if len(candidates) > 1:
-                raise ContractError("AUTHOR_READ_AMBIGUOUS", f"{template}: {[c.name for c in candidates]}")
-            resolved[template] = candidates[0]
+            resolved[template] = resolve_arc(project_root, work_id, arc_ref)
         elif "<work_id>" in template:
             resolved[template] = project_root / template.replace("<work_id>", work_id)
         else:
@@ -126,8 +156,37 @@ def resolve_author_reads(role: str, project_root: Path, work_id: str) -> dict[st
     return resolved
 
 
-def read_actual_texts(project_root: Path, role: str, work_id: str) -> dict[str, str]:
-    return {template: path.read_text(encoding="utf-8-sig") for template, path in resolve_author_reads(role, project_root, work_id).items()}
+def read_actual_texts(project_root: Path, role: str, work_id: str, *, arc_ref: str | None = None) -> dict[str, str]:
+    return {template: path.read_text(encoding="utf-8-sig") for template, path in resolve_author_reads(role, project_root, work_id, arc_ref=arc_ref).items()}
+
+
+def read_production_preparation(project_root: Path, contract: dict) -> dict:
+    """Read the public production manual's preparation sources before Plot."""
+    arc = resolve_arc(project_root, contract["unit"]["id"], contract["story"].get("arc_ref"))
+    paths = [project_root / "94_runtime/current_state.md", project_root / "07_draft/manuscript_index.md", arc,
+             arc.with_name(arc.stem + "_episode_details.md"),
+             project_root / "92_style_engine/character_voice_samples.md", project_root / "90_canon/character_bible.md"]
+    previous = contract["story"].get("previous_episode_ref")
+    episode = re.fullmatch(r"(ep|ch)(\d+)", contract["unit"]["id"], re.I)
+    if not previous and episode and int(episode.group(2)) > 1:
+        previous = f"07_draft/episodes/{episode.group(1)}{int(episode.group(2))-1:0{len(episode.group(2))}d}.md"
+    if not previous and contract["unit"].get("kind") == "episode" and not episode and not contract["story"].get("first_episode"):
+        raise ContractError("PREVIOUS_EPISODE_REFERENCE_REQUIRED", contract["unit"]["id"])
+    if previous:
+        paths.append(project_root / previous)
+    documents, hashes = {}, {}
+    for path in paths:
+        if not path.is_file():
+            raise ContractError("PRODUCTION_CONTEXT_MISSING", str(path.relative_to(project_root)))
+        resolved = path.resolve(strict=True)
+        if not resolved.is_relative_to(project_root.resolve()) or path.is_symlink() or not resolved.is_file():
+            raise ContractError("PRODUCTION_CONTEXT_PATH_UNSAFE", str(path))
+        relative = resolved.relative_to(project_root.resolve()).as_posix()
+        documents[relative] = resolved.read_text(encoding="utf-8-sig")
+        hashes[relative] = sha256_file(resolved)
+    return {"documents": documents, "source_hashes": hashes,
+            "source_method": "example_project/00_meta/episode_production_manual.md#production-reading-order",
+            "previous_episode": previous or ("FIRST_EPISODE" if episode or contract["story"].get("first_episode") else "SCENE_SOURCE_ANCHORS")}
 
 
 def relevant_voice_samples(text: str, characters: list[str]) -> str:

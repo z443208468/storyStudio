@@ -268,10 +268,21 @@ def literary_source_freeze(contract: dict, project_root: Path) -> dict[str, str]
         "92_style_engine/forbidden_patterns.md": project_root / "92_style_engine/forbidden_patterns.md",
         "92_style_engine/character_voice_samples.md": project_root / "92_style_engine/character_voice_samples.md",
     }
+    try:
+        from .cnw_roles import read_production_preparation
+    except ImportError:
+        from cnw_roles import read_production_preparation
+    preparation = read_production_preparation(project_root, contract)
+    paths.update({name: project_root / name for name in preparation["source_hashes"]})
+    arc_index = project_root / "04_chapter_design/arc_index.md"
+    if arc_index.is_file():
+        paths["04_chapter_design/arc_index.md"] = arc_index
     source_root = _source_root(contract, project_root)
     script = (source_root / contract["story"]["source_file"]).resolve(strict=True)
     manifest = (source_root / contract["source"]["manifest_file"]).resolve(strict=True)
     result = {f"project:{name}": sha(path.read_bytes()) for name, path in paths.items() if path.is_file()}
+    result["preparation:identity"] = sha(json.dumps({"files": preparation["source_hashes"],
+        "arc_index": sha(arc_index.read_bytes()) if arc_index.is_file() else None}, sort_keys=True).encode("utf-8"))
     result[f"source:{script.relative_to(ROOT).as_posix()}"] = sha(script.read_bytes())
     result[f"manifest:{manifest.relative_to(ROOT).as_posix()}"] = sha(manifest.read_bytes())
     lines = script.read_text(encoding="utf-8-sig").splitlines()
@@ -287,7 +298,18 @@ def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
     if not isinstance(expected, dict) or not expected:
         raise ContractError("LITERARY_SOURCE_FREEZE_MISSING", state.get("run_id", "unknown"))
     actual = {}
+    contract = load_contract(project_root / state["contract_path"])
     for key, digest in expected.items():
+        if key == "preparation:identity":
+            try:
+                from .cnw_roles import read_production_preparation
+            except ImportError:
+                from cnw_roles import read_production_preparation
+            preparation = read_production_preparation(project_root, contract)
+            arc_index = project_root / "04_chapter_design/arc_index.md"
+            actual[key] = sha(json.dumps({"files": preparation["source_hashes"],
+                "arc_index": sha(arc_index.read_bytes()) if arc_index.is_file() else None}, sort_keys=True).encode("utf-8"))
+            continue
         if key.startswith("project:"):
             path = project_root / key.removeprefix("project:")
         elif key.startswith(("source:", "manifest:")) and key.rsplit(":", 1)[-1] != "anchor_excerpt":
@@ -818,7 +840,7 @@ def _role_sources(role: str, run_dir: Path, state: dict, contract: dict, project
         from .cnw_roles import read_actual_texts
     except ImportError:
         from cnw_roles import read_actual_texts
-    return read_actual_texts(project_root, role, contract["unit"]["id"])
+    return read_actual_texts(project_root, role, contract["unit"]["id"], arc_ref=contract["story"].get("arc_ref"))
 
 
 def _author_messages(role: str, contract: dict, materials: dict[str, str], extra: dict | None = None) -> list[dict]:
@@ -847,6 +869,9 @@ def _role_meta(role: str, contract: dict) -> dict:
 
 def execute_cnw_stage(run_dir: Path, stage: str) -> dict:
     stage = normalize_stage(stage)
+    state = load_state(run_dir)
+    if state.get("mode") == "live" and not state.get("fixture_only"):
+        validate_literary_source_freeze(state, _run_dir_base(run_dir))
     if stage == "plot":
         return execute_plot(run_dir)
     if stage == "scene_cards":
@@ -893,7 +918,22 @@ def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, outp
 
 
 def execute_plot(run_dir: Path) -> dict:
-    result = _planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000, project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent")
+    try:
+        from .cnw_roles import read_production_preparation
+    except ImportError:
+        from cnw_roles import read_production_preparation
+    contract = _contract_for(run_dir)
+    preparation = read_production_preparation(_run_dir_base(run_dir), contract)
+    if contract["unit"]["kind"] == "scene":
+        source = _source_root(contract, _run_dir_base(run_dir)) / contract["story"]["source_file"]
+        lines = source.read_text(encoding="utf-8-sig").splitlines()
+        anchor = contract["story"]["before_anchor"]
+        preparation["preceding_source_text"] = "\n".join(lines[anchor["source_line"]-1:anchor.get("source_line_end", anchor["source_line"])])
+    context_path = run_dir / "artifacts/production_preparation.json"
+    context_path.parent.mkdir(parents=True, exist_ok=True)
+    context_path.write_text(json.dumps(preparation, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    result = _planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000,
+                            extra={"production_preparation": preparation}, project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent")
     _critics_hook(run_dir, "plot")
     return result
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from tools.cnw_contract import ContractError, load_contract
 from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt
 from tools.cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
-from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain
+from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +20,36 @@ def sha(data: bytes) -> str:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_production_preparation_resolves_episode_arc_and_reads_previous_text(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contents = {
+                "04_chapter_design/arc_index.md": "| Arc | Title | Episodes | Purpose |\n|---|---|---|---|\n| 01 | First | 1-5 | Start |\n| 02 | Second | 6-10 | Develop |\n",
+                "04_chapter_design/arc_01.md": "First Arc",
+                "04_chapter_design/arc_02.md": "Second Arc",
+                "04_chapter_design/arc_02_episode_details.md": "Episode seven purpose",
+                "94_runtime/current_state.md": "Next: ep007",
+                "07_draft/manuscript_index.md": "ep006 drafted",
+                "07_draft/episodes/ep006.md": "Previous chapter text",
+                "92_style_engine/character_voice_samples.md": "Voice samples",
+                "90_canon/character_bible.md": "Character facts",
+            }
+            for relative, text in contents.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+            self.assertEqual(resolve_arc(root, "ep007").name, "arc_02.md")
+            self.assertEqual(resolve_arc(root, "custom-scene", "04_chapter_design/arc_01.md").name, "arc_01.md")
+            context = read_production_preparation(root, {"unit": {"id": "ep007", "kind": "episode"}, "story": {}})
+            self.assertEqual(context["documents"]["07_draft/episodes/ep006.md"], "Previous chapter text")
+            self.assertNotIn("04_chapter_design/arc_01.md", context["documents"])
+            self.assertEqual(len(context["source_hashes"]), 7)
+            with self.assertRaisesRegex(ContractError, "ARC_INDEX_INVALID"):
+                resolve_arc(root, "ep020")
+            (root / "07_draft/episodes/ep006.md").unlink()
+            with self.assertRaisesRegex(ContractError, "PRODUCTION_CONTEXT_MISSING"):
+                read_production_preparation(root, {"unit": {"id": "ep007", "kind": "episode"}, "story": {}})
+
     def test_live_role_packet_requires_live_mode_and_frozen_contract(self):
         contract = load_contract(CONTRACT_PATH)
         packet = build_role_packet("plot", CONTRACT_PATH, {
