@@ -9,12 +9,12 @@
 | 原作者阶段 / 方法 | 固定源文件 | StoryStudio 对应职责 | 当前状态 | 目标验证 |
 |---|---|---|---|---|
 | 项目、Arc、Canon、Style 导入与持续维护 | `docs/EXISTING_PROJECT_IMPORT.md`; `templates/_workflows/01_first_import.md`; `templates/_workflows/02_incremental_update.md` | 支持任意私有项目根，维护来源与知识边界 | `NOT_IMPLEMENTED`（仅《苍歧》P2 固定导入存在） | A04、B01、E05 |
-| Plot 规划 | `templates/config/ai_roles.template.yml`; `templates/06_plot/plot.template.md` | 独立 Plot 输入/输出、作用/Hook/节拍/长度合同 | `NOT_IMPLEMENTED`（P2 EP001 Plot 是一次性旧样本） | B01、B04、D02 |
-| Plot 的 CritiCS 项目扩展 | P2 `tools/critics_bridge.py`; `tools/p2_06_critics_run.py` | 原桥接的计划批评接入，结果不能代替 CNW Plot Lens | `ALREADY_IMPLEMENTED_WITH_EVIDENCE`：仅桥接/既有真实 P2 调用；通用适配尚缺 | D04 |
-| Scene Cards | `templates/05_scene_cards/scene_cards.template.md`; `ai_roles.template.yml` | 由已接受 Plot 生成多场或单场合同、起止与预算 | `NOT_IMPLEMENTED`（仅 EP001 手工样本） | B01、B04、B05 |
-| Writing Brief | `templates/07_draft/writing_brief.template.md`; `ai_roles.template.yml` | 从 Plot/Card/当前 Canon/声线导出冻结写作合同 | `NOT_IMPLEMENTED`（仅 EP001 手工 Brief） | B01、B06 |
-| NK POV hook | P2 `tools/p2_06_nk_live_probe.ps1`; NK 固定路由 | 当前 Card 到 NK 现有接口，反思结果映射入 Brief | `ALREADY_IMPLEMENTED_WITH_EVIDENCE`：固定样本真实调用；通用 Card adapter 尚缺 | B06、E09 |
-| Prose | `ai_roles.template.yml`; `templates/07_draft/writing_brief.template.md` | 仅用 Brief 和相关声线生成新 ID 正文、保存 v0 | `NOT_IMPLEMENTED`（P2 runner 固定 EP001，长度硬编码） | B06、B07、C01、C06 |
+| Plot 规划 | `templates/config/ai_roles.template.yml`; `templates/06_plot/plot.template.md` | 独立 Plot 输入/输出、作用/Hook/节拍/长度合同 | `PARTIAL`：W04 Prompt/角色包/结构 gate 已实现；尚无新 run 的真实 Plot 角色结果 | B01、B04、D02 |
+| Plot 的 CritiCS 项目扩展 | P2 `tools/critics_bridge.py`; `tools/p2_06_critics_run.py` | 原桥接的计划批评接入，结果不能代替 CNW Plot Lens | `PARTIAL`：既有 P2 live 证据可复用；W04 新 run 安全调用构造器已实现，尚未真实调用新 Plot | D04 |
+| Scene Cards | `templates/05_scene_cards/scene_cards.template.md`; `ai_roles.template.yml` | 由已接受 Plot 生成多场或单场合同、起止与预算 | `PARTIAL`：W04 Prompt/角色依赖/beat 与预算 gate 已实现；尚无新 run 的真实 Card 角色结果 | B01、B04、B05 |
+| Writing Brief | `templates/07_draft/writing_brief.template.md`; `ai_roles.template.yml` | 从 Plot/Card/当前 Canon/声线导出冻结写作合同 | `PARTIAL`：W04 Prompt/隔离输入包/beat 与长度 gate 已实现；尚无新 run 的真实 Brief 角色结果 | B01、B06 |
+| NK POV hook | P2 `tools/p2_06_nk_live_probe.ps1`; NK 固定路由 | 当前 Card 到 NK 现有接口，反思结果映射入 Brief | `PARTIAL`：W04 按冻结 beats 构造 ordered `eventSequence`，且 Brief 映射需 receipt；本新合同尚未真实调用 | B06、E09 |
+| Prose | `ai_roles.template.yml`; `templates/07_draft/writing_brief.template.md` | 仅用 Brief 和相关声线生成新 ID 正文、保存 v0 | `PARTIAL`：W04 Prompt/Brief+声线输入限制与长度 gate 已实现；无 Controller 接受的 Plot/Card/Brief 时禁止构造 Prose 包 | B06、B07、C01、C06 |
 | Layer 1 表层校验 | `docs/THREE_LAYER_REVIEW.md` | 中文项目 lint，定位问题而不自动删文 | `NOT_IMPLEMENTED` | C09、D02 |
 | Layer 2 结构校验 | `docs/THREE_LAYER_REVIEW.md` | 以上下文发现摘要化、重复等结构候选 | `NOT_IMPLEMENTED` | C03、C09、D02 |
 | 5 个独立 Lens | `docs/THREE_LAYER_REVIEW.md`; `templates/config/workflow.template.yml` | Style/Character/Plot/Canon/Story-specific 隔离输入与记录 | `NOT_IMPLEMENTED`（工程 Controller/CritiCS 不等价） | D01、D02、D09、D10 |
