@@ -441,13 +441,37 @@ def register_editorial_candidate(args) -> dict:
 
 
 def promote_run(args) -> dict:
-    state = load_state(run_path(args.run_id, runs_root_for(args)))
+    path = run_path(args.run_id, runs_root_for(args))
+    state = load_state(path)
     if state["stages"].get("re-review", {}).get("status") != "ACCEPTED":
         raise ContractError("PROMOTION_GATE_NOT_ACCEPTED", "re-review")
-    evidence = state.get("editorial_review")
-    if not evidence or evidence.get("status") != "EXTERNAL_ACCEPTED" or not evidence.get("evidence_sha256"):
-        raise ContractError("EXTERNAL_REVIEW_EVIDENCE_REQUIRED", "CLI or fixture stage status cannot authorize promotion")
-    return {"status": "PROMOTION_READY", "run_id": args.run_id, "self_acceptance": False}
+    candidate_arg=getattr(args,"candidate",None); evidence_arg=getattr(args,"review_evidence",None)
+    if not candidate_arg or not evidence_arg:
+        raise ContractError("EXTERNAL_REVIEW_EVIDENCE_REQUIRED", "supply --candidate and --review-evidence under this run")
+    if state.get("mode") != "live" or state.get("fixture_only"):
+        raise ContractError("MOCK_CANDIDATE_CANNOT_PROMOTE", args.run_id)
+    verify_live(args)
+    candidate_value=Path(candidate_arg); evidence_value=Path(evidence_arg)
+    candidate=safe_run_input(candidate_value if candidate_value.is_absolute() else path/candidate_value,path)
+    evidence_path=safe_run_input(evidence_value if evidence_value.is_absolute() else path/evidence_value,path)
+    project_root=Path(getattr(args,"project_root",None) or ROOT).resolve(strict=True)
+    contract_path=(project_root/state["contract_path"]).resolve(strict=True)
+    if not contract_path.is_relative_to(project_root) or contract_path.is_symlink(): raise ContractError("CONTRACT_PATH_UNSAFE",state["contract_path"])
+    contract=load_contract(contract_path)
+    evidence=json.loads(evidence_path.read_text(encoding="utf-8"))
+    try:
+        from .cnw_revision import promote_revision
+    except ImportError:
+        from cnw_revision import promote_revision
+    result=promote_revision(project_root,path,candidate,contract,evidence)
+    with locked_run(path):
+        state=load_state(path)
+        state["editorial_review"]={**evidence,"evidence_sha256":sha(evidence_path.read_bytes()),"candidate_path":candidate.relative_to(path).as_posix()}
+        state["stages"]["promote"]["status"]="ACCEPTED"
+        state["stages"]["promote"]["artifact"]={"path":candidate.relative_to(path).as_posix(),"sha256":sha(candidate.read_bytes())}
+        state["updated_at"]=now(); state["status"]="PROMOTED"
+        save_state(path,state)
+    return {**result,"run_id":args.run_id,"self_acceptance":False}
 
 
 def export_run(args) -> dict:
@@ -595,6 +619,9 @@ def make_parser() -> argparse.ArgumentParser:
         item = sub.add_parser(command)
         item.add_argument("--run-id", required=True)
         item.add_argument("--project-root")
+        if command=="promote":
+            item.add_argument("--candidate")
+            item.add_argument("--review-evidence")
         item.set_defaults(func=func)
     return parser
 

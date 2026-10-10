@@ -11,7 +11,8 @@ from unittest.mock import patch
 from tools import cnw_generate
 from tools.cnw_contract import ContractError, count_visible_chars, load_contract
 from tools.cnw_generate import assemble_segment_outputs, build_prose_request, build_segment_request, plan_output_segments, validate_generated_scene, load_capacity_reference
-from tools.cnw_revision import plan_persisted_continuation, validate_episode_assembly, validate_revision
+from tools.cnw_revision import (build_revision_plan, build_revision_record, build_rereview_packets, plan_persisted_continuation,
+    promote_revision, validate_episode_assembly, validate_revision)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -125,6 +126,90 @@ class CnwGenerationTests(unittest.TestCase):
             start_state_evidence="她推开门。", end_state_evidence="他收起信。")
         self.assertGreaterEqual(result["v1_visible_chars"], self.contract["unit"]["min_visible_chars"])
         self.assertNotIn("REVISION_REGRESSION", result["failure_codes"])
+
+    def test_revision_shrink_over_25_percent_needs_reason(self):
+        v0=self.prose*2; v1=self.prose[:180]
+        result=validate_revision(self.contract,v0,v1,finish_reason="stop",
+            v0_beat_evidence=self.evidence,v1_beat_evidence=self.evidence,
+            v1_dialogue_evidence=self.dialogue,v1_action_evidence=self.action,
+            start_state_evidence="她推开门。",end_state_evidence="他收起信。")
+        self.assertEqual(result["status"],"CONTENT_RETURN")
+        self.assertIn("REVISION_SHRINK_OVER_25_PERCENT_REQUIRES_REASON",result["failure_codes"])
+        explained=validate_revision(self.contract,v0,v1,finish_reason="stop",
+            v0_beat_evidence=self.evidence,v1_beat_evidence=self.evidence,
+            v1_dialogue_evidence=self.dialogue,v1_action_evidence=self.action,
+            start_state_evidence="她推开门。",end_state_evidence="他收起信。",shortening_reason="删除重复对白，保留全部动作与节拍")
+        self.assertEqual(explained["status"],"CONTENT_VALID")
+        self.assertEqual(explained["shortening_reason"],"删除重复对白，保留全部动作与节拍")
+
+    def test_revision_plan_requires_source_and_acceptance_per_issue(self):
+        items=[{"issue_id":"I2","severity":"P2","owner":"style","source":"lens-style","evidence":"line 4","fix":"reduce repetition","acceptance":"repeat removed","verification_status":"CONFIRMED"},
+               {"issue_id":"I1","severity":"P0","owner":"canon","source":"source anchor A1","evidence":"claim lacks anchor","fix":"remove claim","acceptance":"all claims cited","verification_status":"CONFIRMED"}]
+        plan=build_revision_plan(items)
+        self.assertEqual([x["issue_id"] for x in plan["issues"]],["I1","I2"])
+        self.assertFalse(plan["self_acceptance"])
+        with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_INCOMPLETE"):
+            build_revision_plan([{"issue_id":"I1","severity":"P0","verification_status":"CONFIRMED"}])
+        with self.assertRaisesRegex(ContractError,"REVISION_ISSUE_NOT_CONFIRMED"):
+            build_revision_plan([{**items[0],"verification_status":"REFUTED_OR_UNCERTAIN"}])
+
+    def test_revision_record_preserves_v0_and_records_diff_and_shrink_reason(self):
+        plan=build_revision_plan([{"issue_id":"I1","severity":"P1","owner":"plot","source":"beat B01","evidence":"missing response","fix":"add response","acceptance":"response in scene","verification_status":"CONFIRMED"}])
+        with self.assertRaisesRegex(ContractError,"REVISION_SHRINK_OVER_25_PERCENT_REQUIRES_REASON"):
+            build_revision_record(self.prose*2,self.prose[:180],plan)
+        record=build_revision_record(self.prose*2,self.prose[:180],plan,shortening_reason="删除重复对白，保留两个节拍的动作和回应")
+        self.assertTrue(record["original_preserved"])
+        self.assertIn("issue_ids",record); self.assertIn("I1",record["issue_ids"])
+        self.assertIn("-",record["diff"])
+        self.assertEqual(len(record["v0_sha256"]),64)
+
+    def test_revision_plan_cli_writes_into_private_project(self):
+        repo=self.base/"revision-cli"; project=repo/"workspace/project"; inputs=project/"inputs"; inputs.mkdir(parents=True)
+        issue={"issue_id":"I1","severity":"P1","owner":"character","source":"voice evidence","evidence":"flat response","fix":"restore distinction","acceptance":"distinct voice present","verification_status":"CONFIRMED"}
+        (inputs/"issues.json").write_text(json.dumps({"issues":[issue]},ensure_ascii=False),encoding="utf-8")
+        import tools.cnw_revision as revision
+        with patch.object(cnw_generate,"ROOT",repo),redirect_stdout(io.StringIO()):
+            code=revision.main(["plan","--project-root",str(project),"--issues","inputs/issues.json","--output","09_revision/revision_plan.json"])
+        self.assertEqual(code,0)
+        saved=json.loads((project/"09_revision/revision_plan.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["issues"][0]["issue_id"],"I1")
+
+    def test_rereview_only_builds_affected_lenses_with_fresh_full_text(self):
+        sources={"style_guide":"style","language_rules":"language"}
+        packets=build_rereview_packets("old full text","new complete draft",["style"],sources)
+        self.assertEqual(len(packets),1); self.assertEqual(packets[0]["lens_id"],"style")
+        self.assertEqual(packets[0]["draft"],"new complete draft")
+        self.assertEqual(packets[0]["change_context"]["v0"],"old full text")
+        self.assertEqual(packets[0]["provider_request_id"],None)
+        with self.assertRaisesRegex(ContractError,"REREVIEW_SOURCES_MISSING"):
+            build_rereview_packets("old","new",["character"],sources)
+
+    def test_promotion_requires_external_hash_bound_review_and_archives_old_copy(self):
+        temp=Path(tempfile.mkdtemp())
+        repo=temp/"repo"; project=repo/"tests/_isolated_workspace/project"; run=project/"runs/R1"
+        (run/"artifacts").mkdir(parents=True); (project/"07_draft/scenes").mkdir(parents=True)
+        old=project/"07_draft/scenes/SCENE-1.md"; old.write_text("prior accepted copy",encoding="utf-8")
+        candidate=run/"artifacts/scene.md"; candidate.write_text("new complete candidate",encoding="utf-8")
+        contract={"unit":{"id":"SCENE-1","kind":"scene"},"source":{"source_manifest_sha256":"a"*64}}
+        contract_sha=hashlib.sha256(json.dumps(contract,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+        evidence={"status":"EXTERNAL_ACCEPTED","fixture_only":True,"work_id":"SCENE-1","candidate_sha256":hashlib.sha256(candidate.read_bytes()).hexdigest(),"source_identity_sha256":"a"*64,"contract_sha256":contract_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY"}
+        prod_project=repo/"workspace/project"; prod_run=prod_project/"runs/R1"; prod_candidate=prod_run/"artifacts/scene.md"
+        prod_candidate.parent.mkdir(parents=True); prod_candidate.write_bytes(candidate.read_bytes())
+        prod_evidence={**evidence,"candidate_sha256":hashlib.sha256(prod_candidate.read_bytes()).hexdigest()}
+        import tools.cnw_generate as generate
+        with patch.object(generate,"ROOT",repo), self.assertRaisesRegex(ContractError,"EXTERNAL_REVIEW_EVIDENCE_REQUIRED"):
+            promote_revision(prod_project,prod_run,prod_candidate,contract,prod_evidence)
+        # Isolated fixture root is configurable through the module root; it never points at a production workspace.
+        import tools.cnw_revision as rev
+        with patch.object(rev,"__file__",str(repo/"tools/cnw_revision.py")):
+            result=promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+        self.assertEqual(result["status"],"PROMOTED")
+        self.assertEqual(old.read_text(encoding="utf-8"),"new complete candidate")
+        self.assertEqual((project/result["archive_path"]).read_text(encoding="utf-8"),"prior accepted copy")
+        index=(project/"07_draft/manuscript_index.md").read_text(encoding="utf-8")
+        self.assertIn("# Manuscript Index",index)
+        self.assertIn("review=TEST_FIXTURE_ONLY",index)
+        self.assertNotIn("fixture_only",index)
 
     def test_c06_episode_assembly_requires_every_scene(self):
         result = validate_episode_assembly(["S1", "S2", "S3"], {"S1": {"status": "CONTENT_VALID", "finish_reason": "stop"}, "S2": {"status": "CONTENT_VALID", "finish_reason": "stop"}})

@@ -4,8 +4,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
+import re
 
 try:
     from .cnw_contract import ContractError, count_visible_chars, load_contract
@@ -15,7 +17,7 @@ except ImportError:  # direct script execution
     from cnw_generate import _private_project_root, _project_input, validate_generated_scene
 
 
-def validate_revision(contract: dict, v0: str, v1: str, *, finish_reason: str, v0_beat_evidence: dict[str, str], v1_beat_evidence: dict[str, str], v1_dialogue_evidence: list[str], v1_action_evidence: list[str], start_state_evidence: str, end_state_evidence: str) -> dict:
+def validate_revision(contract: dict, v0: str, v1: str, *, finish_reason: str, v0_beat_evidence: dict[str, str], v1_beat_evidence: dict[str, str], v1_dialogue_evidence: list[str], v1_action_evidence: list[str], start_state_evidence: str, end_state_evidence: str, shortening_reason: str = "") -> dict:
     before = count_visible_chars(v0)
     after = validate_generated_scene(contract, v1, finish_reason=finish_reason, beat_evidence=v1_beat_evidence, dialogue_evidence=v1_dialogue_evidence, action_evidence=v1_action_evidence, start_state_evidence=start_state_evidence, end_state_evidence=end_state_evidence)
     regression = after["actual_visible_chars"] < contract["unit"]["min_visible_chars"]
@@ -30,9 +32,108 @@ def validate_revision(contract: dict, v0: str, v1: str, *, finish_reason: str, v
     after["failure_codes"] = list(dict.fromkeys(after["failure_codes"]))
     after["v0_visible_chars"] = before
     after["v1_visible_chars"] = after["actual_visible_chars"]
+    if before and after["actual_visible_chars"] < before * 0.75 and not shortening_reason.strip():
+        after["failure_codes"].append("REVISION_SHRINK_OVER_25_PERCENT_REQUIRES_REASON")
+        after["status"] = "CONTENT_RETURN"
+    elif before and after["actual_visible_chars"] < before * 0.75:
+        after["shortening_reason"] = shortening_reason.strip()
     after["status"] = "CONTENT_RETURN" if regression or after["failure_codes"] else "CONTENT_VALID"
     # A shorter edit is allowed when it remains in range and preserves required beats.
     return after
+
+
+def build_revision_plan(findings: list[dict]) -> dict:
+    """Normalize accepted review issues into an auditable, severity-ordered plan."""
+    allowed={"P0","P1","P2","P3"}; seen=set(); items=[]
+    for item in findings:
+        issue_id=str(item.get("issue_id", "")).strip()
+        if not issue_id or issue_id in seen or item.get("severity") not in allowed:
+            raise ContractError("REVISION_ISSUE_INVALID", issue_id or "missing or duplicate issue id/severity")
+        if item.get("verification_status")!="CONFIRMED": raise ContractError("REVISION_ISSUE_NOT_CONFIRMED",issue_id)
+        seen.add(issue_id)
+        required=("owner","source","evidence","fix","acceptance")
+        missing=[key for key in required if not str(item.get(key,"" )).strip()]
+        if missing: raise ContractError("REVISION_ISSUE_INCOMPLETE", f"{issue_id}: {', '.join(missing)}")
+        needs_author=item.get("canon_change") is True
+        items.append({"issue_id":issue_id,"severity":item["severity"],"owner":item["owner"],"source":item["source"],"evidence":item["evidence"],"fix":item["fix"],"acceptance":item["acceptance"],"estimated_cost":item.get("estimated_cost","not_estimated"),"depends_on":item.get("depends_on",[]),"status":"NEEDS_AUTHOR_DECISION" if needs_author else "OPEN"})
+    order={"P0":0,"P1":1,"P2":2,"P3":3}
+    return {"schema":1,"status":"AUTHOR_OR_CONTROLLER_REVIEW_REQUIRED","self_acceptance":False,"issues":sorted(items,key=lambda x:(order[x["severity"]],x["issue_id"]))}
+
+
+def build_revision_record(v0:str,v1:str,plan:dict,*,shortening_reason:str="")->dict:
+    before=count_visible_chars(v0); after=count_visible_chars(v1)
+    if before and after<before*.75 and not shortening_reason.strip(): raise ContractError("REVISION_SHRINK_OVER_25_PERCENT_REQUIRES_REASON","record the specific cuts and retained story function")
+    import difflib
+    return {"schema":1,"v0_sha256":hashlib.sha256(v0.encode()).hexdigest(),"v1_sha256":hashlib.sha256(v1.encode()).hexdigest(),"v0_visible_chars":before,"v1_visible_chars":after,"shrink_ratio":round(1-after/before,6) if before else 0,"shortening_reason":shortening_reason.strip() or None,"issue_ids":[item["issue_id"] for item in plan.get("issues",[])],"diff":"".join(difflib.unified_diff(v0.splitlines(keepends=True),v1.splitlines(keepends=True),fromfile="v0",tofile="v1")),"original_preserved":True,"plan_self_acceptance":False}
+
+
+def build_rereview_packets(v0:str,v1:str,affected_lenses:list[str],sources:dict[str,str])->list[dict]:
+    """Build fresh, isolated re-review requests; no transport is invoked here."""
+    required={"style":{"style_guide","language_rules"},"character":{"character_bible","voice_samples","address_terms"},"plot":{"plot","scene_cards","brief"},"canon":{"canon","source_anchors","knowledge_boundaries"},"story_specific":{"story_contract","canon","brief"}}
+    if len(set(affected_lenses))!=len(affected_lenses) or set(affected_lenses)-set(required): raise ContractError("REREVIEW_LENS_INVALID", str(affected_lenses))
+    packets=[]; diff={"v0_sha256":hashlib.sha256(v0.encode()).hexdigest(),"v1_sha256":hashlib.sha256(v1.encode()).hexdigest(),"v0":v0,"v1":v1}
+    for lens in affected_lenses:
+        missing=required[lens]-set(sources)
+        if missing: raise ContractError("REREVIEW_SOURCES_MISSING", f"{lens}: {', '.join(sorted(missing))}")
+        context={key:sources[key] for key in sorted(required[lens])}
+        payload={"lens_id":lens,"draft":v1,"change_context":diff,"sources":context,"execution_mode":"MOCK_ONLY","provider_request_id":None}
+        payload["input_sha256"]=hashlib.sha256(json.dumps(payload,ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+        packets.append(payload)
+    return packets
+
+
+def promote_revision(project_root:str|Path,run_dir:str|Path,candidate_path:str|Path,contract:dict,review_evidence:dict,*,test_fixture:bool=False)->dict:
+    """Promote only an externally accepted, hash-bound candidate; preserve prior text and index."""
+    project_input=Path(project_root).absolute(); run_input=Path(run_dir).absolute()
+    for value in (project_input,run_input):
+        if any(part.is_symlink() for part in (value,*value.parents) if part.exists()): raise ContractError("PROMOTION_PATH_SYMLINK_REJECTED",str(value))
+    project=project_input.resolve(strict=True); run=run_input.resolve(strict=True)
+    if test_fixture:
+        fixture_root=(Path(__file__).resolve().parents[1]/"tests"/"_isolated_workspace").resolve()
+        if not project.is_relative_to(fixture_root): raise ContractError("FIXTURE_PROMOTION_OUTSIDE_ISOLATED_TEST_ROOT",str(project))
+    else:
+        project=_private_project_root(project)
+    if not run.is_relative_to((project/"runs").resolve()): raise ContractError("PROMOTION_RUN_PATH_UNSAFE",str(run))
+    candidate=Path(candidate_path)
+    if not candidate.is_absolute(): candidate=run/candidate
+    cursor=candidate
+    while cursor!=run.parent:
+        if cursor.is_symlink(): raise ContractError("PROMOTION_CANDIDATE_UNSAFE",str(cursor))
+        if cursor==cursor.parent: break
+        cursor=cursor.parent
+    candidate=candidate.resolve(strict=True)
+    if not candidate.is_relative_to(run) or not candidate.is_file(): raise ContractError("PROMOTION_CANDIDATE_UNSAFE",str(candidate))
+    raw=candidate.read_bytes(); candidate_sha=hashlib.sha256(raw).hexdigest(); unit=contract.get("unit",{}); work_id=unit.get("id")
+    source_identity=contract.get("source",{}).get("source_manifest_sha256") or contract.get("source",{}).get("local_private_source_manifest_sha256")
+    contract_identity=hashlib.sha256(json.dumps(contract,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+    index=project/"07_draft"/"manuscript_index.md"
+    if index.is_symlink(): raise ContractError("PROMOTION_INDEX_SYMLINK_REJECTED",str(index))
+    if (review_evidence.get("status")!="EXTERNAL_ACCEPTED" or (review_evidence.get("fixture_only") is True and not test_fixture)
+        or review_evidence.get("candidate_sha256")!=candidate_sha or review_evidence.get("work_id")!=work_id
+        or not review_evidence.get("controller_acceptance_ref") or review_evidence.get("source_identity_sha256")!=source_identity
+        or review_evidence.get("contract_sha256")!=contract_identity):
+        raise ContractError("EXTERNAL_REVIEW_EVIDENCE_REQUIRED","acceptance must bind candidate, work id and source identity")
+    if not isinstance(work_id,str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}",work_id): raise ContractError("PROMOTION_WORK_ID_INVALID",str(work_id))
+    folder="episodes" if unit.get("kind")=="episode" else "scenes" if unit.get("kind")=="scene" else None
+    if not folder: raise ContractError("PROMOTION_UNIT_KIND_INVALID",str(unit.get("kind")))
+    destination=project/"07_draft"/folder/f"{work_id}.md"
+    archive=None
+    for output in (project/"07_draft",destination.parent,index):
+        if output.is_symlink(): raise ContractError("PROMOTION_OUTPUT_SYMLINK_REJECTED",str(output))
+        if output.exists() and not output.resolve().is_relative_to(project): raise ContractError("PROMOTION_OUTPUT_OUTSIDE_PROJECT",str(output))
+    destination.parent.mkdir(parents=True,exist_ok=True)
+    if destination.exists():
+        prior=destination.read_bytes(); prior_sha=hashlib.sha256(prior).hexdigest()
+        archive=project/"09_revision"/"accepted_archive"/f"{work_id}.{prior_sha}.md"; archive.parent.mkdir(parents=True,exist_ok=True)
+        if archive.exists() and hashlib.sha256(archive.read_bytes()).hexdigest()!=prior_sha: raise ContractError("PROMOTION_ARCHIVE_COLLISION",str(archive))
+        if not archive.exists(): archive.write_bytes(prior)
+    destination.parent.mkdir(parents=True,exist_ok=True)
+    tmp=destination.with_name(destination.name+".tmp"); tmp.write_bytes(raw); os.replace(tmp,destination)
+    line=f"- {work_id} | {unit['kind']} | {destination.relative_to(project).as_posix()} | SHA256={candidate_sha} | review={review_evidence['controller_acceptance_ref']} | source={review_evidence['source_identity_sha256']}"
+    prior_index=index.read_text(encoding="utf-8") if index.exists() else "# Manuscript Index\n"
+    rows=[row for row in prior_index.splitlines() if not row.startswith(f"- {work_id} |")]
+    idx_tmp=index.with_name(index.name+".tmp"); idx_tmp.write_text("\n".join([*rows,line])+"\n",encoding="utf-8"); os.replace(idx_tmp,index)
+    return {"status":"PROMOTED","work_id":work_id,"path":destination.relative_to(project).as_posix(),"candidate_sha256":candidate_sha,"archive_path":archive.relative_to(project).as_posix() if archive else None,"review_evidence_sha256":hashlib.sha256(json.dumps(review_evidence,ensure_ascii=False,sort_keys=True).encode()).hexdigest(),"provider_call":"none"}
 
 
 def validate_episode_assembly(expected_scene_ids: list[str], scene_results: dict[str, dict]) -> dict:
@@ -90,6 +191,37 @@ def plan_persisted_continuation(project_root: str | Path, run_id: str, contract:
 
 
 def main(argv=None) -> int:
+    argv=list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in {"plan","rereview","promote"}:
+        command=argv.pop(0); parser=argparse.ArgumentParser(description=f"CNW revision {command}")
+        parser.add_argument("--project-root",required=True)
+        if command=="plan":
+            parser.add_argument("--issues",required=True); parser.add_argument("--output",required=True)
+        elif command=="rereview":
+            parser.add_argument("--v0",required=True); parser.add_argument("--v1",required=True); parser.add_argument("--affected-lenses",required=True); parser.add_argument("--sources",required=True); parser.add_argument("--plan",required=True); parser.add_argument("--shortening-reason",default=""); parser.add_argument("--output",required=True)
+        else:
+            parser.add_argument("--run-id",required=True); parser.add_argument("--candidate",required=True); parser.add_argument("--evidence",required=True)
+        args=parser.parse_args(argv); project=_private_project_root(args.project_root)
+        if command=="plan":
+            raw=json.loads(_project_input(project,args.issues).read_text(encoding="utf-8-sig")); findings=raw.get("issues",raw) if isinstance(raw,dict) else raw
+            result=build_revision_plan(findings); output=_project_input(project,args.output) if (project/args.output).exists() else project/args.output
+            if not output.resolve().is_relative_to(project): raise ContractError("REVISION_OUTPUT_OUTSIDE_PROJECT",str(output))
+            output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+        elif command=="rereview":
+            v0=_project_input(project,args.v0).read_text(encoding="utf-8-sig"); v1=_project_input(project,args.v1).read_text(encoding="utf-8-sig")
+            sources=json.loads(_project_input(project,args.sources).read_text(encoding="utf-8-sig")); plan=json.loads(_project_input(project,args.plan).read_text(encoding="utf-8-sig"))
+            result={"status":"REREVIEW_REQUESTS_PREPARED_MOCK_ONLY","revision_record":build_revision_record(v0,v1,plan,shortening_reason=args.shortening_reason),"packets":build_rereview_packets(v0,v1,[x.strip() for x in args.affected_lenses.split(",") if x.strip()],sources),"provider_call":"none"}
+            output=project/args.output
+            if not output.resolve().is_relative_to(project): raise ContractError("REREVIEW_OUTPUT_OUTSIDE_PROJECT",str(output))
+            output.parent.mkdir(parents=True,exist_ok=True); output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+        else:
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}",args.run_id): raise ContractError("RUN_ID_INVALID",args.run_id)
+            try:
+                from . import cnw_runner
+            except ImportError:
+                import cnw_runner
+            result=cnw_runner.promote_run(argparse.Namespace(run_id=args.run_id,project_root=str(project),candidate=args.candidate,review_evidence=args.evidence))
+        print(json.dumps(result,ensure_ascii=False,indent=2)); return 0
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--contract", required=True)
     parser.add_argument("--v0", required=True)

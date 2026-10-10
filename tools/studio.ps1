@@ -14,6 +14,8 @@ param(
     [string]$InputFile,
     [ValidateSet('md','txt','json')][string]$Format,
     [string]$StepName,
+    [string]$Candidate,
+    [string]$ReviewEvidence,
     [int]$Port = 3175
 )
 $ErrorActionPreference = 'Stop'
@@ -193,7 +195,10 @@ switch ($Command) {
         Invoke-CnwRunner $RunnerArgs
     }
     'review' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('review','--run-id',$RunId) }
-    'promote' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('promote','--run-id',$RunId) }
+    'promote' {
+        if (-not $RunId -or -not $Candidate -or -not $ReviewEvidence) { throw 'PROMOTE_REQUIRES_RUN_ID_CANDIDATE_AND_REVIEW_EVIDENCE' }
+        Invoke-CnwRunner @('promote','--run-id',$RunId,'--project-root',$ProjectRootPath,'--candidate',$Candidate,'--review-evidence',$ReviewEvidence)
+    }
     'show-run' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('show-run','--run-id',$RunId) }
     'verify-history' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('verify-history','--run-id',$RunId) }
     'verify-live' { if (-not $RunId) { throw 'RUN_ID_REQUIRED' }; Invoke-CnwRunner @('verify-live','--run-id',$RunId) }
