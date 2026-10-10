@@ -14,9 +14,9 @@
     "url": "https://github.com/zhangchaodesign/narrative-keyframing/issues"
   },
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --hostname 127.0.0.1",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start --hostname 127.0.0.1"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.49",

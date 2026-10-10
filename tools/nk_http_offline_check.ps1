@@ -30,9 +30,9 @@ $env:NODE_OPTIONS = "--require $Preload"
 $Server = $null
 $NoKeyServer = $null
 try {
-    $Node = (Get-Command node).Source
-    $Server = Start-Process -FilePath $Node -ArgumentList @(
-        'node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', "$Port"
+    $Npm = (Get-Command npm.cmd).Source
+    $Server = Start-Process -FilePath $Npm -ArgumentList @(
+        'start', '--', '--port', "$Port"
     ) -WorkingDirectory $Build -WindowStyle Hidden -PassThru
 
     $Ready = $false
@@ -76,14 +76,14 @@ try {
     }
     $Listener = Get-NetTCPConnection -LocalPort $Port -State Listen
     if ($Listener.LocalAddress -ne '127.0.0.1') { throw "NON_LOOPBACK_LISTENER:$($Listener.LocalAddress -join ',')" }
-    Stop-Process -Id $Server.Id -Force
+    & taskkill.exe /PID $Server.Id /T /F | Out-Null
     $Server = $null
     foreach ($Name in $EnvironmentNames) { Remove-Item "Env:$Name" -ErrorAction SilentlyContinue }
     if (Get-NetTCPConnection -LocalPort $NoKeyPort -State Listen -ErrorAction SilentlyContinue) {
         throw "PORT_IN_USE:$NoKeyPort"
     }
-    $NoKeyServer = Start-Process -FilePath $Node -ArgumentList @(
-        'node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', "$NoKeyPort"
+    $NoKeyServer = Start-Process -FilePath $Npm -ArgumentList @(
+        'start', '--', '--port', "$NoKeyPort"
     ) -WorkingDirectory $Build -WindowStyle Hidden -PassThru
     $NoKeyReady = $false
     for ($i = 0; $i -lt 40; $i++) {

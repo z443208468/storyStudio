@@ -4,9 +4,9 @@
   "good_input_status": 200,
   "too_few_status": 502,
   "malformed_statuses": {
-    "MALFORMED": 500,
+    "EMPTY": 500,
     "TRUNCATED": 500,
-    "EMPTY": 500
+    "MALFORMED": 500
   },
   "listener": "127.0.0.1",
   "no_key_routes": 8,

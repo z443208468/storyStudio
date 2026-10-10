@@ -7,14 +7,14 @@
     "patches/nk/0001-nk-deepseek-adapter.patch"
   ],
   "patch_sha256": [
-    "B45F13266100F66DAAB7C441944EAD2A5352FE6C615241164208430EE9396A31"
+    "F468219F2A0BC8D9D5205DEF48D245896CD1DF19D84FD9BA5C4DBB141C06963E"
   ],
-  "package_manifest_sha256": "845723DFF8BAF510BE557F7447D623CAA8013ABF8EF67C5F2EC89138ADF28CCC",
+  "package_manifest_sha256": "249BF34AA2B53701832B2BFC760797E365841A6CB2FEF42440AA1FC9CF62DAE5",
   "dependency_lock": "patches/nk/package-lock.json",
   "dependency_lock_sha256": "8D6EF80B3161DDDA089DF6EB83AB986326370E9F0F97041E516DD478A0C8E9A4",
   "node_version": "v24.13.1",
   "npm_version": "11.8.0",
-  "runtime_build_id": "p2-03-b857f34b-b45f13266100-8d6ef80b3161",
+  "runtime_build_id": "p2-03-b857f34b-f468219f2a0b-8d6ef80b3161",
   "enabled_generation_routes": [
     "/api/generate-perspective",
     "/api/extract-characters",

@@ -2084,9 +2084,21 @@ index d509ae3..58b7862 100644
        "version": "6.21.0",
        "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
 diff --git a/package.json b/package.json
-index 244b407..2e00278 100644
+index 244b407..1412585 100644
 --- a/package.json
 +++ b/package.json
+@@ -14,9 +14,9 @@
+     "url": "https://github.com/zhangchaodesign/narrative-keyframing/issues"
+   },
+   "scripts": {
+-    "dev": "next dev --turbopack",
++    "dev": "next dev --turbopack --hostname 127.0.0.1",
+     "build": "next build --turbopack",
+-    "start": "next start"
++    "start": "next start --hostname 127.0.0.1"
+   },
+   "dependencies": {
+     "@ai-sdk/openai": "^2.0.49",
 @@ -29,7 +29,7 @@
      "is-hotkey": "^0.2.0",
      "lucide-react": "^0.545.0",
