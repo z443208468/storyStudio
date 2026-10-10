@@ -11,10 +11,12 @@ try:
     from . import cnw_runner as runner
     from .cnw_contract import ContractError, assert_output_within_root
     from .cnw_roles import _pinned_upstream
+    from . import cnw_operations as operations
 except ImportError:
     import cnw_runner as runner
     from cnw_contract import ContractError, assert_output_within_root
     from cnw_roles import _pinned_upstream
+    import cnw_operations as operations
 
 AUDIT_FOLDERS = ("07_draft", "03_project_design", "90_canon", "06_plot")
 HANDOFF_FOLDERS = ("00_meta", "01_theme", "02_logline", "03_project_design", "04_chapter_design",
@@ -25,12 +27,14 @@ HANDOFF_SECTIONS = ("Project One-Liner", "Current Creative Goal", "Protected Cor
 PENDING = "00_meta/maintenance_pending.json"
 OUTPUT_CAPS = {"audit": 6000, "handoff": 4000}
 OUTPUT_CAPS["arc_review"] = 6000
+OUTPUT_CAPS.update({name: 8000 for name in operations.OPERATIONS})
 ARC_SECTIONS = ("Conclusion", "Arc Role", "Start and End States", "Whole Arc Check", "Canon Update Candidates", "Revision Direction", "Next Arc Handoff")
 
 
 def _adapter_identity(operation):
     return runner.sha(json.dumps({"messages_builder": inspect.getsource(_messages),
         "source_selector": inspect.getsource(_inventory), "transport": inspect.getsource(runner._cnw_live_call_in_slot),
+        "standard_adapter": operations.identity() if operation in operations.OPERATIONS else None,
         "model": runner.MODEL, "url": runner.API_URL, "output_cap": OUTPUT_CAPS[operation]}, sort_keys=True).encode())
 
 
@@ -53,6 +57,8 @@ def _draft_kind(name):
 
 def _inventory(root, options):
     names = set()
+    if options["operation"] in operations.OPERATIONS:
+        names = operations.source_names(root, options)
     folders = AUDIT_FOLDERS if options["operation"] == "audit" else HANDOFF_FOLDERS
     if options["operation"] == "arc_review":
         try:
@@ -67,13 +73,15 @@ def _inventory(root, options):
         for name in ("00_meta/episode_production_manual.md", "00_meta/manuscript_review_rubric.md", "04_chapter_design/arc_index.md"):
             if assert_output_within_root(root, name).is_file():
                 names.add(name)
+    if options["operation"] in operations.OPERATIONS:
+        folders = ()
     for folder in folders:
         for path in (root / folder).rglob("*.md"):
             name = path.relative_to(root).as_posix()
             assert_output_within_root(root, name)
             if path.is_file():
                 names.add(name)
-    extra_names = ("AGENTS.md", "CLAUDE.md") if options["operation"] == "arc_review" else ("AGENTS.md", "CLAUDE.md", "00_meta/ai_work_log.md")
+    extra_names = ("AGENTS.md", "CLAUDE.md") if options["operation"] == "arc_review" or options["operation"] in operations.OPERATIONS else ("AGENTS.md", "CLAUDE.md", "00_meta/ai_work_log.md")
     for name in extra_names:
         if assert_output_within_root(root, name).is_file():
             names.add(name)
@@ -105,6 +113,8 @@ def _method(root, operation):
             "templates/04_chapter_design/arc.template.md", "example_project/00_meta/episode_production_manual.md"]
     if operation == "handoff":
         paths += ["templates/93_exports/handoff_brief.template.md", "docs/HANDOFF.md"]
+    if operation in operations.OPERATIONS:
+        paths = ["templates/CLAUDE.md", "templates/90_canon/canon.template.md", *operations.OPERATIONS[operation]["method"]]
     references = {}
     for path in paths:
         text, blob = _pinned_upstream(path)
@@ -119,6 +129,8 @@ def _method(root, operation):
 
 
 def _messages(inventory, references, options):
+    if options["operation"] in operations.OPERATIONS:
+        return operations.messages(inventory, references, options)
     system = "\n\n".join(f"Source: {name}\n{row['text']}" for name, row in references.items())
     system += ("\nTransport only: perform the supplied public workflow in one response. "
                "Supplied project_sources contain complete file text, identity and original line counts. "
@@ -219,16 +231,22 @@ def _apply(root, run, journal):
     (run / "COMMITTED").write_text("Public maintenance transaction committed.\n", encoding="utf-8")
 
 
-def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False):
+def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False, sources=()):
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
         raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
-    if operation not in {"audit", "handoff", "arc_review"} or scope not in {"full", "light", "targeted"}:
+    if operation not in {"audit", "handoff", "arc_review"} | set(operations.OPERATIONS) or scope not in {"full", "light", "targeted"}:
         raise ContractError("MAINTENANCE_OPERATION_INVALID", str(operation))
+    if operation == "arc_review" and (not isinstance(target, str) or not target.strip()):
+        raise ContractError("ARC_REFERENCE_REQUIRED", "select the actual Arc")
+    if operation in operations.OPERATIONS and scope != "full":
+        raise ContractError("MAINTENANCE_OPERATION_INVALID", "standard operations use explicit source selection")
     if scope == "targeted" and (not isinstance(target, str) or not target.strip()):
         raise ContractError("AUDIT_TARGET_REQUIRED", "name the subsystem")
     options = {"operation": operation, "scope": scope, "chapters": sorted(set(chapters)),
                "target": target, "pipeline": bool(pipeline)}
+    if operation in operations.OPERATIONS:
+        options["sources"] = operations.normalize_sources(root, operation, sources)
     with runner.locked_run(root):
         return _run(root, options)
 
@@ -261,12 +279,13 @@ def _run(root, options):
                     # A later handoff/Sprint appends its own log entry. The Arc
                     # input set does not consume this work log; preserving the
                     # complete old prefix is compatible with its committed run.
-                    if options["operation"] == "arc_review" and name == "00_meta/ai_work_log.md" and path.is_file() and path.read_bytes().startswith(row["text"].encode("utf-8")):
+                    if (options["operation"] == "arc_review" or options["operation"] in operations.OPERATIONS) and name == "00_meta/ai_work_log.md" and path.is_file() and path.read_bytes().startswith(row["text"].encode("utf-8")):
                         continue
                     raise ContractError("MAINTENANCE_COMMITTED_OUTPUT_CHANGED", name)
             return {**journal["result"], "provider_call": "reused"}
         messages = _messages(inventory, references, options)
-        target_name = ("08_review/continuity_audit.md" if options["operation"] == "audit" else
+        target_name = (f"08_review/{options['operation']}_report.md" if options["operation"] in operations.OPERATIONS else
+            "08_review/continuity_audit.md" if options["operation"] == "audit" else
             f"08_review/{Path(options['target']).stem}_review.md" if options["operation"] == "arc_review" else "93_exports/handoff_brief.md")
         target_path = assert_output_within_root(root, target_name)
         target_before = runner.sha(target_path.read_bytes()) if target_path.exists() else None
@@ -285,7 +304,9 @@ def _run(root, options):
             messages=messages, output_cap=OUTPUT_CAPS[options["operation"]])
         value = _json(content)
         writes = {}
-        if options["operation"] == "audit":
+        if options["operation"] in operations.OPERATIONS:
+            writes, result = operations.publication(root, options, value, _write)
+        elif options["operation"] == "audit":
             report, items = value.get("report_markdown"), value.get("action_items")
             if not isinstance(report, str) or not report.strip() or not isinstance(items, list) or any(not isinstance(item, str) or not item.strip() for item in items):
                 raise ContractError("MAINTENANCE_RESPONSE_INVALID", "audit report and action items required")
@@ -333,6 +354,13 @@ def _run(root, options):
         old_log = (root / log_name).read_bytes().decode("utf-8") if (root / log_name).exists() else ""
         stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
         writes[log_name] = _write(root, log_name, old_log + f"\n- {stamp} Workflow {options['operation']}; scope={options['scope']}; run={run.name}; provider={receipt['provider_request_id']}.\n")
+        if options["operation"] in operations.OPERATIONS:
+            writes[log_name] = _write(root, log_name, writes[log_name]["text"] +
+                "  Read: " + ", ".join(inventory) + "\n  Created/updated: " + ", ".join(writes) +
+                "\n  Assumptions: " + json.dumps(value["assumptions"], ensure_ascii=False) +
+                "\n  Unresolved: " + json.dumps(value["unresolved_questions"], ensure_ascii=False) +
+                "\n  Next: " + value["next_action"] + "\n")
+            operations.protect_selected_outputs(root, options, writes)
         result.update(run_dir=str(run), provider_call="performed", provider_request_id=receipt["provider_request_id"])
         journal = {"options": options, "source_hashes": current_hashes, "method_hash": method_hash,
             "adapter_identity": adapter_identity, "request_id": receipt["request_id"], "writes": writes, "result": result}

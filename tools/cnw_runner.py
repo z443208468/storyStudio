@@ -388,7 +388,7 @@ def reactivate_receipt(run_dir: Path, receipt: dict) -> None:
 
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "sprint_review", "sprint_handoff"}:
+    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "project_decompose", "project_extract_canon", "project_jet_diagnostic", "project_character_os", "project_revision_plan", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
