@@ -147,3 +147,13 @@
 - 两轮 RETURN 均已按点修复：Prose 来源同时记录 ai_roles 与 writing_brief 两个上游 blob；所有角色拒绝未授权输入字段；未知角色在输出校验开始处拒绝。最终验证：13 项 unittest、py_compile、`git diff --check` 通过；无供应商请求。
 - 推送及远端 readback：待完成。
 - 独立远端回读：`REMOTE_READBACK ACCEPT — P3 W04`；Controller 确认 `origin/main` 与本地追踪 ref 的 C=`dbbf73ad8b0a0f8b26b8aa2edc5b11d504409b8a`、T=`de81d92d46b86ab90998267d0428701dea78f4bb` 匹配，W04 接受候选为关闭提交直接父提交，工作树干净。
+
+## P3 W05 — 离线 run 调度与缓存身份
+
+- Verdict：`ACCEPT`，独立只读 Controller `/root/g00_reviewer`；接受仅限可恢复离线调度器与 fail-closed live gate，不代表完整 CNW 生产链、真实模型执行、正文质量或供应商费用结算已验证。
+- 最终候选：C=`33fec24f8ef8182188afe049a36830e367134d0a`，T=`40c939796b191eb41be808ac00619acc2f5b069a`；其父提交为初轮 W05 离线调度候选 C=`314be64e9d3afde1c30f661924ef6e5833825fc9`。
+- Controller 原消息：`ACCEPT — P3 W05`；确认 stage fingerprint 纳入 `workflow_template_sha256`，回归测试确认 Workflow hash 变化后 Plot 保留、Cards 重建、Brief 失效且旧产物保留。接受限于 offline dispatcher 和 fail-closed live gate。
+- 离线验证：`tests.test_cnw_contract`, `tests.test_cnw_adapters`, `tests.test_cnw_runner` 共 23 项通过；`py_compile`、PowerShell Parser、`git diff --check` 通过。两个不同 fixture ID 有独立 run 与 Plot/Card/Brief fixture 阶段；合同/Prompt/Workflow hash 变化失效、同 ID 重名、并发写入、输入 symlink/绝对路径等负例通过。
+- 实际新 run `P3-W05-CQ-J19-OFFLINE-20261010` 绑定 W03 合同 SHA256=`e5ef4ce8d4468756021b8b7a8e10dd3cff0b9445e25a6a399f3cc683bb0978d0`；Plot request 可 resume 并同 fingerprint 复用；`verify-history` 返回 `HISTORICAL_EVIDENCE_FOUND`。`verify-live` 因本 run 无 provider receipt 明确失败；`p2-cost-ledger.json` 前后 SHA256 一致，零 API。
+- 限制：真实 Plot/Card/Brief/Prose 执行、reserve/settle 接入、五 Lens、三 Verifier、Completeness、Refine、Re-review、Promote、动态 Export、Sprint 仍未实现或验证；W05 live 保持关闭，后续依计划推进。
+- 推送及远端 readback：待完成。
