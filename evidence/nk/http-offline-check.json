@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "bad_input_status": 400,
+  "good_input_status": 200,
+  "too_few_status": 502,
+  "malformed_statuses": {
+    "MALFORMED": 500,
+    "TRUNCATED": 500,
+    "EMPTY": 500
+  },
+  "listener": "127.0.0.1",
+  "no_key_routes": 8,
+  "no_key_status": 401,
+  "captured_calls": 6,
+  "external_provider_calls": 0,
+  "provider_requests": [
+    {
+      "host": "https://api.deepseek.com/v1",
+      "model": "deepseek-flash",
+      "response_format": "json_object",
+      "case": "GOOD",
+      "config_valid": true,
+      "prompt_sha256": "4030734185F81D46CED85F88C43C81C75387AAAA127DF82074C395731985758F",
+      "prompt_length": 1569
+    },
+    {
+      "host": "https://api.deepseek.com/v1",
+      "model": "deepseek-flash",
+      "response_format": "json_object",
+      "case": "TOO_FEW",
+      "config_valid": true,
+      "prompt_sha256": "0AECCEB550FB73C6E1A1033D0621D65F161F7787ED1B4ECAF870697FE630B8D9",
+      "prompt_length": 1770
+    },
+    {
+      "host": "https://api.deepseek.com/v1",
+      "model": "deepseek-flash",
+      "response_format": "json_object",
+      "case": "EMPTY",
+      "config_valid": true,
+      "prompt_sha256": "A3281BDD368B09E0FE463D11AC668A6A2E0E432098E64BC499CEE884926056AA",
+      "prompt_length": 1624
+    },
+    {
+      "host": "https://api.deepseek.com/v1",
+      "model": "deepseek-flash",
+      "response_format": "json_object",
+      "case": "MALFORMED",
+      "config_valid": true,
+      "prompt_sha256": "93335E2F8DE9C88F92CDC0C93CDD8E8F35D13393BBA2574BD98074F61DE34619",
+      "prompt_length": 1628
+    },
+    {
+      "host": "https://api.deepseek.com/v1",
+      "model": "deepseek-flash",
+      "response_format": "json_object",
+      "case": "TRUNCATED",
+      "config_valid": true,
+      "prompt_sha256": "3FC64BD5340A9D7118042FB0C3B1DCB60F4EC0A6C3EDE6972EA9FEFF24EAD74A",
+      "prompt_length": 1628
+    }
+  ]
+}

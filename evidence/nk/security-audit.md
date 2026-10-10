@@ -1,0 +1,6 @@
+# NK dependency security review
+
+- Scan: `npm audit` against the committed production lock; raw JSON SHA256 `994264A8E7300FFD02B7D84A12630699F1CB4651BE9AFB8939AE95468192AFB0` (kept in ignored `runtime/tmp/`). Result: 6 package records (4 moderate, 2 high, 0 critical). Four records are propagated from the AI SDK's `undici` chain; the two direct records are `undici` and `@fastify/busboy`.
+- Fixed material findings within the existing major versions: Next `15.5.7` to `15.5.27`; PostCSS is overridden to `8.5.29`. This removed the prior critical Next advisory and PostCSS findings.
+- Selected generation routes configure `createOpenAI` with an explicit `fetch: globalThis.fetch` and fixed `https://api.deepseek.com/v1` base URL. The HTTP offline harness intercepts that exact fetch, confirms `deepseek-flash` and `json_object`, and blocks every other outbound HTTP(S) request. This demonstrates the selected model path does not invoke the vulnerable bundled Undici fallback or multipart Busboy parser.
+- The remaining npm records are disclosed, not waived as a blanket security claim. The unrelated multipart parser is not used by the JSON-only generation routes; the selected provider path uses Node 24 global fetch. No `npm audit fix --force` or major Next upgrade was applied.

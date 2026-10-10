@@ -1,0 +1,2107 @@
+diff --git a/README.md b/README.md
+index 7f4c337..0b59850 100644
+--- a/README.md
++++ b/README.md
+@@ -11,7 +11,7 @@ We introduce narrative keyframing, an interaction technique for AI-assisted crea
+ - Node.js 20+
+ - An [OpenAI API key](https://platform.openai.com/api-keys)
+ 
+-No `.env` file is needed — the app asks for your OpenAI API key on first load and stores it only in your browser, sending it directly with each request.
++Set `DEEPSEEK_API_KEY` in the local server process before starting the app. The server calls DeepSeek Flash; the browser does not collect or persist an API key.
+ 
+ ## Run locally
+ 
+@@ -20,7 +20,7 @@ npm install
+ npm run dev
+ ```
+ 
+-Then open <http://localhost:3000>, click **Open tool**, and enter your OpenAI API key when prompted.
++Then open <http://127.0.0.1:3000> and click **Open tool**.
+ 
+ ## Build for production
+ 
+diff --git a/app/api/extract-characters/route.ts b/app/api/extract-characters/route.ts
+index 5a6d8c2..4626d17 100644
+--- a/app/api/extract-characters/route.ts
++++ b/app/api/extract-characters/route.ts
+@@ -2,7 +2,7 @@
+ 
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ import { z } from "zod";
+ import fs from "fs/promises";
+ import path from "path";
+@@ -49,7 +49,7 @@ const stripTemplateIndent = (text: string) => {
+ 
+ const loadPromptTemplate = async (filePath: string) => {
+   const raw = await fs.readFile(filePath, "utf8");
+-  const match = raw.match(/template:\s*\|\n([\s\S]*)/);
++  const match = raw.match(/template:\s*\|\r?\n([\s\S]*)/);
+   if (!match) {
+     throw new Error(`Prompt template missing in ${filePath}`);
+   }
+@@ -72,10 +72,10 @@ const renderPromptTemplate = (
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -100,7 +100,8 @@ export async function POST(request: Request) {
+     const prompt = renderPromptTemplate(template, { eventsSection });
+ 
+     const result = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+       temperature: 0.3,
+@@ -110,7 +111,7 @@ export async function POST(request: Request) {
+       characters: result.object.characters,
+     });
+   } catch (error) {
+-    console.error("Character extraction error:", error);
++    console.error("Character extraction error:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       {
+         error: "Failed to extract characters",
+diff --git a/app/api/extract-evidence/route.tsx b/app/api/extract-evidence/route.tsx
+index 67b51f7..84eff77 100644
+--- a/app/api/extract-evidence/route.tsx
++++ b/app/api/extract-evidence/route.tsx
+@@ -3,7 +3,7 @@ import { generateObject } from "ai";
+ import { z } from "zod";
+ import fs from "fs/promises";
+ import path from "path";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ 
+ import {
+   EVIDENCE_CATEGORIES,
+@@ -88,7 +88,7 @@ const stripTemplateIndent = (text: string) => {
+ 
+ const loadPromptTemplate = async (filePath: string) => {
+   const raw = await fs.readFile(filePath, "utf8");
+-  const match = raw.match(/template:\s*\|\n([\s\S]*)/);
++  const match = raw.match(/template:\s*\|\r?\n([\s\S]*)/);
+   if (!match) {
+     throw new Error(`Prompt template missing in ${filePath}`);
+   }
+@@ -273,10 +273,10 @@ const normalizeEvidence = ({
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -327,10 +327,11 @@ export async function POST(request: Request) {
+             reflection: trimmedReflection,
+             groupContext,
+           });
+-          console.log("Evidence analysis prompt:", prompt);
++          
+ 
+           const { object } = await generateObject({
+-            model: openaiProvider("gpt-4.1"),
++            model: openaiProvider,
++                  providerOptions: { openai: { structuredOutputs: false } },
+             schema: EvidenceResultSchema,
+             prompt: prompt,
+           });
+@@ -345,7 +346,7 @@ export async function POST(request: Request) {
+         } catch (error) {
+           console.error(
+             `Failed to analyze evidence for perspective ${perspectiveId}:`,
+-            error,
++            error instanceof Error ? error.name : "UnknownError",
+           );
+           characterEvidence.push(
+             ...characters.map((character) => ({
+@@ -365,7 +366,7 @@ export async function POST(request: Request) {
+ 
+     return NextResponse.json(payload);
+   } catch (error) {
+-    console.error("Error handling evidence analysis request:", error);
++    console.error("Error handling evidence analysis request:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Failed to analyze evidence" },
+       { status: 500 },
+diff --git a/app/api/generate-narrative/route.ts b/app/api/generate-narrative/route.ts
+index b427ae2..9c5a53d 100644
+--- a/app/api/generate-narrative/route.ts
++++ b/app/api/generate-narrative/route.ts
+@@ -2,7 +2,7 @@
+ 
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ import { z } from "zod";
+ import fs from "fs/promises";
+ import path from "path";
+@@ -126,7 +126,7 @@ const stripTemplateIndent = (text: string) => {
+ 
+ const loadPromptTemplate = async (filePath: string) => {
+   const raw = await fs.readFile(filePath, "utf8");
+-  const match = raw.match(/template:\s*\|\n([\s\S]*)/);
++  const match = raw.match(/template:\s*\|\r?\n([\s\S]*)/);
+   if (!match) {
+     throw new Error(`Prompt template missing in ${filePath}`);
+   }
+@@ -254,10 +254,10 @@ const ensureNarrationParagraphBreaks = (text: string): string => {
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -284,10 +284,11 @@ ADDITIONAL INSTRUCTIONS FROM USER:
+ ${trimmedPrompt}`
+       : basePrompt;
+ 
+-    console.log("Multi-event narrative generation prompt:", prompt);
++    
+ 
+     const { object } = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+     });
+@@ -330,7 +331,7 @@ ${trimmedPrompt}`
+ 
+     return NextResponse.json({ narratives });
+   } catch (error) {
+-    console.error("Error generating narrative:", error);
++    console.error("Error generating narrative:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Unable to generate narrative story" },
+       { status: 500 },
+diff --git a/app/api/generate-perspective/route.ts b/app/api/generate-perspective/route.ts
+index d3ec118..c05b050 100644
+--- a/app/api/generate-perspective/route.ts
++++ b/app/api/generate-perspective/route.ts
+@@ -2,7 +2,7 @@
+ 
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ import { z } from "zod";
+ import fs from "fs/promises";
+ import path from "path";
+@@ -69,7 +69,7 @@ const stripTemplateIndent = (text: string) => {
+ 
+ const loadPromptTemplate = async (filePath: string) => {
+   const raw = await fs.readFile(filePath, "utf8");
+-  const match = raw.match(/template:\s*\|\n([\s\S]*)/);
++  const match = raw.match(/template:\s*\|\r?\n([\s\S]*)/);
+   if (!match) {
+     throw new Error(`Prompt template missing in ${filePath}`);
+   }
+@@ -177,7 +177,8 @@ ${snapshotsForDisplay
+   .join("\n\n")}`
+         : "Character traits: (none provided)";
+ 
+-      return `Narrator: ${task.narrator}
++      return `Perspective ${taskIndex + 1} (id: ${task.id})
++Narrator: ${task.narrator}
+ ${snapshotSection}`.trim();
+     })
+     .join("\n\n");
+@@ -213,10 +214,10 @@ const buildActText = (tasks: z.infer<typeof PerspectiveTaskSchema>[]) => {
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -244,31 +245,39 @@ export async function POST(request: Request) {
+     });
+ 
+     const trimmedPrompt = customPrompt?.trim();
+-    const prompt = trimmedPrompt
++    const promptWithCustom = trimmedPrompt
+       ? `${basePrompt}
+ 
+ ADDITIONAL INSTRUCTIONS FROM USER:
+ ${trimmedPrompt}`
+       : basePrompt;
++    const prompt = `${promptWithCustom}
+ 
+-    console.log("Perspective generation prompt:", prompt);
++Output contract: return exactly ${perspectives.length} perspective results, in the same order as the numbered perspective tasks above.`;
++
++    
+ 
+     const { object } = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+     });
+ 
+-    if (!object?.perspectives || object.perspectives.length === 0) {
++    if (
++      !object?.perspectives ||
++      object.perspectives.length !== perspectives.length ||
++      object.perspectives.some((item) => !item.reflection.trim())
++    ) {
+       return NextResponse.json(
+-        { error: "Failed to generate perspectives" },
+-        { status: 500 },
++        { error: "Perspective result count or content did not match the request" },
++        { status: 502 },
+       );
+     }
+ 
+     return NextResponse.json(object);
+   } catch (error) {
+-    console.error("Error generating perspective:", error);
++    console.error("Error generating perspective:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Unable to generate perspectives" },
+       { status: 500 },
+diff --git a/app/api/generate-traits/physiology/route.ts b/app/api/generate-traits/physiology/route.ts
+index a6deb45..7ac5f89 100644
+--- a/app/api/generate-traits/physiology/route.ts
++++ b/app/api/generate-traits/physiology/route.ts
+@@ -3,7 +3,7 @@
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+ import path from "path";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ 
+ import {
+   ResponseSchema,
+@@ -19,10 +19,10 @@ const TEMPLATE_PATH = path.join(
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -40,7 +40,8 @@ export async function POST(request: Request) {
+     const prompt = renderPromptTemplate(template, parsed.data);
+ 
+     const { object } = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+       temperature: 0.7,
+@@ -55,7 +56,7 @@ export async function POST(request: Request) {
+ 
+     return NextResponse.json(object);
+   } catch (error) {
+-    console.error("Error brainstorming physiology traits:", error);
++    console.error("Error brainstorming physiology traits:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Unable to brainstorm physiology traits" },
+       { status: 500 },
+diff --git a/app/api/generate-traits/psychology/route.ts b/app/api/generate-traits/psychology/route.ts
+index a00fcf7..91035ae 100644
+--- a/app/api/generate-traits/psychology/route.ts
++++ b/app/api/generate-traits/psychology/route.ts
+@@ -3,7 +3,7 @@
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+ import path from "path";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ 
+ import {
+   ResponseSchema,
+@@ -19,10 +19,10 @@ const TEMPLATE_PATH = path.join(
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -40,7 +40,8 @@ export async function POST(request: Request) {
+     const prompt = renderPromptTemplate(template, parsed.data);
+ 
+     const { object } = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+       temperature: 0.7,
+@@ -55,7 +56,7 @@ export async function POST(request: Request) {
+ 
+     return NextResponse.json(object);
+   } catch (error) {
+-    console.error("Error brainstorming psychology traits:", error);
++    console.error("Error brainstorming psychology traits:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Unable to brainstorm psychology traits" },
+       { status: 500 },
+diff --git a/app/api/generate-traits/shared.ts b/app/api/generate-traits/shared.ts
+index 57ad722..e7dd4f9 100644
+--- a/app/api/generate-traits/shared.ts
++++ b/app/api/generate-traits/shared.ts
+@@ -111,7 +111,7 @@ const stripTemplateIndent = (text: string) => {
+ 
+ export const loadPromptTemplate = async (filePath: string) => {
+   const raw = await fs.readFile(filePath, "utf8");
+-  const match = raw.match(/template:\s*\|\n([\s\S]*)/);
++  const match = raw.match(/template:\s*\|\r?\n([\s\S]*)/);
+   if (!match) {
+     throw new Error(`Prompt template missing in ${filePath}`);
+   }
+diff --git a/app/api/generate-traits/sociology/route.ts b/app/api/generate-traits/sociology/route.ts
+index 24dc99b..9112406 100644
+--- a/app/api/generate-traits/sociology/route.ts
++++ b/app/api/generate-traits/sociology/route.ts
+@@ -3,7 +3,7 @@
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+ import path from "path";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ 
+ import {
+   ResponseSchema,
+@@ -19,10 +19,10 @@ const TEMPLATE_PATH = path.join(
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -40,7 +40,8 @@ export async function POST(request: Request) {
+     const prompt = renderPromptTemplate(template, parsed.data);
+ 
+     const { object } = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+       temperature: 0.7,
+@@ -55,7 +56,7 @@ export async function POST(request: Request) {
+ 
+     return NextResponse.json(object);
+   } catch (error) {
+-    console.error("Error brainstorming sociology traits:", error);
++    console.error("Error brainstorming sociology traits:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Unable to brainstorm sociology traits" },
+       { status: 500 },
+diff --git a/app/api/interpolate-character/route.ts b/app/api/interpolate-character/route.ts
+index 0cefca3..703a35e 100644
+--- a/app/api/interpolate-character/route.ts
++++ b/app/api/interpolate-character/route.ts
+@@ -2,7 +2,7 @@
+ 
+ import { NextResponse } from "next/server";
+ import { generateObject } from "ai";
+-import { getOpenAiProvider } from "@/lib/openaiServer";
++import { getDeepSeekChatModel } from "@/lib/openaiServer";
+ import { z } from "zod";
+ import fs from "fs/promises";
+ import path from "path";
+@@ -68,7 +68,7 @@ const stripTemplateIndent = (text: string) => {
+ 
+ const loadPromptTemplate = async (filePath: string) => {
+   const raw = await fs.readFile(filePath, "utf8");
+-  const match = raw.match(/template:\s*\|\n([\s\S]*)/);
++  const match = raw.match(/template:\s*\|\r?\n([\s\S]*)/);
+   if (!match) {
+     throw new Error(`Prompt template missing in ${filePath}`);
+   }
+@@ -122,10 +122,10 @@ const formatTraits = (traits: z.infer<typeof TraitListSchema>) => {
+ 
+ export async function POST(request: Request) {
+   try {
+-    const openaiProvider = getOpenAiProvider(request);
++    const openaiProvider = getDeepSeekChatModel();
+     if (!openaiProvider) {
+       return NextResponse.json(
+-        { error: "Missing OpenAI API key" },
++        { error: "Server DEEPSEEK_API_KEY is not configured" },
+         { status: 401 },
+       );
+     }
+@@ -184,10 +184,11 @@ ${formatTraits(snapshot.traits)}`;
+           : "",
+     });
+ 
+-    console.log("Character interpolation prompt:", prompt);
++    
+ 
+     const { object } = await generateObject({
+-      model: openaiProvider("gpt-4.1"),
++      model: openaiProvider,
++      providerOptions: { openai: { structuredOutputs: false } },
+       schema: ResponseSchema,
+       prompt,
+     });
+@@ -201,7 +202,7 @@ ${formatTraits(snapshot.traits)}`;
+ 
+     return NextResponse.json(object);
+   } catch (error) {
+-    console.error("Error interpolating character keyframe:", error);
++    console.error("Error interpolating character keyframe:", error instanceof Error ? error.name : "UnknownError");
+     return NextResponse.json(
+       { error: "Unable to interpolate character keyframe" },
+       { status: 500 },
+diff --git a/app/tool/page.tsx b/app/tool/page.tsx
+index c18abaa..bce0fb7 100644
+--- a/app/tool/page.tsx
++++ b/app/tool/page.tsx
+@@ -18,8 +18,6 @@ import {
+ } from "@/lib/utiils/workflowUtils";
+ import { buildTimelineData } from "@/lib/utiils/timelineUtils";
+ import { useUiStore } from "@/lib/stores/uiStore";
+-import { ApiKeyEntryPanel, ChangeApiKeyButton } from "@/components/ApiKeyManager";
+-import { useApiKeyStore } from "@/lib/stores/apiKeyStore";
+ import {
+   initialEdges as dragonInitialEdges,
+   initialNodes as dragonInitialNodes,
+@@ -35,7 +33,10 @@ import type {
+ } from "@/lib/types/workflow";
+ 
+ export default function Page() {
+-  const apiKey = useApiKeyStore((state) => state.apiKey);
++  useEffect(() => {
++    window.localStorage.removeItem("narrative-keyframing-openai-key");
++  }, []);
++
+   const viewMode = useUiStore((state) => state.viewMode);
+   const setViewMode = useUiStore((state) => state.setViewMode);
+   const eventCount = useUiStore((state) => state.eventCount);
+@@ -354,10 +355,6 @@ export default function Page() {
+     setEdges(result.edges);
+   }, [eventCount, setNodes, setEdges]);
+ 
+-  if (!apiKey) {
+-    return <ApiKeyEntryPanel />;
+-  }
+-
+   return (
+     <div className="flex h-screen flex-col overflow-hidden">
+       {/* <div className="shrink-0">
+@@ -571,7 +568,6 @@ export default function Page() {
+                       </button>
+                     </>
+                   )}
+-                  <ChangeApiKeyButton />
+                 </div>
+               </div>
+ 
+diff --git a/components/ApiKeyManager.tsx b/components/ApiKeyManager.tsx
+deleted file mode 100644
+index 963836b..0000000
+--- a/components/ApiKeyManager.tsx
++++ /dev/null
+@@ -1,179 +0,0 @@
+-"use client";
+-
+-import { useState } from "react";
+-import { useApiKeyStore } from "@/lib/stores/apiKeyStore";
+-
+-/**
+- * Full-screen entry panel shown before an OpenAI API key has been provided.
+- * The key is stored client-side (localStorage) and sent with each AI request;
+- * it never touches the server's environment config.
+- */
+-export function ApiKeyEntryPanel() {
+-  const [keyInput, setKeyInput] = useState("");
+-  const setApiKey = useApiKeyStore((state) => state.setApiKey);
+-
+-  const canStart = keyInput.trim() !== "";
+-
+-  const handleStart = () => {
+-    if (!canStart) return;
+-    setApiKey(keyInput.trim());
+-  };
+-
+-  return (
+-    <div className="landing-page tool-gate-page">
+-      <div className="tool-gate-card">
+-        <div className="tool-gate-form">
+-          <h1 className="tool-gate-title">
+-            <em>Welcome!</em>
+-          </h1>
+-          <p className="tool-gate-description">
+-            Enter your OpenAI API key to start using the tool. It&apos;s stored
+-            only in your browser and sent directly with your requests.
+-          </p>
+-
+-          <div className="tool-gate-field">
+-            <label className="tool-gate-label">OpenAI API Key</label>
+-            <input
+-              type="password"
+-              value={keyInput}
+-              onChange={(e) => setKeyInput(e.target.value)}
+-              onKeyDown={(e) => {
+-                if (e.key === "Enter") handleStart();
+-              }}
+-              placeholder="sk-..."
+-              className="tool-gate-input"
+-              autoFocus
+-            />
+-            <p className="tool-gate-hint">
+-              Get a key from{" "}
+-              <a
+-                href="https://platform.openai.com/api-keys"
+-                target="_blank"
+-                rel="noopener noreferrer"
+-              >
+-                platform.openai.com/api-keys
+-              </a>
+-              .
+-            </p>
+-          </div>
+-
+-          <button
+-            onClick={handleStart}
+-            disabled={!canStart}
+-            className="tool-gate-button"
+-          >
+-            Start
+-          </button>
+-        </div>
+-
+-        <section
+-          className="tool-gate-tutorial"
+-          aria-labelledby="tutorial-title"
+-        >
+-          <div className="tool-gate-tutorial-heading">
+-            <span>Tutorial</span>
+-            <div>
+-              <h2 id="tutorial-title">See Narrative Keyframing in action</h2>
+-              <p>Watch the walkthrough to learn how to use the tool.</p>
+-            </div>
+-          </div>
+-          <div className="tool-gate-video">
+-            <iframe
+-              src="https://www.youtube.com/embed/3SguSBn7UlE"
+-              title="Narrative Keyframing tutorial"
+-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+-              allowFullScreen
+-            />
+-          </div>
+-        </section>
+-      </div>
+-    </div>
+-  );
+-}
+-
+-/**
+- * Small toolbar control to update or clear the stored OpenAI API key.
+- */
+-export function ChangeApiKeyButton() {
+-  const [isOpen, setIsOpen] = useState(false);
+-  const [keyInput, setKeyInput] = useState("");
+-  const setApiKey = useApiKeyStore((state) => state.setApiKey);
+-  const clearApiKey = useApiKeyStore((state) => state.clearApiKey);
+-
+-  const openModal = () => {
+-    setKeyInput("");
+-    setIsOpen(true);
+-  };
+-
+-  const handleSave = () => {
+-    const trimmed = keyInput.trim();
+-    if (!trimmed) return;
+-    setApiKey(trimmed);
+-    setIsOpen(false);
+-  };
+-
+-  const handleClear = () => {
+-    clearApiKey();
+-    setIsOpen(false);
+-  };
+-
+-  return (
+-    <>
+-      <button
+-        onClick={openModal}
+-        className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+-      >
+-        API Key
+-      </button>
+-
+-      {isOpen && (
+-        <div className="fixed inset-0 z-100000 flex items-center justify-center bg-black/40">
+-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+-              Update API Key
+-            </h2>
+-            <p className="text-sm text-gray-500 mb-6">
+-              Enter a new OpenAI API key, or clear the stored key to sign out.
+-            </p>
+-            <input
+-              type="password"
+-              value={keyInput}
+-              onChange={(e) => setKeyInput(e.target.value)}
+-              onKeyDown={(e) => {
+-                if (e.key === "Enter") handleSave();
+-              }}
+-              placeholder="sk-..."
+-              className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-shadow"
+-              autoFocus
+-            />
+-            <button
+-              onClick={handleSave}
+-              disabled={!keyInput.trim()}
+-              className={`w-full mt-4 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
+-                keyInput.trim()
+-                  ? "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer shadow-sm hover:shadow"
+-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+-              }`}
+-            >
+-              Save
+-            </button>
+-            <div className="flex items-center justify-between mt-6">
+-              <button
+-                onClick={handleClear}
+-                className="text-sm text-red-500 hover:text-red-600 transition-colors"
+-              >
+-                Clear key
+-              </button>
+-              <button
+-                onClick={() => setIsOpen(false)}
+-                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+-              >
+-                Cancel
+-              </button>
+-            </div>
+-          </div>
+-        </div>
+-      )}
+-    </>
+-  );
+-}
+diff --git a/components/WorkflowCanvas/EventNode/EventGroupNode.tsx b/components/WorkflowCanvas/EventNode/EventGroupNode.tsx
+index 4a98c9b..dc25aa9 100644
+--- a/components/WorkflowCanvas/EventNode/EventGroupNode.tsx
++++ b/components/WorkflowCanvas/EventNode/EventGroupNode.tsx
+@@ -16,7 +16,6 @@ import type {
+ } from "@/lib/types/workflow";
+ import { cn } from "@/lib/utiils/sharedUtils";
+ import { geistMono } from "@/app/fonts";
+-import { getOpenAiApiKeyHeader } from "@/lib/openaiClientHeaders";
+ 
+ export function EventGroupNode({ id, data }: NodeProps<GroupNodeType>) {
+   const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+@@ -63,8 +62,7 @@ export function EventGroupNode({ id, data }: NodeProps<GroupNodeType>) {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+-          ...getOpenAiApiKeyHeader(),
+-        },
++            },
+         body: JSON.stringify({ events }),
+       });
+ 
+diff --git a/lib/openaiApiKeyHeader.ts b/lib/openaiApiKeyHeader.ts
+deleted file mode 100644
+index 6a0434f..0000000
+--- a/lib/openaiApiKeyHeader.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-export const OPENAI_API_KEY_HEADER = "x-openai-api-key";
+diff --git a/lib/openaiClientHeaders.ts b/lib/openaiClientHeaders.ts
+deleted file mode 100644
+index 22482f0..0000000
+--- a/lib/openaiClientHeaders.ts
++++ /dev/null
+@@ -1,7 +0,0 @@
+-import { OPENAI_API_KEY_HEADER } from "@/lib/openaiApiKeyHeader";
+-import { useApiKeyStore } from "@/lib/stores/apiKeyStore";
+-
+-export function getOpenAiApiKeyHeader(): Record<string, string> {
+-  const apiKey = useApiKeyStore.getState().apiKey;
+-  return apiKey ? { [OPENAI_API_KEY_HEADER]: apiKey } : {};
+-}
+diff --git a/lib/openaiServer.ts b/lib/openaiServer.ts
+index 79481ae..856aac0 100644
+--- a/lib/openaiServer.ts
++++ b/lib/openaiServer.ts
+@@ -1,10 +1,11 @@
+ import { createOpenAI } from "@ai-sdk/openai";
+-import { OPENAI_API_KEY_HEADER } from "@/lib/openaiApiKeyHeader";
+ 
+-export function getOpenAiProvider(request: Request) {
+-  const apiKey = request.headers.get(OPENAI_API_KEY_HEADER)?.trim();
+-  if (!apiKey) {
+-    return null;
+-  }
+-  return createOpenAI({ apiKey });
++const BASE_URL = "https://api.deepseek.com/v1";
++const MODEL = "deepseek-flash";
++
++export function getDeepSeekChatModel() {
++  const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
++  if (!apiKey) return null;
++  const provider = createOpenAI({ apiKey, baseURL: BASE_URL, fetch: globalThis.fetch });
++  return provider.chat(MODEL);
+ }
+diff --git a/lib/stores/apiKeyStore.ts b/lib/stores/apiKeyStore.ts
+deleted file mode 100644
+index 2915f2b..0000000
+--- a/lib/stores/apiKeyStore.ts
++++ /dev/null
+@@ -1,19 +0,0 @@
+-import { create } from "zustand";
+-import { persist } from "zustand/middleware";
+-
+-type ApiKeyState = {
+-  apiKey: string;
+-  setApiKey: (apiKey: string) => void;
+-  clearApiKey: () => void;
+-};
+-
+-export const useApiKeyStore = create<ApiKeyState>()(
+-  persist(
+-    (set) => ({
+-      apiKey: "",
+-      setApiKey: (apiKey: string) => set({ apiKey }),
+-      clearApiKey: () => set({ apiKey: "" }),
+-    }),
+-    { name: "narrative-keyframing-openai-key" },
+-  ),
+-);
+diff --git a/lib/utiils/characterUtils.ts b/lib/utiils/characterUtils.ts
+index 7d8de97..da1a9a9 100644
+--- a/lib/utiils/characterUtils.ts
++++ b/lib/utiils/characterUtils.ts
+@@ -9,7 +9,6 @@ import type {
+   WorkflowNode,
+ } from "@/lib/types/workflow";
+ import { getNodeByIndex } from "@/lib/utiils/workflowUtils";
+-import { getOpenAiApiKeyHeader } from "@/lib/openaiClientHeaders";
+ 
+ export type TraitCategory = keyof CharacterTraits;
+ 
+@@ -466,7 +465,6 @@ export async function brainstormCharacterTraits({
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+-      ...getOpenAiApiKeyHeader(),
+     },
+     body: JSON.stringify({
+       baseline_story_text: context.baselineStoryText,
+@@ -520,7 +518,6 @@ export async function interpolateCharacterSnapshot(
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+-      ...getOpenAiApiKeyHeader(),
+     },
+     body: JSON.stringify({
+       perspectiveText,
+diff --git a/lib/utiils/narrativeUtils.ts b/lib/utiils/narrativeUtils.ts
+index 2c6bc11..886c519 100644
+--- a/lib/utiils/narrativeUtils.ts
++++ b/lib/utiils/narrativeUtils.ts
+@@ -1,7 +1,6 @@
+ import type { NarrativeEventData } from "@/lib/types/narrative";
+ import type { TimelineItem } from "@/lib/types/timeline";
+ import type { NarrativeNodeType, WorkflowNode } from "@/lib/types/workflow";
+-import { getOpenAiApiKeyHeader } from "@/lib/openaiClientHeaders";
+ 
+ export const findNarrativeGroupIdFromTrackItems = (
+   items: TimelineItem[],
+@@ -104,8 +103,7 @@ export const generateNarratives = async ({
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+-        ...getOpenAiApiKeyHeader(),
+-      },
++        },
+       body: JSON.stringify({
+         events,
+         customPrompt: trimmedPrompt ? trimmedPrompt : undefined,
+diff --git a/lib/utiils/perspectiveUtils.ts b/lib/utiils/perspectiveUtils.ts
+index c89ead2..d339486 100644
+--- a/lib/utiils/perspectiveUtils.ts
++++ b/lib/utiils/perspectiveUtils.ts
+@@ -6,7 +6,6 @@ import {
+   type PerspectiveEvidenceTarget,
+   type PerspectivePreparationResult,
+ } from "@/lib/types/perspective";
+-import { getOpenAiApiKeyHeader } from "@/lib/openaiClientHeaders";
+ 
+ const NEED_REFLECTION_MESSAGE = "Add a perspective to analyze evidence.";
+ const ANALYZING_EVIDENCE_MESSAGE = "Analyzing evidence...";
+@@ -92,8 +91,7 @@ export async function analyzeSinglePerspectiveEvidence(
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+-        ...getOpenAiApiKeyHeader(),
+-      },
++        },
+       body: JSON.stringify(target),
+     });
+ 
+@@ -166,8 +164,7 @@ export async function analyzeMultiplePerspectivesEvidence(
+           method: "POST",
+           headers: {
+             "Content-Type": "application/json",
+-            ...getOpenAiApiKeyHeader(),
+-          },
++                },
+           body: JSON.stringify(target),
+         });
+ 
+@@ -239,8 +236,7 @@ export async function generateMultiplePerspectives(
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+-          ...getOpenAiApiKeyHeader(),
+-        },
++            },
+         body: JSON.stringify({
+           eventSequence,
+           perspectives: [task],
+@@ -306,7 +302,6 @@ export async function regenerateSinglePerspective({
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+-      ...getOpenAiApiKeyHeader(),
+     },
+     body: JSON.stringify({
+       eventSequence: preparation.eventSequence,
+diff --git a/package-lock.json b/package-lock.json
+index d509ae3..58b7862 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -19,7 +19,7 @@
+         "is-hotkey": "^0.2.0",
+         "lucide-react": "^0.545.0",
+         "nanoid": "^5.1.6",
+-        "next": "15.5.7",
++        "next": "15.5.27",
+         "openai": "^6.3.0",
+         "react": "19.1.0",
+         "react-dom": "19.1.0",
+@@ -43,14 +43,14 @@
+       }
+     },
+     "node_modules/@ai-sdk/gateway": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/@ai-sdk/gateway/-/gateway-2.0.0.tgz",
+-      "integrity": "sha512-Gj0PuawK7NkZuyYgO/h5kDK/l6hFOjhLdTq3/Lli1FTl47iGmwhH1IZQpAL3Z09BeFYWakcwUmn02ovIm2wy9g==",
++      "version": "2.0.164",
++      "resolved": "https://registry.npmjs.org/@ai-sdk/gateway/-/gateway-2.0.164.tgz",
++      "integrity": "sha512-pol4Klaj4v1sO7s5P3L5NXfNPVLBBwseRzUGjs7gge4TMTK3Xdsu7CqiVzLVCFU7bCbm+mMy7TTxiL1Qkmw/6Q==",
+       "license": "Apache-2.0",
+       "dependencies": {
+-        "@ai-sdk/provider": "2.0.0",
+-        "@ai-sdk/provider-utils": "3.0.12",
+-        "@vercel/oidc": "3.0.3"
++        "@ai-sdk/provider": "2.0.5",
++        "@ai-sdk/provider-utils": "3.0.41",
++        "@vercel/oidc": "3.1.0"
+       },
+       "engines": {
+         "node": ">=18"
+@@ -60,13 +60,13 @@
+       }
+     },
+     "node_modules/@ai-sdk/openai": {
+-      "version": "2.0.53",
+-      "resolved": "https://registry.npmjs.org/@ai-sdk/openai/-/openai-2.0.53.tgz",
+-      "integrity": "sha512-GIkR3+Fyif516ftXv+YPSPstnAHhcZxNoR2s8uSHhQ1yBT7I7aQYTVwpjAuYoT3GR+TeP50q7onj2/nDRbT2FQ==",
++      "version": "2.0.133",
++      "resolved": "https://registry.npmjs.org/@ai-sdk/openai/-/openai-2.0.133.tgz",
++      "integrity": "sha512-UfrnVucrMcYxAKBh8yEW5J7asBvSFqHA9VnIFzuMQuVdmX3KCwIBhe6F4WsZ0oWB1GSsoBJJTXr/K1G7nFKL0w==",
+       "license": "Apache-2.0",
+       "dependencies": {
+-        "@ai-sdk/provider": "2.0.0",
+-        "@ai-sdk/provider-utils": "3.0.12"
++        "@ai-sdk/provider": "2.0.5",
++        "@ai-sdk/provider-utils": "3.0.41"
+       },
+       "engines": {
+         "node": ">=18"
+@@ -76,9 +76,9 @@
+       }
+     },
+     "node_modules/@ai-sdk/provider": {
+-      "version": "2.0.0",
+-      "resolved": "https://registry.npmjs.org/@ai-sdk/provider/-/provider-2.0.0.tgz",
+-      "integrity": "sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==",
++      "version": "2.0.5",
++      "resolved": "https://registry.npmjs.org/@ai-sdk/provider/-/provider-2.0.5.tgz",
++      "integrity": "sha512-cmG40u10QFEUrYXWYom6Lo6DLR+pND3wWABTTT9Nf7zg9F7BD46KNj+STekndp9Kg5ZAIPA0WxmTI0IwRvKvvQ==",
+       "license": "Apache-2.0",
+       "dependencies": {
+         "json-schema": "^0.4.0"
+@@ -88,14 +88,15 @@
+       }
+     },
+     "node_modules/@ai-sdk/provider-utils": {
+-      "version": "3.0.12",
+-      "resolved": "https://registry.npmjs.org/@ai-sdk/provider-utils/-/provider-utils-3.0.12.tgz",
+-      "integrity": "sha512-ZtbdvYxdMoria+2SlNarEk6Hlgyf+zzcznlD55EAl+7VZvJaSg2sqPvwArY7L6TfDEDJsnCq0fdhBSkYo0Xqdg==",
++      "version": "3.0.41",
++      "resolved": "https://registry.npmjs.org/@ai-sdk/provider-utils/-/provider-utils-3.0.41.tgz",
++      "integrity": "sha512-xpURVGQud+AEOZ/uRZTBU0eVy2+dt/y/dUEp9ewjW3eTM6yu0vThzTvduhOSabpn6AExewg8WJW04P4D6USVXw==",
+       "license": "Apache-2.0",
+       "dependencies": {
+-        "@ai-sdk/provider": "2.0.0",
++        "@ai-sdk/provider": "2.0.5",
+         "@standard-schema/spec": "^1.0.0",
+-        "eventsource-parser": "^3.0.5"
++        "eventsource-parser": "^3.0.6",
++        "undici": "^5.29.0"
+       },
+       "engines": {
+         "node": ">=18"
+@@ -118,19 +119,28 @@
+       }
+     },
+     "node_modules/@emnapi/runtime": {
+-      "version": "1.6.0",
+-      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.6.0.tgz",
+-      "integrity": "sha512-obtUmAHTMjll499P+D9A3axeJFlhdjOWdKUNs/U6QIGT7V5RjcUW1xToAzjvmgTSQhDbYn/NwfTRoJcQ2rNBxA==",
++      "version": "1.11.3",
++      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.3.tgz",
++      "integrity": "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==",
+       "license": "MIT",
+       "optional": true,
+       "dependencies": {
+         "tslib": "^2.4.0"
+       }
+     },
++    "node_modules/@fastify/busboy": {
++      "version": "2.1.1",
++      "resolved": "https://registry.npmjs.org/@fastify/busboy/-/busboy-2.1.1.tgz",
++      "integrity": "sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=14"
++      }
++    },
+     "node_modules/@img/colour": {
+-      "version": "1.0.0",
+-      "resolved": "https://registry.npmjs.org/@img/colour/-/colour-1.0.0.tgz",
+-      "integrity": "sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==",
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/@img/colour/-/colour-1.1.0.tgz",
++      "integrity": "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==",
+       "license": "MIT",
+       "optional": true,
+       "engines": {
+@@ -138,9 +148,9 @@
+       }
+     },
+     "node_modules/@img/sharp-darwin-arm64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-arm64/-/sharp-darwin-arm64-0.34.4.tgz",
+-      "integrity": "sha512-sitdlPzDVyvmINUdJle3TNHl+AG9QcwiAMsXmccqsCOMZNIdW2/7S26w0LyU8euiLVzFBL3dXPwVCq/ODnf2vA==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-arm64/-/sharp-darwin-arm64-0.35.5.tgz",
++      "integrity": "sha512-QRUlFQ0WxvdWyqqG/WtI3iupfD5rBzmCHXSdPsY91sAtVtTo7Q4cb6zOccZ3gqEqkr0f1As1ehLqmEpDsRf+lg==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -150,19 +160,19 @@
+         "darwin"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-darwin-arm64": "1.2.3"
++        "@img/sharp-libvips-darwin-arm64": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-darwin-x64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-x64/-/sharp-darwin-x64-0.34.4.tgz",
+-      "integrity": "sha512-rZheupWIoa3+SOdF/IcUe1ah4ZDpKBGWcsPX6MT0lYniH9micvIU7HQkYTfrx5Xi8u+YqwLtxC/3vl8TQN6rMg==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-x64/-/sharp-darwin-x64-0.35.5.tgz",
++      "integrity": "sha512-+BR255RhDlpygUpOc/Jdt1nT6DQ3XG/ERo5wbcdOf5Q320dKtPCKPLR1LJs9VGXRaMa8l1uUa0tkCNOXiAxZUw==",
+       "cpu": [
+         "x64"
+       ],
+@@ -172,19 +182,38 @@
+         "darwin"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-darwin-x64": "1.2.3"
++        "@img/sharp-libvips-darwin-x64": "1.3.4"
++      }
++    },
++    "node_modules/@img/sharp-freebsd-wasm32": {
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-freebsd-wasm32/-/sharp-freebsd-wasm32-0.35.5.tgz",
++      "integrity": "sha512-Y/z91nEZ4uIBX5X3nfTovjU9lHNKFYbL2lpHCLVNmXQK03VIZvXBBt0KxbPGp2SdGSF+2mQU4e+hQaWOt86iAw==",
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "freebsd"
++      ],
++      "dependencies": {
++        "@img/sharp-wasm32": "0.35.5"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
+       }
+     },
+     "node_modules/@img/sharp-libvips-darwin-arm64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-arm64/-/sharp-libvips-darwin-arm64-1.2.3.tgz",
+-      "integrity": "sha512-QzWAKo7kpHxbuHqUC28DZ9pIKpSi2ts2OJnoIGI26+HMgq92ZZ4vk8iJd4XsxN+tYfNJxzH6W62X5eTcsBymHw==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-arm64/-/sharp-libvips-darwin-arm64-1.3.4.tgz",
++      "integrity": "sha512-5R89nBYiRdUlSWJxPhO+GVtaXzXSxKnRu/xqMn3KTA3L9EB9Oy/P+Nn2f2vlhPuUdy/Zusb2DarbyTpGCfEDuw==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -198,9 +227,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-darwin-x64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-x64/-/sharp-libvips-darwin-x64-1.2.3.tgz",
+-      "integrity": "sha512-Ju+g2xn1E2AKO6YBhxjj+ACcsPQRHT0bhpglxcEf+3uyPY+/gL8veniKoo96335ZaPo03bdDXMv0t+BBFAbmRA==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-x64/-/sharp-libvips-darwin-x64-1.3.4.tgz",
++      "integrity": "sha512-iR2OKH80yi0U+dUplyh3/xdpFvps6YkCwsXenIJxqxR1v9o+xtKTGbS9H7cps+2Vxjc8B1j96p75NmTGjIhtpQ==",
+       "cpu": [
+         "x64"
+       ],
+@@ -214,9 +243,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-linux-arm": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm/-/sharp-libvips-linux-arm-1.2.3.tgz",
+-      "integrity": "sha512-x1uE93lyP6wEwGvgAIV0gP6zmaL/a0tGzJs/BIDDG0zeBhMnuUPm7ptxGhUbcGs4okDJrk4nxgrmxpib9g6HpA==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm/-/sharp-libvips-linux-arm-1.3.4.tgz",
++      "integrity": "sha512-LmRtTsOHuvM2+wlO2Db37dx5MiZhB0FvSunciw48YjdOkZz9KAiRbm8ujeMOA1INqmei5NapFxYEK1D1ZSidmw==",
+       "cpu": [
+         "arm"
+       ],
+@@ -230,9 +259,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-linux-arm64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm64/-/sharp-libvips-linux-arm64-1.2.3.tgz",
+-      "integrity": "sha512-I4RxkXU90cpufazhGPyVujYwfIm9Nk1QDEmiIsaPwdnm013F7RIceaCc87kAH+oUB1ezqEvC6ga4m7MSlqsJvQ==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm64/-/sharp-libvips-linux-arm64-1.3.4.tgz",
++      "integrity": "sha512-Y3dgX/6lE2QhQb+Gxy0WZxfg9MEm/JBjamZpS2IklP7xIQoKN4hzAm7KcMVGtaVDt3neE9OKBC7vAfonA/Lr1A==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -246,9 +275,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-linux-ppc64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-ppc64/-/sharp-libvips-linux-ppc64-1.2.3.tgz",
+-      "integrity": "sha512-Y2T7IsQvJLMCBM+pmPbM3bKT/yYJvVtLJGfCs4Sp95SjvnFIjynbjzsa7dY1fRJX45FTSfDksbTp6AGWudiyCg==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-ppc64/-/sharp-libvips-linux-ppc64-1.3.4.tgz",
++      "integrity": "sha512-Le6boB8Tai0Nis+gIxIpKx68UDVVIqdR8Tin5Yf1z2LJJQLDJvCDRqRu+jC2qCoD+eIomonmOwB4smBRxfVpYQ==",
+       "cpu": [
+         "ppc64"
+       ],
+@@ -261,10 +290,26 @@
+         "url": "https://opencollective.com/libvips"
+       }
+     },
++    "node_modules/@img/sharp-libvips-linux-riscv64": {
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-riscv64/-/sharp-libvips-linux-riscv64-1.3.4.tgz",
++      "integrity": "sha512-aHkkIEHPRdQEegJN20MLmGtxYD9R2wQr3Cwpddnu5+YKMt6Uzax7S9h5gpZTo8wyrGuZSlfQ63OevL5mTyOC7Q==",
++      "cpu": [
++        "riscv64"
++      ],
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
+     "node_modules/@img/sharp-libvips-linux-s390x": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-s390x/-/sharp-libvips-linux-s390x-1.2.3.tgz",
+-      "integrity": "sha512-RgWrs/gVU7f+K7P+KeHFaBAJlNkD1nIZuVXdQv6S+fNA6syCcoboNjsV2Pou7zNlVdNQoQUpQTk8SWDHUA3y/w==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-s390x/-/sharp-libvips-linux-s390x-1.3.4.tgz",
++      "integrity": "sha512-ra/mB6MikESDUO7Yg+Mi95bFBb9GsObURuhnOv3OqknjGe9sZrG8tCe9q0xSIGrtLgvgw0gKnFWcK4blSgQOuQ==",
+       "cpu": [
+         "s390x"
+       ],
+@@ -278,9 +323,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-linux-x64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.2.3.tgz",
+-      "integrity": "sha512-3JU7LmR85K6bBiRzSUc/Ff9JBVIFVvq6bomKE0e63UXGeRw2HPVEjoJke1Yx+iU4rL7/7kUjES4dZ/81Qjhyxg==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.4.tgz",
++      "integrity": "sha512-GJ//SSXbnwSDes02umB3nDJLFcQzw8a18V8fyhqr6tV515tOEMdImjjxj1AoafMRz56F3PHgftnj1QEKSU1zkw==",
+       "cpu": [
+         "x64"
+       ],
+@@ -294,9 +339,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-linuxmusl-arm64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-arm64/-/sharp-libvips-linuxmusl-arm64-1.2.3.tgz",
+-      "integrity": "sha512-F9q83RZ8yaCwENw1GieztSfj5msz7GGykG/BA+MOUefvER69K/ubgFHNeSyUu64amHIYKGDs4sRCMzXVj8sEyw==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-arm64/-/sharp-libvips-linuxmusl-arm64-1.3.4.tgz",
++      "integrity": "sha512-hvulFwtjUcagsis6BBxHwGFwWoNZjgYmULGVrZcyfNbjA8hKILbRxGg15/7w5HDyXHXUos/j6baAWqnCyQ2DWA==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -310,9 +355,9 @@
+       }
+     },
+     "node_modules/@img/sharp-libvips-linuxmusl-x64": {
+-      "version": "1.2.3",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.2.3.tgz",
+-      "integrity": "sha512-U5PUY5jbc45ANM6tSJpsgqmBF/VsL6LnxJmIf11kB7J5DctHgqm0SkuXzVWtIY90GnJxKnC/JT251TDnk1fu/g==",
++      "version": "1.3.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.3.4.tgz",
++      "integrity": "sha512-6zXKeE/p39I1AmA3cJG35eyBGNqNddLnUXjhwBnsGjFPWqf5VKkDBEqaEkPDoTEtkxwi2vv8Tcr2mDyP4So7Fg==",
+       "cpu": [
+         "x64"
+       ],
+@@ -326,9 +371,9 @@
+       }
+     },
+     "node_modules/@img/sharp-linux-arm": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm/-/sharp-linux-arm-0.34.4.tgz",
+-      "integrity": "sha512-Xyam4mlqM0KkTHYVSuc6wXRmM7LGN0P12li03jAnZ3EJWZqj83+hi8Y9UxZUbxsgsK1qOEwg7O0Bc0LjqQVtxA==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm/-/sharp-linux-arm-0.35.5.tgz",
++      "integrity": "sha512-LEaXK2WdXVK5ykcw0buWyPMsmLLL2vpHLD6yrNSW+JGEL3BZPA4tpKN6iaMc4AxTTAoaX/sU1rOL51lcIz48ZQ==",
+       "cpu": [
+         "arm"
+       ],
+@@ -338,19 +383,19 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linux-arm": "1.2.3"
++        "@img/sharp-libvips-linux-arm": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-linux-arm64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm64/-/sharp-linux-arm64-0.34.4.tgz",
+-      "integrity": "sha512-YXU1F/mN/Wu786tl72CyJjP/Ngl8mGHN1hST4BGl+hiW5jhCnV2uRVTNOcaYPs73NeT/H8Upm3y9582JVuZHrQ==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm64/-/sharp-linux-arm64-0.35.5.tgz",
++      "integrity": "sha512-LYVx5JTsOM2CBzmxreh+nl64/3H6Xb09iSLknqH47z2T2DFFxDeFLP5y4dJwe6H7uGQlHPyEEtIqyo3DYsRwdQ==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -360,19 +405,19 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linux-arm64": "1.2.3"
++        "@img/sharp-libvips-linux-arm64": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-linux-ppc64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linux-ppc64/-/sharp-linux-ppc64-0.34.4.tgz",
+-      "integrity": "sha512-F4PDtF4Cy8L8hXA2p3TO6s4aDt93v+LKmpcYFLAVdkkD3hSxZzee0rh6/+94FpAynsuMpLX5h+LRsSG3rIciUQ==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-ppc64/-/sharp-linux-ppc64-0.35.5.tgz",
++      "integrity": "sha512-QVxAAq8evVRI9ia2vqgwrmWucn5Dfv+JdWzj75pD8omHLPSP7f8p20O8jxzjCcuCEQEOtYOZUmX1hkiZ0kdevA==",
+       "cpu": [
+         "ppc64"
+       ],
+@@ -382,19 +427,41 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-ppc64": "1.3.4"
++      }
++    },
++    "node_modules/@img/sharp-linux-riscv64": {
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-riscv64/-/sharp-linux-riscv64-0.35.5.tgz",
++      "integrity": "sha512-LtdreXguaavKODPIfzJ4kffx7UNt1omwtK0rch4EBbbSTXPnxWmYSayXdLJw0fJzQ97kHt1gL/yh4tvU+nCyRQ==",
++      "cpu": [
++        "riscv64"
++      ],
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linux-ppc64": "1.2.3"
++        "@img/sharp-libvips-linux-riscv64": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-linux-s390x": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linux-s390x/-/sharp-linux-s390x-0.34.4.tgz",
+-      "integrity": "sha512-qVrZKE9Bsnzy+myf7lFKvng6bQzhNUAYcVORq2P7bDlvmF6u2sCmK2KyEQEBdYk+u3T01pVsPrkj943T1aJAsw==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-s390x/-/sharp-linux-s390x-0.35.5.tgz",
++      "integrity": "sha512-UZasTOFiYzotTsGOCu42BfUzP6Tu6Do/947iRm1RsLKvlllxwGcn4RN27LibGWceix4Y+Pmw3jsnTcCQIgWjqA==",
+       "cpu": [
+         "s390x"
+       ],
+@@ -404,19 +471,19 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linux-s390x": "1.2.3"
++        "@img/sharp-libvips-linux-s390x": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-linux-x64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.34.4.tgz",
+-      "integrity": "sha512-ZfGtcp2xS51iG79c6Vhw9CWqQC8l2Ot8dygxoDoIQPTat/Ov3qAa8qpxSrtAEAJW+UjTXc4yxCjNfxm4h6Xm2A==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.35.5.tgz",
++      "integrity": "sha512-SxFtLTeJInhAA9Q836kux2vZNeOBQEx658qvbboZScr0wIARym3IcGmW7KpVD5sbVg0Ojy+udFQdayYIZyoNog==",
+       "cpu": [
+         "x64"
+       ],
+@@ -426,19 +493,19 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linux-x64": "1.2.3"
++        "@img/sharp-libvips-linux-x64": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-linuxmusl-arm64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-arm64/-/sharp-linuxmusl-arm64-0.34.4.tgz",
+-      "integrity": "sha512-8hDVvW9eu4yHWnjaOOR8kHVrew1iIX+MUgwxSuH2XyYeNRtLUe4VNioSqbNkB7ZYQJj9rUTT4PyRscyk2PXFKA==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-arm64/-/sharp-linuxmusl-arm64-0.35.5.tgz",
++      "integrity": "sha512-9HbMclmI1zlNkFRs3z9/eBtDjfD0sGlrX1z6b1qwmiFY5ElDLh4BC0LPBdVp7z1DXFiKlIcznf+ZlsuZzLxQqg==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -448,19 +515,19 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linuxmusl-arm64": "1.2.3"
++        "@img/sharp-libvips-linuxmusl-arm64": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-linuxmusl-x64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.34.4.tgz",
+-      "integrity": "sha512-lU0aA5L8QTlfKjpDCEFOZsTYGn3AEiO6db8W5aQDxj0nQkVrZWmN3ZP9sYKWJdtq3PWPhUNlqehWyXpYDcI9Sg==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.35.5.tgz",
++      "integrity": "sha512-4KOphqB035HrVdqLZfCgMzzERrQkkzOwRhl4OAkRO1YCldbaFjySXMaK534Mo0V+LndnlJk+sbUyLeU0ULyD1A==",
+       "cpu": [
+         "x64"
+       ],
+@@ -470,38 +537,54 @@
+         "linux"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-libvips-linuxmusl-x64": "1.2.3"
++        "@img/sharp-libvips-linuxmusl-x64": "1.3.4"
+       }
+     },
+     "node_modules/@img/sharp-wasm32": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-wasm32/-/sharp-wasm32-0.34.4.tgz",
+-      "integrity": "sha512-33QL6ZO/qpRyG7woB/HUALz28WnTMI2W1jgX3Nu2bypqLIKx/QKMILLJzJjI+SIbvXdG9fUnmrxR7vbi1sTBeA==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-wasm32/-/sharp-wasm32-0.35.5.tgz",
++      "integrity": "sha512-Ptsga1su4tQx+LLF1ECS9U6nz5kmrXKo6XVbtR48Ke3ZRxxgaWBu7IDtEe1quo8hiupwm6WFqxVlXaSf7IINGQ==",
++      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
++      "optional": true,
++      "dependencies": {
++        "@emnapi/runtime": "^1.11.3"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-webcontainers-wasm32": {
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-webcontainers-wasm32/-/sharp-webcontainers-wasm32-0.35.5.tgz",
++      "integrity": "sha512-hfhF/FmoQyTUkA0bIKFOtw536BQSeBMe6BF6QyWlrPxT754+TFLaZ7sKKTfvvM0yJgKgaYTwnFCIZ/GuDw5SUA==",
+       "cpu": [
+         "wasm32"
+       ],
+-      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
++      "license": "Apache-2.0",
+       "optional": true,
+       "dependencies": {
+-        "@emnapi/runtime": "^1.5.0"
++        "@img/sharp-wasm32": "0.35.5"
+       },
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       }
+     },
+     "node_modules/@img/sharp-win32-arm64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-win32-arm64/-/sharp-win32-arm64-0.34.4.tgz",
+-      "integrity": "sha512-2Q250do/5WXTwxW3zjsEuMSv5sUU4Tq9VThWKlU2EYLm4MB7ZeMwF+SFJutldYODXF6jzc6YEOC+VfX0SZQPqA==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-win32-arm64/-/sharp-win32-arm64-0.35.5.tgz",
++      "integrity": "sha512-X4t7g+7ZA5DKblCBEXGjUqqemj4vczING/5viFwAL8h4N3qYeyjwdCvRLHi4EdOUI+2Z7UFlp1VM+p/AuEtm6Q==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -511,16 +594,16 @@
+         "win32"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       }
+     },
+     "node_modules/@img/sharp-win32-ia32": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-win32-ia32/-/sharp-win32-ia32-0.34.4.tgz",
+-      "integrity": "sha512-3ZeLue5V82dT92CNL6rsal6I2weKw1cYu+rGKm8fOCCtJTR2gYeUfY3FqUnIJsMUPIH68oS5jmZ0NiJ508YpEw==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-win32-ia32/-/sharp-win32-ia32-0.35.5.tgz",
++      "integrity": "sha512-5Zm82LoBc43nhwNybZlG7Y1KO//Zhsn306fQl29ZOuStHLGTo3BWL83q3cznX0poxSAMuYL1On/BHBxkBeKr6A==",
+       "cpu": [
+         "ia32"
+       ],
+@@ -530,16 +613,16 @@
+         "win32"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": "^20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       }
+     },
+     "node_modules/@img/sharp-win32-x64": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.34.4.tgz",
+-      "integrity": "sha512-xIyj4wpYs8J18sVN3mSQjwrw7fKUqRw+Z5rnHNCy5fYTxigBz81u5mOMPmFumwjcn8+ld1ppptMBCLic1nz6ig==",
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.5.tgz",
++      "integrity": "sha512-x76eH0vEiHlcMQu8Y8IenntaACtddpT6W0wmXtWrnKcnKI7ME5DdgqhAD6SEWOEl1v2zDvkZDhFA9KnURwpfqg==",
+       "cpu": [
+         "x64"
+       ],
+@@ -549,7 +632,7 @@
+         "win32"
+       ],
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+@@ -612,15 +695,15 @@
+       "license": "Apache-2.0"
+     },
+     "node_modules/@next/env": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/env/-/env-15.5.7.tgz",
+-      "integrity": "sha512-4h6Y2NyEkIEN7Z8YxkA27pq6zTkS09bUSYC0xjd0NpwFxjnIKeZEeH591o5WECSmjpUhLn3H2QLJcDye3Uzcvg==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/env/-/env-15.5.27.tgz",
++      "integrity": "sha512-WC5hvVqiuFOcRyz6gKPeJkiVvSMf3scNeAV49CdWtVqxmUlzh8UKR6YHt9yiNkh8LngtzqSlVz07/Ma3ZAzchA==",
+       "license": "MIT"
+     },
+     "node_modules/@next/swc-darwin-arm64": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-darwin-arm64/-/swc-darwin-arm64-15.5.7.tgz",
+-      "integrity": "sha512-IZwtxCEpI91HVU/rAUOOobWSZv4P2DeTtNaCdHqLcTJU4wdNXgAySvKa/qJCgR5m6KI8UsKDXtO2B31jcaw1Yw==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-darwin-arm64/-/swc-darwin-arm64-15.5.27.tgz",
++      "integrity": "sha512-fBA9QurmK4+uj4wNhmRTuO5zMVRaBHCvp6H93zTG/5i6Yi6TewbvbesXB8YQNj8T99Cwrow87hHiFV6wL/hyMA==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -634,9 +717,9 @@
+       }
+     },
+     "node_modules/@next/swc-darwin-x64": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-darwin-x64/-/swc-darwin-x64-15.5.7.tgz",
+-      "integrity": "sha512-UP6CaDBcqaCBuiq/gfCEJw7sPEoX1aIjZHnBWN9v9qYHQdMKvCKcAVs4OX1vIjeE+tC5EIuwDTVIoXpUes29lg==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-darwin-x64/-/swc-darwin-x64-15.5.27.tgz",
++      "integrity": "sha512-FGZwJwry8qZNHxD/nfwrCwCHHrqx6epqItkkxbYcBQEQ2uw5S43bY83fQB5zbAsZE7TELMjoYkbhsQ4oKM7wwg==",
+       "cpu": [
+         "x64"
+       ],
+@@ -650,9 +733,9 @@
+       }
+     },
+     "node_modules/@next/swc-linux-arm64-gnu": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-linux-arm64-gnu/-/swc-linux-arm64-gnu-15.5.7.tgz",
+-      "integrity": "sha512-NCslw3GrNIw7OgmRBxHtdWFQYhexoUCq+0oS2ccjyYLtcn1SzGzeM54jpTFonIMUjNbHmpKpziXnpxhSWLcmBA==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-linux-arm64-gnu/-/swc-linux-arm64-gnu-15.5.27.tgz",
++      "integrity": "sha512-GQulAaJYNF1RYuatlsw9/uzbKz4if2V7Ic9nVO+P0ljYPm4yBRTFIl6g5YkKTw40lMLbpy9edLoH44g3jSHMYA==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -666,9 +749,9 @@
+       }
+     },
+     "node_modules/@next/swc-linux-arm64-musl": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-linux-arm64-musl/-/swc-linux-arm64-musl-15.5.7.tgz",
+-      "integrity": "sha512-nfymt+SE5cvtTrG9u1wdoxBr9bVB7mtKTcj0ltRn6gkP/2Nu1zM5ei8rwP9qKQP0Y//umK+TtkKgNtfboBxRrw==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-linux-arm64-musl/-/swc-linux-arm64-musl-15.5.27.tgz",
++      "integrity": "sha512-URFFsUmu8Pi0/1qdnUI7tx7keZw1Mt5zHfrIX1RfDG9Nih8DYxK54WZsDJUX2ZTlii1jgotL7qcbwKnSAES6xQ==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -682,9 +765,9 @@
+       }
+     },
+     "node_modules/@next/swc-linux-x64-gnu": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-15.5.7.tgz",
+-      "integrity": "sha512-hvXcZvCaaEbCZcVzcY7E1uXN9xWZfFvkNHwbe/n4OkRhFWrs1J1QV+4U1BN06tXLdaS4DazEGXwgqnu/VMcmqw==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-15.5.27.tgz",
++      "integrity": "sha512-aJp74z7uvU5jQhyH7lyk+4qSRcTdKbKT9NQE3jiO9kWYkoHZjKi0zzHDbCoZ+v2sJDEiJ/z58R0UlWMGWNF3HA==",
+       "cpu": [
+         "x64"
+       ],
+@@ -698,9 +781,9 @@
+       }
+     },
+     "node_modules/@next/swc-linux-x64-musl": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-15.5.7.tgz",
+-      "integrity": "sha512-4IUO539b8FmF0odY6/SqANJdgwn1xs1GkPO5doZugwZ3ETF6JUdckk7RGmsfSf7ws8Qb2YB5It33mvNL/0acqA==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-15.5.27.tgz",
++      "integrity": "sha512-ILl2bQ8MbpvyMpY8AXljb3BXs0MJSC8HXZ6QV5AWpVS7ZELqNPtrHvhUk+SNarvjvICXX8bCS287TCi+gUFVYg==",
+       "cpu": [
+         "x64"
+       ],
+@@ -714,9 +797,9 @@
+       }
+     },
+     "node_modules/@next/swc-win32-arm64-msvc": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-win32-arm64-msvc/-/swc-win32-arm64-msvc-15.5.7.tgz",
+-      "integrity": "sha512-CpJVTkYI3ZajQkC5vajM7/ApKJUOlm6uP4BknM3XKvJ7VXAvCqSjSLmM0LKdYzn6nBJVSjdclx8nYJSa3xlTgQ==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-win32-arm64-msvc/-/swc-win32-arm64-msvc-15.5.27.tgz",
++      "integrity": "sha512-1MB9Rh5y8TOPN2x7naNTJNkCZQav9c70AI7EBYXxsEewwOffC4DjjwBwKf20NBvcA+u+5jDv7nVmHxunlP2d7Q==",
+       "cpu": [
+         "arm64"
+       ],
+@@ -730,9 +813,9 @@
+       }
+     },
+     "node_modules/@next/swc-win32-x64-msvc": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-15.5.7.tgz",
+-      "integrity": "sha512-gMzgBX164I6DN+9/PGA+9dQiwmTkE4TloBNx8Kv9UiGARsr9Nba7IpcBRA1iTV9vwlYnrE3Uy6I7Aj6qLjQuqw==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-15.5.27.tgz",
++      "integrity": "sha512-XtYgpGOswgnyBWXzOEG6q9RhvnSw0CEZ0MbWqCsl5PISgt9EzvJvNW5mU5n1PsphX/lnamzxjgQXH2GUJL8nqg==",
+       "cpu": [
+         "x64"
+       ],
+@@ -755,9 +838,9 @@
+       }
+     },
+     "node_modules/@standard-schema/spec": {
+-      "version": "1.0.0",
+-      "resolved": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.0.0.tgz",
+-      "integrity": "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==",
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz",
++      "integrity": "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==",
+       "license": "MIT"
+     },
+     "node_modules/@swc/helpers": {
+@@ -992,6 +1075,66 @@
+         "node": ">=14.0.0"
+       }
+     },
++    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/core": {
++      "version": "1.5.0",
++      "dev": true,
++      "inBundle": true,
++      "license": "MIT",
++      "optional": true,
++      "dependencies": {
++        "@emnapi/wasi-threads": "1.1.0",
++        "tslib": "^2.4.0"
++      }
++    },
++    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/runtime": {
++      "version": "1.5.0",
++      "dev": true,
++      "inBundle": true,
++      "license": "MIT",
++      "optional": true,
++      "dependencies": {
++        "tslib": "^2.4.0"
++      }
++    },
++    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/wasi-threads": {
++      "version": "1.1.0",
++      "dev": true,
++      "inBundle": true,
++      "license": "MIT",
++      "optional": true,
++      "dependencies": {
++        "tslib": "^2.4.0"
++      }
++    },
++    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@napi-rs/wasm-runtime": {
++      "version": "1.0.7",
++      "dev": true,
++      "inBundle": true,
++      "license": "MIT",
++      "optional": true,
++      "dependencies": {
++        "@emnapi/core": "^1.5.0",
++        "@emnapi/runtime": "^1.5.0",
++        "@tybys/wasm-util": "^0.10.1"
++      }
++    },
++    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@tybys/wasm-util": {
++      "version": "0.10.1",
++      "dev": true,
++      "inBundle": true,
++      "license": "MIT",
++      "optional": true,
++      "dependencies": {
++        "tslib": "^2.4.0"
++      }
++    },
++    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/tslib": {
++      "version": "2.8.1",
++      "dev": true,
++      "inBundle": true,
++      "license": "0BSD",
++      "optional": true
++    },
+     "node_modules/@tailwindcss/oxide-win32-arm64-msvc": {
+       "version": "4.1.15",
+       "resolved": "https://registry.npmjs.org/@tailwindcss/oxide-win32-arm64-msvc/-/oxide-win32-arm64-msvc-4.1.15.tgz",
+@@ -1133,9 +1276,9 @@
+       }
+     },
+     "node_modules/@vercel/oidc": {
+-      "version": "3.0.3",
+-      "resolved": "https://registry.npmjs.org/@vercel/oidc/-/oidc-3.0.3.tgz",
+-      "integrity": "sha512-yNEQvPcVrK9sIe637+I0jD6leluPxzwJKx/Haw6F4H77CdDsszUn5V3o96LPziXkSNE2B83+Z3mjqGKBK/R6Gg==",
++      "version": "3.1.0",
++      "resolved": "https://registry.npmjs.org/@vercel/oidc/-/oidc-3.1.0.tgz",
++      "integrity": "sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==",
+       "license": "Apache-2.0",
+       "engines": {
+         "node": ">= 20"
+@@ -1202,14 +1345,14 @@
+       }
+     },
+     "node_modules/ai": {
+-      "version": "5.0.76",
+-      "resolved": "https://registry.npmjs.org/ai/-/ai-5.0.76.tgz",
+-      "integrity": "sha512-ZCxi1vrpyCUnDbtYrO/W8GLvyacV9689f00yshTIQ3mFFphbD7eIv40a2AOZBv3GGRA7SSRYIDnr56wcS/gyQg==",
++      "version": "5.0.273",
++      "resolved": "https://registry.npmjs.org/ai/-/ai-5.0.273.tgz",
++      "integrity": "sha512-/rVEn93YcPAugzgKBJykrlWM/lPZuASrG+qvyjbV42/DJb0rEBJa7kg3wC/aKhdxGPppr8+O/pOdpYcXjtsDCQ==",
+       "license": "Apache-2.0",
+       "dependencies": {
+-        "@ai-sdk/gateway": "2.0.0",
+-        "@ai-sdk/provider": "2.0.0",
+-        "@ai-sdk/provider-utils": "3.0.12",
++        "@ai-sdk/gateway": "2.0.164",
++        "@ai-sdk/provider": "2.0.5",
++        "@ai-sdk/provider-utils": "3.0.41",
+         "@opentelemetry/api": "1.9.0"
+       },
+       "engines": {
+@@ -1409,9 +1552,9 @@
+       }
+     },
+     "node_modules/diff": {
+-      "version": "8.0.2",
+-      "resolved": "https://registry.npmjs.org/diff/-/diff-8.0.2.tgz",
+-      "integrity": "sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==",
++      "version": "8.0.4",
++      "resolved": "https://registry.npmjs.org/diff/-/diff-8.0.4.tgz",
++      "integrity": "sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==",
+       "license": "BSD-3-Clause",
+       "engines": {
+         "node": ">=0.3.1"
+@@ -1445,9 +1588,9 @@
+       }
+     },
+     "node_modules/eventsource-parser": {
+-      "version": "3.0.6",
+-      "resolved": "https://registry.npmjs.org/eventsource-parser/-/eventsource-parser-3.0.6.tgz",
+-      "integrity": "sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==",
++      "version": "3.1.1",
++      "resolved": "https://registry.npmjs.org/eventsource-parser/-/eventsource-parser-3.1.1.tgz",
++      "integrity": "sha512-EKN1vKAMcZ8MlYMpaNuxN6R9yakzH6uajHcHVTqWJzvu5pWw9DyhbP35HH8MVBQ+dZjAfDxk+A8NiR9KWaXiyQ==",
+       "license": "MIT",
+       "engines": {
+         "node": ">=18.0.0"
+@@ -1772,9 +1915,9 @@
+       }
+     },
+     "node_modules/lodash": {
+-      "version": "4.17.21",
+-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+-      "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
++      "version": "4.18.1",
++      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.18.1.tgz",
++      "integrity": "sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==",
+       "license": "MIT"
+     },
+     "node_modules/lucide-react": {
+@@ -1797,9 +1940,9 @@
+       }
+     },
+     "node_modules/nanoid": {
+-      "version": "5.1.6",
+-      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-5.1.6.tgz",
+-      "integrity": "sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==",
++      "version": "5.1.16",
++      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-5.1.16.tgz",
++      "integrity": "sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ==",
+       "funding": [
+         {
+           "type": "github",
+@@ -1815,12 +1958,12 @@
+       }
+     },
+     "node_modules/next": {
+-      "version": "15.5.7",
+-      "resolved": "https://registry.npmjs.org/next/-/next-15.5.7.tgz",
+-      "integrity": "sha512-+t2/0jIJ48kUpGKkdlhgkv+zPTEOoXyr60qXe68eB/pl3CMJaLeIGjzp5D6Oqt25hCBiBTt8wEeeAzfJvUKnPQ==",
++      "version": "15.5.27",
++      "resolved": "https://registry.npmjs.org/next/-/next-15.5.27.tgz",
++      "integrity": "sha512-F82CrlPZ8GRxBH9RIIoR3qU1t5RT3dv1K8moe8SjlDEquiFipvEI13R1Om90TaUOEwShkWCMlg8+gvTNzfMhvg==",
+       "license": "MIT",
+       "dependencies": {
+-        "@next/env": "15.5.7",
++        "@next/env": "15.5.27",
+         "@swc/helpers": "0.5.15",
+         "caniuse-lite": "^1.0.30001579",
+         "postcss": "8.4.31",
+@@ -1833,15 +1976,15 @@
+         "node": "^18.18.0 || ^19.8.0 || >= 20.0.0"
+       },
+       "optionalDependencies": {
+-        "@next/swc-darwin-arm64": "15.5.7",
+-        "@next/swc-darwin-x64": "15.5.7",
+-        "@next/swc-linux-arm64-gnu": "15.5.7",
+-        "@next/swc-linux-arm64-musl": "15.5.7",
+-        "@next/swc-linux-x64-gnu": "15.5.7",
+-        "@next/swc-linux-x64-musl": "15.5.7",
+-        "@next/swc-win32-arm64-msvc": "15.5.7",
+-        "@next/swc-win32-x64-msvc": "15.5.7",
+-        "sharp": "^0.34.3"
++        "@next/swc-darwin-arm64": "15.5.27",
++        "@next/swc-darwin-x64": "15.5.27",
++        "@next/swc-linux-arm64-gnu": "15.5.27",
++        "@next/swc-linux-arm64-musl": "15.5.27",
++        "@next/swc-linux-x64-gnu": "15.5.27",
++        "@next/swc-linux-x64-musl": "15.5.27",
++        "@next/swc-win32-arm64-msvc": "15.5.27",
++        "@next/swc-win32-x64-msvc": "15.5.27",
++        "sharp": "^0.34.3 || ^0.35.4"
+       },
+       "peerDependencies": {
+         "@opentelemetry/api": "^1.1.0",
+@@ -1866,52 +2009,6 @@
+         }
+       }
+     },
+-    "node_modules/next/node_modules/nanoid": {
+-      "version": "3.3.11",
+-      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz",
+-      "integrity": "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==",
+-      "funding": [
+-        {
+-          "type": "github",
+-          "url": "https://github.com/sponsors/ai"
+-        }
+-      ],
+-      "license": "MIT",
+-      "bin": {
+-        "nanoid": "bin/nanoid.cjs"
+-      },
+-      "engines": {
+-        "node": "^10 || ^12 || ^13.7 || ^14 || >=15.0.1"
+-      }
+-    },
+-    "node_modules/next/node_modules/postcss": {
+-      "version": "8.4.31",
+-      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.4.31.tgz",
+-      "integrity": "sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==",
+-      "funding": [
+-        {
+-          "type": "opencollective",
+-          "url": "https://opencollective.com/postcss/"
+-        },
+-        {
+-          "type": "tidelift",
+-          "url": "https://tidelift.com/funding/github/npm/postcss"
+-        },
+-        {
+-          "type": "github",
+-          "url": "https://github.com/sponsors/ai"
+-        }
+-      ],
+-      "license": "MIT",
+-      "dependencies": {
+-        "nanoid": "^3.3.6",
+-        "picocolors": "^1.0.0",
+-        "source-map-js": "^1.0.2"
+-      },
+-      "engines": {
+-        "node": "^10 || ^12 || >=14"
+-      }
+-    },
+     "node_modules/openai": {
+       "version": "6.6.0",
+       "resolved": "https://registry.npmjs.org/openai/-/openai-6.6.0.tgz",
+@@ -1940,9 +2037,9 @@
+       "license": "ISC"
+     },
+     "node_modules/postcss": {
+-      "version": "8.5.6",
+-      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.6.tgz",
+-      "integrity": "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==",
++      "version": "8.5.29",
++      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.29.tgz",
++      "integrity": "sha512-49cGhUbXj8Qenv0iTMxA1cFBzxXoctpC9Ujd77t1WcbJIr6nF/eI7g/8MgxrYldFRuAXvja7xQRwavoW7kgrxQ==",
+       "dev": true,
+       "funding": [
+         {
+@@ -1960,18 +2057,18 @@
+       ],
+       "license": "MIT",
+       "dependencies": {
+-        "nanoid": "^3.3.11",
++        "nanoid": "^3.3.19",
+         "picocolors": "^1.1.1",
+-        "source-map-js": "^1.2.1"
++        "source-map-js": "^1.2.2"
+       },
+       "engines": {
+         "node": "^10 || ^12 || >=14"
+       }
+     },
+     "node_modules/postcss/node_modules/nanoid": {
+-      "version": "3.3.11",
+-      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz",
+-      "integrity": "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==",
++      "version": "3.3.20",
++      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz",
++      "integrity": "sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ==",
+       "dev": true,
+       "funding": [
+         {
+@@ -2033,9 +2130,9 @@
+       }
+     },
+     "node_modules/semver": {
+-      "version": "7.7.3",
+-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.3.tgz",
+-      "integrity": "sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==",
++      "version": "7.8.5",
++      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
++      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
+       "license": "ISC",
+       "optional": true,
+       "bin": {
+@@ -2046,46 +2143,53 @@
+       }
+     },
+     "node_modules/sharp": {
+-      "version": "0.34.4",
+-      "resolved": "https://registry.npmjs.org/sharp/-/sharp-0.34.4.tgz",
+-      "integrity": "sha512-FUH39xp3SBPnxWvd5iib1X8XY7J0K0X7d93sie9CJg2PO8/7gmg89Nve6OjItK53/MlAushNNxteBYfM6DEuoA==",
+-      "hasInstallScript": true,
++      "version": "0.35.5",
++      "resolved": "https://registry.npmjs.org/sharp/-/sharp-0.35.5.tgz",
++      "integrity": "sha512-Ywn4OnzGukp7CDMrp08RQ50YKmuwG47brZgIVPTvBaaAfQlRlygrRqSrxdCiL9M+LlzLBiJ68IR1QqvzHyjC7g==",
+       "license": "Apache-2.0",
+       "optional": true,
+       "dependencies": {
+-        "@img/colour": "^1.0.0",
+-        "detect-libc": "^2.1.0",
+-        "semver": "^7.7.2"
++        "@img/colour": "^1.1.0",
++        "detect-libc": "^2.1.2",
++        "semver": "^7.8.5"
+       },
+       "engines": {
+-        "node": "^18.17.0 || ^20.3.0 || >=21.0.0"
++        "node": ">=20.9.0"
+       },
+       "funding": {
+         "url": "https://opencollective.com/libvips"
+       },
+       "optionalDependencies": {
+-        "@img/sharp-darwin-arm64": "0.34.4",
+-        "@img/sharp-darwin-x64": "0.34.4",
+-        "@img/sharp-libvips-darwin-arm64": "1.2.3",
+-        "@img/sharp-libvips-darwin-x64": "1.2.3",
+-        "@img/sharp-libvips-linux-arm": "1.2.3",
+-        "@img/sharp-libvips-linux-arm64": "1.2.3",
+-        "@img/sharp-libvips-linux-ppc64": "1.2.3",
+-        "@img/sharp-libvips-linux-s390x": "1.2.3",
+-        "@img/sharp-libvips-linux-x64": "1.2.3",
+-        "@img/sharp-libvips-linuxmusl-arm64": "1.2.3",
+-        "@img/sharp-libvips-linuxmusl-x64": "1.2.3",
+-        "@img/sharp-linux-arm": "0.34.4",
+-        "@img/sharp-linux-arm64": "0.34.4",
+-        "@img/sharp-linux-ppc64": "0.34.4",
+-        "@img/sharp-linux-s390x": "0.34.4",
+-        "@img/sharp-linux-x64": "0.34.4",
+-        "@img/sharp-linuxmusl-arm64": "0.34.4",
+-        "@img/sharp-linuxmusl-x64": "0.34.4",
+-        "@img/sharp-wasm32": "0.34.4",
+-        "@img/sharp-win32-arm64": "0.34.4",
+-        "@img/sharp-win32-ia32": "0.34.4",
+-        "@img/sharp-win32-x64": "0.34.4"
++        "@img/sharp-darwin-arm64": "0.35.5",
++        "@img/sharp-darwin-x64": "0.35.5",
++        "@img/sharp-freebsd-wasm32": "0.35.5",
++        "@img/sharp-libvips-darwin-arm64": "1.3.4",
++        "@img/sharp-libvips-darwin-x64": "1.3.4",
++        "@img/sharp-libvips-linux-arm": "1.3.4",
++        "@img/sharp-libvips-linux-arm64": "1.3.4",
++        "@img/sharp-libvips-linux-ppc64": "1.3.4",
++        "@img/sharp-libvips-linux-riscv64": "1.3.4",
++        "@img/sharp-libvips-linux-s390x": "1.3.4",
++        "@img/sharp-libvips-linux-x64": "1.3.4",
++        "@img/sharp-libvips-linuxmusl-arm64": "1.3.4",
++        "@img/sharp-libvips-linuxmusl-x64": "1.3.4",
++        "@img/sharp-linux-arm": "0.35.5",
++        "@img/sharp-linux-arm64": "0.35.5",
++        "@img/sharp-linux-ppc64": "0.35.5",
++        "@img/sharp-linux-riscv64": "0.35.5",
++        "@img/sharp-linux-s390x": "0.35.5",
++        "@img/sharp-linux-x64": "0.35.5",
++        "@img/sharp-linuxmusl-arm64": "0.35.5",
++        "@img/sharp-linuxmusl-x64": "0.35.5",
++        "@img/sharp-webcontainers-wasm32": "0.35.5",
++        "@img/sharp-win32-arm64": "0.35.5",
++        "@img/sharp-win32-ia32": "0.35.5",
++        "@img/sharp-win32-x64": "0.35.5"
++      },
++      "peerDependenciesMeta": {
++        "@types/node": {
++          "optional": true
++        }
+       }
+     },
+     "node_modules/slate": {
+@@ -2150,9 +2254,9 @@
+       }
+     },
+     "node_modules/source-map-js": {
+-      "version": "1.2.1",
+-      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+-      "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==",
++      "version": "1.2.2",
++      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz",
++      "integrity": "sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==",
+       "license": "BSD-3-Clause",
+       "engines": {
+         "node": ">=0.10.0"
+@@ -2254,6 +2358,18 @@
+         "node": ">=14.17"
+       }
+     },
++    "node_modules/undici": {
++      "version": "5.29.0",
++      "resolved": "https://registry.npmjs.org/undici/-/undici-5.29.0.tgz",
++      "integrity": "sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==",
++      "license": "MIT",
++      "dependencies": {
++        "@fastify/busboy": "^2.0.0"
++      },
++      "engines": {
++        "node": ">=14.0"
++      }
++    },
+     "node_modules/undici-types": {
+       "version": "6.21.0",
+       "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
+diff --git a/package.json b/package.json
+index 244b407..2e00278 100644
+--- a/package.json
++++ b/package.json
+@@ -29,7 +29,7 @@
+     "is-hotkey": "^0.2.0",
+     "lucide-react": "^0.545.0",
+     "nanoid": "^5.1.6",
+-    "next": "15.5.7",
++    "next": "15.5.27",
+     "openai": "^6.3.0",
+     "react": "19.1.0",
+     "react-dom": "19.1.0",
+@@ -50,5 +50,8 @@
+     "tailwindcss": "^4",
+     "tw-animate-css": "^1.4.0",
+     "typescript": "^5"
++  },
++  "overrides": {
++    "postcss": "8.5.29"
+   }
+ }

@@ -1,0 +1,36 @@
+{
+  "tool": "Narrative Keyframing",
+  "source_commit": "b857f34b7d371ae82c30e00eb021884c14d08ae9",
+  "source_tree": "3960b25cb52265933e0fa4897d1319ad6161bf9c",
+  "source_archive_sha256": "921B92480300FC2EDF484108E936E01BC97D938A28A17829F90133CE28A9E9C6",
+  "ordered_patch_files": [
+    "patches/nk/0001-nk-deepseek-adapter.patch"
+  ],
+  "patch_sha256": [
+    "B45F13266100F66DAAB7C441944EAD2A5352FE6C615241164208430EE9396A31"
+  ],
+  "package_manifest_sha256": "845723DFF8BAF510BE557F7447D623CAA8013ABF8EF67C5F2EC89138ADF28CCC",
+  "dependency_lock": "patches/nk/package-lock.json",
+  "dependency_lock_sha256": "8D6EF80B3161DDDA089DF6EB83AB986326370E9F0F97041E516DD478A0C8E9A4",
+  "node_version": "v24.13.1",
+  "npm_version": "11.8.0",
+  "runtime_build_id": "p2-03-b857f34b-b45f13266100-8d6ef80b3161",
+  "enabled_generation_routes": [
+    "/api/generate-perspective",
+    "/api/extract-characters",
+    "/api/extract-evidence",
+    "/api/generate-narrative",
+    "/api/interpolate-character",
+    "/api/generate-traits/physiology",
+    "/api/generate-traits/psychology",
+    "/api/generate-traits/sociology"
+  ],
+  "provider": {
+    "model": "deepseek-flash",
+    "base_url": "https://api.deepseek.com/v1",
+    "method": "chat",
+    "json_mode": "json_object",
+    "key_source": "server process DEEPSEEK_API_KEY"
+  },
+  "package_manifest": "patches/nk/package.json"
+}

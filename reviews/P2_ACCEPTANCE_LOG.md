@@ -46,7 +46,14 @@
 
 ## P2-02
 
-- Status：实现和离线验证收敛；等待 Controller local acceptance。
-- Source commit：`fbf66cbc913012c6f80af1687e27f0ce350475e3`；patch SHA256：`1A36A1120449560FE2BFE50FA62CE90354E475C26E8B31F8B60A6D117C9BF80F`；dependency lock SHA256：`C4EDECD8D4A1904D9D6032815E9FCB1D089099B13AF9BD83A14171AE9705D30B`。
-- Offline contract：9 固定响应通过、0 provider calls；44 个锁定依赖一致；52 个归档源文件干净重建一致。安全扫描记录及所选调用路径适用性见 `evidence/critics/security-audit.md`。
-- Candidate C/T：冻结后追加；Controller verdict 和远端回读后追加。
+- Verdict：`REMOTE_READBACK ACCEPT`。
+- Candidate：C=`591b979734981fc30a3a3c011cce8aa622239a8c`，T=`3de19929b54cea86d9a3aef159884b3087a1a493`。
+- Main：C=`06c66de7c7f18263039ea19a47e84c29716cde4b`，empty tree=`4b825dc642cb6eb9a060e54bf8d69288fbee4904`。
+- Controller：`/root/g00_reviewer`；local ACCEPT 后 remote readback ACCEPT。修复过的 bridge output symlink finding 与实际执行的离线 symlink 用例已包含在此候选中。
+
+## P2-03
+
+- Status：补丁、锁、生产 build 与离线 HTTP 验收已收敛；等待 Controller local acceptance。
+- Source commit/tree：`b857f34b7d371ae82c30e00eb021884c14d08ae9` / `3960b25cb52265933e0fa4897d1319ad6161bf9c`；archive SHA256：`921B92480300FC2EDF484108E936E01BC97D938A28A17829F90133CE28A9E9C6`。
+- Patch SHA256：`B45F13266100F66DAAB7C441944EAD2A5352FE6C615241164208430EE9396A31`；lock SHA256：`8D6EF80B3161DDDA089DF6EB83AB986326370E9F0F97041E516DD478A0C8E9A4`；runtime build：`p2-03-b857f34b-b45f13266100-8d6ef80b3161`。
+- Candidate C/T、Controller verdict 与远端回读：冻结/验收后追加。
