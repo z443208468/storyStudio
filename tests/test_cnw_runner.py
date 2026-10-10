@@ -64,6 +64,28 @@ class RunnerTests(unittest.TestCase):
             cnw_runner.mark_stage(argparse.Namespace(run_id=run_id, stage=stage, accept_fixture=str(fixture)))
         return cnw_runner.show_run(argparse.Namespace(run_id=run_id))
 
+    def test_author_plot_episode_materializes_generated_structure(self):
+        self.contract["unit"].update(kind="episode", planning_mode="author_plot")
+        self.contract["story"].pop("required_beats")
+        path = self._write_contract(self.contract, "author-episode.json")
+        args = argparse.Namespace(run_id="FICT_AUTHOR_EP", work_id=self.contract["unit"]["id"],
+                                  unit="episode", contract=str(path), project_root=str(self.project), mode="offline")
+        result = cnw_runner.produce(args)
+        run_dir = Path(result["path"])
+        plot = ("## Identity\nEpisode\n## Role in the Arc\nConsequence\n"
+                "## Key Scenes\n1. Encounter\n2. Response\n## Hook\nDecision\n"
+                "## Required Story Beats\n- A new event\n- Its consequence\n"
+                "## Forbidden Items\nNo secret\n## Connections\nContinue\n## Target Length\n1500\n")
+        with patch.object(cnw_runner, "_role_sources", return_value={"arc": "Plan the episode"}), \
+                patch.object(cnw_runner, "cnw_live_call", return_value=(plot, {"request_id": "fixture-design", "provider_request_id": "MOCK_ONLY"})):
+            cnw_runner._planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000,
+                                       project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent")
+        meta = json.loads((run_dir / "artifacts/plot.meta.json").read_text(encoding="utf-8"))
+        self.assertEqual(meta["plot_structure"]["key_scenes"], ["Encounter", "Response"])
+        self.assertEqual(meta["plot_structure"]["plot_sha256"], cnw_runner.sha(plot.encode("utf-8")))
+        self.assertEqual(meta["beats"], [])
+        self.assertNotIn("required_beats", json.loads((run_dir / "artifacts/contract.json").read_text(encoding="utf-8"))["story"])
+
     def test_different_new_ids_create_independent_contract_bound_runs(self):
         first = cnw_runner.show_run(argparse.Namespace(run_id="FICT_SCENE_A"))
         other = json.loads(json.dumps(self.contract))

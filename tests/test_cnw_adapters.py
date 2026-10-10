@@ -5,10 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.cnw_contract import ContractError, load_contract
+from tools.cnw_contract import ContractError, load_contract, check_required_fields, validate_work_unit
 from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt
 from tools.cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
-from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation
+from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation, role_metadata, plot_structure
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +20,34 @@ def sha(data: bytes) -> str:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_author_plot_design_needs_no_prefilled_beats_or_scenes(self):
+        contract = load_contract(CONTRACT_PATH)
+        contract["unit"].update(planning_mode="author_plot", kind="episode")
+        contract["story"].pop("required_beats")
+        check_required_fields(contract)
+        validate_work_unit(contract)
+        plot = ("## Identity\nep001\n## Role in the Arc\nDevelop conflict\n"
+                "## Key Scenes\n1. An encounter\n2. A consequence\n"
+                "## Hook\nA choice\n## Required Story Beats\n- Act\n- Respond\n"
+                "## Forbidden Items\nNo disclosure\n## Connections\nContinue\n## Target Length\n1500\n")
+        meta = role_metadata("plot", contract)
+        self.assertEqual(meta["beats"], [])
+        validate_role_output("plot", contract, plot, meta)
+        self.assertEqual(plot_structure(plot, contract)["key_scenes"], ["An encounter", "A consequence"])
+        cards = "## Scene 1\n### Required Beats\n1. New actual event\n### End state\n- Not an event\n## Scene 2\n### Required beats\n- Actual consequence\n"
+        events = build_nk_payload(contract, cards)["eventSequence"]
+        self.assertEqual([row["description"] for row in events], ["New actual event", "Actual consequence"])
+        with self.assertRaisesRegex(ContractError, "NK_EVENT_SEQUENCE_MISSING"):
+            build_nk_payload(contract, "## Scene 1\nNo events")
+        contract["unit"]["kind"] = "scene"
+        with self.assertRaisesRegex(ContractError, "PLOT_SCOPE_EXPANSION"):
+            validate_role_output("plot", contract, plot, meta)
+        contract["story"]["required_beats"] = [{"beat_id": "B01", "goal": "Required outcome"}]
+        validate_work_unit(contract)
+        contract["story"]["required_beats"].append({"beat_id": "B01", "goal": "Duplicate"})
+        with self.assertRaisesRegex(ContractError, "REQUIRED_BEAT_INVALID"):
+            validate_work_unit(contract)
+
     def test_production_preparation_resolves_episode_arc_and_reads_previous_text(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

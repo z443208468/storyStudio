@@ -47,8 +47,20 @@ def check_required_fields(contract: dict[str, Any], required: list[str] | None =
             raise ContractError(code, f"unit.{key} is required")
     story = contract.get("story", {})
     for key in ("role_in_story", "reader_reward", "entry_state", "exit_state", "before_anchor", "after_anchor", "required_beats", "characters_in_scene", "character_knowledge_boundary_ref", "forbidden_future_revelations", "voice_sample_refs"):
+        if key == "required_beats" and unit.get("planning_mode") == "author_plot":
+            continue
         if key not in story or story[key] in (None, "", []):
             raise ContractError("PREFLIGHT_REQUIRED_FIELD_MISSING", f"story.{key} is required")
+    for key in ("arc_ref", "previous_episode_ref"):
+        if key in story:
+            value = story[key]
+            if (not isinstance(value, str) or not value.strip() or Path(value).anchor
+                    or Path(value).drive or ".." in Path(value).parts or Path(value).suffix.lower() != ".md"):
+                raise ContractError("PRODUCTION_CONTEXT_PATH_UNSAFE", f"story.{key} must be a project-relative Markdown path")
+    if "first_episode" in story and not isinstance(story["first_episode"], bool):
+        raise ContractError("PRODUCTION_CONTEXT_INVALID", "first_episode must be boolean")
+    if story.get("first_episode") and story.get("previous_episode_ref"):
+        raise ContractError("PRODUCTION_CONTEXT_INVALID", "first_episode conflicts with previous_episode_ref")
 
 
 def _safe_source_file(source_root: str | Path, relative: str) -> Path:
@@ -142,6 +154,17 @@ def validate_scene_budget(contract: dict[str, Any]) -> None:
     if minimum < 1 or minimum > target or target > maximum:
         raise ContractError("SCENE_BUDGET_INVALID", "require 1 <= min <= target <= max")
     beats = contract.get("story", {}).get("required_beats", [])
+    if unit.get("planning_mode") == "author_plot":
+        if not isinstance(beats, list):
+            raise ContractError("REQUIRED_BEAT_INVALID", "optional assignment requirements must be a list")
+        ids = set()
+        for beat in beats:
+            if (not isinstance(beat, dict) or not isinstance(beat.get("beat_id"), str)
+                    or not beat["beat_id"].strip() or beat["beat_id"] in ids
+                    or not isinstance(beat.get("goal"), str) or not beat["goal"].strip()):
+                raise ContractError("REQUIRED_BEAT_INVALID", "assignment requirements need unique IDs and goals")
+            ids.add(beat["beat_id"])
+        return
     if not isinstance(beats, list) or not beats:
         raise ContractError("REQUIRED_BEATS_MISSING", "at least one required beat is needed")
     ids: set[str] = set()
@@ -160,6 +183,9 @@ def validate_scene_budget(contract: dict[str, Any]) -> None:
 
 
 def validate_episode_budget(episode: dict[str, Any]) -> None:
+    if episode.get("planning_mode") == "author_plot":
+        validate_scene_budget({"unit": episode, "story": {}})
+        return
     target = episode.get("chapter_target_visible_chars")
     scenes = episode.get("scenes")
     if not isinstance(target, int) or target <= 0 or not isinstance(scenes, list) or not scenes:
@@ -175,6 +201,21 @@ def validate_episode_budget(episode: dict[str, Any]) -> None:
         total += budget
     if total != target:
         raise ContractError("EPISODE_BUDGET_SUM_MISMATCH", f"scene budgets sum to {total}, episode target is {target}")
+
+
+def validate_work_unit(contract: dict[str, Any]) -> None:
+    """Validate scope and length without requiring Plot's design in advance."""
+    unit = contract["unit"]
+    if unit.get("planning_mode") not in (None, "author_plot", "legacy_frozen"):
+        raise ContractError("PLANNING_MODE_INVALID", str(unit["planning_mode"]))
+    if unit.get("kind") == "scene":
+        validate_scene_budget(contract)
+    elif unit.get("kind") == "episode":
+        validate_episode_budget(unit)
+        if unit.get("planning_mode") == "author_plot":
+            validate_scene_budget(contract)
+    else:
+        raise ContractError("WORK_UNIT_KIND_INVALID", str(unit.get("kind")))
 
 
 _MARKDOWN_CONTROL = re.compile(r"```|`|^\s{0,3}#{1,6}\s+|^\s*>\s?|^\s*[-*+]\s+|^\s*\d+[.)]\s+|(?<!\\)(?:\*\*|__|~~|\*|_)", re.MULTILINE)

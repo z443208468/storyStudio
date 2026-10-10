@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from .cnw_contract import ContractError, check_required_fields, load_contract, validate_episode_budget, validate_output_length, validate_scene_budget, validate_source_identity
+    from .cnw_contract import ContractError, check_required_fields, load_contract, validate_episode_budget, validate_output_length, validate_scene_budget, validate_source_identity, validate_work_unit
 except ImportError:  # direct script execution
-    from cnw_contract import ContractError, check_required_fields, load_contract, validate_episode_budget, validate_output_length, validate_scene_budget, validate_source_identity
+    from cnw_contract import ContractError, check_required_fields, load_contract, validate_episode_budget, validate_output_length, validate_scene_budget, validate_source_identity, validate_work_unit
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_DIR = ROOT / "prompts" / "cnw"
@@ -238,8 +238,34 @@ def role_metadata(role: str, contract: dict[str, Any]) -> dict[str, Any]:
         "target_visible_chars": unit["target_visible_chars"],
         "min_visible_chars": unit["min_visible_chars"],
         "max_visible_chars": unit["max_visible_chars"],
-        "beats": [{"beat_id": beat["beat_id"], "budget_visible_chars": beat["budget_visible_chars"]} for beat in contract["story"].get("required_beats", [])],
+        "planning_mode": unit.get("planning_mode", "legacy_frozen"),
+        "beats": [({"beat_id": beat["beat_id"]} if unit.get("planning_mode") == "author_plot"
+                   else {"beat_id": beat["beat_id"], "budget_visible_chars": beat["budget_visible_chars"]})
+                  for beat in contract["story"].get("required_beats", [])],
     }
+
+
+def plot_structure(output: str, contract: dict[str, Any]) -> dict[str, Any]:
+    """Index the author's actual Markdown design, without inventing allocations."""
+    sections: dict[str, list[str]] = {}
+    current = None
+    for line in output.splitlines():
+        heading = re.match(r"^##\s+(.+)", line)
+        if heading:
+            title = heading.group(1).casefold()
+            current = next((name for name in ("key scenes", "required story beats") if title.startswith(name)), None)
+            if current:
+                sections.setdefault(current, [])
+        elif current:
+            item = re.match(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)(\S.*)", line)
+            if item:
+                sections[current].append(item.group(1).strip())
+    if not sections.get("key scenes") or not sections.get("required story beats"):
+        raise ContractError("PLOT_DESIGN_MISSING", "Plot must design nonempty Key Scenes and Required Story Beats lists")
+    if contract["unit"]["kind"] == "scene" and len(sections["key scenes"]) != 1:
+        raise ContractError("PLOT_SCOPE_EXPANSION", "single-scene assignment must remain one Key Scene")
+    return {"source": "plot_markdown", "plot_sha256": sha256_bytes(output.encode("utf-8")),
+            "key_scenes": sections["key scenes"], "required_story_beats": sections["required story beats"]}
 
 
 def creative_assignment(contract: dict[str, Any]) -> dict[str, Any]:
@@ -338,12 +364,7 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
     expected_cnw_manifest = contract.get("review", {}).get("cnw_reference_manifest_sha256", "").lower()
     if not cnw_manifest.is_file() or sha256_file(cnw_manifest) != expected_cnw_manifest:
         raise ContractError("CNW_REFERENCE_IDENTITY_MISMATCH", "captured CNW reference manifest differs")
-    if contract["unit"]["kind"] == "scene":
-        validate_scene_budget(contract)
-    elif contract["unit"]["kind"] == "episode":
-        validate_episode_budget(contract["unit"])
-    else:
-        raise ContractError("WORK_UNIT_KIND_INVALID", str(contract["unit"].get("kind")))
+    validate_work_unit(contract)
     allowed_inputs = {
         "plot": ("canon_scope", "source_anchors"),
         "cards": ("plot", "canon_scope"),
@@ -416,6 +437,8 @@ def validate_role_output(role: str, contract: dict[str, Any], output: str, metad
         missing = [beat_id for beat_id in beat_ids if beat_id not in output]
         if missing:
             raise ContractError("ROLE_BEAT_ID_DROPPED", ", ".join(missing))
+        if role == "plot" and contract["unit"].get("planning_mode") == "author_plot":
+            plot_structure(output, contract)
         # Machine markers belong in the sidecar, not the literary Markdown. When the
         # sidecar is supplied its budgets are checked against the frozen contract.
         if metadata is not None:
@@ -432,6 +455,11 @@ def _validate_sidecar_budget(contract: dict[str, Any], metadata: dict[str, Any])
     actual = {key: metadata.get(key) for key in expected}
     if actual != expected:
         raise ContractError("ROLE_CONTRACT_LENGTH_MISMATCH", f"expected {expected}, got {actual}")
+    if unit.get("planning_mode") == "author_plot":
+        expected_requirements = [{"beat_id": beat["beat_id"]} for beat in contract["story"].get("required_beats", [])]
+        if metadata.get("planning_mode") != "author_plot" or metadata.get("beats") != expected_requirements:
+            raise ContractError("ROLE_REQUIREMENTS_MISMATCH", "assignment requirements differ")
+        return
     expected_beats = {beat["beat_id"]: beat["budget_visible_chars"] for beat in contract["story"].get("required_beats", [])}
     actual_beats = {row.get("beat_id"): row.get("budget_visible_chars") for row in metadata.get("beats", [])}
     if actual_beats != expected_beats:

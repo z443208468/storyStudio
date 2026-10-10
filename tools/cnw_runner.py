@@ -31,9 +31,9 @@ from decimal import Decimal, InvalidOperation, ROUND_CEILING
 import httpx
 
 try:
-    from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity
+    from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit
 except ImportError:  # direct script execution from PowerShell
-    from cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity
+    from cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -286,8 +286,8 @@ def literary_source_freeze(contract: dict, project_root: Path) -> dict[str, str]
     result[f"source:{script.relative_to(ROOT).as_posix()}"] = sha(script.read_bytes())
     result[f"manifest:{manifest.relative_to(ROOT).as_posix()}"] = sha(manifest.read_bytes())
     lines = script.read_text(encoding="utf-8-sig").splitlines()
-    start = int(contract["story"]["before_anchor"]["source_line_end"])
-    end = int(contract["story"]["after_anchor"]["source_line_end"])
+    start = int(contract["story"]["before_anchor"].get("source_line_end", contract["story"]["before_anchor"]["source_line"]))
+    end = int(contract["story"]["after_anchor"].get("source_line_end", contract["story"]["after_anchor"]["source_line"]))
     anchor_text = "\n".join(f"{number}: {lines[number - 1]}" for number in range(start, end + 1))
     result["source:anchor_excerpt"] = sha(anchor_text.encode("utf-8"))
     return result
@@ -327,8 +327,8 @@ def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
     if source_script is None:
         raise ContractError("LITERARY_SOURCE_FREEZE_INVALID", "source script path missing")
     lines = source_script.read_text(encoding="utf-8-sig").splitlines()
-    start = int(contract["story"]["before_anchor"]["source_line_end"])
-    end = int(contract["story"]["after_anchor"]["source_line_end"])
+    start = int(contract["story"]["before_anchor"].get("source_line_end", contract["story"]["before_anchor"]["source_line"]))
+    end = int(contract["story"]["after_anchor"].get("source_line_end", contract["story"]["after_anchor"]["source_line"]))
     actual["source:anchor_excerpt"] = sha("\n".join(f"{number}: {lines[number - 1]}" for number in range(start, end + 1)).encode("utf-8"))
     if actual != expected:
         changed = sorted(key for key in expected if actual.get(key) != expected[key])
@@ -584,12 +584,7 @@ def produce(args) -> dict:
         unit_id = str(contract["unit"].get("id", ""))
     if unit_id != contract["unit"].get("id"):
         raise ContractError("WORK_ID_MISMATCH", unit_id)
-    if kind == "scene":
-        validate_scene_budget(contract)
-    elif kind == "episode":
-        validate_episode_budget(contract["unit"])
-    else:
-        raise ContractError("WORK_UNIT_KIND_INVALID", str(kind))
+    validate_work_unit(contract)
     production_config = ROOT / "config/production.example.json"
     cost_guard_runner = ROOT / "tools/p2_cost_guard.py"
     provider_settings = json.loads(production_config.read_text(encoding="utf-8-sig"))
@@ -904,6 +899,12 @@ def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, outp
     content, receipt = cnw_live_call(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap)
     meta = _role_meta(role, contract)
     _validate_role(role, contract, content, meta)
+    if role == "plot" and contract["unit"].get("planning_mode") == "author_plot":
+        try:
+            from .cnw_roles import plot_structure
+        except ImportError:
+            from cnw_roles import plot_structure
+        meta["plot_structure"] = plot_structure(content, contract)
     if project_dir:
         _write_project_output(project_root, project_dir.replace("<work_id>", contract["unit"]["id"]), content)
     _persist_stage(run_dir, stage, output_name, content, receipt_ids=[receipt["request_id"]], role_id=role_id)

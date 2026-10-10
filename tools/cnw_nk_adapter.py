@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from typing import Any
 
 try:
@@ -22,15 +23,15 @@ def _card_beat_descriptions(cards_markdown: str, fallback_beats: list[dict]) -> 
     in_beats = False
     for raw_line in cards_markdown.splitlines():
         line = raw_line.rstrip()
-        if line.startswith("## Scene"):
+        if re.match(r"^##\s+Scene\s+\S", line, re.IGNORECASE):
             current_scene = line.lstrip("# ").strip()
             in_beats = False
-        elif line.startswith("### Required beats"):
+        elif re.match(r"^###\s+Required beats\b", line, re.IGNORECASE):
             in_beats = True
-        elif in_beats and line.startswith("###"):
+        elif in_beats and re.match(r"^#{1,3}\s", line):
             in_beats = False
-        elif in_beats and line.lstrip().startswith(("-", "*")):
-            text = line.lstrip("-* ").strip()
+        elif in_beats and re.match(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)", line):
+            text = re.sub(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)", "", line).strip()
             if text:
                 events.append({"label": (current_scene or "SCENE") + f"-{len(events) + 1:02d}", "description": text})
     if events:
@@ -42,11 +43,12 @@ def build_nk_payload(contract: dict[str, Any], accepted_cards_markdown: str, acc
     story = contract["story"]
     unit = contract["unit"]
     beats = story.get("required_beats", [])
-    if not beats:
-        raise ContractError("NK_EVENT_SEQUENCE_MISSING", "Scene Card has no ordered events")
     if not isinstance(accepted_cards_markdown, str) or not accepted_cards_markdown.strip():
         raise ContractError("NK_CARDS_REQUIRED", "accepted Scene Cards text is required")
-    events = _card_beat_descriptions(accepted_cards_markdown, beats)
+    fallback = [] if unit.get("planning_mode") == "author_plot" else beats
+    events = _card_beat_descriptions(accepted_cards_markdown, fallback)
+    if not events:
+        raise ContractError("NK_EVENT_SEQUENCE_MISSING", "Scene Cards have no ordered events")
     snapshots = []
     for name in story.get("characters_in_scene", []):
         traits = story.get("nk_character_traits", {}).get(name, {})

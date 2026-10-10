@@ -15,9 +15,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .cnw_contract import ContractError, check_required_fields, validate_scene_budget, validate_source_identity
+    from .cnw_contract import ContractError, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
 except ImportError:  # direct script execution
-    from cnw_contract import ContractError, check_required_fields, validate_scene_budget, validate_source_identity
+    from cnw_contract import ContractError, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{1,63}\Z")
@@ -161,7 +161,7 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
     return {"status": "SOURCE_IMPORTED_FOR_REVIEW", "project_id": project_id, "project_root": str(root), "source_manifest": "_INBOX/source_manifest.json", "source_index": "_INBOX/source_index.json", "canon_candidates": "90_canon/canon_candidates.json", "source_sha256": digest, "source_locations": len(locations), "canon_candidate_count": len(candidates), "canon_status": "TODO_CONFIRM", "provider_call": "none"}
 
 
-def build_source_bound_contract(project_root: str | Path, *, unit_id: str, pov: str, target: int, minimum: int, maximum: int, before_line: int, after_line: int, beat_specs: list[dict], entry_state: str, exit_state: str, role_in_story: str, reader_reward: str, characters: list[str] | None = None) -> dict:
+def build_source_bound_contract(project_root: str | Path, *, unit_id: str, pov: str, target: int, minimum: int, maximum: int, before_line: int, after_line: int, beat_specs: list[dict] | None = None, entry_state: str, exit_state: str, role_in_story: str, reader_reward: str, characters: list[str] | None = None, kind: str = "scene", planning_mode: str = "author_plot", arc_ref: str | None = None, previous_episode_ref: str | None = None, first_episode: bool | None = None) -> dict:
     root = Path(project_root).resolve()
     manifest_file = root / "_INBOX/source_manifest.json"
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
@@ -171,14 +171,17 @@ def build_source_bound_contract(project_root: str | Path, *, unit_id: str, pov: 
     lines = raw_path.read_bytes().splitlines(keepends=True)
     if min(before_line, after_line) < 1 or max(before_line, after_line) > len(lines) or after_line <= before_line:
         raise ContractError("SOURCE_ANCHOR_INVALID", "line anchors must exist and after_line must follow before_line")
-    beats = [{"beat_id": item["beat_id"], "goal": item["goal"], "min_coverage": item.get("min_coverage", "source_supported_action"), "budget_visible_chars": item["budget_visible_chars"]} for item in beat_specs]
-    if sum(item["budget_visible_chars"] for item in beats) != target:
+    if kind not in ("scene", "episode") or planning_mode not in ("author_plot", "legacy_frozen"):
+        raise ContractError("PLANNING_MODE_INVALID", "expected scene/episode and author_plot/legacy_frozen")
+    beats = [{"beat_id": item["beat_id"], "goal": item["goal"], "min_coverage": item.get("min_coverage", "source_supported_action"),
+              **({"budget_visible_chars": item["budget_visible_chars"]} if planning_mode == "legacy_frozen" else {})} for item in (beat_specs or [])]
+    if planning_mode == "legacy_frozen" and sum(item["budget_visible_chars"] for item in beats) != target:
         raise ContractError("SCENE_BUDGET_SUM_MISMATCH", "explicit beat budgets must sum to target")
     return {
         "schema_version": "cnw_work_unit_v1", "project_id": manifest["project_id"], "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
         "source": {"identity_type": "imported_project", "version": "IMPORTED-SOURCE-v1", "import_id": manifest["import_id"], "source_file_sha256": source["sha256"], "source_manifest_sha256": sha(manifest_file.read_bytes()), "manifest_file": "_INBOX/source_manifest.json", "source_root": "."},
-        "unit": {"id": unit_id, "kind": "scene", "language": "zh-CN", "pov": pov, "target_visible_chars": target, "min_visible_chars": minimum, "max_visible_chars": maximum, "policy_sha256": sha((ROOT / "config/cnw_production_policy.json").read_bytes())},
-        "story": {"source_file": source["stored_path"], "chapter_context": f"Imported source {source['source_id']} with {len(index['locations'])} indexed source locations; confirm all facts before production.", "role_in_story": role_in_story, "reader_reward": reader_reward, "entry_state": entry_state, "exit_state": exit_state, "before_anchor": {"scene": "IMPORTED", "source_line": before_line, "sha256": sha(b"".join(lines[before_line-1:before_line]))}, "after_anchor": {"scene": "IMPORTED", "source_line": after_line, "sha256": sha(b"".join(lines[after_line-1:after_line]))}, "required_beats": beats, "characters_in_scene": characters or [], "character_knowledge_boundary_ref": "90_canon/canon_candidates.json#status=TODO_CONFIRM", "forbidden_future_revelations": ["Do not use unconfirmed Canon candidates or facts outside the approved Writing Brief."], "voice_sample_refs": ["90_canon/canon_candidates.json#voice-sample-review-required"]},
+        "unit": {"id": unit_id, "kind": kind, "planning_mode": planning_mode, "language": "zh-CN", "pov": pov, "target_visible_chars": target, "min_visible_chars": minimum, "max_visible_chars": maximum, "policy_sha256": sha((ROOT / "config/cnw_production_policy.json").read_bytes())},
+        "story": {**({"arc_ref": arc_ref} if arc_ref is not None else {}), **({"previous_episode_ref": previous_episode_ref} if previous_episode_ref is not None else {}), **({"first_episode": first_episode} if first_episode is not None else {}), "source_file": source["stored_path"], "chapter_context": f"Imported source {source['source_id']} with {len(index['locations'])} indexed source locations; confirm all facts before production.", "role_in_story": role_in_story, "reader_reward": reader_reward, "entry_state": entry_state, "exit_state": exit_state, "before_anchor": {"scene": "IMPORTED", "source_line": before_line, "sha256": sha(b"".join(lines[before_line-1:before_line]))}, "after_anchor": {"scene": "IMPORTED", "source_line": after_line, "sha256": sha(b"".join(lines[after_line-1:after_line]))}, "required_beats": beats, "characters_in_scene": characters or [], "character_knowledge_boundary_ref": "90_canon/canon_candidates.json#status=TODO_CONFIRM", "forbidden_future_revelations": ["Do not use unconfirmed Canon candidates or facts outside the approved Writing Brief."], "voice_sample_refs": ["90_canon/canon_candidates.json#voice-sample-review-required"]},
         "review": {"workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15", "require_cnw_11_stages": True, "require_3_verifiers": True, "require_completeness_critic": True, "require_re_review": True, "cnw_reference_manifest_sha256": sha((ROOT / "runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json").read_bytes())},
     }
 
@@ -200,9 +203,9 @@ def write_contract_draft(project_root: str | Path, draft_path: str | Path) -> di
     unit_id = draft["unit_id"]
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", unit_id) or unit_id in {".", ".."}:
         raise ContractError("WORK_UNIT_ID_INVALID", str(unit_id))
-    contract = build_source_bound_contract(root, unit_id=unit_id, pov=draft["pov"], target=draft["target_visible_chars"], minimum=draft["min_visible_chars"], maximum=draft["max_visible_chars"], before_line=draft["before_line"], after_line=draft["after_line"], beat_specs=draft["required_beats"], entry_state=draft["entry_state"], exit_state=draft["exit_state"], role_in_story=draft["role_in_story"], reader_reward=draft["reader_reward"], characters=draft.get("characters_in_scene"))
+    contract = build_source_bound_contract(root, unit_id=unit_id, pov=draft["pov"], target=draft["target_visible_chars"], minimum=draft["min_visible_chars"], maximum=draft["max_visible_chars"], before_line=draft["before_line"], after_line=draft["after_line"], beat_specs=draft.get("required_beats", []), entry_state=draft["entry_state"], exit_state=draft["exit_state"], role_in_story=draft["role_in_story"], reader_reward=draft["reader_reward"], characters=draft.get("characters_in_scene"), kind=draft.get("kind", "scene"), planning_mode=draft.get("planning_mode", "author_plot"), arc_ref=draft.get("arc_ref"), previous_episode_ref=draft.get("previous_episode_ref"), first_episode=draft.get("first_episode"))
     check_required_fields(contract)
-    validate_scene_budget(contract)
+    validate_work_unit(contract)
     manifest = json.loads((root / "_INBOX/source_manifest.json").read_text(encoding="utf-8"))
     validate_source_identity(contract, source_root=root, expected_version=contract["source"]["version"], expected_zip_sha256=manifest["import_id"], expected_manifest_sha256=contract["source"]["source_manifest_sha256"])
     output = root / "contracts" / f"{contract['unit']['id']}.json"
