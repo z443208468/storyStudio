@@ -43,8 +43,21 @@ def project_directory(workspace_root: str | Path, project_id: str) -> Path:
 
 def init_project(workspace_root: str | Path, project_id: str) -> dict:
     root = project_directory(workspace_root, project_id)
-    for folder in ("_INBOX/originals", "90_canon", "contracts", "06_plot", "05_scene_cards", "07_draft", "runs"):
+    for folder in ("_INBOX/originals", "00_meta", "01_theme", "02_logline", "03_project_design",
+                   "04_chapter_design", "05_scene_cards", "06_plot", "07_draft", "08_review", "09_revision",
+                   "90_canon", "91_jet_engine", "92_style_engine", "93_data", "93_exports",
+                   "contracts", "runs"):
         (root / folder).mkdir(parents=True, exist_ok=True)
+    try:
+        from .cnw_roles import REFERENCE_ROOT, _pinned_upstream
+    except ImportError:
+        from cnw_roles import REFERENCE_ROOT, _pinned_upstream
+    _pinned_upstream("templates/CLAUDE.md")
+    instructions = (REFERENCE_ROOT / "templates/CLAUDE.md").read_bytes()
+    for name in ("CLAUDE.md", "AGENTS.md"):
+        target = root / name
+        if not target.exists():
+            target.write_bytes(instructions)
     return {"status": "PROJECT_READY", "project_id": project_id, "project_root": str(root), "provider_call": "none"}
 
 

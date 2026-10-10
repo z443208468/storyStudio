@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from tools.cnw_contract import ContractError, load_contract, validate_source_identity
 from tools.cnw_project import import_source, write_contract_draft
-from tools.cnw_roles import build_role_packet
+from tools.cnw_roles import build_role_packet, REFERENCE_ROOT
 from tools.cnw_runner import produce, step, review_run
 from tools import cnw_import_workflow as workflow
 
@@ -34,6 +34,7 @@ class NewProjectImportTests(unittest.TestCase):
         incoming.write_bytes(raw)
         result = import_source(self.tmp, project_id, incoming)
         project = self.tmp / project_id
+        self.assertEqual((project / "AGENTS.md").read_bytes(), (REFERENCE_ROOT / "templates/CLAUDE.md").read_bytes())
         manifest_path = project / result["source_manifest"]
         index_path = project / result["source_index"]
         canon_path = project / result["canon_candidates"]
@@ -100,6 +101,7 @@ class NewProjectImportTests(unittest.TestCase):
 
 class SemanticImportTests(unittest.TestCase):
     def setUp(self):
+        WORKSPACE.mkdir(exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(prefix=".semantic-import-test-", dir=WORKSPACE)
         self.root = Path(self.temp.name)
         (self.root / "_INBOX").mkdir()
@@ -111,15 +113,20 @@ class SemanticImportTests(unittest.TestCase):
         self.temp.cleanup()
 
     def provider(self, run_dir, *, messages, **kwargs):
+        self.assertEqual(kwargs["role_id"], "project_organization")
         payload = json.loads(messages[-1]["content"])
         self.calls.append(payload)
-        if "source" in payload:
-            result = {"source_summary": "Character notes", "claims": [{"status": "CONFIRMED", "text": payload["text"],
-                                  "quote": payload["text"], "subject": "A", "property": "eye_color"}]}
-        else:
-            ids = [row["id"] for row in payload["new_claims"]]
-            result = {"documents": {name: [{"status": "CONFIRMED", "text": "ignored paraphrase", "claim_ids": ids}]
-                                    for name in workflow.DOCUMENTS}, "conflicts": [], "next_action": "Review the character's eye color."}
+        source = payload["original_sources"]["_INBOX/notes.md"]["text"]
+        conflicts = []
+        old = payload["existing_documents"].get("90_canon/canon.md", "")
+        if "A has blue eyes." in old and "gray" in source:
+            conflicts = [{"old_file": "90_canon/canon.md", "old_quote": "A has blue eyes.",
+                          "new_file": "90_canon/canon.md", "new_entry": 0,
+                          "reason": "The same character's eye color is stated as blue and gray."}]
+        result = {"source_notes": {name: "Character notes" for name in payload["original_sources"]},
+                  "documents": {name: [{"status": "CONFIRMED", "text": "## Character facts\n" + source,
+                                       "source_refs": ["_INBOX/notes.md"]}] for name in workflow.DOCUMENTS},
+                  "conflicts": conflicts, "next_action": "Review the character's eye color."}
         return json.dumps(result), {"status": "MOCK_ONLY"}
 
     def test_semantic_import_update_preserves_old_conclusions_and_skips_unchanged(self):
@@ -130,9 +137,9 @@ class SemanticImportTests(unittest.TestCase):
                 self.assertTrue((self.root / name).is_file(), name)
             canon = (self.root / "90_canon/canon.md").read_bytes()
             self.assertIn(b"A has blue eyes.", canon)
-            self.assertNotIn(b"ignored paraphrase", canon)
+            self.assertIn(b"## Character facts", canon)
             self.assertEqual(workflow.run_import(self.root, incremental=True)["provider_call"], "none")
-            self.assertEqual(len(self.calls), 2)
+            self.assertEqual(len(self.calls), 1)
             self.source.write_text("A has gray eyes.", encoding="utf-8")
             result = workflow.run_import(self.root, incremental=True)
             self.assertGreater(result["conflicts"], 0)
@@ -159,7 +166,7 @@ class SemanticImportTests(unittest.TestCase):
             self.assertTrue((self.root / workflow.PENDING).is_file())
             result = workflow.run_import(self.root)
             self.assertEqual(result["status"], "INITIAL_IMPORT_COMPLETE")
-            self.assertEqual(len(self.calls), 2)
+            self.assertEqual(len(self.calls), 1)
             self.assertFalse((self.root / workflow.PENDING).exists())
 
     def test_update_reads_world_bible_and_appends_existing_arc(self):
@@ -173,28 +180,85 @@ class SemanticImportTests(unittest.TestCase):
         self.source.write_text("A has gray eyes.\nThe chapter goes north.", encoding="utf-8")
         def provider(run_dir, *, messages, **kwargs):
             payload = json.loads(messages[-1]["content"])
-            if "source" in payload:
-                rows = [{"status": "CONFIRMED", "text": text, "quote": text, "subject": subject, "property": prop}
-                        for text, subject, prop in (("A has gray eyes.", "A", "eye_color"), ("The chapter goes north.", "chapter", "direction"))]
-                return json.dumps({"source_summary": "Updated character and chapter notes", "claims": rows}), {}
             self.assertEqual(payload["existing_documents"]["90_canon/world_bible.md"], "A has blue eyes.")
             self.assertIn("04_chapter_design/arc_01.md", payload["allowed_existing_documents"])
-            ids = {row["subject"]: row["id"] for row in payload["new_claims"]}
-            return json.dumps({"documents": {"04_chapter_design/arc_01.md": [{"status": "CONFIRMED", "text": "ignored", "claim_ids": [ids["chapter"]]}]},
-                               "conflicts": [{"old_file": "90_canon/world_bible.md", "old_quote": "A has blue eyes.", "new_claim_id": ids["A"]}],
-                               "next_action": "Resolve eye color."}), {}
+            return json.dumps({"source_notes": {"_INBOX/notes.md": "Updated notes"}, "documents": {
+                "04_chapter_design/arc_01.md": [{"status": "CONFIRMED", "text": "## Direction\nThe chapter goes north.", "source_refs": ["_INBOX/notes.md"]}],
+                "90_canon/canon.md": [{"status": "CONFIRMED", "text": "A has gray eyes.", "source_refs": ["_INBOX/notes.md"]}]},
+                "conflicts": [{"old_file": "90_canon/world_bible.md", "old_quote": "A has blue eyes.",
+                               "new_file": "90_canon/canon.md", "new_entry": 0, "reason": "Incompatible eye colors."}],
+                "next_action": "Resolve eye color."}), {}
         with patch.object(workflow, "cnw_live_call", side_effect=provider):
             workflow.run_import(self.root, incremental=True)
         self.assertEqual(world.read_text(encoding="utf-8"), "A has blue eyes.")
         self.assertTrue(arc.read_text(encoding="utf-8").startswith("Existing chapter plan."))
         self.assertIn("The chapter goes north.", arc.read_text(encoding="utf-8"))
-        self.assertIn("90_canon/world_bible.md", (self.root / "90_canon/unresolved_questions.md").read_text(encoding="utf-8"))
 
-    def test_direct_confirmation_requires_exact_source_statement(self):
-        with self.assertRaisesRegex(ContractError, "IMPORT_CONFIRMED_NOT_DIRECT"):
-            workflow._claim({"status": "CONFIRMED", "quote": "A has blue eyes.",
-                             "text": "A is immortal.", "subject": "A", "property": "life"},
-                            "notes.md", "A has blue eyes.", "digest")
+    def test_organization_receives_all_originals_and_preserves_supported_paraphrase(self):
+        second = self.root / "_INBOX/calling.md"
+        second.write_text("B calls A Captain.", encoding="utf-8")
+        def provider(run_dir, *, messages, **kwargs):
+            payload = json.loads(messages[-1]["content"])
+            instructions = (REFERENCE_ROOT / "templates/CLAUDE.md").read_text(encoding="utf-8-sig")
+            self.assertIn(instructions, messages[0]["content"])
+            self.assertEqual(set(payload["original_sources"]), {"_INBOX/notes.md", "_INBOX/calling.md"})
+            self.assertEqual(payload["original_sources"]["_INBOX/calling.md"]["text"], "B calls A Captain.")
+            self.assertNotIn("new_claims", payload)
+            return json.dumps({"source_notes": {name: "Source notes" for name in payload["original_sources"]},
+                "documents": {name: [{"status": "CONFIRMED", "text": "A's eyes are blue. B addresses A as Captain.",
+                                     "source_refs": list(payload["original_sources"])}] for name in workflow.DOCUMENTS},
+                "conflicts": [], "next_action": "Review character notes."}), {}
+        with patch.object(workflow, "cnw_live_call", side_effect=provider):
+            result = workflow.run_import(self.root)
+        self.assertIn("A's eyes are blue.", (self.root / "90_canon/canon.md").read_text(encoding="utf-8"))
+        active = json.loads((self.root / workflow.STATE).read_text(encoding="utf-8"))["claims"]
+        self.assertTrue(all(len(row["sources"]) == 2 for row in active.values()))
+        self.assertTrue(list((Path(result["run_dir"]) / "artifacts").glob("classification_organized-*.json")))
+
+    def test_method_metadata_has_official_provenance_separate_from_story_sources(self):
+        def provider(run_dir, *, messages, **kwargs):
+            raw, receipt = self.provider(run_dir, messages=messages, **kwargs)
+            obj = json.loads(raw)
+            obj["documents"]["90_canon/canon.md"].append({"status": "CONFIRMED",
+                "text": "## Policy\nSource material must be preserved.", "source_refs": ["author:templates/CLAUDE.md"]})
+            return json.dumps(obj), receipt
+        with patch.object(workflow, "cnw_live_call", side_effect=provider):
+            result = workflow.run_import(self.root)
+        state = json.loads((self.root / workflow.STATE).read_text(encoding="utf-8"))
+        policy = next(row for row in state["claims"].values() if row["text"].startswith("## Policy"))
+        self.assertEqual(policy["source_kinds"], {"author:templates/CLAUDE.md": "public_method"})
+        self.assertTrue(list((Path(result["run_dir"]) / "artifacts").glob("import_request-*.json")))
+
+    def test_unknown_source_reference_cannot_commit(self):
+        def provider(run_dir, *, messages, **kwargs):
+            raw, receipt = self.provider(run_dir, messages=messages, **kwargs)
+            obj = json.loads(raw)
+            obj["documents"]["90_canon/canon.md"][0]["source_refs"] = ["_INBOX/nonexistent.md"]
+            return json.dumps(obj), receipt
+        with patch.object(workflow, "cnw_live_call", side_effect=provider):
+            with self.assertRaisesRegex(ContractError, "IMPORT_ENTRY_INVALID"):
+                workflow.run_import(self.root)
+        self.assertFalse((self.root / workflow.STATE).exists())
+
+    def test_conflict_between_new_sections_withholds_both_bound_versions(self):
+        self.source.write_text("A has blue eyes.\nA has gray eyes.", encoding="utf-8")
+        def provider(run_dir, *, messages, **kwargs):
+            raw, receipt = self.provider(run_dir, messages=messages, **kwargs)
+            obj = json.loads(raw)
+            obj["documents"]["90_canon/canon.md"] = [
+                {"status": "CONFIRMED", "text": text, "source_refs": ["_INBOX/notes.md"]}
+                for text in self.source.read_text(encoding="utf-8").splitlines()]
+            obj["conflicts"] = [{"old_file": "90_canon/canon.md", "old_entry": 0, "old_quote": "A has blue eyes.",
+                                 "new_file": "90_canon/canon.md", "new_entry": 1, "reason": "Incompatible eye colors."}]
+            return json.dumps(obj), receipt
+        with patch.object(workflow, "cnw_live_call", side_effect=provider):
+            self.assertEqual(workflow.run_import(self.root)["conflicts"], 1)
+        canon = (self.root / "90_canon/canon.md").read_text(encoding="utf-8")
+        self.assertNotIn("A has blue eyes.", canon)
+        self.assertNotIn("A has gray eyes.", canon)
+        questions = (self.root / "90_canon/unresolved_questions.md").read_text(encoding="utf-8")
+        self.assertIn("A has blue eyes.", questions)
+        self.assertIn("A has gray eyes.", questions)
 
 
 if __name__ == "__main__":
