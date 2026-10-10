@@ -30,14 +30,14 @@ def validate_revision(contract: dict, v0: str, v1: str, *, finish_reason: str, v
     after["failure_codes"] = list(dict.fromkeys(after["failure_codes"]))
     after["v0_visible_chars"] = before
     after["v1_visible_chars"] = after["actual_visible_chars"]
-    after["status"] = "RETURN" if regression or after["failure_codes"] else "PASS"
+    after["status"] = "CONTENT_RETURN" if regression or after["failure_codes"] else "CONTENT_VALID"
     # A shorter edit is allowed when it remains in range and preserves required beats.
     return after
 
 
 def validate_episode_assembly(expected_scene_ids: list[str], scene_results: dict[str, dict]) -> dict:
-    missing = [scene_id for scene_id in expected_scene_ids if scene_id not in scene_results or scene_results[scene_id].get("status") != "PASS" or scene_results[scene_id].get("finish_reason") != "stop"]
-    return {"status": "PASS" if not missing else "RETURN", "failure_codes": [] if not missing else ["TRUNCATED_OR_UNFINISHED"], "missing_scene_ids": missing}
+    missing = [scene_id for scene_id in expected_scene_ids if scene_id not in scene_results or scene_results[scene_id].get("status") != "CONTENT_VALID" or scene_results[scene_id].get("finish_reason") != "stop"]
+    return {"status": "CONTENT_VALID" if not missing else "CONTENT_RETURN", "failure_codes": [] if not missing else ["TRUNCATED_OR_UNFINISHED"], "missing_scene_ids": missing}
 
 
 def plan_persisted_continuation(project_root: str | Path, run_id: str, contract: dict, current_text: str, validation: dict, *, max_attempts: int = 2) -> dict:
@@ -67,7 +67,7 @@ def plan_persisted_continuation(project_root: str | Path, run_id: str, contract:
         previous_hash = digest
     if len(entries) >= max_attempts:
         return {"status": "RETURN_ROOT_CAUSE_REVIEW_REQUIRED", "attempts_used": len(entries), "max_attempts": max_attempts, "provider_call": "none"}
-    if validation.get("status") == "PASS":
+    if validation.get("status") == "CONTENT_VALID":
         return {"status": "CONTINUATION_NOT_REQUIRED", "attempts_used": len(entries), "provider_call": "none"}
     attempt = len(entries) + 1
     payload = {"attempt": attempt, "run_id": run_id, "contract_sha256": contract_sha, "previous_sha256": previous_hash,
@@ -109,12 +109,12 @@ def main(argv=None) -> int:
         raise ContractError("REVISION_EVIDENCE_REQUIRED", "cannot issue revision acceptance from character counts alone")
     evidence = json.loads(_project_input(project_root, args.evidence).read_text(encoding="utf-8"))
     result = validate_revision(contract, v0, v1, finish_reason=evidence["finish_reason"], v0_beat_evidence=evidence["v0_beat_evidence"], v1_beat_evidence=evidence["v1_beat_evidence"], v1_dialogue_evidence=evidence["dialogue_evidence"], v1_action_evidence=evidence["action_evidence"], start_state_evidence=evidence["start_state_evidence"], end_state_evidence=evidence["end_state_evidence"])
-    if args.continuation_run_id and result["status"] != "PASS":
+    if args.continuation_run_id and result["status"] != "CONTENT_VALID":
         result["continuation"] = plan_persisted_continuation(project_root, args.continuation_run_id, contract, v1, result)
-    elif result["status"] != "PASS":
+    elif result["status"] != "CONTENT_VALID":
         raise ContractError("CONTINUATION_RUN_ID_REQUIRED", "a failed revision must be recorded in its persistent run state")
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    if result["status"] != "PASS":
+    if result["status"] != "CONTENT_VALID":
         return 1
     return 0
 

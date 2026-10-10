@@ -55,6 +55,28 @@ class CnwGenerationTests(unittest.TestCase):
         (ledger_dir / "p2-cost-ledger.json").write_text(json.dumps({"requests": [ledger]}), encoding="utf-8")
         return run
 
+    def _write_accepted_run(self, project, brief, voices):
+        run = project / "runs/R1"
+        artifacts = run / "artifacts"
+        artifacts.mkdir(parents=True)
+        contract = copy.deepcopy(self.contract)
+        context = self.accepted_context(contract, brief, voices)
+        contract_bytes = json.dumps(contract, ensure_ascii=False).encode("utf-8")
+        (artifacts / "contract.json").write_bytes(contract_bytes)
+        brief_bytes = brief.encode("utf-8")
+        (artifacts / "brief.md").write_bytes(brief_bytes)
+        approval = {"status": "ACCEPTED", "contract_sha256": hashlib.sha256(contract_bytes).hexdigest(), "reviewer_id": "controller-fixture"}
+        approval_path = project / "reviews/contract-acceptance.json"
+        approval_path.parent.mkdir(parents=True, exist_ok=True)
+        approval_bytes = json.dumps(approval).encode("utf-8")
+        approval_path.write_bytes(approval_bytes)
+        state = {"run_id": "R1", "fixture_only": False, "contract_sha256": hashlib.sha256(contract_bytes).hexdigest(),
+            "contract_approval": {"status": "ACCEPTED", "evidence_path": "reviews/contract-acceptance.json", "evidence_sha256": hashlib.sha256(approval_bytes).hexdigest()},
+            "stages": {"brief": {"status": "ACCEPTED", "fixture_only": False,
+                "artifact": {"path": "artifacts/brief.md", "sha256": hashlib.sha256(brief_bytes).hexdigest()}}}}
+        (run / "run_state.json").write_text(json.dumps(state), encoding="utf-8")
+        return contract
+
     def tearDown(self):
         self.temp.cleanup()
 
@@ -82,8 +104,18 @@ class CnwGenerationTests(unittest.TestCase):
             v0_beat_evidence=self.evidence, v1_beat_evidence={"B01": "她推开门。"},
             v1_dialogue_evidence=self.dialogue, v1_action_evidence=self.action,
             start_state_evidence="她推开门。", end_state_evidence="他收起信。")
+
+    def accepted_context(self, contract, brief, voices):
+        voice_hash = hashlib.sha256(voices.encode("utf-8")).hexdigest()
+        reference = f"fixture-voice.md#SHA256={voice_hash}"
+        contract["story"]["voice_sample_refs"] = [reference]
+        return {"run_id": "RUN-TEST", "contract_sha256": cnw_generate._canonical_sha256(contract),
+            "contract_approval_status": "ACCEPTED", "contract_approval_evidence_sha256": "a" * 64,
+            "brief_stage_status": "ACCEPTED", "brief_fixture_only": False,
+            "brief_sha256": hashlib.sha256(brief.encode("utf-8")).hexdigest(),
+            "voice_sample_sha256": voice_hash, "voice_sample_reference": reference}
         self.assertIn("REVISION_REGRESSION", result["failure_codes"])
-        self.assertEqual(result["status"], "RETURN")
+        self.assertEqual(result["status"], "CONTENT_RETURN")
 
     def test_c05_shorter_revision_can_pass_in_range(self):
         v1 = self.prose[:int(len(self.prose) * .85)]
@@ -95,7 +127,8 @@ class CnwGenerationTests(unittest.TestCase):
         self.assertNotIn("REVISION_REGRESSION", result["failure_codes"])
 
     def test_c06_episode_assembly_requires_every_scene(self):
-        result = validate_episode_assembly(["S1", "S2", "S3"], {"S1": {"status": "PASS", "finish_reason": "stop"}, "S2": {"status": "PASS", "finish_reason": "stop"}})
+        result = validate_episode_assembly(["S1", "S2", "S3"], {"S1": {"status": "CONTENT_VALID", "finish_reason": "stop"}, "S2": {"status": "CONTENT_VALID", "finish_reason": "stop"}})
+        self.assertEqual(result["status"], "CONTENT_RETURN")
         self.assertEqual(result["missing_scene_ids"], ["S3"])
         self.assertEqual(result["failure_codes"], ["TRUNCATED_OR_UNFINISHED"])
 
@@ -105,7 +138,8 @@ class CnwGenerationTests(unittest.TestCase):
         plan = plan_output_segments(contract, actual, provider_output_cap=2048, budget_output_cap=2048)
         self.assertFalse(plan["segmented"])
         self.assertEqual(plan["segments"][0]["target_visible_chars"], 1500)
-        request = build_prose_request(contract, "B01 B02 B03 B04", "voice", actual, provider_output_cap=2048, budget_output_cap=2048)
+        context = self.accepted_context(contract, "B01 B02 B03 B04", "voice")
+        request = build_prose_request(contract, "B01 B02 B03 B04", "voice", actual, accepted_context=context, provider_output_cap=2048, budget_output_cap=2048)
         self.assertEqual(request["execution_contract"]["target_visible_chars"], 1500)
         self.assertIn("do not impose an additional 500–700-character limit", request["system"].lower())
 
@@ -136,25 +170,56 @@ class CnwGenerationTests(unittest.TestCase):
         self.assertEqual(len((project / "runs/RUN1/continuation.jsonl").read_text(encoding="utf-8").splitlines()), 2)
 
     def test_segment_requests_carry_prior_context_and_assembly_is_ordered(self):
-        base = build_prose_request(self.contract, "B01 B02", "voices", CAPACITY, provider_output_cap=90, budget_output_cap=90)
+        context = self.accepted_context(self.contract, "B01 B02", "voices")
+        base = build_prose_request(self.contract, "B01 B02", "voices", CAPACITY, accepted_context=context, provider_output_cap=90, budget_output_cap=90)
         self.assertEqual(len(base["segments"]), 2)
         first_text, second_text = self.prose[:90], self.prose[90:180]
-        first = {"segment_id": base["segments"][0]["segment_id"], "text": first_text, "finish_reason": "stop", "provider_request_id": "P1"}
-        second = {"segment_id": base["segments"][1]["segment_id"], "text": second_text, "finish_reason": "stop", "provider_request_id": "P2"}
+        first = self._segment_receipt(base["segments"][0]["segment_id"], first_text, "R1", "P1")
+        second = self._segment_receipt(base["segments"][1]["segment_id"], second_text, "R2", "P2")
         packet = build_segment_request(base, second["segment_id"], [first])
         self.assertTrue(packet["segment"]["requires_previous_context"])
         self.assertTrue(packet["prior_context"].endswith(first_text))
         with self.assertRaisesRegex(ContractError, "SEGMENT_SEQUENCE_INVALID"):
             build_segment_request(base, second["segment_id"], [])
-        result = assemble_segment_outputs(self.contract, base, [first, second], beat_evidence=self.evidence,
-            dialogue_evidence=self.dialogue, action_evidence=self.action,
-            start_state_evidence="她推开门。", end_state_evidence="他收起信。")
-        self.assertEqual(result["status"], "PASS")
-        self.assertEqual(result["segment_response_ids"], ["P1", "P2"])
-        with self.assertRaisesRegex(ContractError, "SEGMENT_SEQUENCE_INVALID"):
-            assemble_segment_outputs(self.contract, base, [second, first], beat_evidence=self.evidence,
+        repo = self._segment_ledger([first, second])
+        with patch.object(cnw_generate, "ROOT", repo):
+            result = assemble_segment_outputs(self.contract, base, [first, second], beat_evidence=self.evidence,
+                cost_ledger_path=repo / "runtime/private/p2-cost-ledger.json",
                 dialogue_evidence=self.dialogue, action_evidence=self.action,
                 start_state_evidence="她推开门。", end_state_evidence="他收起信。")
+        self.assertEqual(result["status"], "DRAFT_CONTENT_AND_COST_VALIDATED")
+        self.assertEqual(result["segment_response_ids"], ["P1", "P2"])
+        self.assertEqual(result["validation"]["validation_scope"], "CONTENT_ONLY_NO_COST_OR_PROVIDER_AUTHENTICATION")
+        with patch.object(cnw_generate, "ROOT", repo), self.assertRaisesRegex(ContractError, "SEGMENT_COST_SETTLEMENT_MISMATCH"):
+            mismatched = [dict(first), dict(second)]
+            mismatched[0]["cost_cny"] = 0.002
+            assemble_segment_outputs(self.contract, base, mismatched, beat_evidence=self.evidence,
+                cost_ledger_path=repo / "runtime/private/p2-cost-ledger.json", dialogue_evidence=self.dialogue,
+                action_evidence=self.action, start_state_evidence="她推开门。", end_state_evidence="他收起信。")
+        with self.assertRaisesRegex(ContractError, "SEGMENT_SEQUENCE_INVALID"):
+            assemble_segment_outputs(self.contract, base, [second, first], cost_ledger_path=repo / "runtime/private/p2-cost-ledger.json",
+                beat_evidence=self.evidence, dialogue_evidence=self.dialogue, action_evidence=self.action,
+                start_state_evidence="她推开门。", end_state_evidence="他收起信。")
+
+    def _segment_receipt(self, segment_id, text, request_id, provider_id):
+        return {"segment_id": segment_id, "text": text, "request_id": request_id, "provider_request_id": provider_id,
+            "model": "deepseek-flash", "status": "SUCCEEDED", "finish_reason": "stop",
+            "usage": {"prompt_tokens": 10, "completion_tokens": 12}, "cost_cny": 0.001,
+            "raw_response_sha256": "b" * 64, "output_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "ledger_settlement": {"status": "SETTLED", "request_id": request_id}}
+
+    def _segment_ledger(self, outputs):
+        repo = self.base / "repo-ledger"
+        ledger_dir = repo / "runtime/private"
+        ledger_dir.mkdir(parents=True)
+        rows = []
+        for output in outputs:
+            rows.append({"request_id": output["request_id"], "status": "SETTLED", "provider_request_id": output["provider_request_id"],
+                "returned_model": output["model"], "finish_reason": output["finish_reason"],
+                "usage": {"input_tokens": output["usage"]["prompt_tokens"], "output_tokens": output["usage"]["completion_tokens"]},
+                "estimated_actual_cny": output["cost_cny"]})
+        (ledger_dir / "p2-cost-ledger.json").write_text(json.dumps({"requests": rows}), encoding="utf-8")
+        return repo
 
     def test_capacity_reference_requires_raw_response_and_ledger_alignment(self):
         reference = copy.deepcopy(CAPACITY)
@@ -162,13 +227,24 @@ class CnwGenerationTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "CAPACITY_REFERENCE_INVALID"):
             cnw_generate.capacity_ratio(reference)
 
+    def test_prose_request_refuses_unbound_brief_or_voice_sample(self):
+        brief, voices = "B01 B02", "approved voice"
+        context = self.accepted_context(self.contract, brief, voices)
+        with self.assertRaisesRegex(ContractError, "PROSE_INPUTS_NOT_ACCEPTED"):
+            build_prose_request(self.contract, brief + " changed", voices, CAPACITY, accepted_context=context,
+                provider_output_cap=2048, budget_output_cap=2048)
+        with self.assertRaisesRegex(ContractError, "PROSE_INPUTS_NOT_ACCEPTED"):
+            build_prose_request(self.contract, brief, "unreferenced voice", CAPACITY, accepted_context=context,
+                provider_output_cap=2048, budget_output_cap=2048)
+
     def test_generation_cli_rejects_inputs_outside_private_project(self):
         repo = self.base / "repo"
         project = repo / "workspace/project"
         project.mkdir(parents=True)
         external = self.base / "outside.md"
         external.write_text("private", encoding="utf-8")
-        argv = ["--contract", str(external), "--brief", "brief.md", "--voice-samples", "voices.md",
+        self._write_accepted_run(project, "B01 B02", "voice samples")
+        argv = ["--run-id", "R1", "--voice-samples", str(external),
                 "--capacity-run", str(ROOT / "runs/p2-06-draft-20261010"), "--budget-output-cap", "2048",
                 "--project-root", str(project), "--output", "runs/requests/prose.json"]
         with patch.object(cnw_generate, "ROOT", repo), self.assertRaisesRegex(ContractError, "PROJECT_INPUT_OUTSIDE_PRIVATE_PROJECT"):
@@ -177,13 +253,28 @@ class CnwGenerationTests(unittest.TestCase):
     def test_generation_cli_builds_private_request_from_verified_historical_run(self):
         repo = self.base / "repo"
         project = repo / "workspace/project"
-        (project / "contracts").mkdir(parents=True)
-        (project / "inputs").mkdir()
-        (project / "contracts/scene.json").write_text(json.dumps(self.contract), encoding="utf-8")
-        (project / "inputs/brief.md").write_text("B01 B02", encoding="utf-8")
-        (project / "inputs/voices.md").write_text("voice samples", encoding="utf-8")
+        (project / "inputs").mkdir(parents=True)
+        self._write_accepted_run(project, "B01 B02", "voice samples")
+        voice_path = project / "inputs/voices.md"
+        voice_path.write_text("voice samples", encoding="utf-8")
+        # The exact voice file hash must be one of the source references frozen in this run's contract.
+        run_contract_path = project / "runs/R1/artifacts/contract.json"
+        contract = json.loads(run_contract_path.read_text(encoding="utf-8"))
+        voice_hash = hashlib.sha256(voice_path.read_bytes()).hexdigest()
+        contract["story"]["voice_sample_refs"] = [f"inputs/voices.md#SHA256={voice_hash}"]
+        contract_bytes = json.dumps(contract, ensure_ascii=False).encode("utf-8")
+        run_contract_path.write_bytes(contract_bytes)
+        state_path = project / "runs/R1/run_state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["contract_sha256"] = hashlib.sha256(contract_bytes).hexdigest()
+        approval_path = project / "reviews/contract-acceptance.json"
+        approval = {"status": "ACCEPTED", "contract_sha256": state["contract_sha256"], "reviewer_id": "controller-fixture"}
+        approval_bytes = json.dumps(approval).encode("utf-8")
+        approval_path.write_bytes(approval_bytes)
+        state["contract_approval"]["evidence_sha256"] = hashlib.sha256(approval_bytes).hexdigest()
+        state_path.write_text(json.dumps(state), encoding="utf-8")
         capacity_run = self._write_capacity_fixture(repo)
-        argv = ["--contract", "contracts/scene.json", "--brief", "inputs/brief.md", "--voice-samples", "inputs/voices.md",
+        argv = ["--run-id", "R1", "--voice-samples", "inputs/voices.md",
                 "--capacity-run", str(capacity_run), "--budget-output-cap", "2048", "--project-root", str(project),
                 "--output", "runs/R1/artifacts/prose-request.json"]
         stdout = io.StringIO()

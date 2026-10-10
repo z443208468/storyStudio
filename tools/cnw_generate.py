@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import sys
 import hashlib
+from decimal import Decimal, InvalidOperation
 
 try:
     from .cnw_contract import ContractError, assert_output_within_root, count_visible_chars, load_contract, validate_scene_budget
@@ -96,6 +97,26 @@ def capacity_ratio(reference: dict) -> float:
     return chars / tokens
 
 
+def _canonical_sha256(value: dict) -> str:
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def validate_accepted_prose_inputs(contract: dict, brief: str, voice_samples: str, context: dict) -> None:
+    brief_sha = hashlib.sha256(brief.encode("utf-8")).hexdigest()
+    voice_sha = hashlib.sha256(voice_samples.encode("utf-8")).hexdigest()
+    refs = contract.get("story", {}).get("voice_sample_refs", [])
+    ref = context.get("voice_sample_reference", "")
+    if (not context.get("run_id") or context.get("contract_approval_status") != "ACCEPTED"
+            or context.get("contract_sha256") != _canonical_sha256(contract)
+            or not re.fullmatch(r"[0-9a-f]{64}", str(context.get("contract_approval_evidence_sha256", "")))
+            or context.get("brief_stage_status") != "ACCEPTED"
+            or context.get("brief_fixture_only") is not False
+            or context.get("brief_sha256") != brief_sha
+            or context.get("voice_sample_sha256") != voice_sha
+            or ref not in refs or f"SHA256={voice_sha}" not in ref):
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "contract, Brief, and cited voice sample must be frozen and hash-bound")
+
+
 def _tokens_for_chars(characters: int, chars_per_token: float, headroom: float) -> int:
     if not math.isfinite(chars_per_token) or chars_per_token <= 0 or not 1 <= headroom <= 2:
         raise ContractError("CAPACITY_REFERENCE_INVALID", "invalid capacity ratio or headroom")
@@ -133,10 +154,11 @@ def plan_output_segments(contract: dict, capacity_receipt: dict, *, provider_out
     return {"observed_chars_per_output_token": ratio, "capacity_receipt_id": capacity_receipt["receipt"]["request_id"], "capacity_raw_response_sha256": capacity_receipt["raw_response_sha256"], "headroom": headroom, "target_output_tokens": target_tokens, "usable_output_token_cap": usable_cap, "segmented": len(segments) > 1, "segments": segments}
 
 
-def build_prose_request(contract: dict, brief: str, voice_samples: str, capacity_receipt: dict, *, provider_output_cap: int, budget_output_cap: int) -> dict:
+def build_prose_request(contract: dict, brief: str, voice_samples: str, capacity_receipt: dict, *, accepted_context: dict, provider_output_cap: int, budget_output_cap: int) -> dict:
     validate_scene_budget(contract)
     if not brief.strip() or not voice_samples.strip():
         raise ContractError("PROSE_INPUT_MISSING", "accepted Brief and voice samples are required")
+    validate_accepted_prose_inputs(contract, brief, voice_samples, accepted_context)
     for beat in contract["story"]["required_beats"]:
         if beat["beat_id"] not in brief:
             raise ContractError("BRIEF_BEAT_ID_MISSING", beat["beat_id"])
@@ -150,7 +172,7 @@ def build_prose_request(contract: dict, brief: str, voice_samples: str, capacity
     )
     return {
         "schema_version": "cnw_prose_request_v1",
-        "inputs": {"brief": brief, "voice_samples": voice_samples},
+        "inputs": {"brief": brief, "voice_samples": voice_samples, "brief_sha256": accepted_context["brief_sha256"], "voice_sample_sha256": accepted_context["voice_sample_sha256"], "run_id": accepted_context["run_id"]},
         "execution_contract": {"target_visible_chars": unit["target_visible_chars"], "min_visible_chars": unit["min_visible_chars"], "max_visible_chars": unit["max_visible_chars"], "required_beats": contract["story"]["required_beats"]},
         "system": system,
         "segments": plan["segments"],
@@ -174,15 +196,63 @@ def build_segment_request(base_request: dict, segment_id: str, completed_segment
     return {"segment": item, "system": base_request["system"], "prior_context": continuity, "brief": base_request["inputs"]["brief"], "voice_samples": base_request["inputs"]["voice_samples"], "output_token_cap": item["output_token_cap"], "instruction": "Write only this segment's assigned beats. Continue directly from prior_context when present; do not repeat its ending. Preserve POV, voice, and state continuity."}
 
 
-def assemble_segment_outputs(contract: dict, base_request: dict, outputs: list[dict], *, beat_evidence: dict[str, str], dialogue_evidence: list[str], action_evidence: list[str], start_state_evidence: str, end_state_evidence: str) -> dict:
+def assemble_segment_outputs(contract: dict, base_request: dict, outputs: list[dict], *, cost_ledger_path: str | Path | None = None, beat_evidence: dict[str, str], dialogue_evidence: list[str], action_evidence: list[str], start_state_evidence: str, end_state_evidence: str) -> dict:
     expected = base_request["segments"]
     if len(outputs) != len(expected) or any(output.get("segment_id") != segment["segment_id"] for output, segment in zip(outputs, expected)):
         raise ContractError("SEGMENT_SEQUENCE_INVALID", "all planned segments must be supplied in order")
     if any(output.get("finish_reason") != "stop" or not output.get("text", "").strip() for output in outputs):
         raise ContractError("SEGMENT_INCOMPLETE", "each segment must be nonempty and completed")
+    request_ids, provider_ids = set(), set()
+    ledger_path = Path(cost_ledger_path) if cost_ledger_path else ROOT / "runtime/private/p2-cost-ledger.json"
+    if ledger_path.is_symlink() or not ledger_path.is_file():
+        raise ContractError("SEGMENT_COST_LEDGER_MISSING", str(ledger_path))
+    try:
+        ledger_bytes = ledger_path.read_bytes()
+        cost_ledger = json.loads(ledger_bytes.decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("SEGMENT_COST_LEDGER_INVALID", str(exc)) from exc
+    private_runtime = (ROOT / "runtime/private").resolve()
+    if not ledger_path.resolve().is_relative_to(private_runtime):
+        raise ContractError("SEGMENT_COST_LEDGER_UNSAFE", "cost ledger must come from private runtime accounting")
+    rows = cost_ledger.get("requests", [])
+    for output in outputs:
+        required = ("request_id", "provider_request_id", "model", "status", "usage", "cost_cny", "raw_response_sha256", "output_sha256", "ledger_settlement")
+        if not all(output.get(key) is not None for key in required):
+            raise ContractError("SEGMENT_COST_EVIDENCE_MISSING", output["segment_id"])
+        if (not isinstance(output["request_id"], str) or not output["request_id"]
+                or not isinstance(output["provider_request_id"], str) or not output["provider_request_id"] or output["model"] != "deepseek-flash"
+                or output["status"] != "SUCCEEDED" or output["finish_reason"] != "stop"):
+            raise ContractError("SEGMENT_RECEIPT_INVALID", output["segment_id"])
+        if output["request_id"] in request_ids or output["provider_request_id"] in provider_ids:
+            raise ContractError("SEGMENT_RECEIPT_DUPLICATE", output["segment_id"])
+        request_ids.add(output["request_id"])
+        provider_ids.add(output["provider_request_id"])
+        usage = output["usage"]
+        if not isinstance(usage, dict) or not all(isinstance(usage.get(key), int) and usage[key] > 0 for key in ("prompt_tokens", "completion_tokens")):
+            raise ContractError("SEGMENT_RECEIPT_INVALID", output["segment_id"])
+        if (not isinstance(output["text"], str) or not re.fullmatch(r"[0-9a-fA-F]{64}", str(output["raw_response_sha256"]))
+                or hashlib.sha256(output["text"].encode("utf-8")).hexdigest() != output["output_sha256"]):
+            raise ContractError("SEGMENT_RECEIPT_HASH_INVALID", output["segment_id"])
+        settlement = output["ledger_settlement"]
+        matches = [row for row in rows if row.get("request_id") == output["request_id"]]
+        try:
+            billed = Decimal(str(matches[0].get("estimated_actual_cny"))) if len(matches) == 1 else Decimal("NaN")
+            reported = Decimal(str(output["cost_cny"]))
+        except (InvalidOperation, ValueError):
+            raise ContractError("SEGMENT_COST_SETTLEMENT_MISMATCH", output["segment_id"])
+        if not isinstance(settlement, dict) or not billed.is_finite() or not reported.is_finite() or reported < 0:
+            raise ContractError("SEGMENT_COST_SETTLEMENT_MISMATCH", output["segment_id"])
+        if (len(matches) != 1 or matches[0].get("status") != "SETTLED"
+                or matches[0].get("provider_request_id") != output["provider_request_id"]
+                or matches[0].get("returned_model") != output["model"]
+                or matches[0].get("finish_reason") != output["finish_reason"]
+                or matches[0].get("usage") != {"input_tokens": usage["prompt_tokens"], "output_tokens": usage["completion_tokens"]}
+                or settlement.get("status") != "SETTLED" or settlement.get("request_id") != output["request_id"]
+                or billed != reported):
+            raise ContractError("SEGMENT_COST_SETTLEMENT_MISMATCH", output["segment_id"])
     prose = "\n".join(output["text"].strip() for output in outputs)
     validation = validate_generated_scene(contract, prose, finish_reason="stop", beat_evidence=beat_evidence, dialogue_evidence=dialogue_evidence, action_evidence=action_evidence, start_state_evidence=start_state_evidence, end_state_evidence=end_state_evidence)
-    return {"status": validation["status"], "prose": prose, "segment_order": [output["segment_id"] for output in outputs], "segment_response_ids": [output.get("provider_request_id") for output in outputs], "validation": validation}
+    return {"status": "DRAFT_CONTENT_AND_COST_VALIDATED" if validation["status"] == "CONTENT_VALID" else "DRAFT_RETURN", "scope": "content_and_settlement_reconciled; raw_provider_authentication_requires_runner_verify_live", "prose": prose, "segment_order": [output["segment_id"] for output in outputs], "segment_response_ids": [output["provider_request_id"] for output in outputs], "settled_cost_cny": str(sum((Decimal(str(output["cost_cny"])) for output in outputs), Decimal("0"))), "cost_ledger_sha256": hashlib.sha256(ledger_bytes).hexdigest(), "validation": validation}
 
 
 def _private_project_root(value: str | Path) -> Path:
@@ -229,13 +299,12 @@ def validate_generated_scene(contract: dict, prose: str, *, finish_reason: str, 
         failures.append("RETURN_END_STATE_UNPROVEN")
     if finish_reason != "stop":
         failures.append("TRUNCATED_OR_UNFINISHED")
-    return {"status": "PASS" if not failures else "RETURN", "failure_codes": failures, "missing_beat_ids": missing_beats, "actual_visible_chars": visible, "finish_reason": finish_reason}
+    return {"status": "CONTENT_VALID" if not failures else "CONTENT_RETURN", "failure_codes": failures, "missing_beat_ids": missing_beats, "actual_visible_chars": visible, "finish_reason": finish_reason, "validation_scope": "CONTENT_ONLY_NO_COST_OR_PROVIDER_AUTHENTICATION"}
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--contract", required=True)
-    parser.add_argument("--brief", required=True)
+    parser.add_argument("--run-id", required=True)
     parser.add_argument("--voice-samples", required=True)
     parser.add_argument("--capacity-run", required=True, help="historical private run directory containing provider-call.json and run_receipt.json")
     parser.add_argument("--provider-output-cap", type=int, default=2048)
@@ -247,12 +316,65 @@ def main(argv=None) -> int:
     if args.mode == "live":
         raise ContractError("LIVE_EXECUTOR_NOT_AVAILABLE", "W06 constructs and validates requests offline; live execution remains gated for W10")
     project_root = _private_project_root(args.project_root)
-    contract_path = _project_input(project_root, args.contract)
-    brief_path = _project_input(project_root, args.brief)
+    run_id = args.run_id
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", run_id) or run_id in {".", ".."}:
+        raise ContractError("RUN_ID_INVALID", run_id)
+    run_root = project_root / "runs" / run_id
+    try:
+        run_root = run_root.resolve(strict=True)
+    except OSError as exc:
+        raise ContractError("RUN_STATE_MISSING_OR_UNSAFE", run_id) from exc
+    if not run_root.is_relative_to(project_root) or any(part.is_symlink() for part in (project_root / "runs" / run_id, project_root / "runs")):
+        raise ContractError("RUN_STATE_MISSING_OR_UNSAFE", run_id)
+    state_path = run_root / "run_state.json"
+    if state_path.is_symlink() or not state_path.is_file():
+        raise ContractError("RUN_STATE_MISSING_OR_UNSAFE", run_id)
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        contract_path = run_root / "artifacts/contract.json"
+        if contract_path.is_symlink() or not contract_path.is_file():
+            raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "contract artifact missing or unsafe")
+        contract_bytes = contract_path.read_bytes()
+        contract = json.loads(contract_bytes)
+        brief_record = state["stages"]["brief"]
+        brief_relative = brief_record["artifact"]["path"]
+        brief_path = (run_root / brief_relative).resolve(strict=True)
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "run must contain frozen contract and accepted Brief artifacts") from exc
+    if not brief_path.is_relative_to(run_root):
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "Brief artifact escapes run directory")
+    if (state.get("run_id") != run_id or state.get("fixture_only") is True
+            or state.get("contract_sha256") != hashlib.sha256(contract_bytes).hexdigest()
+            or state.get("contract_approval", {}).get("status") != "ACCEPTED"
+            or not state.get("contract_approval", {}).get("evidence_sha256")
+            or brief_record.get("status") != "ACCEPTED" or brief_record.get("fixture_only") is not False
+            or brief_record.get("artifact", {}).get("sha256") != hashlib.sha256(brief_path.read_bytes()).hexdigest()
+            or not brief_path.is_relative_to(run_root)):
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "run state, contract approval, or Brief artifact identity is invalid")
+    approval = state["contract_approval"]
+    approval_path = _project_input(project_root, approval.get("evidence_path", ""))
+    approval_bytes = approval_path.read_bytes()
+    if hashlib.sha256(approval_bytes).hexdigest() != approval["evidence_sha256"]:
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "contract approval evidence hash mismatch")
+    try:
+        approval_record = json.loads(approval_bytes.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "contract approval evidence is invalid") from exc
+    if (approval_record.get("status") != "ACCEPTED"
+            or approval_record.get("contract_sha256") != state["contract_sha256"]
+            or not approval_record.get("reviewer_id")):
+        raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "contract approval evidence does not bind this frozen contract")
+    brief = brief_path.read_text(encoding="utf-8-sig")
     voice_path = _project_input(project_root, args.voice_samples)
     capacity_reference = load_capacity_reference(args.capacity_run)
-    contract = load_contract(contract_path)
-    result = build_prose_request(contract, brief_path.read_text(encoding="utf-8-sig"), voice_path.read_text(encoding="utf-8-sig"), capacity_reference, provider_output_cap=args.provider_output_cap, budget_output_cap=args.budget_output_cap)
+    voice_samples = voice_path.read_text(encoding="utf-8-sig")
+    voice_hash = hashlib.sha256(voice_path.read_bytes()).hexdigest()
+    voice_reference = next((ref for ref in contract.get("story", {}).get("voice_sample_refs", []) if f"SHA256={voice_hash}" in ref), "")
+    context = {"run_id": run_id, "contract_sha256": _canonical_sha256(contract), "contract_approval_status": "ACCEPTED",
+               "contract_approval_evidence_sha256": state["contract_approval"]["evidence_sha256"], "brief_stage_status": "ACCEPTED",
+               "brief_fixture_only": False, "brief_sha256": hashlib.sha256(brief.encode("utf-8")).hexdigest(),
+               "voice_sample_sha256": voice_hash, "voice_sample_reference": voice_reference}
+    result = build_prose_request(contract, brief, voice_samples, capacity_reference, accepted_context=context, provider_output_cap=args.provider_output_cap, budget_output_cap=args.budget_output_cap)
     relative = Path(args.output)
     if relative.is_absolute() or not relative.parts or relative.parts[0].lower() != "runs":
         raise ContractError("OUTPUT_PATH_UNSAFE", "request artifact must be written under runs/")
