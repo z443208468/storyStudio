@@ -75,10 +75,11 @@
 
 ## P2-05
 
-- Status：单场 CNW Plot 草案已由 DeepSeek Flash 生成；首轮 Controller RETURN 后已修正插入时点，等待限定复核。
+- Status：单场 CNW Plot 草案已由 DeepSeek Flash 生成；首轮 RETURN 修正后，Controller 对插入边界限定复核 ACCEPT。
 - 合同：`workspace/cangqi/sample_contract.json`；源锚：`workspace/cangqi/06_plot/ep001_source_anchors.md`；Plot：`workspace/cangqi/06_plot/ep001_plot.v0.md`。
 - 插入窗口：J19 释放行动后、J20 任一路线开始前；单场连续讲堂空间。新增细节均标记为候选，未写回 Canon；保持知识与路线状态。
 - 真实调用：`runs/p2-05-live-20261010/`；provider request `02ed6533-354f-432d-8bd7-25a1774f4122`，DeepSeek Flash，finish=stop，3142/955 tokens，估算 `¥0.013994`。全 campaign 六笔真实 provider 请求估算 `¥0.018886/¥10`；其中 P2-04 五笔事实保持原记录。无项目 Key 写入证据。
 - 脱敏/私有证据清单：`evidence/p2-05-plot-check.json`；其记录的六项产物哈希已核对。
 - 首轮 RETURN：J19 第559行仍允许即时坦白，首版锚点截断在第557行。修正后精确插点为第555行对白之后、玩法开启（557）之前；场景后原样恢复 J19 玩法与坦白选项，再继续 J20。修正说明与补齐的私有源锚已加入 hash 清单；没有重发模型请求。
-- 该阶段 candidate C/T 与 Controller verdict：冻结后追加。
+- 插入边界复核候选 C=`cc30e9d7b7a3966a71279e6dfb5eb9c3905067b0`，T=`645fb4ba8c174f18866e6c5fff39975a86a999f6`；限定 ACCEPT（只接受 J19/J20 连续性纠偏）。
+- 最终带验收记录的提交与远端 readback：推送后追加。
