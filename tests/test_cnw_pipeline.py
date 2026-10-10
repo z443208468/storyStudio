@@ -16,6 +16,12 @@ from tools import cnw_sprint_live as live_sprint
 
 
 class EpisodePipelineTests(unittest.TestCase):
+    def test_arc_end_review_consumes_previous_sprint_and_passes(self):
+        self._exercise_live_sprint(arc_status="pass")
+
+    def test_arc_revise_blocks_sprint_advance_after_passing_batch(self):
+        self._exercise_live_sprint(arc_status="revise")
+
     def test_live_sprint_orchestration_with_mocked_production_and_provider(self):
         self._exercise_live_sprint()
 
@@ -25,7 +31,19 @@ class EpisodePipelineTests(unittest.TestCase):
     def test_live_sprint_project_stop_reason_blocks_passing_scores(self):
         self._exercise_live_sprint(stop_reasons=["Mock project Canon contradiction requires decision"])
 
-    def _exercise_live_sprint(self, project_status="pass", low_score=False, stop_reasons=None):
+    def test_cross_arc_sprint_refused_before_production(self):
+        self._exercise_live_sprint(preflight_case="cross", expected_error="SPRINT_CROSSES_ARC_BOUNDARY")
+
+    def test_unknown_arc_range_refused_before_production(self):
+        self._exercise_live_sprint(preflight_case="unknown", expected_error="ARC_RANGE_UNRESOLVED")
+
+    def test_missing_arc_reference_refused_before_production(self):
+        self._exercise_live_sprint(preflight_case="missing", expected_error="AUTHOR_READ_MISSING")
+
+    def test_ambiguous_arc_reference_refused_before_production(self):
+        self._exercise_live_sprint(preflight_case="ambiguous", expected_error="AUTHOR_READ_AMBIGUOUS")
+
+    def _exercise_live_sprint(self, project_status="pass", low_score=False, stop_reasons=None, arc_status=None, preflight_case=None, expected_error=None):
         with tempfile.TemporaryDirectory(prefix=".sprint-orchestration-", dir=ROOT / "workspace") as temp:
             root = Path(temp)
             (root / "contracts").mkdir()
@@ -34,6 +52,20 @@ class EpisodePipelineTests(unittest.TestCase):
             old_handoff = b"Previous handoff retained verbatim.\r\n"
             (root / "93_exports/handoff_brief.md").write_bytes(old_handoff)
             (root / "00_meta/manuscript_review_rubric.md").write_text("MOCK_ONLY project rubric: evaluate continuity and reward. Any episode score <=64 requires rewrite; this is a mock project rule, not a universal threshold.", encoding="utf-8")
+            (root / "04_chapter_design").mkdir()
+            if preflight_case != "missing":
+                bounds = "ep000 – ep005" if arc_status else "ep001 – ep010"
+                if preflight_case == "cross":
+                    bounds = "ep001 – ep003"
+                elif preflight_case == "unknown":
+                    bounds = "author decision pending"
+                (root / "04_chapter_design/arc_01.md").write_text("# Arc 01\n## Range\n" + bounds + "\n## Purpose\nMOCK plan\n", encoding="utf-8")
+                (root / "04_chapter_design/arc_01_episode_details.md").write_text("MOCK episode details", encoding="utf-8")
+            if preflight_case in {"cross", "ambiguous"}:
+                (root / "04_chapter_design/arc_02.md").write_text("# Arc 02\n## Range\nep004 – ep010\n", encoding="utf-8")
+            if arc_status:
+                (root / "07_draft/episodes").mkdir(parents=True)
+                (root / "07_draft/episodes/ep000.md").write_text("MOCK previous Sprint prose", encoding="utf-8")
             base = json.loads((ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contract.json").read_text(encoding="utf-8"))
             episodes = []
             for index in range(1, 6):
@@ -41,11 +73,24 @@ class EpisodePipelineTests(unittest.TestCase):
                 contract["project_id"] = "MOCK_ORCHESTRATION"
                 contract["unit"].update(id=f"ep{index:03d}", kind="episode", planning_mode="author_plot")
                 contract["story"]["required_beats"] = []
+                if preflight_case not in {"missing", "ambiguous"}:
+                    contract["story"]["arc_ref"] = "04_chapter_design/arc_01.md"
+                    if preflight_case == "cross" and index >= 4:
+                        contract["story"]["arc_ref"] = "04_chapter_design/arc_02.md"
+                else:
+                    contract["story"].pop("arc_ref", None)
                 name = f"contracts/ep{index:03d}.json"
                 (root / name).write_text(json.dumps(contract), encoding="utf-8")
                 episodes.append({"episode_id": f"ep{index:03d}", "contract": name})
             plan = root / "plan.json"
             plan.write_text(json.dumps({"episodes": episodes}), encoding="utf-8")
+            if expected_error:
+                with patch.object(live_sprint.runner, "produce", side_effect=AssertionError("production before boundary check")), \
+                        patch.object(live_sprint.runner, "cnw_live_call", side_effect=AssertionError("provider before boundary check")):
+                    with self.assertRaisesRegex(ContractError, expected_error):
+                        live_sprint.run_live_sprint(root, "MOCK-SPRINT", plan)
+                self.assertFalse((root / "sprints/MOCK-SPRINT").exists())
+                return
             produced, executed, verified = [], [], []
             cache = {}
             def produce(args):
@@ -71,6 +116,15 @@ class EpisodePipelineTests(unittest.TestCase):
                 key = json.dumps([stage, role_id, messages], sort_keys=True)
                 if key in cache:
                     return cache[key]
+                if role_id == "project_arc_review":
+                    from tools import cnw_maintenance
+                    from tests.test_cnw_chapter_arc import mock_receipt
+                    sources = json.loads(messages[1]["content"])["project_sources"]
+                    self.assertIn("07_draft/episodes/ep000.md", sources)
+                    self.assertIn("07_draft/episodes/ep005.md", sources)
+                    result = {"status": arc_status, "review_markdown": "\n".join("## " + heading + "\nMOCK Arc review" for heading in cnw_maintenance.ARC_SECTIONS) + "\nStatus: " + arc_status}
+                    cache[key] = mock_receipt(path, {"stage": stage, "role_id": role_id, "messages": messages}, json.dumps(result), "SPRINT-ARC-MOCK")
+                    return cache[key]
                 if role_id == "batch_review":
                     result = {"episode_scores": [{"episode_id": row["episode_id"], "score": (60 if row["episode_id"] == "ep001" else 90) if low_score else 80} for row in episodes],
                         "lens_scores": [{"lens_id": lens, "score": 80} for lens in live_sprint.runner.LENS_IDS],
@@ -89,7 +143,12 @@ class EpisodePipelineTests(unittest.TestCase):
                     patch.object(live_sprint.runner, "verify_live", side_effect=lambda args: verified.append(args.work_id)), \
                     patch.object(live_sprint.runner, "cnw_live_call", side_effect=provider):
                 result = live_sprint.run_live_sprint(root, "MOCK-SPRINT", plan)
-                self.assertEqual(result["status"], "PASS" if project_status == "pass" and not stop_reasons else "REVISION_REQUIRED")
+                self.assertEqual(result["status"], "PASS" if project_status == "pass" and not stop_reasons and arc_status != "revise" else "REVISION_REQUIRED")
+                if arc_status:
+                    self.assertEqual(result["arc_review"]["arc_status"], arc_status)
+                    self.assertIn(result["status"], (root / "94_runtime/current_state.md").read_text(encoding="utf-8"))
+                elif project_status == "pass" and not stop_reasons:
+                    self.assertEqual(result["arc_review"]["status"], "ARC_NOT_AT_END")
                 if low_score:
                     self.assertEqual(result["average_score"], 84)
                 self.assertEqual(result["confirmed_counts"]["P1"], 1)

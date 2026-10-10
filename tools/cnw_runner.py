@@ -388,7 +388,7 @@ def reactivate_receipt(run_dir: Path, receipt: dict) -> None:
 
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "sprint_review", "sprint_handoff"}:
+    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
@@ -1184,6 +1184,9 @@ def execute_prose(run_dir: Path) -> dict:
     project_root = _run_dir_base(run_dir)
     materials = _role_sources("prose", run_dir, state, contract, project_root)
     base_messages = _author_messages("prose", contract, materials)
+    scope = "同一章" if contract["unit"]["kind"] == "episode" else "同一场"
+    whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
+    scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
     output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
     try:
         from .cnw_contract import validate_output_length, count_visible_chars
@@ -1211,8 +1214,8 @@ def execute_prose(run_dir: Path) -> dict:
             remaining = contract["unit"]["min_visible_chars"] - count_visible_chars(already)
             messages = [
                 {"role": "system", "content": (
-                    "你是在续写同一场中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。"
-                    "继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到整场完整且达到合同可见字数。"
+                    f"你是在续写{scope}中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。"
+                    f"继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到{whole}完整且达到合同可见字数。{scenes}"
                 )},
                 {"role": "user", "content": json.dumps({
                     "brief": base_messages[1]["content"],
@@ -1451,6 +1454,9 @@ def _confirmed_findings(run_dir: Path, state: dict) -> list[dict]:
 def execute_refine(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
+    whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
+    scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
+    output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
     project_root = _run_dir_base(run_dir)
     previous_revision = state["stages"]["refine"]
     pending = previous_revision.get("pending_findings")
@@ -1498,10 +1504,10 @@ def execute_refine(run_dir: Path) -> dict:
     plan_path.parent.mkdir(parents=True, exist_ok=True)
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     system = (
-        "你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订整场中文正文，保留有效戏剧内容与所有必需节拍，"
+        f"你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订{whole}中文正文，保留有效戏剧内容与所有必需节拍，{scenes}"
         "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
         "CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。"
-        "拒用其中增加场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。"
+        "拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。"
     )
     user = json.dumps({"v0": v0, "confirmed_findings": feedback, "brief_constraints": brief}, ensure_ascii=False, sort_keys=True)
     try:
@@ -1517,12 +1523,12 @@ def execute_refine(run_dir: Path) -> dict:
         else:
             messages = [
                 {"role": "system", "content": (
-                    "上一次修订删得过短。请在保留已采纳修改的前提下，把整场正文补回完整篇幅：恢复被删掉的必需动作、回应、对白与结尾，"
+                    f"上一次修订删得过短。请在保留已采纳修改的前提下，把{whole}正文补回完整篇幅：恢复被删掉的必需动作、回应、对白与结尾，{scenes}"
                     "不得新增 Canon、不得越过知识边界、不得使用标题或说明。只输出补全后的完整正文 Markdown。"
                 )},
-                {"role": "user", "content": json.dumps({"under_length_draft": content, "target_visible_chars": contract["unit"]["target_visible_chars"], "min_visible_chars": contract["unit"]["min_visible_chars"], "confirmed_findings": feedback}, ensure_ascii=False, sort_keys=True)},
+                {"role": "user", "content": json.dumps({"under_length_draft": content, "revision_base": v0, "brief_constraints": brief, "target_visible_chars": contract["unit"]["target_visible_chars"], "min_visible_chars": contract["unit"]["min_visible_chars"], "confirmed_findings": feedback}, ensure_ascii=False, sort_keys=True)},
             ]
-        content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=4096, extra={"revision_number": revision_number})
+        content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=output_cap, extra={"revision_number": revision_number})
         receipt_ids.append(receipt["request_id"])
         if count_visible_chars(content) >= contract["unit"]["min_visible_chars"]:
             break

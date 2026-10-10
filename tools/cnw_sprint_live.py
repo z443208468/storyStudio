@@ -38,11 +38,11 @@ def _write_once(root: Path, relative: str, text: str) -> None:
 
 def _append_once(root: Path, relative: str, marker: str, text: str) -> None:
     path = assert_output_within_root(root, relative)
-    prior = path.read_text(encoding="utf-8") if path.exists() else ""
+    prior = path.read_bytes().decode("utf-8") if path.exists() else ""
     if marker in prior:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(prior + f"\n\n<!-- {marker} -->\n{text}\n", encoding="utf-8")
+    path.write_bytes((prior + f"\n\n<!-- {marker} -->\n{text}\n").encode("utf-8"))
 
 
 def _publish_handoff(root: Path, out: Path, text: str) -> None:
@@ -234,10 +234,37 @@ def run_live_sprint(project_root: str | Path, sprint_id: str, plan_path: str | P
             previous_ref = f"07_draft/episodes/{number[1]}{int(number[2])-1:0{len(number[2])}d}.md" if number else None
         if previous_ref != expected_previous or current["story"].get("first_episode"):
             raise ContractError("SPRINT_EPISODE_CONTINUITY_INVALID", current["unit"]["id"])
+    # A five-chapter batch must not pass an Arc endpoint before its review.
+    # Refuse cross-Arc plans before any provider call; standalone chapter and
+    # Arc review remain the public path for finishing a shorter Arc remainder.
+    _preflight_arc(root, contracts)
     out = assert_output_within_root(root, f"sprints/{sprint_id}")
     out.mkdir(parents=True, exist_ok=True)
     with runner.locked_run(out, lock_name="execution.lock"):
         return _execute(root, out, payload, contracts, criteria)
+
+
+def _preflight_arc(root: Path, contracts: list) -> str:
+    try:
+        from .cnw_arc import planned_arc_range
+        from .cnw_roles import resolve_arc
+    except ImportError:
+        from cnw_arc import planned_arc_range
+        from cnw_roles import resolve_arc
+    selected = set()
+    for _, contract in contracts:
+        episode_id = contract["unit"]["id"]
+        arc_path = resolve_arc(root, episode_id, contract["story"].get("arc_ref"))
+        arc_ref = arc_path.relative_to(root).as_posix()
+        context = planned_arc_range(root, arc_ref)
+        if context["status"] != "ARC_RANGE_RESOLVED":
+            raise ContractError("ARC_RANGE_UNRESOLVED", arc_ref)
+        if episode_id not in context["episodes"]:
+            raise ContractError("ARC_EPISODE_OUTSIDE_RANGE", episode_id)
+        selected.add(arc_ref)
+    if len(selected) != 1:
+        raise ContractError("SPRINT_CROSSES_ARC_BOUNDARY", "finish and review the current Arc before producing the next Arc")
+    return next(iter(selected))
 
 
 def _execute(root: Path, out: Path, plan: dict, contracts: list, criteria: dict) -> dict:
@@ -345,11 +372,28 @@ def _execute(root: Path, out: Path, plan: dict, contracts: list, criteria: dict)
               "criteria": criteria, "status": "PASS" if passed else "REVISION_REQUIRED", "episode_hashes": {row["episode_id"]: row["sha256"] for row in candidates}, "provider_request_id": receipt["provider_request_id"], "user_creative_accepted": False}
     _write_once(out, "batch_review.json", json.dumps(report, ensure_ascii=False, indent=2))
     _write_once(out, "batch_review.md", render_batch_report(report))
+    # Arc review consumes the full planned range, including prior Sprints. The
+    # current drafts and batch evidence must be published before selecting it.
+    _write_once(root, f"08_review/{out.name}_batch_review.json", json.dumps(report, ensure_ascii=False, indent=2))
+    _write_once(root, f"08_review/{out.name}_batch_review.md", render_batch_report(report))
+    for row in candidates:
+        _write_once(root, f"07_draft/episodes/{row['episode_id']}.md", row["prose"])
+    try:
+        from .cnw_arc import review_arc
+    except ImportError:
+        from cnw_arc import review_arc
+    arc_ref = _preflight_arc(root, contracts)
+    arc_review = review_arc(root, arc_ref, last_episode=candidates[-1]["episode_id"], prior_gate=report["status"], handoff=False)
+    arc_blocked = arc_review.get("arc_status") == "revise" or arc_review["status"] not in {"ARC_NOT_AT_END", "ARC_REVIEW_RECORDED"}
+    final_status = "REVISION_REQUIRED" if arc_blocked else report["status"]
+    arc_context = {key: value for key, value in arc_review.items() if key not in {"provider_call", "recovered"}}
+    if arc_review.get("report"):
+        arc_context["report_markdown"] = _read(root, arc_review["report"])
     handoff_prompt, _ = _pinned_upstream("templates/_workflows/05_handoff.md")
     handoff_sections = ("Project pitch", "Creative goal", "Protected core", "Draft state", "Canon warnings", "Open questions", "Next best action", "File index", "Pipeline-Ready Context Pack")
     handoff, _ = runner.cnw_live_call(out, stage="sprint_handoff", role_id="handoff", messages=[
         {"role": "system", "content": handoff_prompt + "\nGenerate compact Markdown using these exact ## headings: " + ", ".join(handoff_sections) + ". Include confirmed unresolved batch issues and pipeline pointers. Do not claim user acceptance or automatically start another sprint."},
-        {"role": "user", "content": json.dumps({"project": context, "episodes": candidates, "batch_review": report}, ensure_ascii=False)}], output_cap=3000)
+        {"role": "user", "content": json.dumps({"project": context, "episodes": candidates, "batch_review": report, "arc_review": arc_context}, ensure_ascii=False)}], output_cap=3000)
     if any("## " + heading not in handoff for heading in handoff_sections):
         raise ContractError("SPRINT_HANDOFF_INCOMPLETE", "required handoff sections missing")
     _write_once(out, "next_sprint_handoff.md", handoff)
@@ -369,12 +413,12 @@ def _execute(root: Path, out: Path, plan: dict, contracts: list, criteria: dict)
         _write_once(root, f"07_draft/episodes/{row['episode_id']}.md", row["prose"])
     index_lines = "\n".join(f"- {row['episode_id']}: 07_draft/episodes/{row['episode_id']}.md; SHA256={row['sha256']}; pending user reading" for row in candidates)
     for relative, text in (("07_draft/manuscript_index.md", index_lines),
-        ("94_runtime/current_state.md", f"Sprint {out.name}: {report['status']}; five drafted episodes; user creative acceptance pending."),
-        ("94_runtime/current_sprint.md", f"{out.name}: {report['status']}. Next sprint has not started; review 08_review/{out.name}_batch_review.md and 93_exports/handoff_{out.name}.md."),
-        ("00_meta/ai_work_log.md", f"Completed five episode pipelines and batch review for {out.name}; status={report['status']}; handoff archived; user reading pending.")):
+        ("94_runtime/current_state.md", f"Sprint {out.name}: {final_status}; five drafted episodes; Arc review={arc_review['status']}; user creative acceptance pending."),
+        ("94_runtime/current_sprint.md", f"{out.name}: {final_status}. Next sprint has not started; review 08_review/{out.name}_batch_review.md and 93_exports/handoff_{out.name}.md."),
+        ("00_meta/ai_work_log.md", f"Completed five episode pipelines and batch review for {out.name}; status={final_status}; Arc review={arc_review['status']}; handoff archived; user reading pending.")):
         _append_once(root, relative, f"CNW-SPRINT-{out.name}", text)
     final = runner.load_state(out)
-    final.update(status=report["status"], average_score=average, confirmed_counts=counts, next_sprint_started=False)
+    final.update(status=final_status, average_score=average, confirmed_counts=counts, arc_review=arc_review, next_sprint_started=False)
     runner.save_state(out, final)
-    return {"status": report["status"], "sprint_id": out.name, "episode_count": 5, "average_score": average, "confirmed_counts": counts,
+    return {"status": final_status, "sprint_id": out.name, "episode_count": 5, "average_score": average, "confirmed_counts": counts, "arc_review": arc_review,
             "output_dir": str(out), "provider_call": "performed", "user_creative_accepted": False, "next_sprint_started": False}

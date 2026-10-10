@@ -24,6 +24,8 @@ HANDOFF_SECTIONS = ("Project One-Liner", "Current Creative Goal", "Protected Cor
                     "Canon Warnings", "Open Questions", "Next Best Action", "File Index")
 PENDING = "00_meta/maintenance_pending.json"
 OUTPUT_CAPS = {"audit": 6000, "handoff": 4000}
+OUTPUT_CAPS["arc_review"] = 6000
+ARC_SECTIONS = ("Conclusion", "Arc Role", "Start and End States", "Whole Arc Check", "Canon Update Candidates", "Revision Direction", "Next Arc Handoff")
 
 
 def _adapter_identity(operation):
@@ -52,13 +54,27 @@ def _draft_kind(name):
 def _inventory(root, options):
     names = set()
     folders = AUDIT_FOLDERS if options["operation"] == "audit" else HANDOFF_FOLDERS
+    if options["operation"] == "arc_review":
+        try:
+            from .cnw_arc import arc_context
+        except ImportError:
+            from cnw_arc import arc_context
+        arc = arc_context(root, options["target"])
+        if arc["status"] != "ARC_READY_FOR_REVIEW":
+            raise ContractError("ARC_NOT_READY", arc["status"])
+        folders = ("01_theme", "02_logline", "03_project_design", "90_canon", "08_review")
+        names.update([arc["arc_ref"], arc["details"], *arc["draft_paths"]])
+        for name in ("00_meta/episode_production_manual.md", "00_meta/manuscript_review_rubric.md", "04_chapter_design/arc_index.md"):
+            if assert_output_within_root(root, name).is_file():
+                names.add(name)
     for folder in folders:
         for path in (root / folder).rglob("*.md"):
             name = path.relative_to(root).as_posix()
             assert_output_within_root(root, name)
             if path.is_file():
                 names.add(name)
-    for name in ("AGENTS.md", "CLAUDE.md", "00_meta/ai_work_log.md"):
+    extra_names = ("AGENTS.md", "CLAUDE.md") if options["operation"] == "arc_review" else ("AGENTS.md", "CLAUDE.md", "00_meta/ai_work_log.md")
+    for name in extra_names:
         if assert_output_within_root(root, name).is_file():
             names.add(name)
     if options["operation"] == "handoff":
@@ -84,6 +100,9 @@ def _inventory(root, options):
 def _method(root, operation):
     workflow = "04_canon_audit" if operation == "audit" else "05_handoff"
     paths = ["templates/CLAUDE.md", f"templates/_workflows/{workflow}.md"]
+    if operation == "arc_review":
+        paths = ["templates/CLAUDE.md", "docs/ARCHITECTURE.md", "templates/config/workflow.template.yml",
+            "templates/04_chapter_design/arc.template.md", "example_project/00_meta/episode_production_manual.md"]
     if operation == "handoff":
         paths += ["templates/93_exports/handoff_brief.template.md", "docs/HANDOFF.md"]
     references = {}
@@ -113,6 +132,14 @@ def _messages(inventory, references, options):
                    'Do not manufacture findings; if none are found, say so and return an empty action_items list. '
                    'Only action_items will be deduplicated and appended to unresolved_questions; the report is saved verbatim. '
                    'A light audit covers selected new chapters against the supplied Canon/design/Plot; a targeted audit covers the named subsystem across all supplied sources.')
+    elif options["operation"] == "arc_review":
+        system += ('Perform the public per-Arc completion review in the production manual section 部単位チェック. '
+            'Use THIS project Arc Range, Purpose, beats and all actual Arc drafts, including earlier Sprints. '
+            'The example protagonist, twenty-episode length, self-evaluation axes and misrecognition model are example facts only; never impose them on this project. '
+            'Compare plan/actual, opening/closing character and world state, final payoff, next-Arc readiness, unresolved foreshadowing/Canon candidates and long-term repetition. '
+            'Return JSON {"review_markdown":"complete Arc review","status":"pass or revise"}. '
+            'Use these exact ## headings with project-language content: ' + ', '.join(ARC_SECTIONS) + '. '
+            'Write Status: pass or Status: revise consistent with the JSON status. Canon updates are candidates only; do not approve them or start another Arc.')
     else:
         system += ('Return JSON {"brief_markdown":"compact current-project handoff using the eight sections of the official template"}. '
                    'Keep the official English section headings for publication indexing; content uses the project language. '
@@ -196,7 +223,7 @@ def run_maintenance(project_root, operation, *, scope="full", chapters=(), targe
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
         raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
-    if operation not in {"audit", "handoff"} or scope not in {"full", "light", "targeted"}:
+    if operation not in {"audit", "handoff", "arc_review"} or scope not in {"full", "light", "targeted"}:
         raise ContractError("MAINTENANCE_OPERATION_INVALID", str(operation))
     if scope == "targeted" and (not isinstance(target, str) or not target.strip()):
         raise ContractError("AUDIT_TARGET_REQUIRED", "name the subsystem")
@@ -231,10 +258,16 @@ def _run(root, options):
             for name, row in journal["writes"].items():
                 path = assert_output_within_root(root, name)
                 if not path.exists() or runner.sha(path.read_bytes()) != row["after_sha256"]:
+                    # A later handoff/Sprint appends its own log entry. The Arc
+                    # input set does not consume this work log; preserving the
+                    # complete old prefix is compatible with its committed run.
+                    if options["operation"] == "arc_review" and name == "00_meta/ai_work_log.md" and path.is_file() and path.read_bytes().startswith(row["text"].encode("utf-8")):
+                        continue
                     raise ContractError("MAINTENANCE_COMMITTED_OUTPUT_CHANGED", name)
             return {**journal["result"], "provider_call": "reused"}
         messages = _messages(inventory, references, options)
-        target_name = "08_review/continuity_audit.md" if options["operation"] == "audit" else "93_exports/handoff_brief.md"
+        target_name = ("08_review/continuity_audit.md" if options["operation"] == "audit" else
+            f"08_review/{Path(options['target']).stem}_review.md" if options["operation"] == "arc_review" else "93_exports/handoff_brief.md")
         target_path = assert_output_within_root(root, target_name)
         target_before = runner.sha(target_path.read_bytes()) if target_path.exists() else None
         identity = runner.sha(json.dumps(messages, ensure_ascii=False, sort_keys=True).encode())
@@ -265,6 +298,15 @@ def _run(root, options):
                 writes[questions] = _write(root, questions, next_questions)
             result = {"status": "CANON_AUDIT_RECORDED", "report": report_path, "action_items": len(items),
                 "canon_modified": False, "unresolved_questions_updated": questions in writes}
+        elif options["operation"] == "arc_review":
+            report, status = value.get("review_markdown"), value.get("status")
+            if not isinstance(report, str) or not report.strip() or status not in {"pass", "revise"}:
+                raise ContractError("ARC_REVIEW_RESPONSE_INVALID", "report and pass/revise required")
+            headings = re.findall(r"^##\s+(.+?)\s*$", report, re.M)
+            if not all(any(section.casefold() == heading.casefold() for heading in headings) for section in ARC_SECTIONS) or not re.search(r"\bStatus:\s*" + status + r"\b", report, re.I):
+                raise ContractError("ARC_REVIEW_RESPONSE_INVALID", "public review sections and consistent status required")
+            writes[target_name] = _write(root, target_name, report)
+            result = {"status": "ARC_REVIEW_RECORDED", "arc_status": status, "report": target_name, "canon_modified": False, "next_arc_started": False}
         else:
             brief = value.get("brief_markdown")
             if not isinstance(brief, str) or not brief.strip():

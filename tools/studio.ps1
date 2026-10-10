@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0,Mandatory=$true)]
-    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','project-incremental','canon-audit','handoff','support-workflow','verify','scene','legacy-scene','resume','refresh-references','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
+    [ValidateSet('doctor','prepare','import-source','project-init','project-import','project-contract','project-incremental','canon-audit','handoff','arc-review','support-workflow','verify','scene','legacy-scene','resume','refresh-references','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
     [string]$Command,
     [ValidateSet('offline','live')][string]$Mode,
     [ValidateSet('plot','scene_cards','writing_brief','prose','lint_layer1','lint_layer2','multi_lens_review','adversarial_verify','completeness_critic','refine','re_review','cards','brief','pov','draft','lint1','lint2','lens5','verifier3','completeness','re-review','revise')][string]$Stage,
@@ -29,6 +29,8 @@ param(
     [string[]]$AuditChapter,
     [string]$AuditTarget,
     [string]$Reason,
+    [string]$ArcRef,
+    [string]$LastEpisode,
     [switch]$Pipeline,
     [switch]$CreateOnly,
     [int]$Port = 3175
@@ -310,6 +312,7 @@ switch ($Command) {
     'sprint' {
         if (-not $SprintId -or -not $SprintPlan) { throw 'SPRINT_REQUIRES_SPRINT_ID_AND_FIXTURE_PLAN' }
         $PlanPath=(Resolve-Path -LiteralPath $SprintPlan).Path
+        if ($Mode -eq 'live') { Invoke-CnwRunner @('sprint','--run-id',$SprintId,'--sprint-plan',$PlanPath,'--mode','live'); break }
         $SprintScript=Join-Path $Root 'tools/cnw_sprint.py'
         & $Python $SprintScript --project-root $ProjectRootPath --sprint-id $SprintId --plan $PlanPath
         if ($LASTEXITCODE -ne 0) { throw "CNW_SPRINT_FAILED:$LASTEXITCODE" }
@@ -324,6 +327,13 @@ switch ($Command) {
         $Ledger=Read-Json (Join-Path $Root 'runtime/private/p2-cost-ledger.json')
         $Rows=@($Ledger.requests | Where-Object run_id -eq $RunId)
         [ordered]@{status='RUN_REOPENED_READ_ONLY';run_id=$RunId;path=$Run;ledger_rows=$Rows.Count;provider_requests=@($Rows | Where-Object provider_request_id).Count;no_replay=$true} | ConvertTo-Json -Depth 4
+    }
+    'arc-review' {
+        if (-not $ArcRef) { throw 'ARC_REFERENCE_REQUIRED' }
+        $ArcArgs=@('--project-root',$ProjectRootPath,'--arc-ref',$ArcRef)
+        if ($LastEpisode) { $ArcArgs += @('--last-episode',$LastEpisode) }
+        & $Python (Join-Path $Root 'tools/cnw_arc.py') @ArcArgs
+        if ($LASTEXITCODE -ne 0) { throw "CNW_ARC_REVIEW_FAILED:$LASTEXITCODE" }
     }
     'refresh-references' {
         if (-not $RunId -or -not $Reason) { throw 'REFERENCE_REOPEN_REQUIRES_RUN_ID_AND_REASON' }
