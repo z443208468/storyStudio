@@ -77,7 +77,7 @@ def safe_run(run_dir: str | Path) -> Path:
 
 
 def verify_run_preflight(run: Path, state: dict | None = None) -> dict:
-    """Validate the pinned W10 run-level authorization independently of stage readiness."""
+    """Validate legacy J19 authorization or an explicit project-bound preflight."""
     if state is None:
         try:
             state = json.loads((run / "run_state.json").read_text(encoding="utf-8"))
@@ -88,18 +88,35 @@ def verify_run_preflight(run: Path, state: dict | None = None) -> dict:
         from .cnw_w10_policy import CONTRACT_SHA256, PREFLIGHT_EVIDENCE_SHA256, PREFLIGHT_REF, SOURCE_SCRIPT_SHA256
     except ImportError:
         from cnw_w10_policy import CONTRACT_SHA256, PREFLIGHT_EVIDENCE_SHA256, PREFLIGHT_REF, SOURCE_SCRIPT_SHA256
-    if (state.get("run_id") != run.name or state.get("mode") != "live"
-            or state.get("fixture_only") is not False
-            or authorization.get("status") != "ACCEPTED"
-            or authorization.get("scope") != "W10_SINGLE_SCENE"
-            or authorization.get("contract_sha256") != CONTRACT_SHA256
-            or state.get("contract_sha256") != CONTRACT_SHA256
-            or authorization.get("source_script_sha256") != SOURCE_SCRIPT_SHA256
-            or authorization.get("evidence_sha256") != PREFLIGHT_EVIDENCE_SHA256
-            or authorization.get("controller_acceptance_ref") != PREFLIGHT_REF
-            or authorization.get("provider_call_authorized") is not True):
-        raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "W10 run preflight")
-    return state
+    legacy_authorized = (
+        state.get("run_id") == run.name and state.get("mode") == "live"
+        and state.get("fixture_only") is False
+        and authorization.get("status") == "ACCEPTED"
+        and authorization.get("scope") == "W10_SINGLE_SCENE"
+        and authorization.get("contract_sha256") == CONTRACT_SHA256
+        and state.get("contract_sha256") == CONTRACT_SHA256
+        and authorization.get("source_script_sha256") == SOURCE_SCRIPT_SHA256
+        and authorization.get("evidence_sha256") == PREFLIGHT_EVIDENCE_SHA256
+        and authorization.get("controller_acceptance_ref") == PREFLIGHT_REF
+        and authorization.get("provider_call_authorized") is True)
+    if legacy_authorized:
+        return state
+    preflight_path = os.environ.get("STORYSTUDIO_W10_PREFLIGHT_PATH")
+    if preflight_path:
+        try:
+            from .cnw_w10_policy import verify_preflight_file
+        except ImportError:
+            from cnw_w10_policy import verify_preflight_file
+        contract_path = run / "artifacts/contract.json"
+        project_root = run.parent.parent
+        preflight, _evidence_sha = verify_preflight_file(
+            preflight_path, contract_path, run_dir=run, project_root=project_root)
+        if (state.get("run_id") != run.name or state.get("mode") != "live"
+                or state.get("fixture_only") is not False
+                or preflight.get("provider_call_authorized") is not True):
+            raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "per-run W10 preflight does not authorize provider calls")
+        return state
+    raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "W10 run preflight")
 
 
 def _load_live_state(run: Path, stage: str) -> dict:

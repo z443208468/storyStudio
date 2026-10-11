@@ -34,9 +34,11 @@ def strip_key(value):
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--action", required=True, choices=("plan-critique", "plan-revise", "text-refine"))
-    parser.add_argument("--input", required=True, help="Plot or key excerpt under workspace/cangqi or runs")
+    parser.add_argument("--input", required=True, help="Plot or key excerpt under the selected private project")
     parser.add_argument("--critique", help="CritiCS feedback JSON for plan-revise")
-    parser.add_argument("--run-name", required=True)
+    run_group = parser.add_mutually_exclusive_group(required=True)
+    run_group.add_argument("--run-name", help="Legacy run name under the repository runs directory")
+    run_group.add_argument("--run-dir", help="Explicit direct child of a registered private runs directory")
     parser.add_argument("--ledger-run-id", help="Optional parent production run ID for shared campaign settlement")
     args = parser.parse_args(argv)
 
@@ -44,10 +46,15 @@ def main(argv=None) -> int:
         raise SystemExit("DEEPSEEK_API_KEY_REQUIRED")
     if args.action == "plan-revise" and not args.critique:
         raise SystemExit("CRITIQUE_REQUIRED_FOR_PLAN_REVISE")
-    run_name = Path(args.run_name).name
-    if run_name != args.run_name or run_name in {"", ".", ".."}:
-        raise SystemExit("RUN_NAME_INVALID")
-    run_dir = ROOT / "runs" / run_name
+    if args.run_name:
+        run_name = Path(args.run_name).name
+        if run_name != args.run_name or run_name in {"", ".", ".."}:
+            raise SystemExit("RUN_NAME_INVALID")
+        run_dir = ROOT / "runs" / run_name
+    else:
+        supplied_run_dir = critics_bridge.project_path(args.run_dir, directory=True)
+        run_name = supplied_run_dir.name
+        run_dir = supplied_run_dir
     input_path = critics_bridge.project_path(args.input)
     if not input_path.is_file():
         raise SystemExit("INPUT_FILE_NOT_FOUND")

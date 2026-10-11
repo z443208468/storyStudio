@@ -20,12 +20,36 @@ ROOT = Path(__file__).resolve().parents[1]
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest().upper()
 
+
+def _evidence_path(path: Path, project_root: Path) -> str:
+    resolved = path.resolve(strict=True)
+    for base in (project_root.resolve(strict=True), ROOT.resolve(strict=True)):
+        try:
+            return resolved.relative_to(base).as_posix()
+        except ValueError:
+            continue
+    raise ContractError("W10_CRITICS_EVIDENCE_PATH_OUTSIDE_SCOPE", str(resolved))
+
+
+def _critics_run_path(run: Path, action: str) -> tuple[Path, Path]:
+    try:
+        from .critics_bridge import _registered_project_for_path
+    except ImportError:
+        from critics_bridge import _registered_project_for_path
+    project = _registered_project_for_path(run)
+    evidence_root = project or ROOT
+    runs_root = project / "runs" if project else ROOT / "runs"
+    critic_run_id = f"{run.name}-critics-{action}"
+    return evidence_root, runs_root / critic_run_id
+
+
 def run_action(run_dir: str | Path, action: str) -> dict:
     run = safe_run(run_dir)
     if action not in {"plan-critique", "text-refine"}:
         raise ContractError("W10_CRITICS_ACTION_INVALID", action)
     state = load_state(run)
     contract = _contract_for(run)
+    project_root, critic_dir = _critics_run_path(run, action)
     if _support_integration_mode(contract, "critics") == "DISABLED":
         return {"status": "DISABLED", "action": action, "provider_call_count": 0,
                 "provider_call": "none"}
@@ -38,14 +62,13 @@ def run_action(run_dir: str | Path, action: str) -> dict:
     input_sha = sha(input_path.read_bytes())
     if any(row.get("action") == action for row in state.get("critics_evidence", [])):
         raise ContractError("W10_CRITICS_ACTION_ALREADY_RECORDED", action)
-    critic_run_id = f"{run.name}-critics-{action}"
-    critic_dir = ROOT / "runs" / critic_run_id
+    critic_run_id = critic_dir.name
     if critic_dir.exists() or critic_dir.is_symlink():
         raise ContractError("W10_CRITICS_RUN_COLLISION", critic_run_id)
     if not os.environ.get("DEEPSEEK_API_KEY"):
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", action)
     command = [sys.executable, str(ROOT / "tools/p2_06_critics_run.py"), "--action", action,
-               "--input", str(input_path), "--run-name", critic_run_id, "--ledger-run-id", run.name]
+               "--input", str(input_path), "--run-dir", str(critic_dir), "--ledger-run-id", run.name]
     completed = subprocess.run(command, cwd=ROOT, check=False, capture_output=True, text=True)
     if completed.returncode != 0:
         raise ContractError("W10_CRITICS_ACTION_FAILED", f"{action}; exit={completed.returncode}")
@@ -53,7 +76,7 @@ def run_action(run_dir: str | Path, action: str) -> dict:
     if not results:
         raise ContractError("W10_CRITICS_RESULT_MISSING", action)
     result = json.loads(results[-1])
-    critic_root = ROOT / "runs" / critic_run_id
+    critic_root = critic_dir
     receipt_path = critic_root / "run_receipt.json"
     calls_path = critic_root / "provider-calls.json"
     output_path = Path(result.get("output", "")).resolve(strict=True)
@@ -90,11 +113,12 @@ def run_action(run_dir: str | Path, action: str) -> dict:
             raise ContractError("W10_CRITICS_COST_LEDGER_MISMATCH", action) from exc
         if not estimated.is_finite() or not reported_cost.is_finite() or estimated != reported_cost:
             raise ContractError("W10_CRITICS_COST_LEDGER_MISMATCH", action)
-    evidence = {"action": action, "run_dir": critic_root.relative_to(ROOT).as_posix(),
-        "receipt_path": receipt_path.relative_to(ROOT).as_posix(),
-        "receipt_sha256": sha(receipt_path.read_bytes()), "calls_path": calls_path.relative_to(ROOT).as_posix(),
-        "calls_sha256": sha(calls_path.read_bytes()), "input_path": input_path.relative_to(ROOT).as_posix(),
-        "input_sha256": input_sha, "output_path": output_path.relative_to(ROOT).as_posix(),
+    evidence = {"action": action, "path_root": "project_root",
+        "run_dir": _evidence_path(critic_root, project_root),
+        "receipt_path": _evidence_path(receipt_path, project_root),
+        "receipt_sha256": sha(receipt_path.read_bytes()), "calls_path": _evidence_path(calls_path, project_root),
+        "calls_sha256": sha(calls_path.read_bytes()), "input_path": _evidence_path(input_path, project_root),
+        "input_sha256": input_sha, "output_path": _evidence_path(output_path, project_root),
         "output_sha256": sha(output_path.read_bytes()), "request_ids": request_ids,
         "provider_request_ids": provider_ids, "status": "SUCCEEDED"}
     with locked_run(run):
@@ -112,7 +136,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", required=True)
     parser.add_argument("--action", required=True, choices=("plan-critique", "text-refine"))
+    parser.add_argument("--preflight")
     args = parser.parse_args()
+    if args.preflight:
+        os.environ["STORYSTUDIO_W10_PREFLIGHT_PATH"] = str(Path(args.preflight).resolve(strict=True))
     print(json.dumps(run_action(args.run_dir, args.action), ensure_ascii=False, indent=2))
 if __name__ == "__main__":
     try:

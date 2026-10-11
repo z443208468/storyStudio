@@ -128,8 +128,16 @@ def validate_legacy_source_path_map(
     legacy_run_dir: str | Path,
     manifest_path: str | Path,
     expected_manifest_sha256: str,
+    original_run_state_path: str | Path | None = None,
 ) -> tuple[dict, dict, dict]:
-    """Validate map, target registration, and unchanged historical run bytes."""
+    """Validate map, target registration, and historical run identity.
+
+    By default the map must bind the current run_state bytes exactly. A caller
+    may supply an external immutable snapshot of the original run_state; in
+    that mode the map is checked against the snapshot while stable identity
+    fields are still compared to the current run. This supports read-only
+    validation of legacy mappings after a separately authorized run advances.
+    """
     requested_root = Path(target_project_root).absolute()
     requested_run = Path(legacy_run_dir).absolute()
     if not _no_reparse(requested_root) or not _no_reparse(requested_run):
@@ -151,6 +159,17 @@ def validate_legacy_source_path_map(
     state, state_raw = _read_json_object(state_path, "LEGACY_RUN_STATE_INVALID")
     contract, contract_raw = _read_json_object(contract_path, "LEGACY_CONTRACT_INVALID")
     map_doc, map_raw = _read_json_object(map_path, "LEGACY_SOURCE_MAP_INVALID")
+    original_state_file = None
+    original_state_raw = None
+    original_state = None
+    if original_run_state_path is not None:
+        original_state_file = Path(original_run_state_path).absolute()
+        if (not _no_reparse(original_state_file) or not original_state_file.is_file()
+                or original_state_file.resolve(strict=True).is_relative_to(ROOT.resolve())
+                or original_state_file.resolve(strict=True).is_relative_to(root)):
+            raise ContractError("LEGACY_ORIGINAL_RUN_STATE_PATH_UNSAFE", str(original_state_file))
+        original_state, original_state_raw = _read_json_object(
+            original_state_file, "LEGACY_ORIGINAL_RUN_STATE_INVALID")
     if sha256_bytes(map_raw) != expected_manifest_sha256:
         raise ContractError("LEGACY_SOURCE_MAP_SHA_MISMATCH", str(map_path))
 
@@ -168,8 +187,15 @@ def validate_legacy_source_path_map(
                            contract.get("source", {}).get("local_private_source_manifest_sha256"))
     if source_manifest_sha is not None:
         _required_sha(source_manifest_sha, "contract source manifest SHA256")
-    if (source_run.get("run_id") != state.get("run_id") or run_dir.name != state.get("run_id") or
-            source_run.get("run_state_sha256") != sha256_bytes(state_raw) or
+    mapped_state_raw = original_state_raw if original_state_raw is not None else state_raw
+    stable_state_keys = ("run_id", "project_id", "work_id", "contract_path", "contract_sha256",
+                         "source_identity", "workflow_template_sha256")
+    stable_state_matches = (original_state is None or all(
+        state.get(key) == original_state.get(key) for key in stable_state_keys
+        if key in original_state or key in state))
+    if (not stable_state_matches or
+            source_run.get("run_id") != state.get("run_id") or run_dir.name != state.get("run_id") or
+            source_run.get("run_state_sha256") != sha256_bytes(mapped_state_raw) or
             state.get("contract_sha256") != sha256_bytes(contract_raw) or
             source_run.get("contract_path_in_run") != "artifacts/contract.json" or
             source_run.get("contract_sha256") != sha256_bytes(contract_raw) or
@@ -205,7 +231,7 @@ def validate_legacy_source_path_map(
                 not isinstance(binding, dict) or binding.get("run_id") != state.get("run_id") or
                 binding.get("contract_sha256") != contract_sha or
                 binding.get("source_manifest_sha256") != source_manifest_sha or
-                binding.get("run_state_sha256") != sha256_bytes(state_raw)):
+                binding.get("run_state_sha256") != sha256_bytes(mapped_state_raw)):
             raise ContractError("LEGACY_EXTERNAL_IDENTITY_BINDING_MISMATCH", "external identity must bind this root, run, contract, and source manifest")
 
     source = contract.get("source", {})
@@ -289,6 +315,7 @@ def validate_legacy_source_path_map(
     identity_raw = identity_path.read_bytes() if schema_version == SCHEMA_VERSION else None
     if (sha256_bytes(state_path.read_bytes()) != sha256_bytes(state_raw) or
             sha256_bytes(contract_path.read_bytes()) != sha256_bytes(contract_raw) or
+            (original_state_file is not None and sha256_bytes(original_state_file.read_bytes()) != sha256_bytes(original_state_raw)) or
             (identity_raw is not None and sha256_bytes(identity_path.read_bytes()) != sha256_bytes(identity_raw))):
         raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
     if sha256_bytes(map_path.read_bytes()) != sha256_bytes(map_raw):

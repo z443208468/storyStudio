@@ -124,7 +124,8 @@ def prepare_role_request(run_dir: str | Path, project_root: str | Path, *, role:
         from .cnw_w10_policy import verify_preflight_file
     except ImportError:
         from cnw_w10_policy import verify_preflight_file
-    preflight, preflight_sha = verify_preflight_file(preflight_path, contract_path)
+    preflight, preflight_sha = verify_preflight_file(
+        preflight_path, contract_path, run_dir=run, project_root=project)
     role_packet = build_role_packet(role, contract_path, inputs,
         accepted_receipts=state.get("role_receipts", []), mode="live", w10_preflight=preflight)
     user_packet = {key: value for key, value in role_packet.items() if key != "prompt"}
@@ -387,6 +388,7 @@ def execute(run_dir: str | Path, *, stage: str, packet_path: str | Path,
         if (rebuilt_path.resolve() != packet_file.resolve()
                 or digest(rebuilt_path.read_bytes()) != packet.get("packet_sha256")):
             raise ContractError("LIVE_STAGE_PACKET_REBUILD_MISMATCH", stage)
+        os.environ["STORYSTUDIO_W10_PREFLIGHT_PATH"] = packet["preflight_path"]
     else:
         raise ContractError("LIVE_STAGE_PACKET_BUILDER_UNTRUSTED", str(packet.get("builder_id")))
     contract_path = run / "artifacts/contract.json"
@@ -619,6 +621,8 @@ def main(argv=None) -> int:
     parser.add_argument("--input-token-cap", type=int)
     parser.add_argument("--output-token-cap", type=int)
     args = parser.parse_args(argv)
+    if args.preflight:
+        os.environ["STORYSTUDIO_W10_PREFLIGHT_PATH"] = str(Path(args.preflight).resolve(strict=True))
     if args.bind_nk_receipt:
         result = bind_nk_receipt(args.run_dir, args.bind_nk_receipt)
     elif args.record_nk_budget_failure:

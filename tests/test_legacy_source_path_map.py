@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -12,7 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tools.cnw_contract import ContractError
-from tools import cnw_runner
+from tools import cnw_live_provider, cnw_runner, cnw_w10_policy
 from tools.cnw_runner import validate_literary_source_freeze
 from tools.legacy_source_path_map import (CATEGORIES, EXTERNAL_SCHEMA_VERSION,
     legacy_external_project_instance_id, resolve_legacy_key,
@@ -163,6 +164,35 @@ class LegacySourcePathMapTests(unittest.TestCase):
         self.assertEqual(self.state_path.read_bytes(), before_state)
         self.assertEqual((self.run / "artifacts/contract.json").read_bytes(), before_contract)
         self.assertEqual(self.map_path.read_bytes(), before_map)
+
+    def test_original_run_state_snapshot_allows_only_stable_identity_after_run_advances(self):
+        snapshot = self.temp / "external-original-run-state.json"
+        original = self.state_path.read_bytes()
+        snapshot.write_bytes(original)
+        current = json.loads(original.decode("utf-8"))
+        current["stages"]["plot"]["status"] = "EXECUTION_INCOMPLETE"
+        current["execution_failures"] = [{"stage": "plot", "code": "SYNTHETIC_FAILURE"}]
+        advanced = json.dumps(current, sort_keys=True).encode("utf-8")
+        self.state_path.write_bytes(advanced)
+
+        with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH"):
+            validate_legacy_source_path_map(target_project_root=self.project, legacy_run_dir=self.run,
+                manifest_path=self.map_path, expected_manifest_sha256=self.map_sha)
+
+        before_current = self.state_path.read_bytes()
+        validate_legacy_source_path_map(target_project_root=self.project, legacy_run_dir=self.run,
+            manifest_path=self.map_path, expected_manifest_sha256=self.map_sha,
+            original_run_state_path=snapshot)
+        self.assertEqual(self.state_path.read_bytes(), before_current)
+        self.assertEqual(snapshot.read_bytes(), original)
+
+        altered_snapshot = json.loads(original.decode("utf-8"))
+        altered_snapshot["unrelated_synthetic_field"] = "tampered"
+        snapshot.write_text(json.dumps(altered_snapshot, sort_keys=True), encoding="utf-8")
+        with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH"):
+            validate_legacy_source_path_map(target_project_root=self.project, legacy_run_dir=self.run,
+                manifest_path=self.map_path, expected_manifest_sha256=self.map_sha,
+                original_run_state_path=snapshot)
 
     def test_prospective_plot_identity_tracks_bound_input_and_builder_without_mutating_run(self):
         args = SimpleNamespace(project_root=str(self.project), run_id="SYNTHETIC-LEGACY",
@@ -339,6 +369,85 @@ class LegacySourcePathMapTests(unittest.TestCase):
         self.assertEqual(before["state"], external_state.read_bytes())
         self.assertEqual(before["contract"], external_contract.read_bytes())
         self.assertEqual(before["project_contract"], (external_root / "contracts/SYNTHETIC-UNIT.json").read_bytes())
+
+        original_state_path = self.temp / "external-original-state-snapshot.json"
+        original_state_path.write_bytes(state_raw)
+        controller_evidence = self.temp / "synthetic-controller-review.json"
+        controller_ref = "SYNTHETIC-W10-PREFLIGHT-ACCEPT-01"
+        run_contract = json.loads(contract_raw)
+        workflow_sha = json.loads(state_raw)["workflow_template_sha256"]
+        controller_doc = {"schema_version": "cnw_w10_controller_verdict_v1", "status": "ACCEPTED",
+            "scope": "W10_SINGLE_SCENE", "controller_acceptance_ref": controller_ref,
+            "provider_call_authorized": False, "identity_kind": "LEGACY_EXTERNAL_V1",
+            "project_instance_id": instance_id, "project_id": project_id,
+            "run_id": "SYNTHETIC-LEGACY", "work_id": "SYNTHETIC-UNIT",
+            "contract_sha256": sha(contract_raw),
+            "source_file_sha256": run_contract["source"]["source_file_sha256"],
+            "source_manifest_sha256": manifest_sha,
+            "policy_sha256": run_contract["unit"]["policy_sha256"],
+            "workflow_template_sha256": workflow_sha,
+            "legacy_identity_map_sha256": map_sha,
+            "original_run_state_sha256": sha(state_raw)}
+        controller_evidence.write_text(json.dumps(controller_doc, sort_keys=True), encoding="utf-8")
+        preflight = {
+            "schema_version": cnw_w10_policy.PER_RUN_PREFLIGHT_SCHEMA,
+            "status": "ACCEPTED", "scope": "W10_SINGLE_SCENE",
+            "controller_acceptance_ref": controller_ref,
+            "controller_evidence_path": str(controller_evidence),
+            "controller_evidence_sha256": sha(controller_evidence.read_bytes()),
+            "provider_call_authorized": False,
+            "identity_kind": "LEGACY_EXTERNAL_V1", "project_instance_id": instance_id,
+            "project_id": project_id, "run_id": "SYNTHETIC-LEGACY", "work_id": "SYNTHETIC-UNIT",
+            "contract_sha256": sha(contract_raw),
+            "source_file_sha256": run_contract["source"]["source_file_sha256"],
+            "source_manifest_sha256": manifest_sha,
+            "policy_sha256": run_contract["unit"]["policy_sha256"],
+            "workflow_template_sha256": workflow_sha,
+            "legacy_identity_map_path": str(map_path), "legacy_identity_map_sha256": map_sha,
+            "original_run_state_path": str(original_state_path),
+            "original_run_state_sha256": sha(state_raw),
+        }
+        preflight_path = self.temp / "synthetic-w10-preflight.json"
+        preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
+        verified, verified_sha = cnw_w10_policy.verify_preflight_file(
+            preflight_path, external_contract, run_dir=external_run, project_root=external_root)
+        self.assertEqual(verified["provider_call_authorized"], False)
+        self.assertEqual(verified_sha, sha(preflight_path.read_bytes()))
+        for key, invalid, code in (
+            ("run_id", "OTHER-RUN", "W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH"),
+            ("source_manifest_sha256", "f" * 64, "W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH"),
+            ("controller_evidence_sha256", "0" * 64, "W10_CONTROLLER_EVIDENCE_INVALID"),
+        ):
+            original_value = preflight[key]
+            preflight[key] = invalid
+            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, code):
+                cnw_w10_policy.verify_preflight_file(
+                    preflight_path, external_contract, run_dir=external_run, project_root=external_root)
+            preflight[key] = original_value
+        preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
+
+        advanced_state = json.loads(external_state.read_text(encoding="utf-8"))
+        advanced_state["stages"]["plot"]["status"] = "EXECUTION_INCOMPLETE"
+        advanced_state["execution_failures"] = [{"stage": "plot", "code": "SYNTHETIC_FAILURE"}]
+        advanced_state["mode"] = "live"
+        advanced_state["fixture_only"] = False
+        external_state.write_text(json.dumps(advanced_state, sort_keys=True), encoding="utf-8")
+        cnw_w10_policy.verify_preflight_file(
+            preflight_path, external_contract, run_dir=external_run, project_root=external_root)
+        with patch.dict(os.environ, {"STORYSTUDIO_W10_PREFLIGHT_PATH": str(preflight_path)}, clear=True):
+            with self.assertRaisesRegex(ContractError, "LIVE_STAGE_NOT_AUTHORIZED_OR_READY"):
+                cnw_live_provider.verify_run_preflight(external_run)
+            preflight["provider_call_authorized"] = True
+            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_EVIDENCE_INVALID"):
+                cnw_live_provider.verify_run_preflight(external_run)
+            controller_doc["provider_call_authorized"] = True
+            controller_evidence.write_text(json.dumps(controller_doc, sort_keys=True), encoding="utf-8")
+            preflight["controller_evidence_sha256"] = sha(controller_evidence.read_bytes())
+            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
+            self.assertEqual(cnw_live_provider.verify_run_preflight(external_run)["run_id"], "SYNTHETIC-LEGACY")
+        external_state.write_bytes(state_raw)
 
         other_root = self.temp / "same-files-different-legacy-root"
         shutil.copytree(external_root, other_root)

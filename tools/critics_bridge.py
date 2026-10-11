@@ -19,19 +19,41 @@ def project_path(value: str, *, directory: bool = False) -> Path:
     if not path.is_absolute():
         path = ROOT / path
     resolved = path.resolve(strict=False)
-    try:
-        resolved.relative_to(ROOT.resolve())
-    except ValueError as exc:
-        raise ValueError("PATH_OUTSIDE_PROJECT_ROOT") from exc
-    if directory and not resolved.is_relative_to((ROOT / "runs").resolve()):
-        raise ValueError("RUN_DIR_MUST_BE_UNDER_RUNS")
-    if not directory:
-        allowed = ((ROOT / "workspace").resolve(), (ROOT / "runs").resolve())
-        if not any(resolved.is_relative_to(base) for base in allowed):
-            raise ValueError("INPUT_MUST_BE_UNDER_PRIVATE_WORKSPACE_OR_RUNS")
+    repo_roots = ((ROOT / "workspace").resolve(), (ROOT / "runs").resolve())
+    repo_content_allowed = any(resolved.is_relative_to(base) for base in repo_roots)
+    data_home_project = _registered_project_for_path(resolved)
+    if directory:
+        in_repo_runs = resolved.is_relative_to((ROOT / "runs").resolve())
+        in_project_runs = bool(data_home_project and
+                               resolved.is_relative_to((data_home_project / "runs").resolve()))
+        if not (in_repo_runs or in_project_runs):
+            raise ValueError("RUN_DIR_MUST_BE_UNDER_REGISTERED_RUNS")
+    elif not (repo_content_allowed or data_home_project):
+        raise ValueError("INPUT_MUST_BE_UNDER_PRIVATE_WORKSPACE_OR_REGISTERED_PROJECT")
     if resolved == ROOT.resolve():
         raise ValueError("PROJECT_ROOT_IS_NOT_A_FILE")
     return resolved
+
+
+def _registered_project_for_path(path: Path) -> Path | None:
+    """Return the registered DataHome project containing path, if any."""
+    try:
+        from project_paths import resolve_project
+    except ImportError:
+        try:
+            from .project_paths import resolve_project
+        except ImportError:
+            return None
+    for ancestor in (path, *path.parents):
+        if ancestor.parent.name != "projects":
+            continue
+        try:
+            registration = resolve_project(ancestor, data_home=ancestor.parent.parent)
+        except Exception:
+            continue
+        if registration.get("project_root") == str(ancestor.resolve(strict=True)):
+            return ancestor.resolve(strict=True)
+    return None
 
 
 def sha256_file(path: Path) -> str:
@@ -47,17 +69,22 @@ def read_json(path: Path):
 
 
 def create_run_directory(value: str) -> Path:
-    runs = ROOT / "runs"
-    if runs.is_symlink() or not runs.is_dir():
-        raise ValueError("RUNS_ROOT_INVALID")
     candidate = Path(value)
     if not candidate.is_absolute():
         candidate = ROOT / candidate
-    try:
-        relative = candidate.relative_to(runs)
-    except ValueError as exc:
-        raise ValueError("RUN_DIR_MUST_BE_UNDER_RUNS") from exc
-    if len(relative.parts) != 1 or relative.parts[0] in (".", ".."):
+    candidate = candidate.absolute().resolve(strict=False)
+    runs = candidate.parent
+    if runs == ROOT / "runs":
+        if runs.is_symlink() or not runs.is_dir():
+            raise ValueError("RUNS_ROOT_INVALID")
+    else:
+        project = _registered_project_for_path(runs)
+        if (runs.name != "runs" or project is None or
+                runs.resolve(strict=False) != (project / "runs").resolve(strict=False)):
+            raise ValueError("RUNS_ROOT_NOT_REGISTERED")
+        if runs.is_symlink() or not runs.is_dir():
+            raise ValueError("RUNS_ROOT_INVALID")
+    if candidate.name in ("", ".", ".."):
         raise ValueError("RUN_DIR_MUST_BE_NEW_DIRECT_CHILD")
     if candidate.is_symlink() or candidate.exists():
         raise ValueError("RUN_DIR_MUST_BE_NEW")
