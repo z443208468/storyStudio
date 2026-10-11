@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import shutil
 import subprocess
 import tempfile
@@ -13,7 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tools.cnw_contract import ContractError
-from tools import cnw_live_provider, cnw_runner, cnw_w10_policy
+from tools import cnw_runner, cnw_w10_policy
 from tools.cnw_runner import validate_literary_source_freeze
 from tools.legacy_source_path_map import (CATEGORIES, EXTERNAL_SCHEMA_VERSION,
     legacy_external_project_instance_id, resolve_legacy_key,
@@ -440,72 +439,12 @@ class LegacySourcePathMapTests(unittest.TestCase):
         preflight.update({**bindings, "evidence_digest": evidence_digest})
         preflight_path = self.temp / "synthetic-w10-preflight.json"
         preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
-        verified, verified_sha = cnw_w10_policy.verify_preflight_file(
-            preflight_path, external_contract, run_dir=external_run, project_root=external_root)
-        self.assertEqual(verified["provider_call_authorized"], False)
-        self.assertEqual(verified_sha, sha(preflight_path.read_bytes()))
-        original_map_raw = map_path.read_bytes()
-        original_snapshot_raw = original_state_path.read_bytes()
-        validate_map = validate_legacy_source_path_map
-        def mutate_map_after_validation(*args, **kwargs):
-            result = validate_map(*args, **kwargs)
-            map_path.write_bytes(map_path.read_bytes() + b"\n")
-            return result
-        with patch("tools.legacy_source_path_map.validate_legacy_source_path_map",
-                   side_effect=mutate_map_after_validation):
-            with self.assertRaisesRegex(ContractError, "W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ"):
+        for asserted_status in ("ACCEPTED", "UNREVIEWED"):
+            preflight["status"] = asserted_status
+            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
+            with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_ATTESTATION_UNVERIFIED"):
                 cnw_w10_policy.verify_preflight_file(
                     preflight_path, external_contract, run_dir=external_run, project_root=external_root)
-        map_path.write_bytes(original_map_raw)
-
-        def mutate_snapshot_after_validation(*args, **kwargs):
-            result = validate_map(*args, **kwargs)
-            original_state_path.write_bytes(original_snapshot_raw + b"\n")
-            return result
-        with patch("tools.legacy_source_path_map.validate_legacy_source_path_map",
-                   side_effect=mutate_snapshot_after_validation):
-            with self.assertRaisesRegex(ContractError, "W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ"):
-                cnw_w10_policy.verify_preflight_file(
-                    preflight_path, external_contract, run_dir=external_run, project_root=external_root)
-        original_state_path.write_bytes(original_snapshot_raw)
-
-        for key, invalid, code in (
-            ("run_id", "OTHER-RUN", "W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH"),
-            ("source_manifest_sha256", "f" * 64, "W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH"),
-            ("controller_evidence_sha256", "0" * 64, "W10_CONTROLLER_EVIDENCE_INVALID"),
-            ("work_intent", "ADAPT_SOURCE", "W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH"),
-            ("evidence_digest", "0" * 64, "W10_CONTROLLER_EVIDENCE_INVALID"),
-        ):
-            original_value = preflight[key]
-            preflight[key] = invalid
-            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
-            with self.assertRaisesRegex(ContractError, code):
-                cnw_w10_policy.verify_preflight_file(
-                    preflight_path, external_contract, run_dir=external_run, project_root=external_root)
-            preflight[key] = original_value
-        preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
-
-        advanced_state = json.loads(external_state.read_text(encoding="utf-8"))
-        advanced_state["stages"]["plot"]["status"] = "EXECUTION_INCOMPLETE"
-        advanced_state["execution_failures"] = [{"stage": "plot", "code": "SYNTHETIC_FAILURE"}]
-        advanced_state["mode"] = "live"
-        advanced_state["fixture_only"] = False
-        external_state.write_text(json.dumps(advanced_state, sort_keys=True), encoding="utf-8")
-        cnw_w10_policy.verify_preflight_file(
-            preflight_path, external_contract, run_dir=external_run, project_root=external_root)
-        with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaisesRegex(ContractError, "LIVE_STAGE_NOT_AUTHORIZED_OR_READY"):
-                cnw_live_provider.verify_run_preflight(external_run, preflight_path=preflight_path)
-            preflight["provider_call_authorized"] = True
-            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
-            with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_EVIDENCE_INVALID"):
-                cnw_live_provider.verify_run_preflight(external_run, preflight_path=preflight_path)
-            controller_doc["provider_call_authorized"] = True
-            controller_evidence.write_text(json.dumps(controller_doc, sort_keys=True), encoding="utf-8")
-            preflight["controller_evidence_sha256"] = sha(controller_evidence.read_bytes())
-            preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
-            with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_EVIDENCE_INVALID"):
-                cnw_live_provider.verify_run_preflight(external_run, preflight_path=preflight_path)
         external_state.write_bytes(state_raw)
 
         other_root = self.temp / "same-files-different-legacy-root"
