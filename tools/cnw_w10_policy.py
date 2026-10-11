@@ -36,6 +36,12 @@ def _no_reparse(path: Path) -> bool:
     return not any(part.is_symlink() for part in (path, *path.parents) if part.exists())
 
 
+def _canonical_sha256(value: object) -> str:
+    raw = json.dumps(value, ensure_ascii=False, sort_keys=True,
+                     separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def verify_per_run_preflight_file(
     path: str | Path,
     contract_path: str | Path,
@@ -115,6 +121,8 @@ def verify_per_run_preflight_file(
             or type(value.get("provider_call_authorized")) is not bool):
         raise ContractError("W10_PER_RUN_PREFLIGHT_REVIEW_INVALID", "accepted per-run review evidence is required")
 
+    bound_files: list[tuple[Path, bytes]] = []
+
     def external_bound_file(path_key: str, sha_key: str, error_code: str) -> tuple[Path, bytes]:
         supplied = value.get(path_key)
         expected_sha = value.get(sha_key)
@@ -128,6 +136,7 @@ def verify_per_run_preflight_file(
         raw = bound.read_bytes()
         if hashlib.sha256(raw).hexdigest() != expected_sha.lower():
             raise ContractError(error_code, "SHA256 mismatch")
+        bound_files.append((bound, raw))
         return bound, raw
 
     controller_evidence, controller_raw = external_bound_file(
@@ -139,11 +148,14 @@ def verify_per_run_preflight_file(
             or controller_doc.get("status") != "ACCEPTED"
             or controller_doc.get("scope") != "W10_SINGLE_SCENE"
             or controller_doc.get("controller_acceptance_ref") != value["controller_acceptance_ref"]
-            or controller_doc.get("provider_call_authorized") is not value["provider_call_authorized"]):
+            or value.get("provider_call_authorized") is not False
+            or controller_doc.get("provider_call_authorized") is not False):
         raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "bound Controller verdict does not match the preflight")
 
     identity_path = project / "project_identity.json"
     identity_raw = None
+    legacy_map_doc = None
+    legacy_map_sha = None
     if identity_path.is_file():
         identity, identity_raw = _read_json(identity_path, "PROJECT_IDENTITY_INVALID")
         identity_sha = hashlib.sha256(identity_raw).hexdigest()
@@ -167,6 +179,8 @@ def verify_per_run_preflight_file(
             target_project_root=project, legacy_run_dir=run, manifest_path=map_path,
             expected_manifest_sha256=value["legacy_identity_map_sha256"],
             original_run_state_path=original_state_path)
+        legacy_map_doc = map_doc
+        legacy_map_sha = value["legacy_identity_map_sha256"].lower()
         target = map_doc.get("target_project", {})
         source_run = map_doc.get("source_run", {})
         if (target.get("project_id") != expected_identity["project_id"]
@@ -176,21 +190,67 @@ def verify_per_run_preflight_file(
                     mapped_contract.get("source", {}).get("local_private_source_manifest_sha256")) != manifest_sha):
             raise ContractError("W10_PER_RUN_PREFLIGHT_IDENTITY_MISMATCH", "legacy map does not bind the approved run and source")
 
+    story = contract.get("story", {})
+    work_intent = contract.get("work_intent")
+    if not isinstance(work_intent, str) or not work_intent:
+        work_intent = ("LEGACY_V1_INSERT_BETWEEN" if
+            isinstance(story.get("before_anchor"), dict) and isinstance(story.get("after_anchor"), dict)
+            else "LEGACY_V1")
+    source_id = source.get("source_id") or source.get("import_id")
+    source_revision_id = (source.get("source_revision_id") or source.get("source_file_sha256")
+                          or source.get("script_sha256"))
+    source_manifest_revision_sha = (source.get("source_manifest_revision_sha256") or manifest_sha)
+    selection = story.get("source_selection")
+    if work_intent == "ADAPT_SOURCE" and isinstance(selection, dict):
+        selected_identity = selection
+    elif work_intent in {"INSERT_BETWEEN", "LEGACY_V1_INSERT_BETWEEN"}:
+        selected_identity = {key: story.get(key) for key in ("before_anchor", "after_anchor")}
+    elif work_intent == "ORIGINAL_EPISODE":
+        selected_identity = {key: story.get(key) for key in
+            ("arc_ref", "canon_ref", "previous_episode_identity", "chapter_context") if key in story}
+    else:
+        selected_identity = None
+    selected_span_or_anchor_sha = _canonical_sha256(selected_identity) if selected_identity else None
+    if identity_raw is not None:
+        source_root_identity = hashlib.sha256(identity_raw).hexdigest()
+    else:
+        target = legacy_map_doc.get("target_project", {}) if legacy_map_doc else {}
+        source_root_identity = _canonical_sha256({"legacy_identity_map_sha256": legacy_map_sha,
+            "legacy_project_root": target.get("legacy_project_root"),
+            "project_id": target.get("project_id"),
+            "project_instance_id": target.get("project_instance_id")})
     controller_bindings = {**expected_identity, "identity_kind": value.get("identity_kind"),
         "project_instance_id": value.get("project_instance_id"),
+        "work_intent": work_intent,
+        "source_id": source_id,
+        "source_revision_id": source_revision_id,
+        "source_manifest_revision_sha256": source_manifest_revision_sha,
+        "source_root_identity": source_root_identity,
+        "selected_span_or_anchor_sha": selected_span_or_anchor_sha,
+        "reviewer_identity": value.get("reviewer_identity"),
         "controller_acceptance_ref": value.get("controller_acceptance_ref"),
-        "provider_call_authorized": value.get("provider_call_authorized")}
+        "provider_call_authorized": False}
     if value.get("identity_kind") == "LEGACY_EXTERNAL_V1":
         controller_bindings.update({"legacy_identity_map_sha256": value.get("legacy_identity_map_sha256"),
             "original_run_state_sha256": value.get("original_run_state_sha256")})
+    if any(value.get(key) != expected for key, expected in controller_bindings.items()):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH", "preflight does not bind the complete project/source review identity")
     if any(controller_doc.get(key) != expected for key, expected in controller_bindings.items()):
         raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "Controller verdict is not bound to this project/Run identity")
+    if (not isinstance(value.get("reviewer_identity"), str) or not value["reviewer_identity"].strip()
+            or controller_doc.get("reviewer_identity") != value["reviewer_identity"]):
+        raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "independent reviewer identity is required")
+    evidence_digest = _canonical_sha256(controller_bindings)
+    if (value.get("evidence_digest") != evidence_digest
+            or controller_doc.get("evidence_digest") != evidence_digest):
+        raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "review evidence digest differs from the bound identity")
 
     if (state_path.read_bytes() != state_raw or contract_file.read_bytes() != contract_raw
             or run_contract_path.read_bytes() != run_contract_raw
             or evidence.read_bytes() != evidence_raw or controller_evidence.read_bytes() != controller_raw
             or policy_path.read_bytes() != policy_raw or WORKFLOW_PATH.read_bytes() != workflow_raw
-            or (identity_raw is not None and identity_path.read_bytes() != identity_raw)):
+            or (identity_raw is not None and identity_path.read_bytes() != identity_raw)
+            or any(bound.read_bytes() != raw for bound, raw in bound_files)):
         raise ContractError("W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ", run.name)
     return value, hashlib.sha256(evidence_raw).hexdigest()
 

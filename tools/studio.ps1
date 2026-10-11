@@ -278,7 +278,9 @@ switch ($Command) {
             }
             $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
             $CriticsAction = if ($Stage -eq 'plot') { 'plan-critique' } else { 'text-refine' }
-            & $Python (Join-Path $Root 'tools/cnw_w10_critics.py') --run-dir $RunPath --action $CriticsAction
+            $CriticsArgs = @((Join-Path $Root 'tools/cnw_w10_critics.py'),'--run-dir',$RunPath,'--action',$CriticsAction)
+            if ($W10Preflight) { $CriticsArgs += @('--preflight',(Resolve-Path -LiteralPath $W10Preflight).Path) }
+            & $Python @CriticsArgs
             if ($LASTEXITCODE -ne 0) { throw "W10_CRITICS_FAILED:$LASTEXITCODE" }
         } finally {
             $env:DEEPSEEK_API_KEY = $OldKey

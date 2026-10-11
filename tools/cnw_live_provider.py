@@ -76,7 +76,7 @@ def safe_run(run_dir: str | Path) -> Path:
     return run
 
 
-def verify_run_preflight(run: Path, state: dict | None = None) -> dict:
+def verify_run_preflight(run: Path, state: dict | None = None, *, preflight_path: str | Path | None = None) -> dict:
     """Validate legacy J19 authorization or an explicit project-bound preflight."""
     if state is None:
         try:
@@ -101,7 +101,7 @@ def verify_run_preflight(run: Path, state: dict | None = None) -> dict:
         and authorization.get("provider_call_authorized") is True)
     if legacy_authorized:
         return state
-    preflight_path = os.environ.get("STORYSTUDIO_W10_PREFLIGHT_PATH")
+    preflight_path = preflight_path or os.environ.get("STORYSTUDIO_W10_PREFLIGHT_PATH")
     if preflight_path:
         try:
             from .cnw_w10_policy import verify_preflight_file

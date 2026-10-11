@@ -16,6 +16,11 @@ from tools.cnw_contract import ContractError
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def canonical_sha256(value):
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
 class W10OptionalIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix=".w10-optional-", dir=ROOT / "workspace")
@@ -95,6 +100,18 @@ class W10OptionalIntegrationTests(unittest.TestCase):
             with self.assertRaisesRegex(ContractError, "LIVE_STAGE_NOT_AUTHORIZED_OR_READY"):
                 cnw_w10_critics.run_action(self.run, "plan-critique")
 
+    def test_critics_passes_explicit_per_run_preflight_to_shared_gate(self):
+        self.write_contract(critics="ENABLED")
+        observed = {}
+        def capture_preflight(run, state, *, preflight_path=None):
+            observed["run"] = run
+            observed["preflight_path"] = preflight_path
+            raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "synthetic preflight denied")
+        with patch("tools.cnw_w10_critics.verify_run_preflight", side_effect=capture_preflight):
+            with self.assertRaisesRegex(ContractError, "LIVE_STAGE_NOT_AUTHORIZED_OR_READY"):
+                cnw_w10_critics.run_action(self.run, "plan-critique", preflight_path=self.preflight)
+        self.assertEqual(observed, {"run": self.run, "preflight_path": self.preflight})
+
     def test_unknown_optional_integration_value_fails_closed(self):
         self.write_contract(nk="AUTO")
         with self.assertRaisesRegex(ContractError, "SUPPORT_INTEGRATION_CONFIG_INVALID"):
@@ -134,6 +151,22 @@ class W10OptionalIntegrationTests(unittest.TestCase):
             "policy_sha256": contract["unit"]["policy_sha256"],
             "workflow_template_sha256": state["workflow_template_sha256"],
             "project_identity_sha256": hashlib.sha256(identity_raw).hexdigest()}
+        reviewer_identity = "synthetic-independent-read-only-controller"
+        bindings = {"project_id": contract["project_id"], "run_id": self.run.name,
+            "work_id": contract["unit"]["id"], "contract_sha256": state["contract_sha256"],
+            "source_file_sha256": contract["source"]["source_file_sha256"],
+            "source_manifest_sha256": contract["source"]["source_manifest_sha256"],
+            "policy_sha256": contract["unit"]["policy_sha256"],
+            "workflow_template_sha256": state["workflow_template_sha256"],
+            "identity_kind": "NATIVE", "project_instance_id": identity["project_instance_id"],
+            "work_intent": "LEGACY_V1", "source_id": None,
+            "source_revision_id": contract["source"]["source_file_sha256"],
+            "source_manifest_revision_sha256": contract["source"]["source_manifest_sha256"],
+            "source_root_identity": hashlib.sha256(identity_raw).hexdigest(),
+            "selected_span_or_anchor_sha": None, "reviewer_identity": reviewer_identity,
+            "controller_acceptance_ref": controller_ref, "provider_call_authorized": False}
+        evidence_digest = canonical_sha256(bindings)
+        controller.update({**bindings, "evidence_digest": evidence_digest})
         controller_path = self.project / "controller-review.json"
         controller_path.write_text(json.dumps(controller, sort_keys=True), encoding="utf-8")
         preflight = {"schema_version": cnw_w10_policy.PER_RUN_PREFLIGHT_SCHEMA,
@@ -149,6 +182,7 @@ class W10OptionalIntegrationTests(unittest.TestCase):
             "source_manifest_sha256": contract["source"]["source_manifest_sha256"],
             "policy_sha256": contract["unit"]["policy_sha256"],
             "workflow_template_sha256": state["workflow_template_sha256"]}
+        preflight.update({**bindings, "evidence_digest": evidence_digest})
         preflight_path = self.project / "w10-preflight.json"
         preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
         observed = {}

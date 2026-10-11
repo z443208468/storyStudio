@@ -43,7 +43,7 @@ def _critics_run_path(run: Path, action: str) -> tuple[Path, Path]:
     return evidence_root, runs_root / critic_run_id
 
 
-def run_action(run_dir: str | Path, action: str) -> dict:
+def run_action(run_dir: str | Path, action: str, *, preflight_path: str | Path | None = None) -> dict:
     run = safe_run(run_dir)
     if action not in {"plan-critique", "text-refine"}:
         raise ContractError("W10_CRITICS_ACTION_INVALID", action)
@@ -53,7 +53,7 @@ def run_action(run_dir: str | Path, action: str) -> dict:
     if _support_integration_mode(contract, "critics") == "DISABLED":
         return {"status": "DISABLED", "action": action, "provider_call_count": 0,
                 "provider_call": "none"}
-    verify_run_preflight(run, state)
+    verify_run_preflight(run, state, preflight_path=preflight_path)
     stage = "plot" if action == "plan-critique" else "draft"
     record = state.get("stages", {}).get(stage, {})
     if record.get("status") != "ACCEPTED" or not record.get("role_output_path"):
@@ -138,9 +138,8 @@ def main():
     parser.add_argument("--action", required=True, choices=("plan-critique", "text-refine"))
     parser.add_argument("--preflight")
     args = parser.parse_args()
-    if args.preflight:
-        os.environ["STORYSTUDIO_W10_PREFLIGHT_PATH"] = str(Path(args.preflight).resolve(strict=True))
-    print(json.dumps(run_action(args.run_dir, args.action), ensure_ascii=False, indent=2))
+    print(json.dumps(run_action(args.run_dir, args.action, preflight_path=args.preflight),
+        ensure_ascii=False, indent=2))
 if __name__ == "__main__":
     try:
         main()
