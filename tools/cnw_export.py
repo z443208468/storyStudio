@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 
 try:
     from .cnw_contract import ContractError, load_contract
@@ -34,6 +35,9 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     project = Path(project_root)
     contract = load_contract(run / "artifacts/contract.json")
     unit = contract["unit"]
+    locale = unit.get("language_locale", unit.get("language"))
+    if not isinstance(locale, str) or not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", locale):
+        raise ContractError("EXPORT_LOCALE_INVALID", str(locale))
     run_id = state["run_id"]
     if contract.get("schema_version") == "cnw_work_unit_v2":
         try:
@@ -165,7 +169,7 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     reading = "\n\n".join(reading_parts) + "\n"
     (deliverables / "03_前后文连读.md").write_text(reading, encoding="utf-8")
     html = (
-        "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">"
+        f"<!doctype html><html lang=\"{_html_escape(locale)}\"><head><meta charset=\"utf-8\">"
         f"<title>{_html_escape(unit['id'])} 前后文连读</title>"
         "<style>body{max-width:46rem;margin:2rem auto;font-family:serif;line-height:1.9;padding:0 1rem}"
         "p{margin:.6rem 0} .scene{border-left:3px solid #999;padding-left:1rem}</style></head><body>"

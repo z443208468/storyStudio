@@ -14,6 +14,11 @@ import re
 import tempfile
 from typing import Any
 
+try:
+    from .cnw_contract import MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT, SUPPORTED_LOCALE_MATRIX
+except ImportError:
+    from cnw_contract import MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT, SUPPORTED_LOCALE_MATRIX
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_STORE = ROOT / "config" / "policy_snapshots"
 INDEX_NAME = "index.v1.json"
@@ -118,6 +123,14 @@ def project_preflight_missing(policy: dict[str, Any]) -> list[str]:
             dotted = f"writing.{field}"
             if dotted not in missing:
                 missing.append(dotted)
+    locale = _get_path(policy, "language.locale")
+    if locale not in SUPPORTED_LOCALE_MATRIX:
+        missing.append("language.locale_supported")
+    elif _get_path(policy, "language.length_unit") != SUPPORTED_LOCALE_MATRIX[locale]["length_unit"]:
+        missing.append("language.length_unit_supported")
+    maximum = writing.get("maximum_length")
+    if type(maximum) is int and maximum > MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT:
+        missing.append("writing.maximum_length_supported")
     if all(type(writing.get(key)) is int for key in ("minimum_length", "target_length", "maximum_length")):
         if not writing["minimum_length"] <= writing["target_length"] <= writing["maximum_length"]:
             missing.append("writing.length_range_consistency")
@@ -166,8 +179,9 @@ def validate_policy_document(document: Any, *, expected_kind: str | None = None)
                 defaults.get("unconfigured_project_fields_are_errors") is not True):
             raise PolicySnapshotError("LIVE_DEFAULT_MUST_BE_CLOSED", "new installation must require an explicit project, adapter, and authorization")
         compatibility = document.get("execution_compatibility", {})
-        if compatibility.get("tested_locales") != [] or compatibility.get("maximum_validated_visible_characters_per_unit") is not None:
-            raise PolicySnapshotError("EXECUTION_COMPATIBILITY_UNVERIFIED", "Atom-02 must not claim untested locale or length support")
+        if (compatibility.get("tested_locales") != sorted(SUPPORTED_LOCALE_MATRIX) or
+                compatibility.get("maximum_validated_visible_characters_per_unit") != MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT):
+            raise PolicySnapshotError("EXECUTION_COMPATIBILITY_UNVERIFIED", "locale/capacity claims must match the Atom-06 tested matrix")
         safety = document.get("safety", {})
         if (safety.get("max_in_flight") != 5 or safety.get("missing_usage") != "UNKNOWN_NOT_ZERO" or
                 safety.get("reservation_before_send") is not True or safety.get("settlement_after_response") is not True or

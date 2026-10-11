@@ -20,6 +20,17 @@ class ContractError(ValueError):
         self.code = code
 
 
+# Atom-06 tested consumer matrix. Lengths are normalized visible Unicode code
+# points, not language-specific word counts. Larger work units are rejected
+# until their provider-capacity behavior has a separate validated bound.
+SUPPORTED_LOCALE_MATRIX = {
+    "zh-CN": {"language_name": "简体中文", "length_unit": "unicode_visible_code_points"},
+    "en-US": {"language_name": "English (United States)", "length_unit": "unicode_visible_code_points"},
+}
+MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT = 4000
+SUPPORT_INTEGRATION_STATES = {"DISABLED", "ENABLED"}
+
+
 def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -432,6 +443,22 @@ def validate_work_unit(contract: dict[str, Any]) -> None:
             validate_scene_budget(contract)
     else:
         raise ContractError("WORK_UNIT_KIND_INVALID", str(unit.get("kind")))
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        locale = unit.get("language_locale", unit.get("language"))
+        if locale not in SUPPORTED_LOCALE_MATRIX:
+            raise ContractError("LOCALE_UNSUPPORTED", str(locale))
+        if unit.get("language") != locale:
+            raise ContractError("LOCALE_CONFIGURATION_MISMATCH", "unit.language and unit.language_locale must identify the same locale")
+        if unit.get("length_metric") != SUPPORTED_LOCALE_MATRIX[locale]["length_unit"]:
+            raise ContractError("LENGTH_METRIC_UNSUPPORTED", str(unit.get("length_metric")))
+        if unit.get("max_visible_chars", MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT + 1) > MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT:
+            raise ContractError("UNIT_CAPACITY_UNVALIDATED", f"maximum supported work-unit length is {MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT} visible characters")
+        integrations = contract.get("integrations", {"nk": "DISABLED", "critics": "DISABLED"})
+        if not isinstance(integrations, dict):
+            raise ContractError("SUPPORT_INTEGRATION_CONFIG_INVALID", "integrations must be an object")
+        for name in ("nk", "critics"):
+            if integrations.get(name, "DISABLED") not in SUPPORT_INTEGRATION_STATES:
+                raise ContractError("SUPPORT_INTEGRATION_CONFIG_INVALID", f"integrations.{name} must be DISABLED or ENABLED")
 
 
 _MARKDOWN_CONTROL = re.compile(r"```|`|^\s{0,3}#{1,6}\s+|^\s*>\s?|^\s*[-*+]\s+|^\s*\d+[.)]\s+|(?<!\\)(?:\*\*|__|~~|\*|_)", re.MULTILINE)

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager, redirect_stdout
+from contextvars import ContextVar
 from datetime import datetime, timezone
 import hashlib
 import io
@@ -38,6 +39,17 @@ except ImportError:  # direct script execution from PowerShell
     from cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit
 
 ROOT = Path(__file__).resolve().parents[1]
+_TEST_FIXTURE_CONTEXT: ContextVar[bool] = ContextVar("cnw_runner_test_fixture_context", default=False)
+
+
+@contextmanager
+def _offline_test_fixture_context():
+    """Inject offline fixture identity for tests; this is not a CLI option."""
+    token = _TEST_FIXTURE_CONTEXT.set(True)
+    try:
+        yield
+    finally:
+        _TEST_FIXTURE_CONTEXT.reset(token)
 
 # CNW author `templates/config/workflow.template.yml` — 11 published stages.
 CNW_STAGES = (
@@ -680,7 +692,10 @@ def produce(args) -> dict:
         raise ContractError("CONTRACT_PATH_OUTSIDE_PROJECT", str(contract_file))
     contract = load_contract(contract_file)
     check_required_fields(contract)
-    is_fixture = str(contract.get("project_id", "")).startswith("FICT_")
+    fixture_context = _TEST_FIXTURE_CONTEXT.get()
+    if fixture_context and args.mode == "live":
+        raise ContractError("LIVE_FIXTURE_FORBIDDEN", "offline test fixture context cannot enter live production")
+    is_fixture = fixture_context and args.mode == "offline"
     private_workspace = (ROOT / "workspace").resolve()
     if not project_root.is_relative_to(private_workspace) and (not is_fixture or contract.get("schema_version") == "cnw_work_unit_v2"):
         if contract.get("schema_version") != "cnw_work_unit_v2":
@@ -721,6 +736,8 @@ def produce(args) -> dict:
     if unit_id != contract["unit"].get("id"):
         raise ContractError("WORK_ID_MISMATCH", unit_id)
     validate_work_unit(contract)
+    if args.mode == "live":
+        _assert_support_components_available(contract)
     production_config = ROOT / "config/production.example.json"
     cost_guard_runner = ROOT / "tools/p2_cost_guard.py"
     if contract.get("schema_version") == "cnw_work_unit_v2":
@@ -1039,6 +1056,7 @@ def _execute_cnw_stage_locked(run_dir: Path, stage: str) -> dict:
     stage = normalize_stage(stage)
     state = load_state(run_dir)
     if state.get("mode") == "live" and not state.get("fixture_only"):
+        _assert_support_components_available(_contract_for(run_dir))
         try:
             from .cnw_recovery import execute_checked
         except ImportError:
@@ -1148,8 +1166,41 @@ def execute_scene_cards(run_dir: Path) -> dict:
     return _planning_stage(run_dir, "cards", "scene_cards", "artifacts/scene_cards.md", 4000, role_id="scene_card_agent")
 
 
+def _support_integration_mode(contract: dict, name: str) -> str:
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        # Existing frozen contracts keep their historical support-hook behavior.
+        return "ENABLED"
+    integrations = contract.get("integrations", {})
+    mode = integrations.get(name, "DISABLED") if isinstance(integrations, dict) else None
+    if mode not in {"DISABLED", "ENABLED"}:
+        raise ContractError("SUPPORT_INTEGRATION_CONFIG_INVALID", f"integrations.{name}")
+    return mode
+
+
+def _assert_support_components_available(contract: dict) -> None:
+    """Fail before any paid CNW stage if a selected local supplement is unavailable."""
+    import shutil
+    if _support_integration_mode(contract, "nk") == "ENABLED":
+        index_path = ROOT / "patches/nk/PATCH_INDEX.json"
+        try:
+            build_id = json.loads(index_path.read_text(encoding="utf-8")).get("runtime_build_id")
+        except (OSError, json.JSONDecodeError, AttributeError) as exc:
+            raise ContractError("ENABLED_BUT_UNAVAILABLE", "NK build index is unavailable") from exc
+        build = ROOT / "runtime/patched/NK" / str(build_id)
+        next_cli = build / "node_modules/next/dist/bin/next"
+        if not build_id or not next_cli.is_file() or not shutil.which("node") or not os.environ.get("DEEPSEEK_API_KEY"):
+            raise ContractError("ENABLED_BUT_UNAVAILABLE", "NK runtime, Node launcher, or provider credential is unavailable")
+    if _support_integration_mode(contract, "critics") == "ENABLED":
+        executable = ROOT / "runtime/envs/critics-api/Scripts/python.exe"
+        runner = ROOT / "tools/p2_06_critics_run.py"
+        if not executable.is_file() or not runner.is_file() or not os.environ.get("DEEPSEEK_API_KEY"):
+            raise ContractError("ENABLED_BUT_UNAVAILABLE", "CritiCS runtime, runner, or provider credential is unavailable")
+
+
 def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
     """Run the pinned local NK service for the accepted Scene Cards before the Brief."""
+    if _support_integration_mode(contract, "nk") == "DISABLED":
+        return {"status": "DISABLED", "path": None, "mapping": {"provider_request_id": None}}
     try:
         from .cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
     except ImportError:
@@ -1319,11 +1370,13 @@ def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
 def execute_writing_brief(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
-    nk = _nk_pov(run_dir, state, contract)
+    nk = _nk_pov(run_dir, state, contract) if _support_integration_mode(contract, "nk") == "ENABLED" else {
+        "status": "DISABLED", "path": None, "mapping": {"provider_request_id": None}}
     state = load_state(run_dir)
     project_root = _run_dir_base(run_dir)
     materials = _role_sources("brief", run_dir, state, contract, project_root)
-    extra = {"nk_perspective_reflection_support_only": (run_dir / nk["path"]).read_text(encoding="utf-8")}
+    extra = ({"nk_perspective_reflection_support_only": (run_dir / nk["path"]).read_text(encoding="utf-8")}
+             if nk["status"] != "DISABLED" else None)
     messages = _author_messages("brief", contract, materials, extra)
     content, receipt = cnw_live_call(run_dir, stage="writing_brief", role_id="brief_agent", messages=messages, output_cap=4000)
     meta = _role_meta("brief", contract)
@@ -1338,9 +1391,26 @@ def execute_prose(run_dir: Path) -> dict:
     project_root = _run_dir_base(run_dir)
     materials = _role_sources("prose", run_dir, state, contract, project_root)
     base_messages = _author_messages("prose", contract, materials)
-    scope = "同一章" if contract["unit"]["kind"] == "episode" else "同一场"
-    whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
-    scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
+    is_chinese = contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN"
+    if contract.get("schema_version") == "cnw_work_unit_v2" and not is_chinese and contract["unit"].get("language_locale") != "en-US":
+        raise ContractError("LOCALE_UNSUPPORTED", str(contract["unit"].get("language_locale")))
+    if is_chinese:
+        scope = "同一章" if contract["unit"]["kind"] == "episode" else "同一场"
+        whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
+        scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
+        continuation_system = f"你是在续写{scope}简体中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到{whole}完整且达到合同可见字数。{scenes}"
+        continuation_instruction = "只续写，不重复。"
+        over_limit_instruction = "可见字符超过 Writing Brief 上限。请按 Brief 的目标/最小/最大字数完整重写全文，不要引用、拼接或重复上次尝试。这只是长度修正。"
+    else:
+        scope = "chapter" if contract["unit"]["kind"] == "episode" else "scene"
+        whole = "complete chapter" if contract["unit"]["kind"] == "episode" else "complete scene"
+        scenes = "Preserve the order and content of scenes required by the Writing Brief; do not collapse multiple scenes into one." if contract["unit"]["kind"] == "episode" else "Stay within the same scene."
+        continuation_system = (f"Continue the same {scope} in English (en-US). Output only new text following the prior passage; "
+                               f"do not repeat or summarize it, and do not add a heading or commentary. Continue writing the required actions, "
+                               f"responses, dialogue, and pauses from the Writing Brief until the {whole} is complete and within the contract's "
+                               f"visible-character range. {scenes}")
+        continuation_instruction = "Continue only; do not repeat earlier text."
+        over_limit_instruction = "The prior output exceeded the Writing Brief visible-character maximum. Rewrite the complete prose within its target/minimum/maximum; do not append to, refer to, or repeat the previous attempt. This is length recovery only."
     output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
     try:
         from .cnw_contract import validate_output_length, count_visible_chars
@@ -1367,27 +1437,19 @@ def execute_prose(run_dir: Path) -> dict:
             messages = base_messages
         elif over_limit is not None:
             messages = [dict(message) for message in base_messages]
-            messages[0]["content"] += (
-                f"\nLength validation rejected the previous output: {over_limit} visible characters exceeds "
-                f"the Writing Brief maximum {contract['unit']['max_visible_chars']}. "
-                "Regenerate the complete prose within the Writing Brief's target/minimum/maximum. "
-                "Do not append to, refer to, or repeat an earlier attempt. This is length recovery only."
-            )
+            messages[0]["content"] += f"\n{over_limit_instruction} (actual={over_limit}; max={contract['unit']['max_visible_chars']})."
             parts = []
             over_limit = None
         else:
             already = "\n".join(parts)
             remaining = contract["unit"]["min_visible_chars"] - count_visible_chars(already)
             messages = [
-                {"role": "system", "content": (
-                    f"你是在续写{scope}中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。"
-                    f"继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到{whole}完整且达到合同可见字数。{scenes}"
-                )},
+                {"role": "system", "content": continuation_system},
                 {"role": "user", "content": json.dumps({
                     "brief": base_messages[1]["content"],
                     "already_written_tail": already[-1500:],
                     "still_needed_visible_chars": max(remaining, 0),
-                    "instruction": "只续写，不重复。",
+                    "instruction": continuation_instruction,
                 }, ensure_ascii=False, sort_keys=True)},
             ]
         content, receipt = cnw_live_call(run_dir, stage="prose", role_id=f"prose_agent_{attempt + 1}", messages=messages, output_cap=output_cap)
@@ -1545,6 +1607,17 @@ def _validate_finding_identities(findings: list[dict]) -> None:
         seen.add(fid)
 
 
+def _single_verifier_vote(parsed: dict, verifier_id: str, finding_id: str) -> dict:
+    if parsed.get("verifier_id") != verifier_id or not isinstance(parsed.get("votes"), list):
+        raise ContractError("LIVE_VERIFIER_OUTPUT_INVALID", verifier_id)
+    votes = parsed["votes"]
+    if (len(votes) != 1 or not isinstance(votes[0], dict) or
+            votes[0].get("finding_id") != finding_id or
+            votes[0].get("verdict") not in {"not_refuted", "refuted", "uncertain"}):
+        raise ContractError("LIVE_VERIFIER_VOTES_INVALID", f"{finding_id}:{verifier_id}")
+    return votes[0]
+
+
 def execute_three_verifiers(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
@@ -1579,11 +1652,7 @@ def execute_three_verifiers(run_dir: Path) -> dict:
             extra={"finding_id": finding_id, "verifier_id": verifier_id}) for verifier_id in VERIFIER_IDS])
         for verifier_id, (content, receipt) in zip(VERIFIER_IDS, results):
             parsed = _parse_json_content(content, f"adversarial_verify:{finding_id}:{verifier_id}")
-            if parsed.get("verifier_id") != verifier_id or not isinstance(parsed.get("votes"), list):
-                raise ContractError("LIVE_VERIFIER_OUTPUT_INVALID", verifier_id)
-            vote = next((row for row in parsed["votes"] if row.get("finding_id") == finding_id), None)
-            if not vote or vote.get("verdict") not in {"not_refuted", "refuted", "uncertain"}:
-                raise ContractError("LIVE_VERIFIER_VOTES_INVALID", f"{finding_id}:{verifier_id}")
+            vote = _single_verifier_vote(parsed, verifier_id, finding_id)
             votes[verifier_id] = vote["verdict"]
             receipt_ids.append(receipt["request_id"])
             rows.append({"finding_id": finding_id, "verifier_id": verifier_id, "verdict": vote["verdict"], "provider_request_id": receipt["provider_request_id"], "request_id": receipt["request_id"]})
@@ -1676,8 +1745,17 @@ def _confirmed_findings(run_dir: Path, state: dict) -> list[dict]:
 def execute_refine(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
-    whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
-    scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
+    is_chinese = contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN"
+    if is_chinese:
+        whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
+        scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
+        language_instruction = "按合同语言简体中文（zh-CN）修订，长度按可见 Unicode 码点计算。"
+    else:
+        if contract.get("schema_version") == "cnw_work_unit_v2" and contract["unit"].get("language_locale") != "en-US":
+            raise ContractError("LOCALE_UNSUPPORTED", str(contract["unit"].get("language_locale")))
+        whole = "the complete chapter" if contract["unit"]["kind"] == "episode" else "the complete scene"
+        scenes = "Preserve the Writing Brief's scene order and content; do not collapse multiple scenes into one." if contract["unit"]["kind"] == "episode" else "Keep the same scene scope."
+        language_instruction = "Revise in English (en-US); measure length in visible Unicode code points, not words."
     output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
     previous_revision = state["stages"]["refine"]
     pending = previous_revision.get("pending_findings")
@@ -1726,12 +1804,16 @@ def execute_refine(run_dir: Path) -> dict:
     plan_path = run_dir / f"artifacts/revisions/revision-{revision_number}.plan.json"
     plan_path.parent.mkdir(parents=True, exist_ok=True)
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    system = (
-        f"你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订{whole}中文正文，保留有效戏剧内容与所有必需节拍，{scenes}"
-        "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
-        "CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。"
-        "拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。"
-    )
+    if is_chinese:
+        system = (f"你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订{whole}正文，保留有效戏剧内容与所有必需节拍，{scenes}{language_instruction} "
+                  "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
+                  "CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。"
+                  "拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。")
+    else:
+        system = (f"You are the CNW Refine Agent. Based on confirmed findings and Completeness candidates, revise {whole}, preserving effective dramatic content and required beats. {scenes} {language_instruction} "
+                  "Do not remove required actions, introduce new Canon, or cross the reader-knowledge boundary. Output only the complete revised prose in Markdown, with no explanation, evaluation, or JSON wrapper. "
+                  "CritiCS suggestions are unaccepted alternative wording, not CNW review decisions; use them only to address listed findings. "
+                  "Reject suggestions that add scenes not approved by the Brief, reveal new secrets, change the story route, or violate the Brief; never treat support suggestions as new facts.")
     user = json.dumps({"v0": v0, "confirmed_findings": feedback, "brief_constraints": brief}, ensure_ascii=False, sort_keys=True)
     try:
         from .cnw_contract import count_visible_chars, validate_output_length
@@ -1744,11 +1826,13 @@ def execute_refine(run_dir: Path) -> dict:
         if attempt == 0:
             messages = base_messages
         else:
+            restore_system = (
+                f"上一次修订删得过短。请在保留已采纳修改的前提下，把{whole}正文补回完整篇幅：恢复被删掉的必需动作、回应、对白与结尾，{scenes}不得新增 Canon、不得越过知识边界、不得使用标题或说明。只输出补全后的完整正文 Markdown。"
+                if is_chinese else
+                f"The previous revision was too short. Preserve accepted changes and restore the {whole} to a complete length by restoring removed required actions, responses, dialogue, and ending. {scenes} Do not add Canon, cross knowledge boundaries, or add headings/commentary. Output only the complete restored prose in Markdown."
+            )
             messages = [
-                {"role": "system", "content": (
-                    f"上一次修订删得过短。请在保留已采纳修改的前提下，把{whole}正文补回完整篇幅：恢复被删掉的必需动作、回应、对白与结尾，{scenes}"
-                    "不得新增 Canon、不得越过知识边界、不得使用标题或说明。只输出补全后的完整正文 Markdown。"
-                )},
+                {"role": "system", "content": restore_system},
                 {"role": "user", "content": json.dumps({"under_length_draft": content, "revision_base": v0, "brief_constraints": brief, "target_visible_chars": contract["unit"]["target_visible_chars"], "min_visible_chars": contract["unit"]["min_visible_chars"], "confirmed_findings": feedback}, ensure_ascii=False, sort_keys=True)},
             ]
         content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=output_cap, extra={"revision_number": revision_number})
@@ -1894,6 +1978,11 @@ def _critics_excerpt(run_dir: Path, state: dict) -> Path | None:
 
 def _critics_hook(run_dir: Path, stage: str) -> dict:
     """Attach the existing cost-guarded CritiCS bridge as a support hook."""
+    contract = _contract_for(run_dir)
+    if _support_integration_mode(contract, "critics") == "DISABLED":
+        evidence = {"status": "DISABLED", "provider_call": "none"}
+        _record_hook(run_dir, "critics_plot" if stage == "plot" else "critics_text", evidence)
+        return evidence
     import subprocess
     try:
         from .cnw_critics_adapter import read_native_result
@@ -1935,9 +2024,7 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         _record_hook(run_dir, hook_name, evidence)
         return evidence
     if not python.is_file():
-        evidence = {"status": "CRITICS_ENV_MISSING"}
-        _record_hook(run_dir, hook_name, evidence)
-        return evidence
+        raise ContractError("ENABLED_BUT_UNAVAILABLE", "CritiCS runtime missing after enabled preflight")
     run_name = f"{run_dir.name}-critics-{action}-{uuid.uuid4().hex[:8]}"
     command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action, "--input", str(input_path), "--run-name", run_name, "--ledger-run-id", run_dir.name]
     try:

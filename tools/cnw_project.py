@@ -581,6 +581,10 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
     characters = _text_list(draft.get("characters_in_scene"), "story.characters_in_scene")
     forbidden = _text_list(draft.get("forbidden_future_revelations"), "story.forbidden_future_revelations")
     voice_refs = _text_list(draft.get("voice_sample_refs"), "story.voice_sample_refs")
+    integration_draft = draft.get("integrations", {})
+    if not isinstance(integration_draft, dict):
+        raise ContractError("SUPPORT_INTEGRATION_CONFIG_INVALID", "integrations must be an object")
+    integrations = {name: integration_draft.get(name, "DISABLED") for name in ("nk", "critics")}
     policy_path = ROOT / "config/policies/app_policy.v1.json"
     contract = {
         "schema_version": "cnw_work_unit_v2", "project_id": identity["project_id"],
@@ -592,6 +596,7 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
                  "pov": _required_text(draft.get("pov"), "unit.pov"), "target_visible_chars": target,
                  "min_visible_chars": minimum, "max_visible_chars": maximum,
                  "policy_sha256": sha(policy_path.read_bytes())},
+        "integrations": integrations,
         "story": {**story_source_fields,
                   "chapter_context": _required_text(draft.get("chapter_context"), "story.chapter_context"),
                   "role_in_story": _required_text(draft.get("role_in_story"), "story.role_in_story"),

@@ -57,8 +57,11 @@
     "unconfigured_project_fields_are_errors": true
   },
   "execution_compatibility": {
-    "tested_locales": [],
-    "maximum_validated_visible_characters_per_unit": null
+    "tested_locales": [
+      "en-US",
+      "zh-CN"
+    ],
+    "maximum_validated_visible_characters_per_unit": 4000
   },
   "safety": {
     "max_in_flight": 5,

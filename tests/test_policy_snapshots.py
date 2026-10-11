@@ -33,7 +33,7 @@ def app_policy():
         "work_contract_requirements": json.loads(json.dumps(WORK_CONTRACT_REQUIREMENTS)),
         "installation_defaults": {"live_authorization": False, "project_required_for_writes": True, "provider_override_requires_registered_adapter": True, "unconfigured_project_fields_are_errors": True},
         "safety": {"max_in_flight": 5, "missing_usage": "UNKNOWN_NOT_ZERO", "reservation_before_send": True, "settlement_after_response": True, "campaign_limit_inheritance": False, "allow_output_without_frozen_work_contract": False, "method_fields_project_override_allowed": False, "method_fields_provider_override_allowed": False},
-        "execution_compatibility": {"tested_locales": [], "maximum_validated_visible_characters_per_unit": None},
+        "execution_compatibility": {"tested_locales": ["en-US", "zh-CN"], "maximum_validated_visible_characters_per_unit": 4000},
         "path_policy": {"data_home_must_be_explicit_or_user_selected": True, "project_identity_is_instance_scoped": True, "project_writes_require_registered_project": True},
     }
 
@@ -57,7 +57,7 @@ def project_policy(project_id: str, locale: str, target: int, lens_id: str):
         "schema_version": "storystudio_project_policy_v1",
         "project_id": project_id,
         "display_name": project_id,
-        "language": {"locale": locale, "length_unit": "unicode_visible_characters", "length_semantics": "normalized visible Unicode code points"},
+        "language": {"locale": locale, "length_unit": "unicode_visible_code_points", "length_semantics": "normalized visible Unicode code points"},
         "writing": {"target_length": target, "minimum_length": target - 100, "maximum_length": target + 100},
         "arc": {"status": "CONFIRMED", "reference": "project://arc/revision-1"},
         "canon": {"status": "APPROVED", "reference": "project://canon/approval-1"},
@@ -155,7 +155,7 @@ class PolicySnapshotTests(unittest.TestCase):
         app_sha = self.put(app_policy(), "app_policy", "config/policies/app_policy.v1.json")
         provider_sha = self.put(provider_policy(), "provider_policy", "config/policies/provider_policy.deepseek_flash.v1.json")
         first_doc = project_policy("NOVEL-ALPHA", "en-US", 2400, "reader-promise")
-        second_doc = project_policy("ESSAY-BETA", "ja-JP", 900, "argument-clarity")
+        second_doc = project_policy("ESSAY-BETA", "zh-CN", 900, "argument-clarity")
         first_sha = self.put(first_doc, "project_policy", "fixture/alpha.json")
         second_sha = self.put(second_doc, "project_policy", "fixture/beta.json")
 

@@ -15,6 +15,16 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "039c2389fe3971c7044135f1d1d88f7654d5d1ef50ef6442bea45b51e7bbda96",
+      "source_refs": [
+        "tools/cnw_sprint.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "06b325076368cc8bf9671d50502f78ddd8f3b1141fd0c83c2e7e34f692eab0a9",
       "source_refs": [
         "tools/policy_snapshots.py"
@@ -45,9 +55,39 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "1a3961727af385b85f0c2057d80102141501e57041671797a8217f38035bc394",
+      "source_refs": [
+        "tools/cnw_recovery.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "1d5272a36ac6443938c1c9b23b60346d8d1585d819d3cb62083c220a48950e3e",
+      "source_refs": [
+        "tools/cnw_contract.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "29b929b5f8a45529f885093ebd60522c083bf5f90a14eaebc00dd2a28c90ae36",
       "source_refs": [
         "tools/cnw_contract.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "2b9abb3748a1c3f0cec084b6e6a4405b6cc01ca1c7b4a004f7ba428addb3b59a",
+      "source_refs": [
+        "tools/cnw_export.py"
       ]
     },
     {
@@ -95,6 +135,16 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "43b4633547bcd546d85cf30c0c6da6d68a553e60f4490e462949998b1e6d8bc6",
+      "source_refs": [
+        "tools/cnw_sprint_live.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "48a91edd1de9d580a99f45323896a936d313025ee0f6e3d0ffcabb6c946053ad",
       "source_refs": [
         "tools/cnw_generate.py"
@@ -135,6 +185,16 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "620358251516ec295e368ebac849d97bb6d3a25a88f84e062ad6e9c2dc16c7ce",
+      "source_refs": [
+        "tools/policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "62d415a43a629702db87d10e59e2e0a150d9409c172269d58ac6368b4576fb3f",
       "source_refs": [
         "tools/critics_bridge.py"
@@ -168,6 +228,16 @@
       "sha256": "6b24844ae092cab912574ef756f3b96cfe4c77dcbbceb21f12a8bbed1b99f990",
       "source_refs": [
         "tools/cnw_recovery.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "6b2852934e16e2bdd79882b4a3f8d3b779fbcac5a332b421a0db2b7592dcf0e1",
+      "source_refs": [
+        "tools/cnw_project.py"
       ]
     },
     {
@@ -227,9 +297,39 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "8a7b114d1e6f73ec5a43468c70285f8db72e37840a3a0091b9545338641a82f7",
+      "source_refs": [
+        "tools/cnw_runner.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "8b23959335d1efde81aee9055f82372583f683c6a6556d99ab2e61fee6467309",
       "source_refs": [
         "tools/cnw_review.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "8b7d3e90f95e4c40e2613ca65f48bc97505826836b21494a49bf58980730a1a5",
+      "source_refs": [
+        "tools/cnw_generate.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "93c7a92fb4392e2576f467592d6567692bfa853bc6bbaa4e2d18b3a7f5fab653",
+      "source_refs": [
+        "tools/cnw_contract.py"
       ]
     },
     {
@@ -267,6 +367,16 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "a15c41350c9a06cd989fd2d014b507b888d38fb4af38d345c38d4df134318d5d",
+      "source_refs": [
+        "tools/cnw_roles.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "a22e1905fae701217d8aec7ddd42140b659b495c8909da7f9c6058d8c8969161",
       "source_refs": [
         "tools/cnw_import_workflow.py"
@@ -288,9 +398,29 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "aa798b5d50e4ce5c6416b60f28edd38eff507e6f1542e819958d17d638820bf0",
+      "source_refs": [
+        "tools/cnw_maintenance.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "ab8a40b15687b8fc35faffbef5c34553649f818f188c7e4cdfa57ba9342c21e3",
       "source_refs": [
         "git:3c0d8c23e251ccf76d80ac72fce2b9f18515bc7d:tools/p2_cost_guard.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "app_policy"
+      ],
+      "sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472",
+      "source_refs": [
+        "config/policies/app_policy.v1.json"
       ]
     },
     {
@@ -418,6 +548,26 @@
       "sha256": "ead9b205791ea7e96bcdba475b7c9d92a117710949cb82c9c33b6441c8712815",
       "source_refs": [
         "historical run state cost_guard_runner_sha256"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "ee58c5c91fb21aae240f4842aff6c4941b0440f45957c0b3e930397b608c11e6",
+      "source_refs": [
+        "tools/cnw_import_workflow.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "f48f4701906bae27d11797bbed4739d853d42b8e3c3a9a615d57c31b45fae2be",
+      "source_refs": [
+        "tools/cnw_runner.py"
       ]
     },
     {

@@ -18,7 +18,27 @@ from tools.cnw_contract import ContractError
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contract.json"
+
+
+def synthetic_contract():
+    return {
+        "schema_version": "cnw_work_unit_v1", "project_id": "FICT_CNW_TEST",
+        "source": {"zip_sha256": "a" * 64, "source_manifest_sha256": "b" * 64},
+        "unit": {"id": "FICT_SCENE_A", "kind": "scene", "planning_mode": "legacy_frozen",
+                 "language": "zh-CN", "pov": "Fictional POV", "target_visible_chars": 1800,
+                 "min_visible_chars": 1500, "max_visible_chars": 2100, "policy_sha256": "c" * 64},
+        "story": {"chapter_context": "Synthetic test context", "role_in_story": "Test only",
+                  "reader_reward": "A clear test outcome", "entry_state": "Before fixture event",
+                  "exit_state": "After fixture event", "before_anchor": {"scene": "FIXTURE", "source_line": 1, "sha256": "d" * 64},
+                  "after_anchor": {"scene": "FIXTURE", "source_line": 2, "sha256": "e" * 64},
+                  "required_beats": [{"beat_id": f"B{i}", "goal": f"Synthetic beat {i}", "budget_visible_chars": size}
+                                     for i, size in enumerate((300, 500, 600, 400), 1)],
+                  "characters_in_scene": ["Fictional POV"], "character_knowledge_boundary_ref": "fixture://knowledge",
+                  "forbidden_future_revelations": ["No fixture secret"], "voice_sample_refs": ["fixture://voice"]},
+        "review": {"workflow_template_git_blob": "fixture", "require_cnw_11_stages": True,
+                   "require_3_verifiers": True, "require_completeness_critic": True,
+                   "require_re_review": True, "cnw_reference_manifest_sha256": "f" * 64},
+    }
 
 
 class RunnerTests(unittest.TestCase):
@@ -135,8 +155,7 @@ class RunnerTests(unittest.TestCase):
             request = json.loads(kwargs["messages"][1]["content"])
             self.assertEqual(request["confirmed_findings"]["critics_supplement"]["result"], native)
             self.assertEqual(request["confirmed_findings"]["confirmed"], [finding])
-            self.assertIn("尚未采纳", kwargs["messages"][0]["content"])
-            return prose.replace("窗边", "门边"), {"request_id": "MOCK-REFINE"}
+            return prose + "甲" * 100, {"request_id": "MOCK-REFINE"}
         with patch.object(adapter, "ROOT", self.base), patch.object(adapter, "native_text_templates", return_value=templates), patch.object(adapter, "native_conversation_template", return_value=conversation_template), patch("subprocess.run", side_effect=subprocess_result) as process, \
                 patch.object(cnw_runner, "cnw_live_call", side_effect=refine_provider):
             with patch.object(adapter, "read_native_result", side_effect=ContractError("CRITICS_NATIVE_DEPENDENCY_MISMATCH", "MOCK validator failure")):
@@ -210,8 +229,7 @@ class RunnerTests(unittest.TestCase):
         (self.base / "tools/p2_cost_guard.py").write_text("# shared cost guard fixture", encoding="utf-8")
         self.contract_dir = self.project / "contracts"
         self.contract_dir.mkdir()
-        self.contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
-        self.contract["project_id"] = "FICT_CNW_TEST"
+        self.contract = synthetic_contract()
         self.root_patch = patch.object(cnw_runner, "ROOT", self.base)
         self.workflow_patch = patch.object(cnw_runner, "WORKFLOW_PATH", ROOT / "runtime/reference/cnw_97ad71fe5e5e/templates/config/workflow.template.yml")
         self.root_patch.start()
@@ -231,14 +249,18 @@ class RunnerTests(unittest.TestCase):
     def _produce_contract(self, value, run_id, name):
         path = self._write_contract(value, name)
         args = argparse.Namespace(run_id=run_id, work_id=value["unit"]["id"], unit="scene", contract=str(path), project_root=str(self.project), mode="offline")
-        return cnw_runner.produce(args)
+        with cnw_runner._offline_test_fixture_context():
+            return cnw_runner.produce(args)
 
-    def test_create_only_live_run_reports_no_provider_call(self):
+    def test_fict_prefix_does_not_bypass_live_source_preflight(self):
         path = self._write_contract(self.contract, "create-only.json")
-        result = cnw_runner.produce(argparse.Namespace(run_id="CREATE-ONLY", work_id=self.contract["unit"]["id"],
-            unit="scene", contract=str(path), project_root=str(self.project), mode="live", create_only=True))
-        self.assertEqual(result["provider_call"], "none")
-        self.assertEqual(cnw_runner.load_state(Path(result["path"]))["provider_requests"], [])
+        args = argparse.Namespace(run_id="CREATE-ONLY", work_id=self.contract["unit"]["id"],
+            unit="scene", contract=str(path), project_root=str(self.project), mode="live", create_only=True)
+        with self.assertRaisesRegex(ContractError, "PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE"):
+            cnw_runner.produce(args)
+        with cnw_runner._offline_test_fixture_context(), self.assertRaisesRegex(ContractError, "LIVE_FIXTURE_FORBIDDEN"):
+            cnw_runner.produce(args)
+        self.assertFalse((self.base / "runs/CREATE-ONLY").exists())
 
     def test_over_limit_prose_recovers_with_same_brief_and_voices_without_splicing(self):
         run = self.base / "runs/FICT_SCENE_A"
@@ -254,7 +276,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(result["visible_chars"], minimum)
         self.assertEqual(len(sent), 2)
         self.assertEqual(sent[0][1], sent[1][1])
-        self.assertIn("Length validation rejected", sent[1][0]["content"])
+        self.assertIn("actual=2101", sent[1][0]["content"])
         state = cnw_runner.load_state(run)
         self.assertEqual(cnw_runner._read_stage_text(run, state, "prose"), "乙" * minimum)
         self.assertEqual(result["receipts"], ["MOCK-1", "MOCK-2"])
@@ -297,7 +319,8 @@ class RunnerTests(unittest.TestCase):
         path = self._write_contract(self.contract, "author-episode.json")
         args = argparse.Namespace(run_id="FICT_AUTHOR_EP", work_id=self.contract["unit"]["id"],
                                   unit="episode", contract=str(path), project_root=str(self.project), mode="offline")
-        result = cnw_runner.produce(args)
+        with cnw_runner._offline_test_fixture_context():
+            result = cnw_runner.produce(args)
         run_dir = Path(result["path"])
         plot = ("## Identity\nEpisode\n## Role in the Arc\nConsequence\n"
                 "## Key Scenes\n1. Encounter\n2. Response\n## Hook\nDecision\n"
@@ -491,17 +514,17 @@ class RunnerTests(unittest.TestCase):
         with patch.object(cnw_runner, "ROOT", self.base):
             args = argparse.Namespace(run_id="FICT_SCENE_A", work_id=self.contract["unit"]["id"], unit="scene", contract=str(self.contract_dir / "fixture-a.json"), project_root=str(self.project), mode="offline")
             with self.assertRaisesRegex(ContractError, "RUN_ID_COLLISION"):
-                cnw_runner.produce(args)
+                with cnw_runner._offline_test_fixture_context():
+                    cnw_runner.produce(args)
             with self.assertRaisesRegex(ContractError, "VALID_RUN_ID_REQUIRED"):
                 cnw_runner.run_path("../outside")
 
-    def test_live_mode_requires_provider_key_before_any_request(self):
+    def test_live_mode_rejects_unverified_fixture_source_before_any_request(self):
         args = argparse.Namespace(run_id="NO-LIVE-CALL", work_id=self.contract["unit"]["id"], unit="scene", contract=str(self.contract_dir / "fixture-a.json"), project_root=str(self.project), mode="live")
-        with patch.dict("os.environ", {}, clear=False):
-            import os as _os
-            _os.environ.pop("DEEPSEEK_API_KEY", None)
-            with self.assertRaisesRegex(ContractError, "DEEPSEEK_API_KEY_REQUIRED"):
+        with patch.object(cnw_runner, "cnw_live_call") as provider:
+            with self.assertRaisesRegex(ContractError, "PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE"):
                 cnw_runner.produce(args)
+            provider.assert_not_called()
 
     def test_live_candidate_requires_complete_contract_pipeline(self):
         run = self.base / "runs/FICT_SCENE_A"

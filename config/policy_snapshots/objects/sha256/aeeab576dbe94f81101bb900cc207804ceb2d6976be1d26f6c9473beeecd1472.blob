@@ -1,0 +1,81 @@
+{
+  "schema_version": "storystudio_app_policy_v1",
+  "method": {
+    "per_unit_stages": [
+      "plot",
+      "scene_cards",
+      "writing_brief",
+      "prose",
+      "lint_layer1",
+      "lint_layer2",
+      "multi_lens_review",
+      "adversarial_verify",
+      "completeness_critic",
+      "refine",
+      "re_review"
+    ],
+    "lens_ids": ["style", "character", "plot", "canon", "story_specific"],
+    "adversarial": {
+      "verifier_count": 3,
+      "refute_default": true,
+      "threshold": 2
+    },
+    "sprint": {
+      "size": 5,
+      "min_score": 75,
+      "max_p0_findings": 0,
+      "max_p1_findings": 2
+    }
+  },
+  "method_reference": {
+    "repository": "MintoTsukino/claude-novel-workflow",
+    "commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+    "workflow_template_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+    "local_reference_manifest_sha256": "E9B989C52C66AB9BE8C73F09E84BC5BD7D2ECC92F9F1CBFC61BA300DC6CD3983"
+  },
+  "work_contract_requirements": {
+    "required_scene_fields": ["source", "unit", "story", "review"],
+    "required_story_fields": [
+      "role_in_story",
+      "reader_reward",
+      "entry_state",
+      "exit_state",
+      "before_anchor",
+      "after_anchor",
+      "required_beats",
+      "characters_in_scene",
+      "character_knowledge_boundary_ref",
+      "forbidden_future_revelations",
+      "voice_sample_refs"
+    ],
+    "require_exact_beat_budget_sum": true
+  },
+  "installation_defaults": {
+    "project_required_for_writes": true,
+    "live_authorization": false,
+    "provider_override_requires_registered_adapter": true,
+    "unconfigured_project_fields_are_errors": true
+  },
+  "execution_compatibility": {
+    "tested_locales": [
+      "en-US",
+      "zh-CN"
+    ],
+    "maximum_validated_visible_characters_per_unit": 4000
+  },
+  "safety": {
+    "max_in_flight": 5,
+    "missing_usage": "UNKNOWN_NOT_ZERO",
+    "reservation_before_send": true,
+    "settlement_after_response": true,
+    "campaign_limit_inheritance": false,
+    "allow_output_without_frozen_work_contract": false,
+    "method_fields_project_override_allowed": false,
+    "method_fields_provider_override_allowed": false
+  },
+  "path_policy": {
+    "data_home_must_be_explicit_or_user_selected": true,
+    "project_identity_is_instance_scoped": true,
+    "project_writes_require_registered_project": true
+  }
+}
