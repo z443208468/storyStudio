@@ -56,22 +56,38 @@ def safe_run(run_dir: str | Path) -> Path:
     workspace = (ROOT / "workspace").resolve()
     allowed = run.is_relative_to(private_runs) or (
         run.parent.name == "runs" and run.parent.parent.is_relative_to(workspace))
+    if not allowed and run.parent.name == "runs":
+        # Generic registered projects live at DataHome/projects/<instance>/runs/<run>.
+        # Resolve that exact instance against its parent DataHome registry; never
+        # admit an arbitrary sibling path merely because it is outside workspace.
+        project_root = run.parent.parent
+        data_home = project_root.parent.parent
+        try:
+            try:
+                from .project_paths import resolve_project
+            except ImportError:
+                from project_paths import resolve_project
+            registration = resolve_project(project_root, data_home=data_home)
+            allowed = registration.get("project_root") == str(project_root.resolve(strict=True))
+        except Exception:
+            allowed = False
     if not allowed or not run.is_dir():
         raise ContractError("LIVE_RUN_PATH_UNSAFE", "live artifacts must be under runs/")
     return run
 
 
-def _load_live_state(run: Path, stage: str) -> dict:
-    try:
-        state = json.loads((run / "run_state.json").read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        raise ContractError("LIVE_RUN_STATE_INVALID", run.name) from exc
+def verify_run_preflight(run: Path, state: dict | None = None) -> dict:
+    """Validate the pinned W10 run-level authorization independently of stage readiness."""
+    if state is None:
+        try:
+            state = json.loads((run / "run_state.json").read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ContractError("LIVE_RUN_STATE_INVALID", run.name) from exc
     authorization = state.get("w10_contract_preflight", {})
     try:
         from .cnw_w10_policy import CONTRACT_SHA256, PREFLIGHT_EVIDENCE_SHA256, PREFLIGHT_REF, SOURCE_SCRIPT_SHA256
     except ImportError:
         from cnw_w10_policy import CONTRACT_SHA256, PREFLIGHT_EVIDENCE_SHA256, PREFLIGHT_REF, SOURCE_SCRIPT_SHA256
-    stage_state = state.get("stages", {}).get(stage, {})
     if (state.get("run_id") != run.name or state.get("mode") != "live"
             or state.get("fixture_only") is not False
             or authorization.get("status") != "ACCEPTED"
@@ -81,8 +97,15 @@ def _load_live_state(run: Path, stage: str) -> dict:
             or authorization.get("source_script_sha256") != SOURCE_SCRIPT_SHA256
             or authorization.get("evidence_sha256") != PREFLIGHT_EVIDENCE_SHA256
             or authorization.get("controller_acceptance_ref") != PREFLIGHT_REF
-            or authorization.get("provider_call_authorized") is not True
-            or stage_state.get("status") != "READY_FOR_EXECUTION"):
+            or authorization.get("provider_call_authorized") is not True):
+        raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "W10 run preflight")
+    return state
+
+
+def _load_live_state(run: Path, stage: str) -> dict:
+    state = verify_run_preflight(run)
+    stage_state = state.get("stages", {}).get(stage, {})
+    if stage_state.get("status") != "READY_FOR_EXECUTION":
         raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", stage)
     return state
 

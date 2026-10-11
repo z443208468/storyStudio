@@ -12,6 +12,7 @@ import uuid
 import httpx
 
 from tools import cnw_live_provider, cnw_w10_policy, p2_cost_guard
+from tools.project_paths import create_project, setup_data_home
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -185,6 +186,24 @@ class LiveProviderTransportTests(unittest.TestCase):
         self.assertEqual(self.ledger.read_bytes(), ledger_before)
         self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))[
             "w10_contract_preflight"]["provider_call_authorized"], False)
+
+    def test_safe_run_accepts_only_registered_projects_under_explicit_data_home(self):
+        import tempfile
+        with tempfile.TemporaryDirectory(prefix="w10-data-home-") as temp_name:
+            temp = Path(temp_name).resolve()
+            data_home = temp / "selected-data-home"
+            setup_data_home(data_home, pointer_path=temp / "config/setup.json")
+            registered = create_project(project_id="W10GENERIC", data_home=data_home)
+            project = Path(registered["project_root"])
+            run = project / "runs" / "SAFE-RUN"
+            run.mkdir(parents=True)
+            self.assertEqual(cnw_live_provider.safe_run(run), run.resolve())
+
+            unregistered = temp / "unregistered" / "projects" / "fake-instance"
+            unsafe_run = unregistered / "runs" / "UNREGISTERED-RUN"
+            unsafe_run.mkdir(parents=True)
+            with self.assertRaisesRegex(Exception, "LIVE_RUN_PATH_UNSAFE"):
+                cnw_live_provider.safe_run(unsafe_run)
 
 
 if __name__ == "__main__":
