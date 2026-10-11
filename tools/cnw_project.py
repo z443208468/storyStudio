@@ -692,9 +692,18 @@ def _append_log(project_root: Path, message: str) -> None:
 def incremental_update(workspace_root: str | Path, project_id: str, input_file: str | Path) -> dict:
     """Workflow 02: add new material without overwriting prior imports or resolving conflicts."""
     root = project_directory(workspace_root, project_id)
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
+        return _incremental_update_unlocked(workspace_root, project_id, input_file, root=root)
+
+
+def _incremental_update_unlocked(workspace_root: str | Path, project_id: str, input_file: str | Path, *, root: Path) -> dict:
     manifest_file = root / "_INBOX/source_manifest.json"
     if (root / "00_meta/import_pending.json").is_file():
-        return {**semantic_import(root, incremental=True), "requested_input_deferred": True,
+        return {**_run_import_unlocked(root, incremental=True), "requested_input_deferred": True,
             "note": "Recovered the pending import first; submit the requested input again after recovery."}
     if not (root / "00_meta/import_state.json").is_file():
         raise ContractError("INCREMENTAL_REQUIRES_INITIAL_IMPORT", "run initial-import first")
@@ -702,7 +711,7 @@ def incremental_update(workspace_root: str | Path, project_id: str, input_file: 
     if source_path.is_relative_to((root / "_INBOX").resolve()):
         assert_output_within_root(root, str(source_path))
     elif all(path.is_file() for path in (manifest_file, root / "_INBOX/source_index.json", root / "90_canon/canon_candidates.json")):
-        import_source(workspace_root, project_id, source_path)
+        _import_source_unlocked(workspace_root, project_id, source_path)
     else:
         # Ordinary public _INBOX projects have no legacy staging manifest.
         # Preserve their old material and candidate files; only stage new bytes.
@@ -722,7 +731,15 @@ def incremental_update(workspace_root: str | Path, project_id: str, input_file: 
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists():
             destination.write_bytes(raw)
-    return semantic_import(root, incremental=True)
+    return _run_import_unlocked(root, incremental=True)
+
+
+def _run_import_unlocked(project_root: Path, *, incremental: bool) -> dict:
+    try:
+        from . import cnw_import_workflow
+    except ImportError:
+        import cnw_import_workflow
+    return cnw_import_workflow._run_import(project_root, incremental=incremental)
 
 
 def semantic_import(project_root: str | Path, *, incremental: bool = False) -> dict:

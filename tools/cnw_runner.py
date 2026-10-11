@@ -23,6 +23,7 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import time
@@ -1617,22 +1618,51 @@ def execute_completeness(run_dir: Path) -> dict:
         if (not isinstance(finding, dict) or finding.get("lens_id") not in LENS_IDS
                 or not isinstance(finding.get("prompt_update"), str) or not finding["prompt_update"].strip()):
             raise ContractError("LIVE_COMPLETENESS_OUTPUT_INVALID", "each omission needs a relevant lens and reusable prompt_update")
-    feedback_dir = project_root / "08_review/lens_feedback"
-    for finding in parsed["candidate_findings"]:
-        feedback_dir.mkdir(parents=True, exist_ok=True)
-        path = feedback_dir / f"{finding['lens_id']}.json"
-        updates = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
-        instruction = finding["prompt_update"].strip()
-        if not any(item["instruction"] == instruction for item in updates):
-            updates.append({"instruction": instruction, "category": finding.get("category"),
-                            "run_id": run_dir.name, "finding_id": finding.get("finding_id"),
-                            "provider_request_id": receipt["provider_request_id"]})
-            path.write_text(json.dumps(updates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _publish_lens_feedback(project_root, run_dir, parsed["candidate_findings"], receipt)
     parsed["stage"] = "completeness_critic"
     parsed["confirmed_findings"] = [f.get("finding_id") for f in confirmed]
     parsed["rejected_findings"] = [f.get("finding_id") for f in rejected]
     _persist_stage(run_dir, "completeness_critic", "artifacts/completeness_critic.json", json.dumps(parsed, ensure_ascii=False, indent=2), receipt_ids=[receipt["request_id"]], role_id="completeness")
     return {"stage": "completeness_critic", "candidates": len(parsed["candidate_findings"])}
+
+
+def _publish_lens_feedback(project_root: Path, run_dir: Path, findings: list[dict], receipt: dict) -> None:
+    """Serialize feedback read/dedupe/publish with every other project-authority write."""
+    if not findings:
+        return
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    feedback_dir = project_root / "08_review/lens_feedback"
+    with project_write_lock(project_root):
+        for finding in findings:
+            path = assert_output_within_root(project_root, f"08_review/lens_feedback/{finding['lens_id']}.json")
+            feedback_dir.mkdir(parents=True, exist_ok=True)
+            before = path.read_bytes() if path.is_file() else None
+            updates = json.loads(before.decode("utf-8")) if before is not None else []
+            instruction = finding["prompt_update"].strip()
+            if any(item["instruction"] == instruction for item in updates):
+                continue
+            updates.append({"instruction": instruction, "category": finding.get("category"),
+                            "run_id": run_dir.name, "finding_id": finding.get("finding_id"),
+                            "provider_request_id": receipt["provider_request_id"]})
+            # Revalidate the preimage under the shared project lock before atomic publication.
+            current = path.read_bytes() if path.is_file() else None
+            if current != before:
+                raise ContractError("PROJECT_WRITE_CONFLICT", path.relative_to(project_root).as_posix())
+            payload = (json.dumps(updates, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+            with tempfile.NamedTemporaryFile(mode="wb", delete=False, dir=feedback_dir,
+                                             prefix=f".{path.name}.{uuid.uuid4().hex}.") as stream:
+                temporary = Path(stream.name)
+                stream.write(payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+            try:
+                os.replace(temporary, path)
+            except BaseException:
+                temporary.unlink(missing_ok=True)
+                raise
 
 
 def _confirmed_findings(run_dir: Path, state: dict) -> list[dict]:

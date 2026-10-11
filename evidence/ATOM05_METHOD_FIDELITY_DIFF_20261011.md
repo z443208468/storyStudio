@@ -17,3 +17,18 @@ is the R5-pinned upstream `claude-novel-workflow@97ad71fe5e5e76a82275c6c63d4add0
 | M16 | Keep offline evidence, independent engineering review, canon approval, user acceptance and Live evidence distinct. | New evidence labels tests as local Writer evidence and explicitly leaves private cutover, Controller verdict, and Live production separate. | No production API, story generation, migration, Canon approval, or user creative acceptance occurred. |
 
 **Explicitly not established here:** complete role-chain semantics, NK/CritiCS enabled/disabled end-to-end behavior, five-Lens/three-Verifier/Completeness/Refine/Re-review real-consumer chain, Sprint live output, private V5/J19 migration, cost-ledger relocation, or Live writing quality. These remain later Atom gates or are blocked pending an explicitly selected DataHome and read-only cutover review.
+
+## Atom-05 RETURN repair scope — 2026-10-11
+
+The independent Controller returned two §05.1b write paths. The minimal repair
+keeps their existing authority semantics and serializes them with the established
+project lock:
+
+| Returned path | Repair | Focused evidence |
+|---|---|---|
+| `execute_completeness()` Lens feedback | Read/de-duplicate/update now runs under `project_write_lock`; it re-reads the locked preimage and atomically replaces the feedback file. | Two concurrent synthetic updates to one Lens preserve both instructions while revision publication uses the same critical section (`test_lens_feedback_publication_serializes_concurrent_feedback_and_publish`). |
+| `incremental_update()` source staging + semantic import | The public Workflow 02 operation acquires the project lock before state recovery/checks and raw `_INBOX/originals` staging, and runs both supported source/semantic import bodies without nested acquisition. | Fixture races the actual incremental staging entrypoint and revision publication, checking the staged source exists before semantic import, one active writer, and no lost authority updates (`test_incremental_staging_and_publish_share_one_project_lock`). |
+
+Focused retest results are recorded in `ATOM05_ENGINE_RETEST_20261011.txt`.
+These new results are Writer evidence only. Exact repaired C/T remains subject
+to independent Controller review; nothing here authorizes private-data cutover.

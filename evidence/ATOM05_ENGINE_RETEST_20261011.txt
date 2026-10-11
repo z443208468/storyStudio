@@ -29,6 +29,27 @@ provider/API call)
   PUBLISH_CONFLICT and remains unchanged by the attempted promotion.
 - `git diff --check` — passed.
 
+Return repair retest — 2026-10-11 (Writer evidence; pending independent Controller)
+- Completeness Lens-feedback read, de-duplication and publication now happen
+  under the common project-write lock. The current byte preimage is re-read
+  while holding that lock and the resulting JSON is atomically replaced.
+- Workflow 02 now holds the project-write lock before checking/recovering import
+  state, staging raw source bytes, invoking semantic import, or using the legacy
+  source importer. It calls the unlocked transaction bodies internally to
+  avoid reacquiring the same lock.
+- Added synthetic concurrency tests racing two same-Lens feedback publications
+  and revision publish, and racing incremental source staging/import against
+  revision publish. Both assert serialized critical sections, retained updates,
+  and writes confined to the selected fixture project.
+- `python -m py_compile tools/cnw_runner.py tools/cnw_project.py tests/test_cnw_runner.py` — passed.
+- `python -m unittest discover -s tests -p test_cnw_runner.py` — 34 tests, OK.
+- `python -m unittest discover -s tests -p test_cnw_project_import.py` — 14 tests, OK.
+- `python -m unittest discover -s tests -p test_cnw_maintenance.py` — 10 tests, OK.
+- `python -m unittest discover -s tests -p test_cnw_generation.py` — 22 tests, OK.
+- The first direct dotted unittest invocation could not import `tests.test_cnw_runner`
+  because `tests` is not a package; rerunning through repository unittest discovery
+  passed. No test used private projects or a Provider/API call.
+
 Boundary
 - No DataHome, legacy J19 root, v5 private project, global cost ledger, run, or
   W10 file was selected, read, copied, or modified. No migration or cutover was

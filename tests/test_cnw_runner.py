@@ -10,6 +10,7 @@ import tempfile
 import threading
 import time
 import unittest
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from tools import cnw_runner
@@ -625,6 +626,114 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(maximum, 1)
         self.assertCountEqual(json.loads(state_path.read_text(encoding="utf-8"))["writes"],
                               ["source_import", "revision_publish"])
+
+    def test_incremental_staging_and_publish_share_one_project_lock(self):
+        from tools import cnw_project, cnw_revision, project_transactions
+        workspace = self.base / "workspace"
+        root = workspace / "FICT_INCREMENTAL"
+        (root / "_INBOX").mkdir(parents=True)
+        (root / "00_meta").mkdir()
+        (root / "00_meta/import_state.json").write_text("{}", encoding="utf-8")
+        authority = root / "authority.json"
+        authority.write_text('{"writes":[]}', encoding="utf-8")
+        incoming = self.base / "incremental.md"
+        incoming.write_text("Synthetic incremental source", encoding="utf-8")
+        active = maximum = 0
+        guard = threading.Lock()
+        original_lock = project_transactions.project_write_lock
+
+        @contextmanager
+        def observed_lock(project_root):
+            nonlocal active, maximum
+            with original_lock(project_root):
+                with guard:
+                    active += 1
+                    maximum = max(maximum, active)
+                try:
+                    yield
+                finally:
+                    with guard:
+                        active -= 1
+
+        def fake_import(project_root, *, incremental=False):
+            staged = root / "_INBOX/originals"
+            self.assertTrue(staged.is_dir())
+            self.assertEqual(len(list(staged.iterdir())), 1)
+            current = json.loads(authority.read_text(encoding="utf-8"))
+            time.sleep(0.03)
+            current["writes"].append("incremental_stage_and_import")
+            authority.write_text(json.dumps(current), encoding="utf-8")
+            return {"status": "FIXTURE_INCREMENTAL"}
+
+        def fake_publish(*args, **kwargs):
+            current = json.loads(authority.read_text(encoding="utf-8"))
+            time.sleep(0.03)
+            current["writes"].append("revision_publish")
+            authority.write_text(json.dumps(current), encoding="utf-8")
+            return {"status": "FIXTURE_PUBLISH"}
+
+        with patch.object(cnw_project, "ROOT", self.base), \
+                patch.object(project_transactions, "project_write_lock", observed_lock), \
+                patch("tools.cnw_import_workflow._run_import", side_effect=fake_import), \
+                patch.object(cnw_revision, "_promote_revision_unlocked", side_effect=fake_publish):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                update = pool.submit(cnw_project.incremental_update, workspace, "FICT_INCREMENTAL", incoming)
+                publish = pool.submit(cnw_revision.promote_revision, root, root / "runs/R1", "candidate.md", {}, {})
+                self.assertEqual(update.result()["status"], "FIXTURE_INCREMENTAL")
+                self.assertEqual(publish.result()["status"], "FIXTURE_PUBLISH")
+        self.assertEqual(maximum, 1)
+        self.assertCountEqual(json.loads(authority.read_text(encoding="utf-8"))["writes"],
+                              ["incremental_stage_and_import", "revision_publish"])
+
+    def test_lens_feedback_publication_serializes_concurrent_feedback_and_publish(self):
+        from tools import cnw_revision, project_transactions
+        root = self.base / "shared-project"
+        root.mkdir()
+        authority = root / "authority.json"
+        authority.write_text('{"writes":[]}', encoding="utf-8")
+        active = maximum = 0
+        guard = threading.Lock()
+        original_lock = project_transactions.project_write_lock
+
+        @contextmanager
+        def observed_lock(project_root):
+            nonlocal active, maximum
+            with original_lock(project_root):
+                with guard:
+                    active += 1
+                    maximum = max(maximum, active)
+                try:
+                    yield
+                finally:
+                    with guard:
+                        active -= 1
+
+        def fake_publish(*args, **kwargs):
+            current = json.loads(authority.read_text(encoding="utf-8"))
+            time.sleep(0.03)
+            current["writes"].append("revision_publish")
+            authority.write_text(json.dumps(current), encoding="utf-8")
+            return {"status": "FIXTURE_PUBLISH"}
+
+        receipt = {"provider_request_id": "MOCK-PROVIDER"}
+        feedback = [
+            {"lens_id": "style", "prompt_update": "Check sentence rhythm.", "finding_id": "F1"},
+            {"lens_id": "style", "prompt_update": "Check repeated imagery.", "finding_id": "F2"},
+        ]
+        with patch.object(project_transactions, "project_write_lock", observed_lock), \
+                patch.object(cnw_revision, "_promote_revision_unlocked", side_effect=fake_publish):
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                calls = [pool.submit(cnw_runner._publish_lens_feedback, root, root / "runs/R1", [finding], receipt)
+                         for finding in feedback]
+                publish = pool.submit(cnw_revision.promote_revision, root, root / "runs/R1", "candidate.md", {}, {})
+                for call in calls:
+                    call.result()
+                publish.result()
+        self.assertEqual(maximum, 1)
+        stored = json.loads((root / "08_review/lens_feedback/style.json").read_text(encoding="utf-8"))
+        self.assertEqual({row["instruction"] for row in stored}, {row["prompt_update"] for row in feedback})
+        self.assertEqual(json.loads(authority.read_text(encoding="utf-8"))["writes"], ["revision_publish"])
+        self.assertEqual(list((root / "08_review/lens_feedback").glob(".style.json.*")), [])
 
     def test_semantic_import_accepts_registered_datahome_root(self):
         from tools import cnw_import_workflow, cnw_project
