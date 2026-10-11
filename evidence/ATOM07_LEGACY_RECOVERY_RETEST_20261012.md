@@ -13,7 +13,7 @@
 - `python -m py_compile tools/cnw_runner.py tests/test_legacy_source_path_map.py` — exit 0, stdout/stderr empty.
 - `python -m unittest discover -s tests -p test_legacy_source_path_map.py` — exit 0, 8 tests passed in 30.030s.
 - Captured test output: `ATOM07_LEGACY_RECOVERY_RETEST_20261012.raw.txt`
-- Captured output SHA-256: `c80b8f8beab8d3aba4b22b17fb308572d5871d8d2318cae2890e2b0870e6814`
+- Captured output SHA-256: `c80b8f8bfeab8d3aba4b22b17fb308572d5871d8d2318cae2890e2b0870e6814`
 - `tools/cnw_runner.py` SHA-256: `03e45dae590e0a561eef6cc2ba3b4367ae25cb716d334e591114f722520c4eb2`
 - `tests/test_legacy_source_path_map.py` SHA-256: `1f91ff0776f562eb63d4e58504390ba99ae3166781a88eb3114b331aefa9745a`
 - `git diff --check` — exit 0.
