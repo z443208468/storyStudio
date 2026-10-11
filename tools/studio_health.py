@@ -32,8 +32,19 @@ def _sha(path: Path) -> str:
     return digest.hexdigest()
 
 
-def verify_author_reference(repo_root: str | Path) -> str:
-    root = Path(repo_root).resolve()
+def _git_blob_sha(path: Path) -> str:
+    raw = path.read_bytes()
+    # These pinned method references are text files. Git's clean conversion
+    # maps Windows CRLF checkouts back to the LF blob bytes.
+    canonical = raw.replace(b"\r\n", b"\n")
+    if b"\r" in canonical:
+        return ""
+    header = f"blob {len(canonical)}\0".encode("ascii")
+    return hashlib.sha1(header + canonical).hexdigest()
+
+
+def _verify_reference_files(root: Path, expected_commit: str,
+                            expected_blobs: dict[str, str]) -> str:
     reference_root = root / "runtime/reference/cnw_97ad71fe5e5e"
     manifest_path = reference_root / "CNW_LOCAL_REFERENCE_MANIFEST.json"
     if not manifest_path.is_file():
@@ -42,13 +53,13 @@ def verify_author_reference(repo_root: str | Path) -> str:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         rows = manifest["references"]
         if (manifest.get("project") != "MintoTsukino/claude-novel-workflow" or
-                manifest.get("upstream_commit") != REFERENCE_COMMIT or
+                manifest.get("upstream_commit") != expected_commit or
                 not isinstance(rows, list) or manifest.get("file_count") != len(rows)):
             return "PIN_MISMATCH"
         by_source = {row["source_path"]: row for row in rows if isinstance(row, dict)}
         if len(by_source) != len(rows):
             return "PIN_MISMATCH"
-        for source_path, expected_blob in REFERENCE_BLOBS.items():
+        for source_path, expected_blob in expected_blobs.items():
             row = by_source.get(source_path)
             if not row or row.get("upstream_git_blob") != expected_blob:
                 return "PIN_MISMATCH"
@@ -59,11 +70,16 @@ def verify_author_reference(repo_root: str | Path) -> str:
             if not local.is_relative_to(reference_root.resolve()):
                 return "PIN_MISMATCH"
             if (local.stat().st_size != row.get("bytes") or
-                    _sha(local) != str(row.get("sha256", "")).lower()):
+                    _sha(local) != str(row.get("sha256", "")).lower() or
+                    _git_blob_sha(local) != expected_blob):
                 return "PIN_MISMATCH"
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         return "PIN_MISMATCH"
     return "PINNED_REFERENCE_VERIFIED"
+
+
+def verify_author_reference(repo_root: str | Path) -> str:
+    return _verify_reference_files(Path(repo_root).resolve(), REFERENCE_COMMIT, REFERENCE_BLOBS)
 
 
 def verify_optional_build(repo_root: str | Path, component: str) -> str:

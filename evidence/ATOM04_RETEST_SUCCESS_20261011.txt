@@ -4,6 +4,7 @@ Status: initial candidate received RETURN; corrected candidate is locally verifi
 Plan: plans/MASTER_PLAN_GENERIC_APP_R5.md
 Plan SHA256: 5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF
 Returned candidate: C=743b4fa8be38cf3dc54c6cd2ff0a66aac4cbe402, T=dfcf83b53c065a06b1411f5be0bed09840b19713
+Second returned candidate: C=5da8a295db1a48333a13195f176c9afc01868e5a, T=b1e3fe6eb850b825965e8269b200f4b6e5a42ace
 The corrected candidate C/T is supplied in the independent Controller review request and its original verdict record; this test log records the evidence scope and results without embedding a self-referential commit SHA. No remote push until Controller ACCEPT.
 
 Checks performed on synthetic/temp data only:
@@ -11,10 +12,12 @@ Checks performed on synthetic/temp data only:
   Initial result before Controller RETURN: 9 tests, OK (134.108s)
 - python -m unittest discover -s tests -p test_studio_cli_routes.py
   Corrected result after Controller RETURN: 11 tests, OK (66.123s)
+- python -m unittest discover -s tests -p test_studio_cli_routes.py
+  Result after second Controller RETURN and Git-blob verification fix: 11 tests, OK (56.176s)
 - Targeted registered-root live Sprint admission test
   Result: 1 test, OK (6.021s); invalid synthetic plan is rejected at plan validation after root identity admission, before any provider route.
 - Synthetic health verifier checks
-  Included in corrected route suite; validates correct synthetic reference/build identity and rejects wrong pin/build ID.
+  Targeted test after second Controller RETURN: 1 test, OK (0.022s), validating a calculated synthetic Git blob identity and rejection of modified bytes despite a synchronized manifest SHA, plus build identity mismatch rejection.
 - python -m unittest discover -s tests -p test_cnw_maintenance.py
   Result: 10 tests, OK (0.691s)
 - py_compile for tools/cnw_project.py, tools/cnw_maintenance.py, tools/cnw_sprint.py

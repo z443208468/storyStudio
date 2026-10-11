@@ -73,25 +73,38 @@ class StudioCliRouteTests(unittest.TestCase):
             root = Path(temporary)
             reference_root = root / "runtime/reference/cnw_97ad71fe5e5e"
             rows = []
+            synthetic_blobs = {}
             for source_path, blob in studio_health.REFERENCE_BLOBS.items():
                 relative = f"runtime/reference/cnw_97ad71fe5e5e/{source_path}"
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 content = f"fixture:{source_path}\n".encode()
                 target.write_bytes(content)
+                synthetic_blobs[source_path] = studio_health._git_blob_sha(target)
                 rows.append({"source_path": source_path, "local_reference": relative,
-                             "upstream_git_blob": blob, "bytes": len(content),
+                             "upstream_git_blob": synthetic_blobs[source_path], "bytes": len(content),
                              "sha256": hashlib.sha256(content).hexdigest()})
             reference_root.mkdir(parents=True, exist_ok=True)
             manifest_path = reference_root / "CNW_LOCAL_REFERENCE_MANIFEST.json"
             manifest = {"project": "MintoTsukino/claude-novel-workflow",
-                        "upstream_commit": studio_health.REFERENCE_COMMIT,
+                        "upstream_commit": "synthetic-pinned-commit",
                         "file_count": len(rows), "references": rows}
             manifest_path.write_text(__import__("json").dumps(manifest), encoding="utf-8")
-            self.assertEqual(studio_health.verify_author_reference(root), "PINNED_REFERENCE_VERIFIED")
-            manifest["upstream_commit"] = "wrong-pin"
+            self.assertEqual(studio_health._verify_reference_files(
+                root, "synthetic-pinned-commit", synthetic_blobs), "PINNED_REFERENCE_VERIFIED")
+            manifest["upstream_commit"] = "wrong-pinned-commit"
             manifest_path.write_text(__import__("json").dumps(manifest), encoding="utf-8")
-            self.assertEqual(studio_health.verify_author_reference(root), "PIN_MISMATCH")
+            self.assertEqual(studio_health._verify_reference_files(
+                root, "synthetic-pinned-commit", synthetic_blobs), "PIN_MISMATCH")
+            manifest["upstream_commit"] = "synthetic-pinned-commit"
+            tampered = root / rows[0]["local_reference"]
+            tampered_bytes = tampered.read_bytes() + b"tamper\n"
+            tampered.write_bytes(tampered_bytes)
+            rows[0]["bytes"] = len(tampered_bytes)
+            rows[0]["sha256"] = hashlib.sha256(tampered_bytes).hexdigest()
+            manifest_path.write_text(__import__("json").dumps(manifest), encoding="utf-8")
+            self.assertEqual(studio_health._verify_reference_files(
+                root, "synthetic-pinned-commit", synthetic_blobs), "PIN_MISMATCH")
 
             patch_bytes, lock_bytes = b"synthetic patch\n", b"synthetic lock\n"
             (root / "patches/critics").mkdir(parents=True)
