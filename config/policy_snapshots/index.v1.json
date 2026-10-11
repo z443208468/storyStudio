@@ -1,0 +1,435 @@
+{
+  "entries": [
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "02e8b91e9b30039a0df0ea5cfa21adc74e0ba0aec464a6663e33b3b79997eae5",
+      "source_refs": [
+        "tools/cnw_export.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "06b325076368cc8bf9671d50502f78ddd8f3b1141fd0c83c2e7e34f692eab0a9",
+      "source_refs": [
+        "tools/policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "0965344687e71a7b475a429a7aafe7513751aa190cfa7b79ce5e332397931207",
+      "source_refs": [
+        "tools/cnw_runner.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "122617825fe90b5d279997adf1a7fa6abb693f6ab27a97b85f13429bb4645bae",
+      "source_refs": [
+        "tools/cnw_project.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "29b929b5f8a45529f885093ebd60522c083bf5f90a14eaebc00dd2a28c90ae36",
+      "source_refs": [
+        "tools/cnw_contract.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "302ed5ae378c9bdf49dbeeb3505ccd0efc690fcc1969a651d1062a128f2075f5",
+      "source_refs": [
+        "tools/p2_cost_guard.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "provider_policy"
+      ],
+      "sha256": "3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519",
+      "source_refs": [
+        "config/policies/provider_policy.deepseek_flash.v1.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "workflow"
+      ],
+      "sha256": "3f00c193c606405664f684e54002e4ad7aa1bdffd3a1d9c3ee8f58d99242d432",
+      "source_refs": [
+        "third_party/claude-novel-workflow/docs/HOW_TO_ADAPT.md"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "429c9450b8f8e640b38bfd652cadf26786aa5a5420128384c43d57eaae8de3ab",
+      "source_refs": [
+        "tools/build_policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "48a91edd1de9d580a99f45323896a936d313025ee0f6e3d0ffcabb6c946053ad",
+      "source_refs": [
+        "tools/cnw_generate.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "4c4748a031f4e397a326460c8e2fb6585e214f19f7d1bfa571791bd168aba256",
+      "source_refs": [
+        "tools/policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "55e69ae79a7fe4aaa5f07175de3b707e73bb793c9bd35e568ab140d56ed006e2",
+      "source_refs": [
+        "tools/cnw_roles.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "workflow"
+      ],
+      "sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+      "source_refs": [
+        "third_party/claude-novel-workflow/templates/config/workflow.template.yml"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "62d415a43a629702db87d10e59e2e0a150d9409c172269d58ac6368b4576fb3f",
+      "source_refs": [
+        "tools/critics_bridge.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "app_policy"
+      ],
+      "sha256": "645dbae7fb7574247f0ffa424b3b5d548bcfc9062042032ed3e8666136e879e1",
+      "source_refs": [
+        "config/policies/app_policy.v1.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "workflow"
+      ],
+      "sha256": "651388b6480d71a281a5e887f2de1410e53c43c1be4341a780addf44c19b61fb",
+      "source_refs": [
+        "third_party/claude-novel-workflow/docs/THREE_LAYER_REVIEW.md"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "6b24844ae092cab912574ef756f3b96cfe4c77dcbbceb21f12a8bbed1b99f990",
+      "source_refs": [
+        "tools/cnw_recovery.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "prompt"
+      ],
+      "sha256": "6ccfafa1ee8269fec1e3c0bbebc19f314c8272c1ddce3de85176594a1a03c380",
+      "source_refs": [
+        "prompts/cnw/prose.md"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "6fbd07f815e0643089ea11b70c287992ba2a65e159d4fd2495726805bdb99365",
+      "source_refs": [
+        "tools/cnw_sprint_live.py"
+      ]
+    },
+    {
+      "availability": "LEGACY_SNAPSHOT_MISSING",
+      "kinds": [
+        "tool"
+      ],
+      "reason": "exact original bytes not present in current checkout, Atom-00 file archive, or Git path history",
+      "reason_code": "LEGACY_MIGRATION_REQUIRED",
+      "sha256": "7a650695452b549f431325a14a690c51238d880b6d117388e0fa144eb8470e28",
+      "source_refs": [
+        "historical run state cost_guard_runner_sha256"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "provider_pricing"
+      ],
+      "sha256": "7cd8f0db82d122bf212fade5ec42c03d158c77fee6ab1c0025fb0c6a3ef20cd7",
+      "source_refs": [
+        "config/p2_cost_pricing_2026-10-10.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "8819ccf045c1c05a4e7db395d7ba3ed0096e0f27c0f7e4b48b4ca3a65e9c3fc2",
+      "source_refs": [
+        "tools/policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "8b23959335d1efde81aee9055f82372583f683c6a6556d99ab2e61fee6467309",
+      "source_refs": [
+        "tools/cnw_review.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "workflow"
+      ],
+      "sha256": "9ac2b7fce957c1607ac135f6a19646b429b0358fbdf7bc5e69440d4537babb23",
+      "source_refs": [
+        "third_party/claude-novel-workflow/templates/config/project.template.yml"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "prompt"
+      ],
+      "sha256": "9d7b2654d537fb032d6b9bb8042cd38edb7ee700376878ff4b152a08abd38667",
+      "source_refs": [
+        "prompts/cnw/brief.md"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "9f0056212ecb503932f980d7f76027d950acf6ff3ea1f9d6b512c18f01322509",
+      "source_refs": [
+        "tools/policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "a22e1905fae701217d8aec7ddd42140b659b495c8909da7f9c6058d8c8969161",
+      "source_refs": [
+        "tools/cnw_import_workflow.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "legacy_combined_production_config",
+        "legacy_production_config"
+      ],
+      "sha256": "a7b5e8284264bff0bd8c40960eda1a8f073bfb5e11e395f5c329c7d2b8bdef8a",
+      "source_refs": [
+        "config/production.example.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "ab8a40b15687b8fc35faffbef5c34553649f818f188c7e4cdfa57ba9342c21e3",
+      "source_refs": [
+        "git:3c0d8c23e251ccf76d80ac72fce2b9f18515bc7d:tools/p2_cost_guard.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "b0d750ed37b56f9950dce9a6496c925fe1d6d18463b8f814c7bd71d3cc73b742",
+      "source_refs": [
+        "tools/cnw_sprint.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "legacy_combined_production_config",
+        "legacy_production_config"
+      ],
+      "sha256": "b5dc2bebb54f9ee4beca56ad3bf2d9b88f9ab6831d7bd9211bedcd57a3a9e959",
+      "source_refs": [
+        "git:29dec841a55d78ac843101bdf87c15dfe240a803:config/production.example.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "workflow"
+      ],
+      "sha256": "b63007c9657522fa1dac13e53a40de66a6687fcf2b4d21255ce5951c39bfd7d0",
+      "source_refs": [
+        "third_party/claude-novel-workflow/templates/config/ai_roles.template.yml"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "b948f8fd4e5baedd5090fd217917bd76cc4057307fdbd8f49000b7220ca3ac38",
+      "source_refs": [
+        "tools/policy_snapshots.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "prompt"
+      ],
+      "sha256": "c2e6558b450f3c35f892648c146182fa7181529ef24a3bdceb8ec1cef1aad7f3",
+      "source_refs": [
+        "prompts/cnw/scene_cards.md"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "legacy_project_policy"
+      ],
+      "sha256": "d4c4fe2b877d4bbadb33a39d6378e2769fd6d9de449eddbb5a17a203cc56854d",
+      "source_refs": [
+        "config/cnw_production_policy.json"
+      ]
+    },
+    {
+      "availability": "LEGACY_SNAPSHOT_MISSING",
+      "kinds": [
+        "legacy_combined_production_config",
+        "legacy_production_config"
+      ],
+      "reason": "exact original bytes not present in current checkout, Atom-00 file archive, or Git path history",
+      "reason_code": "LEGACY_MIGRATION_REQUIRED",
+      "sha256": "d5debd560ee2c91ffcb7ca0c08f6dec7014e7436691795e74a23912b715a8d96",
+      "source_refs": [
+        "historical run state provider_config_sha256"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "prompt"
+      ],
+      "sha256": "dc8a4fda550b8790359618cbaf01691ff38585ab0b0f4e6d89ef9cd7e7e41cbd",
+      "source_refs": [
+        "prompts/cnw/plot.md"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "e1128320551e82e3d1c11f37a0aaee917d807cfa14d42c41a03bf059d1994648",
+      "source_refs": [
+        "tools/cnw_maintenance.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "app_policy"
+      ],
+      "sha256": "e1d0ea5096a2056159e08291e44f91cc9a82247515beae2331cbb7d1dc207f12",
+      "source_refs": [
+        "config/policies/app_policy.v1.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "project_policy",
+        "project_policy_template"
+      ],
+      "sha256": "e76075db0cb8460adf66bc1e6be61b7f86373859fb657336c07d4666c9a5891c",
+      "source_refs": [
+        "config/policies/project_policy.template.v1.json"
+      ]
+    },
+    {
+      "availability": "LEGACY_SNAPSHOT_MISSING",
+      "kinds": [
+        "tool"
+      ],
+      "reason": "exact original bytes not present in current checkout, Atom-00 file archive, or Git path history",
+      "reason_code": "LEGACY_MIGRATION_REQUIRED",
+      "sha256": "ead9b205791ea7e96bcdba475b7c9d92a117710949cb82c9c33b6441c8712815",
+      "source_refs": [
+        "historical run state cost_guard_runner_sha256"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
+      "sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+      "source_refs": [
+        "tools/cnw_lint.py"
+      ]
+    }
+  ],
+  "schema_version": "storystudio_policy_snapshot_index_v1"
+}

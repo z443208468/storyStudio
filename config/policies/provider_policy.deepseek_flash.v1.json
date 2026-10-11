@@ -1,0 +1,30 @@
+{
+  "schema_version": "storystudio_provider_policy_v1",
+  "adapter_id": "deepseek_flash",
+  "display_name": "DeepSeek Flash",
+  "model": "deepseek-flash",
+  "base_url": "https://api.deepseek.com/v1",
+  "key_environment_variable": "DEEPSEEK_API_KEY",
+  "request_policy": {
+    "thinking": "disabled",
+    "max_in_flight": 5,
+    "sdk_max_retries": 0,
+    "network_extra_attempts": 2,
+    "format_repair_extra_attempts": 1,
+    "read_timeout_seconds": 180,
+    "output_tokens": "derive_from_provider_capability_and_work_unit_requirements"
+  },
+  "pricing": {
+    "currency": "CNY",
+    "price_source": "official_current_pricing_at_execution",
+    "missing_usage": "UNKNOWN_NOT_ZERO"
+  },
+  "accounting": {
+    "reserve_before_send": true,
+    "settle_after_response": true,
+    "persist_across_run_ids": true,
+    "auto_top_up": false,
+    "new_project_inherits_historical_campaign_limit": false
+  },
+  "supported_project_override_ids": ["deepseek_flash"]
+}

@@ -1,0 +1,62 @@
+{
+  "plan_version": "P2",
+  "template_status": "EXAMPLE_CONFIG_NOT_A_RUN_RECEIPT",
+  "project_root": "D:\\CangqiStudio\\StoryStudio",
+  "provider": {
+    "name": "deepseek",
+    "base_url": "https://api.deepseek.com/v1",
+    "model": "deepseek-flash",
+    "key_environment_variable": "DEEPSEEK_API_KEY",
+    "thinking": "disabled",
+    "max_in_flight": 1,
+    "sdk_max_retries": 0,
+    "network_extra_attempts": 2,
+    "format_repair_extra_attempts": 1,
+    "read_timeout_seconds": 180,
+    "production_max_output_tokens_policy": "derive_from_provider_capability_and_remaining_estimated_budget",
+    "literary_word_count_target": null
+  },
+  "cost_guard": {
+    "currency": "CNY",
+    "estimated_campaign_limit": 10,
+    "scope": "P2_first_scene_campaign_including_diagnostics_and_retries",
+    "persist_across_run_ids": true,
+    "auto_top_up": false,
+    "price_source": "official_current_pricing_at_execution",
+    "missing_usage": "UNKNOWN_NOT_ZERO",
+    "is_hard_billing_guarantee": false
+  },
+  "source": {
+    "zip_path": null,
+    "expected_version": "JUN-SINGLE-02.3",
+    "expected_zip_sha256": "300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2",
+    "private_output": "inputs/private/release"
+  },
+  "sample": {
+    "id": "CQ_P2_SAMPLE_001",
+    "pov": "君天离",
+    "language": "zh-CN",
+    "max_distinct_scenes_before_user_review": 1,
+    "blind_regeneration": false,
+    "content_revision_rounds_before_root_cause_review": 2,
+    "critic_text_scope": "source_referenced_key_excerpt_up_to_five_sentences",
+    "full_scene_review": "independent_controller"
+  },
+  "nk": {
+    "listen_host": "127.0.0.1",
+    "preferred_port": 3100,
+    "selected_live_route": "/api/generate-perspective",
+    "structured_outputs": false,
+    "client_key_persistence": false
+  },
+  "upstream": {
+    "cnw": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+    "nk": "b857f34b7d371ae82c30e00eb021884c14d08ae9",
+    "critics": "fbf66cbc913012c6f80af1687e27f0ce350475e3"
+  },
+  "acceptance": {
+    "controller": "delegated_independent_read_only_subagent",
+    "writer_can_self_accept": false,
+    "user_final_creative_review_required": true
+  }
+}

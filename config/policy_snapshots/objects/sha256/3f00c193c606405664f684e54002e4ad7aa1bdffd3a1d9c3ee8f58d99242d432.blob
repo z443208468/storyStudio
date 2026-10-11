@@ -1,0 +1,171 @@
+# How to Adapt the Example to Your Project
+
+If you've forked this repo, you have two starting materials:
+
+1. `templates/` — Generic English-language templates for a fresh project.
+2. `example_project/` — A real, complete, in-progress Japanese light novel project.
+
+This document is about getting the most out of the **example** without copying it directly.
+
+---
+
+## Why You Shouldn't Copy the Example
+
+The example project is:
+
+- In Japanese (every canon file, brief, and chapter is in Japanese)
+- Specific to a single story (4-layer misperception structure, specific character names, specific calling rules)
+- The product of 50+ iterations of refinement on the workflow itself
+
+If you copy `example_project/90_canon/character_bible.md` into your own project, you'd get a character bible for someone else's story. The structure transfers. The contents don't.
+
+---
+
+## What to Copy vs. What to Adapt vs. What to Throw Away
+
+### Copy directly (these transfer cleanly)
+
+- **Folder structure**: The numbered folders, the per-chapter file conventions, the separation of canon from drafts. This works for any long-form fiction.
+- **Per-episode file pattern**: `epNNN_plot.md` → `epNNN_scene_cards.md` → `epNNN_writing_brief.md` → `episodes/epNNN.md`. Battle-tested.
+- **Three-layer review structure**: Layer 1 (regex) / Layer 2 (regex with context) / Layer 3 (semantic agents). The pattern is universal even if the specific rules aren't.
+- **Adversarial verify pattern**: 3 skeptics per finding, refute-by-default. Transfers as-is.
+- **Completeness critic pattern**: Meta-lens at the end. Transfers as-is.
+
+### Adapt (structure transfers, contents don't)
+
+- **`character_bible.md`**: Use the table format, the inter-character calling rules section, the special naming conventions section. Fill with YOUR characters.
+- **`world_bible.md`**: Use the section structure. Fill with YOUR world.
+- **`glossary.md`**: Use the table format and category split. Fill with YOUR terms.
+- **`timeline.md`**: Use the per-chapter time coverage table and the foreshadowing ledger. Fill with YOUR events.
+- **`style_guide.md`**: Use the section structure (overall voice, punctuation, dialogue, etc.). Fill with YOUR style decisions.
+- **`forbidden_patterns.md`**: USE THE 3-LAYER STRUCTURE. DO NOT use the specific rules — they're 80% project-specific. The template in `templates/92_style_engine/` has English-language defaults you can build from.
+- **Brief format**: Use the writing-brief structure (header / active canon / scene-by-scene / hard constraints). Adapt fields as needed.
+- **Review lens design**: 5 lenses works well, but the 5th lens (story-specific) should be replaced. The example uses a misperception lens because the story has 4-layer misperception. Yours might need a clue-placement lens (mystery), a tension-curve lens (thriller), a revelation-pacing lens (epic fantasy), etc.
+
+### Throw away (specific to the example)
+
+- All character names, world details, glossary entries — specific to one story.
+- All plot files, scene cards, briefs, episodes — these are the example's story.
+- All review files — these review the example's chapters.
+- `91_jet_engine/` — Idiosyncratic to the author's process. Don't copy unless you understand each file's role.
+- The arc structure (5 arcs × 20 chapters = 100 chapters) — works for that story; yours might be a single 12-chapter arc, or 7 arcs of 30 chapters.
+
+---
+
+## Adaptation Sequence
+
+If you want to maximize value from the example, do this in order:
+
+### Phase 1 — Study (no writing yet, ~3–6 hours)
+
+1. Read `docs/PHILOSOPHY.md` and `docs/ARCHITECTURE.md`.
+2. Read `example_project/README.md`.
+3. Read `example_project/CLAUDE.md` to see how the example author talks to Claude in this codebase (originally named `AGENTS.md` during the OpenAI Codex era).
+4. Read `example_project/90_canon/canon.md` then `character_bible.md` then `glossary.md`. Don't try to memorize anything — feel the shape.
+5. Read `example_project/92_style_engine/forbidden_patterns.md`. This is your strongest reference for what a mature forbidden-patterns file looks like.
+6. Read `example_project/07_draft/episodes/ep001.md` (an actual chapter).
+7. Read `example_project/07_draft/ep001_writing_brief.md` (the brief that produced it).
+8. Skip ahead and read `example_project/08_review/ep002-ep006_batch_review.md` to see what a real review pass looks like.
+
+By the end of phase 1, you should understand:
+- How files flow into and out of each agent stage.
+- What level of detail goes into a brief vs. into a canon file.
+- What kinds of issues the review pass actually catches.
+
+### Phase 2 — Plan your project (1–2 hours)
+
+Decide:
+- Is your story a single arc or multiple? How long is an arc?
+- What's the equivalent of your project's "misperception lens" — what's the structural special-sauce that needs its own review pass?
+- What's your per-chapter target length?
+- What language are you writing in?
+- What's your style register?
+
+Sketch these on paper or in a single notes file. Don't fill in templates yet.
+
+### Phase 3 — Initialize your project folder
+
+Follow [`GETTING_STARTED.md`](GETTING_STARTED.md) Path 1.
+
+You're not adapting the example; you're applying what you learned from the example.
+
+### Phase 4 — Reference the example while you build
+
+While building your canon, when you hit a structural question ("what level of detail should the character bible have?"), open the corresponding example file and look. The example is a working reference, not a template.
+
+Two specific patterns worth stealing wholesale:
+
+1. **Inter-character calling rules table.** The example's character bible has a table for "when character A and character B are together, how do they call each other in public/private/under stress?" This is one of the highest-leverage tables you can build. Steal the format.
+
+2. **Per-scene forbidden items.** The example's scene cards have a "Forbidden items for this scene" section — things that must NOT appear in THIS scene, distinct from chapter-level or global forbidden items. This is essential for disclosure pacing. Steal it.
+
+---
+
+## Pitfalls When Adapting
+
+### "I'll start by translating the example into English"
+
+Wastes weeks, produces a worse character bible than you'd write from scratch. The example's character bible was built for a Japanese light-novel audience, with calling patterns that are deeply tied to Japanese social conventions. Translation produces something that works in neither language.
+
+### "I'll keep the example's forbidden_patterns and add my own"
+
+The example's forbidden patterns are tuned to catch issues in Japanese prose with specific story-internal vocabulary. Most of them will produce zero hits in English prose. The ones that DO hit might fire on legitimate constructions.
+
+Start fresh. Use the template's 3-layer structure. Add patterns as you spot them in YOUR drafts.
+
+### "I'll use the example's `91_jet_engine/` files directly"
+
+The files in `91_jet_engine/` encode the **JET reader-emotion framework** — an original story-design model documented in [`JET_OS_PRIMER.md`](JET_OS_PRIMER.md). Unlike the character_bible or forbidden_patterns (which are project-specific and don't transfer), **JET itself does transfer** — it's a genre-agnostic framework that improves stories in any language.
+
+What to do:
+
+- **Read [`JET_OS_PRIMER.md`](JET_OS_PRIMER.md) first.** Get the 7-variable model and 4 OS-class taxonomy in your head.
+- **Pick your OS class.** Is your story revenge-fantasy (Class 1a)? Slow-life (Class 2)? Decide before adopting the framework.
+- **Copy the structure of `91_jet_engine/` if useful** (the file layout, the compressed/checklist pattern). The contents need to be adapted to your story.
+- **Or skip the folder entirely** if you have your own framework you trust (Save the Cat, Story Grid, etc.). The pipeline works without JET — JET is one option for filling the "story-design lens" slot, not a requirement.
+
+What NOT to do:
+
+- Don't copy `project_jet_design.md` directly. That's the example novel's specific JET configuration.
+- Don't try to learn JET by reading the example files cold — start with the primer, then go to the working files.
+
+### "I'll start with the multi-agent pipeline immediately"
+
+Don't. Even the example author wrote the first 5 chapters of arc 1 manually, then wrote a workflow for the rest. Manual first chapters teach you what the pipeline needs to be.
+
+---
+
+## What to Borrow Without Hesitation
+
+These are project-agnostic and reliable across genres:
+
+- The 3-layer forbidden patterns structure (surface / structural / semantic).
+- The adversarial verify pattern (3 skeptics, refute by default).
+- The completeness critic pattern (final pass that asks "what's missing").
+- The "no chat history, only files" discipline.
+- The "prose agent never sees forbidden patterns; lint pass catches" separation.
+- The "every chapter teaches you a new pattern" maintenance habit.
+- The sprint-based development (5 chapters → review → adjust → next sprint) instead of fire-and-forget all-at-once runs.
+
+---
+
+## What to Always Replace
+
+These are project-specific even if they look generic:
+
+- Calling patterns and rules.
+- Vocabulary and glossary.
+- The "story-specific" review lens (5th lens).
+- Voice samples.
+- Any rule in `forbidden_patterns.md` that mentions specific words, specific characters, or specific story facts.
+- The arc structure.
+
+---
+
+## If You Get Stuck
+
+The example is here to be studied, not to be a black box. If a file in the example confuses you, open it, read it as prose, and ask yourself: what problem does this file solve?
+
+Most files in the example exist because something went wrong in the production process, and the author added structure to prevent it from happening again. Knowing the WHY of each file matters more than the WHAT.
+
+If a file's purpose still isn't clear, look for the equivalent template in `templates/` — the templates' "How Agents Use This File" sections explain each file's role in plain English.

@@ -1,0 +1,236 @@
+# Three-Layer Review
+
+How chapter quality is enforced in the pipeline.
+
+The core insight: **don't ask the prose agent to remember rules. Let it write freely, then catch problems with separate, focused review passes.**
+
+This document explains the three-layer review structure and why each layer exists.
+
+---
+
+## The Layers
+
+| Layer | Detection method | Catches | Speed |
+|---|---|---|---|
+| 1 | Pure regex (lint) | Surface AI-tells: em-dash counts, ellipsis abuse, double spaces | Milliseconds |
+| 2 | Regex with context (lint) | AI-tell sentence shapes: "not X, it's Y", chapter-ending aphorisms | Seconds |
+| 3 | Multi-lens agent review | Semantic: voice drift, canon contradictions, plot regression | Minutes per lens, run in parallel |
+
+Run all three. Layer 1 and 2 run as a deterministic lint pass. Layer 3 runs as parallel agents in the review stage.
+
+---
+
+## Layer 1 — Surface
+
+Pure regex. One rule, one regex, one cap.
+
+Examples:
+- Em-dash count per chapter capped at 5
+- Ellipsis count capped at 3
+- Smart quotes forbidden (or straight quotes — pick one)
+- Double spaces forbidden
+- Trailing whitespace forbidden
+
+Detection lives in `lint_scripts/lint_layer1.py` (or equivalent). The script reads the drafted chapter, applies every Layer 1 rule, and outputs violations with line numbers.
+
+**Why this layer exists**: these patterns are 100% predictable. No model judgment needed. Catch them with code, every time, in milliseconds. The prose agent never thinks about them.
+
+---
+
+## Layer 2 — Structural
+
+Regex with a few words of context. Still deterministic, slightly more expensive.
+
+These are the **AI-tell sentence shapes**. The things that make AI prose sound like AI prose to a trained reader.
+
+Examples:
+- `"not X, it's Y"` constructions
+- `"wasn't just X — it was Y"` variants
+- Three-fragment punches (`"X. Not Y. Z."`)
+- Chapter-ending aphorisms
+- `"a testament to..."`, `"a symphony of..."`, `"a dance of..."`
+- `"in that moment, [pronoun] realized..."`
+- Adverb stacking in dialogue tags
+- `"It was as if..."`
+- Telling-not-showing emotion verbs (`"felt sad"`, `"seemed angry"`)
+
+Same as Layer 1: regex catches them, prose agent never sees the rules.
+
+**Why this layer is separate from Layer 1**: these patterns need slightly richer regex (with context, alternation, lookahead). They're still deterministic, but the rules are longer and you'll add to them more often as you discover new AI tells in your drafts.
+
+---
+
+## Layer 3 — Semantic (multi-lens review)
+
+This is where the multi-agent magic actually lives.
+
+After the lint passes catch the surface stuff, the chapter goes through a **review fan-out**: five parallel agents, each with a focused job.
+
+### The five lenses
+
+| Lens | Reads | Looks for |
+|---|---|---|
+| **Style** | draft + `style_guide.md` + `forbidden_patterns.md` | Pacing problems, density violations, info repetition |
+| **Character** | draft + `character_bible.md` + relevant voice samples | Voice drift, out-of-character actions, calling-pattern errors |
+| **Plot** | draft + scene cards + writing brief | Missed required beats, hook mismatches |
+| **Canon** | draft + `glossary.md` + `timeline.md` + `world_bible.md` | World contradictions, glossary misuse, timeline errors |
+| **Story-specific** | draft + project-specific canon | (e.g. our project uses a "misperception lens" that checks for 4-layer information leakage) |
+
+### Output format
+
+Each lens outputs structured JSON:
+
+```json
+{
+  "lens": "character",
+  "findings": [
+    {
+      "severity": "high",
+      "line": 142,
+      "issue": "Character A calls Character B 'Alex' in front of his parents. Per character_bible.md, this is private-only.",
+      "suggested_fix": "Change to 'Alexander' or 'Mr. Chen' for this scene."
+    },
+    ...
+  ]
+}
+```
+
+Structured output matters: it can be passed to the refine stage automatically.
+
+### Key principle: lenses don't talk
+
+The review agents run in parallel and independently. They don't see each other's findings.
+
+This matters because **independent judgment matters**. If one lens is wrong (false positive), the others don't get contaminated by its mistake. Combining their findings happens at the end, not in the middle.
+
+---
+
+## The Adversarial Verify Stage
+
+After the lenses produce findings, the pipeline runs an adversarial verify pass:
+
+Three verifier agents with different framings (correctness / character-consistency / continuity-plausibility) get the findings and are prompted:
+
+> "Try to refute this claim. Default to refuted=true under uncertainty."
+
+Findings that survive the majority vote (2/3 don't refute) move on to the refine stage. The rest are dropped as likely false positives.
+
+**Why this stage exists**: early in pipeline development, review lenses tend to flag stylistic choices as bugs. The adversarial layer noticeably cuts false positives — agents that have to defend a finding against three skeptics tend to drop the marginal ones.
+
+This stage was added after we noticed our pipeline was generating long lists of "violations" that turned out to be valid prose choices the reviewers personally disliked. The adversarial filter solved most of it.
+
+---
+
+## The Completeness Critic
+
+One agent reads the chapter plus all surviving findings and asks:
+
+> "What's MISSING from this review? What category of issue did none of the lenses catch?"
+
+This is the catch-all for blind spots in the lens design itself.
+
+If the completeness critic finds something the lenses missed, two things happen:
+1. The finding is added to the refine queue for this chapter.
+2. The reviewer's prompt for the relevant lens is updated to catch this category next time.
+
+**Why this stage exists**: any fixed lens design has blind spots. The completeness critic is the meta-lens that watches for them. It's not always useful, but when it catches something, it catches what would have otherwise leaked into the final draft.
+
+---
+
+## The Refine Stage
+
+Findings that survive everything go to a refine agent. The refine agent:
+
+1. Reads the original draft.
+2. Reads the list of confirmed findings.
+3. Produces a new draft that addresses each finding.
+
+In our pipeline, the refine agent has been less reliable than the review agents — it sometimes "fixes" things by introducing new violations. We do a re-review pass after refine to catch this. In practice, about 15% of chapters need a second refine pass.
+
+---
+
+## Putting It Together — Per-Chapter Review Flow
+
+```
+Drafted chapter (from prose agent)
+        ↓
+   Layer 1 lint pass (regex, milliseconds)
+        ↓
+   Layer 2 lint pass (regex with context, seconds)
+        ↓
+   Multi-lens review (5 parallel agents, minutes)
+        ↓
+   Adversarial verify (3 parallel agents per finding)
+        ↓
+   Completeness critic (1 agent)
+        ↓
+   Refine (1 agent, takes confirmed findings)
+        ↓
+   Re-review (faster — only re-runs lenses for areas that were refined)
+        ↓
+   Final draft (ready for human polish)
+```
+
+Total time per chapter, end to end: 4–8 minutes when the lenses are running in parallel and the model isn't rate-limited.
+
+For a 5-chapter sprint with the pipeline running all chapters in parallel: ~15–25 minutes of wall-clock time, depending on review queue depth.
+
+---
+
+## What This Doesn't Catch
+
+Even the full three-layer review with all lenses misses things. Specifically:
+
+- **Emotional landing**: whether a scene actually moves a reader. Lenses can verify the beats happened; they can't verify the beats felt right.
+- **Long-form pacing**: whether a chapter has the right "shape" relative to its place in the arc. Hard to specify mechanically.
+- **Voice-perfect imitation**: lenses catch deviation from voice samples, but the prose can still feel "almost-right" in ways readers notice and reviewers don't.
+- **Surprise**: whether a reveal lands surprisingly or feels announced. Mostly a human judgment call.
+
+This is why the pipeline produces drafts, not finished work. Human polish handles what the lenses can't.
+
+---
+
+## Tuning the Lenses
+
+After your pipeline produces 5–10 chapters, look at:
+
+1. What did human polish change in each chapter?
+2. Which lens SHOULD have caught those changes?
+3. Update that lens's prompt to catch them next time.
+
+This is how the pipeline gets better. Lenses are not set-and-forget. They evolve as your story and your taste evolve.
+
+In our project, we've updated lens prompts ~30+ times across 3 arcs. Each update made the next sprint slightly cleaner.
+
+---
+
+## Common Failure Modes
+
+### "All lenses say the chapter is fine, but it feels off"
+
+Usually means a blind spot in lens design. Read the chapter, identify what feels off, articulate it, add it as a new lens or extend an existing one's prompt.
+
+### "Lenses flag tons of false positives"
+
+Adversarial verify exists for this. If false positives still leak through, tighten the verifier prompt ("default to refuted=true if uncertain" is the magic phrase).
+
+### "Refine introduces new violations"
+
+Add a re-review pass scoped only to the areas refine touched. Don't trust refine output blindly.
+
+### "Reviews take forever"
+
+Likely caused by serializing what should be parallel. Lenses should fan out, not run in sequence. Adversarial verify should run all three skeptics per finding in parallel, not chained.
+
+---
+
+## Summary
+
+- **Layer 1**: pure regex, milliseconds, catches surface noise.
+- **Layer 2**: regex with context, seconds, catches AI-tell sentence shapes.
+- **Layer 3**: 5 parallel agent lenses, minutes, catches semantic violations.
+- **Adversarial verify**: 3 skeptics per finding, kills false positives.
+- **Completeness critic**: meta-pass that catches lens blind spots.
+- **Refine + re-review**: applies confirmed findings.
+
+The prose agent is never in the review loop. Its job is to write. The lenses' job is to catch. Separating those two jobs is what makes the pipeline scale.

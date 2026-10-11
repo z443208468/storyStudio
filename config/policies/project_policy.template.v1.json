@@ -1,0 +1,40 @@
+{
+  "schema_version": "storystudio_project_policy_v1",
+  "project_id": null,
+  "display_name": null,
+  "language": {
+    "locale": null,
+    "length_unit": null,
+    "length_semantics": null
+  },
+  "writing": {
+    "target_length": null,
+    "minimum_length": null,
+    "maximum_length": null
+  },
+  "arc": null,
+  "canon": null,
+  "characters": null,
+  "world": null,
+  "voice": null,
+  "forbidden_phrases": null,
+  "review": {
+    "fifth_lens": {
+      "id": null,
+      "responsibility": null
+    }
+  },
+  "sources": null,
+  "integrations": {
+    "jet": null,
+    "nk": null,
+    "critics": null
+  },
+  "execution": {
+    "provider_override": null,
+    "live_authorization": false,
+    "authorization_ref": null,
+    "campaign_limit_mode": null,
+    "campaign_limit_cny": null
+  }
+}

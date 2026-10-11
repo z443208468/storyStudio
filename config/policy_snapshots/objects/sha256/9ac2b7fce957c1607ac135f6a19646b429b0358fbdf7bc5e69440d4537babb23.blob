@@ -1,0 +1,29 @@
+# Project Configuration
+
+project:
+  name: "<project_name>"
+  title: "<TITLE>"
+  author: "<author_name>"
+  status: "in_progress"  # planning / in_progress / completed
+  language: "ja"          # ja / en / etc.
+
+target:
+  total_episodes: 100
+  characters_per_episode: 5000
+  arcs: 5
+  episodes_per_arc: 20
+
+genre:
+  primary: "<primary_genre>"
+  tags:
+    - <tag>
+    - <tag>
+
+platform:
+  - "<kakuyomu>"
+  - "<narou>"
+
+ai_pipeline:
+  enabled: true
+  primary_agent: "claude"   # claude / codex / etc.
+  sprint_size: 5            # episodes per sprint

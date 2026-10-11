@@ -1,0 +1,39 @@
+# Workflow Configuration
+
+workflow:
+  per_chapter:
+    stages:
+      - plot
+      - scene_cards
+      - writing_brief
+      - prose
+      - lint_layer1
+      - lint_layer2
+      - multi_lens_review
+      - adversarial_verify
+      - completeness_critic
+      - refine
+      - re_review
+
+  lenses:
+    - style
+    - character
+    - plot
+    - canon
+    - story_specific   # rename or customize for your project
+
+  adversarial:
+    verifier_count: 3
+    refute_default: true
+    threshold: 2          # findings need 2+ verifiers to survive
+
+sprint:
+  size: 5
+  pass_criteria:
+    min_score: 75
+    max_p0_findings: 0
+    max_p1_findings: 2
+
+handoff:
+  generate_on_arc_end: true
+  archive_old_briefs: true

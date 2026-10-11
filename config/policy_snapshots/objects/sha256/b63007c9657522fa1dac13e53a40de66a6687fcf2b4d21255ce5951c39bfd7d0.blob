@@ -1,0 +1,39 @@
+# AI Roles Configuration
+
+agents:
+  plot_agent:
+    role: "Plot specialist"
+    reads:
+      - 04_chapter_design/arc_<NN>.md
+      - 90_canon/canon.md
+      - 90_canon/character_bible.md
+    outputs:
+      - 06_plot/epNNN_plot.md
+
+  scene_card_agent:
+    role: "Scene-level structure"
+    reads:
+      - 06_plot/epNNN_plot.md
+      - 90_canon/character_bible.md
+    outputs:
+      - 05_scene_cards/epNNN_scene_cards.md
+
+  brief_agent:
+    role: "Prepare prose prompt"
+    reads:
+      - 06_plot/epNNN_plot.md
+      - 05_scene_cards/epNNN_scene_cards.md
+      - 90_canon/character_bible.md
+      - 92_style_engine/style_guide.md
+    outputs:
+      - 07_draft/epNNN_writing_brief.md
+
+  prose_agent:
+    role: "Write prose"
+    reads:
+      - 07_draft/epNNN_writing_brief.md
+      - 92_style_engine/character_voice_samples.md (relevant chars only)
+    outputs:
+      - 07_draft/episodes/epNNN.md
+
+  # ... add review lenses, refine agent, etc.
