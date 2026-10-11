@@ -94,9 +94,15 @@ class NewProjectImportTests(unittest.TestCase):
         plot_packet = build_role_packet("plot", contract_path, {"canon_scope":canon_path, "source_anchors":index_path})
         brief_path = project / "07_draft/brief.md"
         brief_path.write_text(f"Source SHA256: {sha(raw)}\nCanon candidates: {canon_path.read_text(encoding='utf-8')}\nB01 B02; target_visible_chars=120", encoding="utf-8")
-        brief_packet = build_role_packet("brief", contract_path, {"plot":plot_path,"cards":card_path,"canon_scope":canon_path,"style_guide":index_path,"voice_samples":source_original,"nk_reflection":index_path}, accepted_receipts=receipts)
+        # The real V2 Brief builder must work when the optional NK component
+        # is disabled and no POV/NK material exists.
+        brief_packet = build_role_packet("brief", contract_path,
+            {"plot":plot_path,"cards":card_path,"canon_scope":canon_path,
+             "style_guide":index_path,"voice_samples":source_original},
+            accepted_receipts=receipts)
         self.assertEqual(plot_packet["execution_mode"], "MOCK_ONLY")
         self.assertEqual(brief_packet["execution_mode"], "MOCK_ONLY")
+        self.assertNotIn("nk_reflection", brief_packet["inputs"])
         self.assertIn(raw.decode("utf-8").splitlines()[1], brief_packet["inputs"]["voice_samples"])
         self.assertIn("TODO_CONFIRM", brief_packet["inputs"]["canon_scope"])
         run_args = Namespace(mode="offline", unit=None, run_id=f"run-{project_id}", work_id=contract["unit"]["id"], contract=str(contract_path), project_root=str(project))

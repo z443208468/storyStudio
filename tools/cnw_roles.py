@@ -576,6 +576,11 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
         "brief": ("plot", "cards", "canon_scope", "style_guide", "voice_samples", "nk_reflection"),
         "prose": ("brief", "voice_samples"),
     }[role]
+    if (role == "brief" and contract.get("schema_version") == "cnw_work_unit_v2"
+            and contract.get("integrations", {}).get("nk", "DISABLED") == "DISABLED"):
+        # NK is an opt-in support component for V2. The core CNW Brief role
+        # must remain usable without a POV stage or any NK-derived material.
+        allowed_inputs = tuple(name for name in allowed_inputs if name != "nk_reflection")
     expected = allowed_inputs
     missing = [name for name in expected if name not in inputs]
     if missing:
