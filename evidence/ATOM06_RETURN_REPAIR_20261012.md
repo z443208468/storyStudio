@@ -21,7 +21,7 @@
 - 曾运行包含整个 `tests/test_cnw_export.py` 的探索性组合；其中 4 个既有导出 fixture 的旧合同缺少当前导出器要求的 `unit.language_locale`，因此未通过。新增适配导出 fixture 的定点用例单独通过；上述问题不在本修复改动路径内。
 
 原始合成请求/响应轨迹：`evidence/ATOM06_RETURN_REPAIR_TRACE_20261012.json`，SHA-256
-`3085c4a33b9d49c02642eaf8f2999618c59bb60f2affe77904860cecf8c99198`。
+`30a1dd752998b387004083e97984760b33a7ac406b292f855f64722b3e47f8c7`。
 轨迹标记 `SYNTHETIC_OFFLINE_ONLY`，只含合成项目标记及注入的离线模拟响应，不含项目私稿或生产请求。
 
 ## 边界

@@ -325,6 +325,23 @@ class Atom06Tests(unittest.TestCase):
         self.assertEqual(second_packets["story_specific"]["sources"]["fifth_lens_id"], "argument-evidence")
         self.assertIn(first["fifth_lens_responsibility"], first_packets["story_specific"]["author_lens_definition"])
         self.assertIn(second["fifth_lens_responsibility"], second_packets["story_specific"]["author_lens_definition"])
+        first_messages = cnw_review.lens_messages(first_packets["story_specific"])
+        second_messages = cnw_review.lens_messages(second_packets["story_specific"])
+        first_serialized = json.dumps(first_messages, ensure_ascii=False, sort_keys=True)
+        second_serialized = json.dumps(second_messages, ensure_ascii=False, sort_keys=True)
+        self.assertNotEqual(first_serialized, second_serialized)
+        self.assertIn(first["fifth_lens_responsibility"], first_serialized)
+        self.assertNotIn(second["fifth_lens_responsibility"], first_serialized)
+        self.assertIn(second["fifth_lens_responsibility"], second_serialized)
+        self.assertNotIn(first["fifth_lens_responsibility"], second_serialized)
+        _record_trace("fifth_lens_project_policy_isolation", {
+            "synthetic_projects": [
+                {"project": "FICT_MYSTERY", "packet": first_packets["story_specific"], "messages": first_messages,
+                 "messages_sha256": hashlib.sha256(first_serialized.encode("utf-8")).hexdigest()},
+                {"project": "FICT_ARGUMENT", "packet": second_packets["story_specific"], "messages": second_messages,
+                 "messages_sha256": hashlib.sha256(second_serialized.encode("utf-8")).hexdigest()},
+            ], "consumer_result": "actual story_specific messages differ; each carries only its own frozen project duty",
+            "provider_call": "none; deterministic packet/message builders"})
 
     def test_review_source_consumer_rejects_changed_frozen_fifth_lens_duty(self):
         with tempfile.TemporaryDirectory() as tmp:
