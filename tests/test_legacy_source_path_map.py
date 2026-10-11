@@ -175,6 +175,17 @@ class LegacySourcePathMapTests(unittest.TestCase):
         self.assertNotEqual(second["builder_sha256"], third["builder_sha256"])
         self.assertEqual(self.state_path.read_bytes(), json.dumps(self.state, sort_keys=True).encode("utf-8"))
 
+    def test_preflight_rejects_not_run_stage_with_execution_failure_evidence(self):
+        state = json.loads(self.state_path.read_text(encoding="utf-8"))
+        state["stages"]["plot"]["execution_failures"] = [{"status": "FAILED", "fixture": True}]
+        self.state_path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
+        self.state = state
+        self._write_map()
+        args = SimpleNamespace(project_root=str(self.project), run_id="SYNTHETIC-LEGACY",
+            legacy_source_map=str(self.map_path), legacy_source_map_sha256=self.map_sha)
+        with self.assertRaisesRegex(ContractError, "LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED"):
+            cnw_runner.legacy_source_preflight(args)
+
     def test_map_sha_path_traversal_and_missing_key_fail_closed(self):
         with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_MAP_SHA_MISMATCH"):
             validate_legacy_source_path_map(target_project_root=self.project, legacy_run_dir=self.run,

@@ -1,0 +1,6 @@
+test_preflight_rejects_not_run_stage_with_execution_failure_evidence (tests.test_legacy_source_path_map.LegacySourcePathMapTests.test_preflight_rejects_not_run_stage_with_execution_failure_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 3.499s
+
+OK

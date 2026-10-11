@@ -2161,7 +2161,7 @@ def legacy_source_preflight(args) -> dict:
     for name, record in stages.items():
         if (not isinstance(record, dict) or record.get("status") != "NOT_RUN" or
                 any(record.get(field) for field in ("execution_identity", "artifact", "request_artifact",
-                    "provider_request_ids", "invalidated_attempts", "validation"))):
+                    "provider_request_ids", "invalidated_attempts", "execution_failures", "validation"))):
             raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", f"{name} contains completed or partial stage evidence")
     identity = json.loads((project_root / "project_identity.json").read_text(encoding="utf-8"))
     state_bytes = state_path.read_bytes()
