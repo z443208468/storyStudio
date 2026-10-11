@@ -205,6 +205,8 @@ class LegacySourcePathMapTests(unittest.TestCase):
         result = cnw_runner.legacy_recovery_plan(args)
         self.assertEqual(result["status"], "V5_RECOVERY_REVIEW_REQUIRED")
         self.assertEqual(result["next_stage_candidate"], "plot")
+        self.assertEqual(result["next_stage_identity_assessment"], "COMPUTED_OFFLINE")
+        self.assertEqual(result["prospective_next_stage_identity"]["stage"], "plot")
         self.assertEqual(result["stage_history"][0]["stage"], "plot")
         self.assertEqual(result["stage_history"][0]["execution_failure_count"], 1)
         self.assertEqual(result["provider_receipt_history"]["counts_by_status"], {"UNKNOWN_NOT_ZERO": 1})

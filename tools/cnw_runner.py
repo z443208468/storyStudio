@@ -2365,6 +2365,22 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
         receipt_digest = sha(json.dumps({"provider_requests": provider_requests,
             "provider_attempts": provider_attempts}, ensure_ascii=False, sort_keys=True,
             separators=(",", ":")).encode("utf-8"))
+        try:
+            from .cnw_recovery import stage_identity as recovery_stage_identity
+        except ImportError:
+            from cnw_recovery import stage_identity as recovery_stage_identity
+        prospective_next_identity = None
+        identity_assessment = "NO_NEXT_STAGE_CANDIDATE"
+        if next_stage:
+            try:
+                prospective_next_identity = (prospective_plot if next_stage == "plot" else
+                    recovery_stage_identity(run_dir, next_stage, project_root=project_root,
+                        contract_override=mapped))
+                identity_assessment = "COMPUTED_OFFLINE"
+            except Exception as exc:
+                # A missing prior-stage artifact or changed input must remain a
+                # review condition; never materialize it during this plan.
+                identity_assessment = getattr(exc, "code", type(exc).__name__)
         unchanged = (state_path.read_bytes() == state_bytes and
             contract_artifact.read_bytes() == run_contract_bytes and
             project_contract.read_bytes() == project_contract_bytes and
@@ -2382,6 +2398,8 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
                 "sha256": receipt_digest, "validation": "PRESERVED_UNVERIFIED"},
             "cost_ledger": "NOT_READ_RECONCILIATION_REQUIRED",
             "prospective_plot_identity": prospective_plot,
+            "prospective_next_stage_identity": prospective_next_identity,
+            "next_stage_identity_assessment": identity_assessment,
             "provider_call": "none", "resume_executed": False,
             "run_state_sha256_before": state_before, "run_state_sha256_after": sha(state_path.read_bytes()),
             "run_state_unchanged": True, "resume_eligibility": "NOT_ESTABLISHED"}
