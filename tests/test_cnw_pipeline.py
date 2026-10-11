@@ -15,6 +15,65 @@ from tools.cnw_runner import ROOT
 from tools import cnw_sprint_live as live_sprint
 
 
+def synthetic_mock_receipt(run: Path, request: dict, content: str, identifier: str):
+    """Persist a transport receipt clearly marked as simulated test data."""
+    request_path = run / f"artifacts/provider/{identifier}.request.json"
+    request_path.parent.mkdir(parents=True, exist_ok=True)
+    request_path.write_bytes(json.dumps({"messages": request["messages"]}, ensure_ascii=False).encode("utf-8"))
+    raw_path = request_path.with_suffix(".raw.json")
+    raw_path.write_bytes(json.dumps({"choices": [{"message": {"content": content}}]}, ensure_ascii=False).encode("utf-8"))
+    row = {"request_id": identifier, "provider_request_id": identifier, "status": "SUCCEEDED",
+           "mode": "MOCK_ONLY", "fixture_only": True, "stage": request["stage"], "role_id": request["role_id"],
+           "request_path": request_path.relative_to(run).as_posix(),
+           "request_sha256": live_sprint.runner.sha(request_path.read_bytes()),
+           "input_sha256": live_sprint.runner.sha(json.dumps(request["messages"], ensure_ascii=False,
+               sort_keys=True, separators=(",", ":")).encode("utf-8")),
+           "raw_response_path": raw_path.relative_to(run).as_posix(),
+           "raw_response_sha256": live_sprint.runner.sha(raw_path.read_bytes()),
+           "output_sha256": live_sprint.runner.sha(content.encode("utf-8"))}
+    state = live_sprint.runner.load_state(run)
+    state.setdefault("provider_requests", []).append(row)
+    live_sprint.runner.save_state(run, state)
+    return content, row
+
+
+def synthetic_sprint_contract(project_id: str, episode_id: str, index: int) -> dict:
+    """Self-contained legacy-shaped contract for orchestration tests only."""
+    previous = None if index == 1 else f"07_draft/episodes/ep{index - 1:03d}.md"
+    story = {
+        "role_in_story": "Exercise the synthetic sprint route.",
+        "reader_reward": "Observe a small fictional change.",
+        "entry_state": "The characters have not decided.",
+        "exit_state": "The characters have chosen.",
+        "required_beats": [],
+        "characters_in_scene": ["Mira"],
+        "character_knowledge_boundary_ref": "90_canon/canon.md",
+        "forbidden_future_revelations": ["No later reveal."],
+        "voice_sample_refs": ["Mira"],
+        "source_file": "_INBOX/synthetic-source.md",
+        "before_anchor": {"scene": "synthetic", "source_line": 1, "sha256": "a" * 64},
+        "after_anchor": {"scene": "synthetic", "source_line": 2, "sha256": "b" * 64},
+        "arc_ref": "04_chapter_design/arc_01.md",
+        "first_episode": index == 1,
+    }
+    if previous:
+        story["previous_episode_ref"] = previous
+    return {
+        "schema_version": "cnw_work_unit_v1",
+        "project_id": project_id,
+        "source": {"identity_type": "imported_project", "source_root": ".",
+                   "manifest_file": "_INBOX/source_manifest.json"},
+        "unit": {"id": episode_id, "kind": "episode", "planning_mode": "author_plot",
+                 "language": "zh-CN", "pov": "Mira", "target_visible_chars": 300,
+                 "min_visible_chars": 250, "max_visible_chars": 400,
+                 "policy_sha256": "synthetic-policy"},
+        "story": story,
+        "review": {"workflow_template_git_blob": "synthetic-fixture",
+                   "require_cnw_11_stages": True, "require_3_verifiers": True,
+                   "require_completeness_critic": True, "require_re_review": True},
+    }
+
+
 class EpisodePipelineTests(unittest.TestCase):
     def test_arc_end_review_consumes_previous_sprint_and_passes(self):
         self._exercise_live_sprint(arc_status="pass")
@@ -60,19 +119,18 @@ class EpisodePipelineTests(unittest.TestCase):
                 elif preflight_case == "unknown":
                     bounds = "author decision pending"
                 (root / "04_chapter_design/arc_01.md").write_text("# Arc 01\n## Range\n" + bounds + "\n## Purpose\nMOCK plan\n", encoding="utf-8")
-                (root / "04_chapter_design/arc_01_episode_details.md").write_text("MOCK episode details", encoding="utf-8")
+            (root / "04_chapter_design/arc_01_episode_details.md").write_text("MOCK episode details", encoding="utf-8")
+            (root / "_INBOX").mkdir(parents=True, exist_ok=True)
+            (root / "_INBOX/synthetic-source.md").write_text("Synthetic anchor one.\nSynthetic anchor two.\n", encoding="utf-8")
+            (root / "_INBOX/source_manifest.json").write_text('{"fixture":"SYNTHETIC_ONLY"}', encoding="utf-8")
             if preflight_case in {"cross", "ambiguous"}:
                 (root / "04_chapter_design/arc_02.md").write_text("# Arc 02\n## Range\nep004 – ep010\n", encoding="utf-8")
             if arc_status:
                 (root / "07_draft/episodes").mkdir(parents=True)
                 (root / "07_draft/episodes/ep000.md").write_text("MOCK previous Sprint prose", encoding="utf-8")
-            base = json.loads((ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contract.json").read_text(encoding="utf-8"))
             episodes = []
             for index in range(1, 6):
-                contract = json.loads(json.dumps(base))
-                contract["project_id"] = "MOCK_ORCHESTRATION"
-                contract["unit"].update(id=f"ep{index:03d}", kind="episode", planning_mode="author_plot")
-                contract["story"]["required_beats"] = []
+                contract = synthetic_sprint_contract("MOCK_ORCHESTRATION", f"ep{index:03d}", index)
                 if preflight_case not in {"missing", "ambiguous"}:
                     contract["story"]["arc_ref"] = "04_chapter_design/arc_01.md"
                     if preflight_case == "cross" and index >= 4:
@@ -118,12 +176,11 @@ class EpisodePipelineTests(unittest.TestCase):
                     return cache[key]
                 if role_id == "project_arc_review":
                     from tools import cnw_maintenance
-                    from tests.test_cnw_chapter_arc import mock_receipt
                     sources = json.loads(messages[1]["content"])["project_sources"]
                     self.assertIn("07_draft/episodes/ep000.md", sources)
                     self.assertIn("07_draft/episodes/ep005.md", sources)
                     result = {"status": arc_status, "review_markdown": "\n".join("## " + heading + "\nMOCK Arc review" for heading in cnw_maintenance.ARC_SECTIONS) + "\nStatus: " + arc_status}
-                    cache[key] = mock_receipt(path, {"stage": stage, "role_id": role_id, "messages": messages}, json.dumps(result), "SPRINT-ARC-MOCK")
+                    cache[key] = synthetic_mock_receipt(path, {"stage": stage, "role_id": role_id, "messages": messages}, json.dumps(result), "SPRINT-ARC-MOCK")
                     return cache[key]
                 if role_id == "batch_review":
                     result = {"episode_scores": [{"episode_id": row["episode_id"], "score": (60 if row["episode_id"] == "ep001" else 90) if low_score else 80} for row in episodes],

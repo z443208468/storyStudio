@@ -9,6 +9,8 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from tools.project_paths import create_project, setup_data_home
 from tools.cnw_contract import ContractError, validate_source_identity
@@ -17,7 +19,8 @@ from tools.cnw_project import (build_contract_preflight, import_source, init_reg
 from tools.cnw_roles import build_author_role_messages, read_production_preparation
 from tools.cnw_runner import build_plot_request, load_state, produce, validate_literary_source_freeze
 from tools.cnw_runner import save_state
-from tools.cnw_recovery import plan_recovery
+from tools.cnw_recovery import execute_checked, plan_recovery, stage_identity
+from tools import cnw_runner
 from tools.cnw_generate import _project_root
 
 
@@ -162,6 +165,73 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
         duplicate.write_text('{"same":1,"same":2}', encoding="utf-8")
         with self.assertRaisesRegex(ContractError, "IMPORT_JSON_DUPLICATE_KEY"):
             import_source(input_file=duplicate, project_root=root)
+
+    def test_anchor_free_adapt_scene_plot_identity_execution_and_reuse(self):
+        root = self.project("ADAPTRECOVERY")
+        imported = self.import_bytes(root, "adapt-source.md", b"Selected B source.")
+        contract = self.draft(root, imported, intent="ADAPT_SOURCE", unit_id="ADAPT-SCENE",
+                              start_line=1, end_line=1, arc_ref="04_chapter_design/arc_01.md",
+                              integrations={"nk": "DISABLED", "critics": "DISABLED"})
+        self.assertNotIn("before_anchor", contract["story"])
+        self.assertNotIn("after_anchor", contract["story"])
+        args = SimpleNamespace(mode="offline", unit="scene", run_id="ADAPT-RUN",
+            work_id=contract["unit"]["id"], contract=str(root / "contracts/ADAPT-SCENE.json"),
+            project_root=str(root), create_only=True)
+        created = produce(args)
+        run = Path(created["path"])
+        identity = stage_identity(run, "plot", project_root=root)
+        self.assertEqual(len(identity["sha256"]), 64)
+
+        from tools.cnw_roles import ROLE_REQUIRED_SECTIONS
+        content_parts = []
+        for heading in ROLE_REQUIRED_SECTIONS["plot"]:
+            if heading == "## Key Scenes":
+                body = "- S1 Mira makes one source-grounded choice."
+            elif heading == "## Required Story Beats":
+                body = "- B01 Mira makes the choice visible."
+            else:
+                body = "Synthetic plot detail."
+            content_parts.append(f"{heading}\n{body}")
+        content = "\n".join(content_parts)
+        calls = []
+        def simulated_transport(run_dir, *, stage, role_id, messages, output_cap, extra=None):
+            calls.append((stage, role_id, messages))
+            request_id = "MOCK-ADAPT-PLOT"
+            request_path = run_dir / "artifacts/provider" / f"{request_id}.request.json"
+            request_path.parent.mkdir(parents=True, exist_ok=True)
+            request_path.write_bytes(json.dumps({"messages": messages}, ensure_ascii=False).encode("utf-8"))
+            raw_path = request_path.with_suffix(".raw.json")
+            raw_path.write_bytes(json.dumps({"choices": [{"message": {"content": content}}]}, ensure_ascii=False).encode("utf-8"))
+            receipt = {"request_id": request_id, "provider_request_id": request_id,
+                "stage": stage, "role_id": role_id, "status": "SUCCEEDED", "mode": "MOCK_ONLY",
+                "fixture_only": True, "request_path": request_path.relative_to(run_dir).as_posix(),
+                "request_sha256": sha(request_path.read_bytes()),
+                "input_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True,
+                    separators=(",", ":")).encode("utf-8")),
+                "raw_response_path": raw_path.relative_to(run_dir).as_posix(),
+                "raw_response_sha256": sha(raw_path.read_bytes()),
+                "output_sha256": sha(content.encode("utf-8"))}
+            state = load_state(run_dir)
+            state["provider_requests"].append(receipt)
+            save_state(run_dir, state)
+            return content, receipt
+
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=simulated_transport):
+            first = execute_checked(run, "plot")
+            state = load_state(run)
+            artifact = run / state["stages"]["plot"]["artifact"]["path"]
+            prior_hash = sha(artifact.read_bytes())
+            reused = execute_checked(run, "plot")
+        self.assertEqual(first["stage"], "plot")
+        self.assertEqual(reused["status"], "STAGE_REUSED")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(sha(artifact.read_bytes()), prior_hash)
+        sent = json.dumps(calls[0][2], ensure_ascii=False)
+        self.assertIn("Selected B source.", sent)
+        self.assertNotIn("before_anchor", sent)
+        self.assertNotIn("after_anchor", sent)
+        self.assertEqual(stage_identity(run, "plot", project_root=root)["sha256"],
+                         load_state(run)["stages"]["plot"]["execution_identity"]["sha256"])
 
     def test_json_object_and_array_keep_canonical_and_plot_wire_hashes_separate(self):
         root = self.project("JSON-NODES")

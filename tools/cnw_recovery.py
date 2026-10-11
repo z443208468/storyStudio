@@ -142,22 +142,55 @@ def stage_identity(run_dir: Path, stage: str, *, project_root: Path | None = Non
         extra = None
         if stage == "plot":
             preparation = roles.read_production_preparation(project, contract)
-            if contract["unit"]["kind"] == "scene":
+            # V1 scene runs historically used two source anchors. V2 decides
+            # the Plot context from its frozen work intent instead.
+            version = contract.get("schema_version")
+            intent = contract.get("work_intent") if version == "cnw_work_unit_v2" else None
+            has_legacy_scene_anchors = version != "cnw_work_unit_v2" and contract["unit"]["kind"] == "scene"
+            has_insert_anchors = version == "cnw_work_unit_v2" and intent == "INSERT_BETWEEN" and contract["unit"]["kind"] == "scene"
+            if has_legacy_scene_anchors or has_insert_anchors:
                 lines = (r._source_root(contract, project) / contract["story"]["source_file"]).read_text(encoding="utf-8-sig").splitlines()
                 anchor = contract["story"]["before_anchor"]
                 preparation["preceding_source_text"] = "\n".join(lines[anchor["source_line"]-1:anchor.get("source_line_end", anchor["source_line"])])
             extra = {"production_preparation": preparation}
             builders.append(roles.read_production_preparation)
         if stage == "writing_brief":
-            try:
-                from . import cnw_nk_adapter as nk
-            except ImportError:
-                import cnw_nk_adapter as nk
-            inputs["nk_payload"] = nk.build_nk_payload(contract, text("scene_cards"), r._role_meta("cards", contract))
-            reflection = state.get("support_hooks", {}).get("nk_pov", {}).get("artifact")
-            if reflection:
-                extra = {"nk_perspective_reflection_support_only": r.assert_output_within_root(run_dir, reflection["path"]).read_text(encoding="utf-8")}
-            builders += [nk.build_nk_payload, nk.map_reflection_to_brief, r._nk_pov]
+            integration_mode = r._support_integration_mode(contract, "nk")
+            # V1 recovery retains the historical NK identity. V2 DISABLED
+            # deliberately excludes NK builders and inputs from Brief identity.
+            if contract.get("schema_version") != "cnw_work_unit_v2" or integration_mode == "ENABLED":
+                try:
+                    from . import cnw_nk_adapter as nk
+                except ImportError:
+                    import cnw_nk_adapter as nk
+                payload = nk.build_nk_payload(contract, text("scene_cards"), r._role_meta("cards", contract))
+                inputs["nk_mode"] = integration_mode
+                inputs["nk_payload"] = payload
+                reflection = state.get("support_hooks", {}).get("nk_pov", {}).get("artifact")
+                if integration_mode == "ENABLED":
+                    r._assert_support_components_available(contract)
+                    hook = state.get("support_hooks", {}).get("nk_pov", {})
+                    if hook.get("status") == "MATERIALIZED":
+                        if not reflection:
+                            raise r.ContractError("NK_REFLECTION_MISSING", run_dir.name)
+                        artifact_path = r.assert_output_within_root(run_dir, reflection["path"])
+                        if not artifact_path.is_file() or r.sha(artifact_path.read_bytes()) != reflection.get("sha256"):
+                            raise r.ContractError("NK_REFLECTION_HASH_MISMATCH", reflection.get("path", ""))
+                        payload_sha = r.sha(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+                        receipt = next((item for item in state.get("provider_requests", [])
+                                        if item.get("request_id") == hook.get("request_id") and
+                                        item.get("role_id") == "nk_pov" and item.get("status") == "SUCCEEDED"), None)
+                        if not receipt or receipt.get("input_sha256") != payload_sha:
+                            raise r.ContractError("NK_INPUT_IDENTITY_MISMATCH", run_dir.name)
+                        r._receipt_content(run_dir, receipt)
+                        inputs["nk_result"] = {"input_sha256": payload_sha,
+                            "reflection_sha256": reflection["sha256"],
+                            "request_id": receipt["request_id"],
+                            "provider_request_id": receipt.get("provider_request_id"),
+                            "raw_response_sha256": receipt.get("raw_response_sha256")}
+                if reflection:
+                    extra = {"nk_perspective_reflection_support_only": r.assert_output_within_root(run_dir, reflection["path"]).read_text(encoding="utf-8")}
+                builders += [nk.build_nk_payload, nk.map_reflection_to_brief, r._nk_pov]
         inputs["messages"] = r._author_messages(role, contract, materials, extra)
         builders += [r._author_messages, roles.build_author_role_messages, roles.read_actual_texts,
                      roles.resolve_author_reads, roles.resolve_arc, roles.creative_assignment]

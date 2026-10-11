@@ -22,7 +22,7 @@ class ExportTests(unittest.TestCase):
         source = self.root / "original.md"
         source.write_bytes(b"Before <anchor>\r\nFollowing choice\n")
         lines = source.read_bytes().splitlines(keepends=True)
-        self.contract = {"project_id": "FICT_EXPORT", "unit": {"id": "TEST"},
+        self.contract = {"project_id": "FICT_EXPORT", "unit": {"id": "TEST", "language": "zh-CN"},
                          "source": {"identity_type": "imported_project", "source_root": "."},
                          "story": {"source_file": source.name, "before_anchor": {
                              "scene": "A", "source_line": 1, "sha256": hashlib.sha256(lines[0]).hexdigest()},
@@ -68,7 +68,8 @@ class ExportTests(unittest.TestCase):
         return {"schema_version": "cnw_work_unit_v2", "project_id": identity["project_id"],
             "project_instance_id": identity["project_instance_id"], "work_intent": "ORIGINAL_EPISODE",
             "source": {"source_origin": "ORIGINAL_PROJECT", "project_instance_id": identity["project_instance_id"]},
-            "unit": {"id": unit_id, "kind": "episode"},
+            "unit": {"id": unit_id, "kind": "episode", "language": "en-US",
+                     "language_locale": "en-US", "pov": "Mira"},
             "story": {"first_episode": True, "arc_ref": "04_chapter_design/arc_01.md",
                       "arc_sha256": hashlib.sha256(arc.read_bytes()).hexdigest()}}
 
@@ -120,6 +121,14 @@ class ExportTests(unittest.TestCase):
         reading = (directory / "03_前后文连读.md").read_text(encoding="utf-8")
         self.assertEqual(reading.strip(), "A single synthetic opening chapter.")
         self.assertEqual(directory.parent.parent, project / "deliverables")
+
+    def test_v2_export_requires_explicit_matching_locale(self):
+        project = self._registered_project("LOCALEEX")
+        contract = self._v2_original_contract(project)
+        contract["unit"].pop("language_locale")
+        run, state = self._make_v2_run(project, "MISSING-LOCALE", contract)
+        with self.assertRaisesRegex(ContractError, "EXPORT_LOCALE_INVALID"):
+            cnw_export.export_reading_package(run, state, project_root=project)
 
     def test_v2_exports_for_same_project_id_stay_in_distinct_instances(self):
         first = self._registered_project("SAMEID")

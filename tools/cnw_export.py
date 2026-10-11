@@ -35,7 +35,16 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     project = Path(project_root)
     contract = load_contract(run / "artifacts/contract.json")
     unit = contract["unit"]
-    locale = unit.get("language_locale", unit.get("language"))
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        # New contracts must carry an explicit locale. Do not make an
+        # incomplete v2 contract look valid by falling back to `language`.
+        locale = unit.get("language_locale")
+        if not isinstance(locale, str) or unit.get("language") != locale:
+            raise ContractError("EXPORT_LOCALE_INVALID", str(locale))
+    else:
+        # Historical v1 contracts predate language_locale. Preserve the
+        # original behavior of falling back to their declared language.
+        locale = unit.get("language_locale", unit.get("language"))
     if not isinstance(locale, str) or not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", locale):
         raise ContractError("EXPORT_LOCALE_INVALID", str(locale))
     run_id = state["run_id"]
