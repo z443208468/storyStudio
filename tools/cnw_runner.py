@@ -761,34 +761,6 @@ def produce(args) -> dict:
             "cost_guard_runner_sha256": None if contract.get("schema_version") == "cnw_work_unit_v2" else sha(cost_guard_runner.read_bytes()),
         }
         save_state(path, state)
-        for previous_path in (project_root / "runs").iterdir():
-            if previous_path == path or previous_path.is_symlink() or not previous_path.is_dir():
-                continue
-            previous_state_path = previous_path / "run_state.json"
-            if not previous_state_path.is_file() or previous_state_path.is_symlink():
-                continue
-            try:
-                previous = json.loads(previous_state_path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            # New generic contracts must never rewrite a pre-existing v1 run
-            # merely because its unit ID is reused. Run supersession is a
-            # later, explicit promotion/isolation operation.
-            if contract.get("schema_version") == "cnw_work_unit_v2":
-                previous_contract_path = previous_path / "artifacts" / "contract.json"
-                try:
-                    previous_contract = load_contract(previous_contract_path)
-                except (ContractError, OSError):
-                    previous_contract = None
-                if not previous_contract or previous_contract.get("schema_version") != "cnw_work_unit_v2":
-                    continue
-            if previous.get("work_id") == unit_id and previous.get("contract_sha256") != state["contract_sha256"]:
-                previous["status"] = "INVALIDATED"
-                previous["updated_at"] = now()
-                for record in previous.get("stages", {}).values():
-                    if record.get("status") in {"ACCEPTED", "READY_FOR_EXECUTION"}:
-                        record["status"] = "INVALIDATED"
-                save_state(previous_path, previous)
     except Exception:
         shutil.rmtree(path, ignore_errors=True)
         raise
@@ -941,24 +913,44 @@ def _contract_for(run_dir: Path) -> dict:
     return load_contract(run_dir / "artifacts/contract.json")
 
 
-def _write_project_output(project_root: Path, relative: str, content: str) -> Path:
-    target = (project_root / relative).resolve()
-    if not target.is_relative_to(project_root.resolve()):
-        raise ContractError("PROJECT_OUTPUT_OUTSIDE_PROJECT", relative)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content.rstrip() + "\n", encoding="utf-8")
-    return target
-
-
-def _persist_stage(run_dir: Path, stage: str, relative: str, text: str, *, receipt_ids: list[str] | None = None, validation: dict | None = None, role_id: str | None = None, extra: dict | None = None) -> dict:
+def _write_run_candidate_file(run_dir: Path, relative: str, payload: bytes) -> dict:
+    digest = sha(payload)
     target = assert_output_within_root(run_dir, relative)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(text if isinstance(text, str) else json.dumps(text, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary = target.with_name(f".{target.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        if target.exists():
+            if target.read_bytes() != payload:
+                raise ContractError("STAGE_ARTIFACT_CONTENT_ADDRESS_COLLISION", relative)
+        else:
+            temporary.write_bytes(payload)
+            os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+    if sha(target.read_bytes()) != digest:
+        raise ContractError("STAGE_ARTIFACT_WRITE_MISMATCH", relative)
+    return {"path": relative, "sha256": digest}
+
+
+def _persist_stage(run_dir: Path, stage: str, relative: str, text: str, *, receipt_ids: list[str] | None = None, validation: dict | None = None, role_id: str | None = None, extra: dict | None = None, meta: dict | None = None) -> dict:
+    if stage not in CNW_STAGES:
+        raise ContractError("UNKNOWN_STAGE", stage)
+    payload = (text if isinstance(text, str) else json.dumps(text, ensure_ascii=False, indent=2)).encode("utf-8")
+    suffix = Path(relative).suffix or ".bin"
+    artifact_relative = f"artifacts/candidates/{stage}/{sha(payload)}{suffix}"
     with locked_run(run_dir):
+        artifact = _write_run_candidate_file(run_dir, artifact_relative, payload)
+        meta_artifact = None
+        if meta is not None:
+            meta_payload = (json.dumps(meta, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+            meta_relative = f"artifacts/candidates/{stage}/{sha(meta_payload)}.meta.json"
+            meta_artifact = _write_run_candidate_file(run_dir, meta_relative, meta_payload)
         state = load_state(run_dir)
         record = state["stages"][stage]
         record["status"] = "STAGE_MATERIALIZED"
-        record["artifact"] = {"path": relative, "sha256": sha(target.read_bytes())}
+        record["artifact"] = artifact
+        if meta_artifact is not None:
+            record["meta"] = meta_artifact
         record["role_ids"] = ([role_id] if role_id else record.get("role_ids", []))
         if receipt_ids:
             record.setdefault("provider_request_ids", []).extend(receipt_ids)
@@ -970,7 +962,7 @@ def _persist_stage(run_dir: Path, stage: str, relative: str, text: str, *, recei
         state["updated_at"] = now()
         state["status"] = "RUNNING"
         save_state(run_dir, state)
-    return {"path": relative, "sha256": sha(target.read_bytes())}
+    return artifact
 
 
 def _next_stage(state: dict) -> str | None:
@@ -991,12 +983,26 @@ def _project_relative(run_dir: Path, contract: dict, name: str) -> str:
 
 
 def _role_sources(role: str, run_dir: Path, state: dict, contract: dict, project_root: Path) -> dict[str, str]:
-    """Author reading list for a live role, resolved to actual file text."""
+    """Resolve project-frozen author inputs and verified same-run predecessors."""
     try:
         from .cnw_roles import read_actual_texts
     except ImportError:
         from cnw_roles import read_actual_texts
-    return read_actual_texts(project_root, role, contract["unit"]["id"], arc_ref=contract["story"].get("arc_ref"))
+    work_id = contract["unit"]["id"]
+    stage_inputs = {
+        "cards": {"06_plot/<work_id>_plot.md": "plot"},
+        "brief": {"06_plot/<work_id>_plot.md": "plot",
+                  "05_scene_cards/<work_id>_scene_cards.md": "scene_cards"},
+        "prose": {"07_draft/<work_id>_writing_brief.md": "writing_brief"},
+    }.get(role, {})
+    overrides = {}
+    for relative, producer in stage_inputs.items():
+        record = state.get("stages", {}).get(producer, {})
+        if record.get("status") not in _MATERIALIZED or not record.get("artifact"):
+            raise ContractError("SAME_RUN_STAGE_ARTIFACT_REQUIRED", producer)
+        overrides[relative] = _read_stage_text(run_dir, state, producer)
+    return read_actual_texts(project_root, role, work_id, arc_ref=contract["story"].get("arc_ref"),
+                             content_overrides=overrides)
 
 
 def _author_messages(role: str, contract: dict, materials: dict[str, str], extra: dict | None = None) -> list[dict]:
@@ -1064,7 +1070,7 @@ def _dispatch_cnw_stage(run_dir: Path, stage: str) -> dict:
     raise ContractError("UNKNOWN_STAGE", stage)
 
 
-def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, output_cap: int, *, extra=None, project_dir: str | None, role_id: str, prebuilt_messages: list[dict] | None = None) -> dict:
+def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, output_cap: int, *, extra=None, role_id: str, prebuilt_messages: list[dict] | None = None) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
     project_root = _run_dir_base(run_dir)
@@ -1079,16 +1085,7 @@ def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, outp
         except ImportError:
             from cnw_roles import plot_structure
         meta["plot_structure"] = plot_structure(content, contract)
-    if project_dir:
-        _write_project_output(project_root, project_dir.replace("<work_id>", contract["unit"]["id"]), content)
-    _persist_stage(run_dir, stage, output_name, content, receipt_ids=[receipt["request_id"]], role_id=role_id)
-    meta_rel = f"artifacts/{stage}.meta.json"
-    meta_path = run_dir / meta_rel
-    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    with locked_run(run_dir):
-        s = load_state(run_dir)
-        s["stages"][stage]["meta"] = {"path": meta_rel, "sha256": sha(meta_path.read_bytes())}
-        save_state(run_dir, s)
+    _persist_stage(run_dir, stage, output_name, content, receipt_ids=[receipt["request_id"]], role_id=role_id, meta=meta)
     return {"stage": stage, "receipt": receipt["request_id"], "provider_request_id": receipt["provider_request_id"]}
 
 
@@ -1140,14 +1137,14 @@ def execute_plot(run_dir: Path) -> dict:
         materials = _role_sources("plot", run_dir, load_state(run_dir), contract, _run_dir_base(run_dir))
         request["messages"] = _author_messages("plot", contract, materials, {"production_preparation": preparation})
     result = _planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000,
-                            project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent",
+                            role_id="plot_agent",
                             prebuilt_messages=request["messages"])
     _critics_hook(run_dir, "plot")  # user-authorized supplement, not a CNW completion gate
     return result
 
 
 def execute_scene_cards(run_dir: Path) -> dict:
-    return _planning_stage(run_dir, "cards", "scene_cards", "artifacts/scene_cards.md", 4000, project_dir="05_scene_cards/<work_id>_scene_cards.md", role_id="scene_card_agent")
+    return _planning_stage(run_dir, "cards", "scene_cards", "artifacts/scene_cards.md", 4000, role_id="scene_card_agent")
 
 
 def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
@@ -1330,7 +1327,6 @@ def execute_writing_brief(run_dir: Path) -> dict:
     content, receipt = cnw_live_call(run_dir, stage="writing_brief", role_id="brief_agent", messages=messages, output_cap=4000)
     meta = _role_meta("brief", contract)
     _validate_role("brief", contract, content, meta)
-    _write_project_output(project_root, f"07_draft/{contract['unit']['id']}_writing_brief.md", content)
     _persist_stage(run_dir, "writing_brief", "artifacts/writing_brief.md", content, receipt_ids=[receipt["request_id"]], role_id="brief_agent")
     return {"stage": "writing_brief", "nk_request": nk["mapping"].get("provider_request_id"), "receipt": receipt["request_id"]}
 
@@ -1653,7 +1649,6 @@ def execute_refine(run_dir: Path) -> dict:
     whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
     scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
     output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
-    project_root = _run_dir_base(run_dir)
     previous_revision = state["stages"]["refine"]
     pending = previous_revision.get("pending_findings")
     v0 = _read_stage_text(run_dir, state, "refine" if pending else "prose")
@@ -1670,7 +1665,9 @@ def execute_refine(run_dir: Path) -> dict:
         supplement = _critics_hook(run_dir, "prose")  # support hook, never an additional CNW stage
     if not confirmed and not candidates:
         plan = {"schema": 1, "status": "NO_CHANGE", "self_acceptance": False, "issues": []}
-        _write_project_output(project_root, f"09_revision/{contract['unit']['id']}_revision_plan.json", json.dumps(plan, ensure_ascii=False, indent=2))
+        plan_path = assert_output_within_root(run_dir, "artifacts/revisions/no-change.plan.json")
+        plan_path.parent.mkdir(parents=True, exist_ok=True)
+        plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         _persist_stage(run_dir, "refine", f"artifacts/prose.v{revision_number}.md", v0,
             validation={"status": "NO_CHANGE", "v0_sha256": sha(v0.encode("utf-8"))},
             extra={"revision_number": revision_number, "affected_lenses": [], "pending_findings": [], "revision_base": None})
@@ -1737,7 +1734,6 @@ def execute_refine(run_dir: Path) -> dict:
     _persist_stage(run_dir, "refine", f"artifacts/prose.v{revision_number}.md", content, receipt_ids=receipt_ids, role_id="refine", validation=diff,
                    extra={"revision_number": revision_number, "affected_lenses": affected, "pending_findings": [], "refinement_attempt": None,
                           "revision_base": {"path": base_path.relative_to(run_dir).as_posix(), "sha256": sha(base_path.read_bytes())}})
-    _write_project_output(project_root, f"09_revision/{run_dir.name}/{contract['unit']['id']}_v{revision_number}.md", content)
     return {"stage": "refine", "receipts": receipt_ids, "changed": diff["v0_sha256"] != diff["v1_sha256"], **diff}
 
 
@@ -1976,17 +1972,37 @@ def review_run(args) -> dict:
 
 def register_editorial_candidate(args) -> dict:
     path = run_path(args.run_id, runs_root_for(args))
-    with locked_run(path, lock_name="execution.lock"), locked_run(path):
-        state = load_state(path)
-        if state.get("fixture_only") or state.get("mode") != "live":
-            raise ContractError("MOCK_CANDIDATE_CANNOT_REQUEST_EDITORIAL_REVIEW", args.run_id)
-        verify_live(args)
+    project_root = Path(getattr(args, "project_root", None) or _run_dir_base(path)).resolve(strict=True)
+    if not path.resolve().is_relative_to((project_root / "runs").resolve()):
+        raise ContractError("PROJECT_RUN_PATH_MISMATCH", str(path))
+    state = load_state(path)
+    if state.get("fixture_only") or state.get("mode") != "live":
+        raise ContractError("MOCK_CANDIDATE_CANNOT_REQUEST_EDITORIAL_REVIEW", args.run_id)
+    verify_live(args)
+    contract_path = (project_root / state["contract_path"]).resolve(strict=True)
+    if not contract_path.is_relative_to(project_root) or contract_path.is_symlink():
+        raise ContractError("CONTRACT_PATH_UNSAFE", state["contract_path"])
+    contract = load_contract(contract_path)
+    folder = "episodes" if contract["unit"].get("kind") == "episode" else "scenes" if contract["unit"].get("kind") == "scene" else None
+    if not folder:
+        raise ContractError("PROMOTION_UNIT_KIND_INVALID", str(contract["unit"].get("kind")))
+    destination = project_root / "07_draft" / folder / f"{contract['unit']['id']}.md"
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(project_root), locked_run(path, lock_name="execution.lock"), locked_run(path):
+        current = load_state(path)
         target = safe_run_input(args.candidate, path)
-        candidate = {"path": target.relative_to(path).as_posix(), "sha256": sha(target.read_bytes()), "status": "READY_FOR_EDITORIAL_REVIEW", "provider_evidence": "validated"}
-        state["editorial_candidate"] = candidate
-        state["status"] = "READY_FOR_EDITORIAL_REVIEW"
-        state["updated_at"] = now()
-        save_state(path, state)
+        if destination.is_symlink() or (destination.exists() and not destination.is_file()):
+            raise ContractError("PROMOTION_OUTPUT_SYMLINK_REJECTED", str(destination))
+        expected = sha(destination.read_bytes()) if destination.is_file() else None
+        candidate = {"path": target.relative_to(path).as_posix(), "sha256": sha(target.read_bytes()),
+                     "expected_current_sha": expected, "status": "READY_FOR_EDITORIAL_REVIEW", "provider_evidence": "validated"}
+        current["editorial_candidate"] = candidate
+        current["status"] = "READY_FOR_EDITORIAL_REVIEW"
+        current["updated_at"] = now()
+        save_state(path, current)
         return {"status": "READY_FOR_EDITORIAL_REVIEW", "run_id": args.run_id, "candidate": candidate, "self_acceptance": False}
 
 
@@ -2034,6 +2050,9 @@ def promote_run(args) -> dict:
         raise ContractError("CONTRACT_PATH_UNSAFE", state["contract_path"])
     contract = load_contract(contract_path)
     evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    expected_current = state.get("editorial_candidate", {}).get("expected_current_sha", object())
+    if "expected_current_sha" not in evidence or evidence.get("expected_current_sha") != expected_current:
+        raise ContractError("PUBLISH_EXPECTATION_MISMATCH", "review evidence must preserve the project version frozen at candidate registration")
     accepted_review = evidence.get("accepted_review")
     if not isinstance(accepted_review, dict):
         raise ContractError("ACCEPTED_REVIEW_EVIDENCE_REQUIRED", "promotion record must include the reviewed provider receipts")

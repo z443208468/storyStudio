@@ -251,7 +251,11 @@ def run_maintenance(project_root, operation, *, scope="full", chapters=(), targe
                "target": target, "pipeline": bool(pipeline)}
     if operation in operations.OPERATIONS:
         options["sources"] = operations.normalize_sources(root, operation, sources)
-    with runner.locked_run(root):
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
         return _run(root, options)
 
 

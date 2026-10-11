@@ -127,8 +127,16 @@ def _apply(root: Path, run_dir: Path, journal: dict) -> None:
 def run_import(project_root: str | Path, *, incremental: bool = False) -> dict:
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((ROOT / "workspace").resolve()):
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
-    with locked_run(root):
+        try:
+            from .cnw_project import _registered_project_identity
+        except ImportError:
+            from cnw_project import _registered_project_identity
+        _registered_project_identity(root)
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
         return _run_import(root, incremental=incremental)
 
 

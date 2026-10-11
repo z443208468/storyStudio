@@ -184,7 +184,9 @@ class RecoveryTests(unittest.TestCase):
 
     def test_raw_or_output_tamper_is_not_repaired_by_new_paid_call(self):
         self.execute()
-        for path in (self.run / "artifacts/prose.v0.md", next((self.run / "artifacts/provider").glob("*.raw.json"))):
+        state = r.load_state(self.run)
+        prose_path = self.run / state["stages"]["prose"]["artifact"]["path"]
+        for path in (prose_path, next((self.run / "artifacts/provider").glob("*.raw.json"))):
             saved = path.read_bytes()
             path.write_bytes(b"tampered")
             count = len(self.sent)

@@ -44,14 +44,24 @@ def project_directory(workspace_root: str | Path, project_id: str) -> Path:
 def init_project(workspace_root: str | Path, project_id: str) -> dict:
     root = project_directory(workspace_root, project_id)
     new_project = not root.exists()
-    _initialize_project_root(root, project_id, new_project=new_project)
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
+        _initialize_project_root(root, project_id, new_project=new_project)
     return {"status": "PROJECT_READY", "project_id": project_id, "project_root": str(root), "provider_call": "none"}
 
 
 def init_registered_project(project_root: str | Path) -> dict:
     root = Path(project_root).resolve(strict=True)
     identity = _registered_project_identity(root)
-    _initialize_project_root(root, identity["project_id"], new_project=not (root / "CLAUDE.md").exists())
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
+        _initialize_project_root(root, identity["project_id"], new_project=not (root / "CLAUDE.md").exists())
     return {"status": "PROJECT_READY", "project_id": identity["project_id"],
             "project_instance_id": identity["project_instance_id"], "project_root": str(root), "provider_call": "none"}
 
@@ -141,6 +151,22 @@ def _json_bytes(value: dict) -> bytes:
 
 
 def import_source(workspace_root: str | Path | None = None, project_id: str | None = None, input_file: str | Path | None = None, *, project_root: str | Path | None = None) -> dict:
+    if project_root is not None:
+        root = Path(project_root).resolve(strict=True)
+    elif workspace_root is not None and project_id is not None:
+        root = project_directory(workspace_root, project_id)
+        root.mkdir(parents=True, exist_ok=True)
+    else:
+        raise ContractError("PROJECT_REQUIRED", "supply a registered project_root or legacy workspace_root and project_id")
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
+        return _import_source_unlocked(workspace_root, project_id, input_file, project_root=project_root)
+
+
+def _import_source_unlocked(workspace_root: str | Path | None = None, project_id: str | None = None, input_file: str | Path | None = None, *, project_root: str | Path | None = None) -> dict:
     if input_file is None:
         raise ContractError("IMPORT_INPUT_REQUIRED", "select an explicit source file")
     if project_root is not None:
@@ -591,6 +617,16 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
 
 
 def write_contract_draft(project_root: str | Path, draft_path: str | Path) -> dict:
+    root = Path(project_root).resolve(strict=True)
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
+        return _write_contract_draft_unlocked(root, draft_path)
+
+
+def _write_contract_draft_unlocked(project_root: str | Path, draft_path: str | Path) -> dict:
     root = Path(project_root).resolve(strict=True)
     registered_identity = None
     if not root.is_relative_to((ROOT / "workspace").resolve()):

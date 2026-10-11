@@ -254,7 +254,8 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(sent), 2)
         self.assertEqual(sent[0][1], sent[1][1])
         self.assertIn("Length validation rejected", sent[1][0]["content"])
-        self.assertEqual((run / "artifacts/prose.v0.md").read_text(encoding="utf-8"), "乙" * minimum)
+        state = cnw_runner.load_state(run)
+        self.assertEqual(cnw_runner._read_stage_text(run, state, "prose"), "乙" * minimum)
         self.assertEqual(result["receipts"], ["MOCK-1", "MOCK-2"])
 
     def test_over_limit_recovery_exhausts_same_three_calls_without_publishing(self):
@@ -265,7 +266,9 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(ContractError, "RETURN_OVER_LIMIT"):
                 cnw_runner.execute_prose(run)
         self.assertEqual(provider.call_count, 3)
-        self.assertFalse((run / "artifacts/prose.v0.md").exists())
+        state = cnw_runner.load_state(run)
+        self.assertIsNone(state["stages"]["prose"].get("artifact"))
+        self.assertFalse((run / "artifacts/candidates/prose").exists())
 
     def test_completeness_capacity_tracks_actual_review_set_with_fixed_ceiling(self):
         run = self.base / "runs/FICT_SCENE_A"
@@ -302,8 +305,9 @@ class RunnerTests(unittest.TestCase):
         with patch.object(cnw_runner, "_role_sources", return_value={"arc": "Plan the episode"}), \
                 patch.object(cnw_runner, "cnw_live_call", return_value=(plot, {"request_id": "fixture-design", "provider_request_id": "MOCK_ONLY"})):
             cnw_runner._planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000,
-                                       project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent")
-        meta = json.loads((run_dir / "artifacts/plot.meta.json").read_text(encoding="utf-8"))
+                                       role_id="plot_agent")
+        meta_ref = cnw_runner.load_state(run_dir)["stages"]["plot"]["meta"]
+        meta = json.loads((run_dir / meta_ref["path"]).read_text(encoding="utf-8"))
         self.assertEqual(meta["plot_structure"]["key_scenes"], ["Encounter", "Response"])
         self.assertEqual(meta["plot_structure"]["plot_sha256"], cnw_runner.sha(plot.encode("utf-8")))
         self.assertEqual(meta["beats"], [])
@@ -331,19 +335,68 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(second["stages"][stage], "ACCEPTED")
         self.assertNotEqual((self.base / "runs/FICT_SCENE_A/artifacts/plot-fixture.json").read_bytes(), (self.base / "runs/FICT_SCENE_B/artifacts/plot-fixture.json").read_bytes())
 
-    def test_changed_contract_invalidates_old_cache_without_overwriting_run(self):
+    def test_new_run_does_not_modify_old_run_state_or_cache(self):
         original_hash = cnw_runner.show_run(argparse.Namespace(run_id="FICT_SCENE_A"))["contract_sha256"]
         old_artifact = self.base / "runs/FICT_SCENE_A/artifacts/contract.json"
+        old_state_path = self.base / "runs/FICT_SCENE_A/run_state.json"
         original_artifact_hash = cnw_runner.sha(old_artifact.read_bytes())
         cnw_runner.step(argparse.Namespace(run_id="FICT_SCENE_A", work_id=None, stage="plot", input=None))
+        old_state_bytes = old_state_path.read_bytes()
         changed = json.loads(json.dumps(self.contract))
         changed["story"]["reader_reward"] += " Revised contract."
         self._produce_contract(changed, "FICT_SCENE_A-R2", "fixture-a-revised.json")
         old_state = cnw_runner.load_state(self.base / "runs/FICT_SCENE_A")
-        self.assertEqual(old_state["status"], "INVALIDATED")
-        self.assertEqual(old_state["stages"]["plot"]["status"], "INVALIDATED")
+        self.assertEqual(old_state_path.read_bytes(), old_state_bytes)
+        self.assertEqual(old_state["status"], "RUNNING")
+        self.assertEqual(old_state["stages"]["plot"]["status"], "READY_FOR_EXECUTION")
         self.assertEqual(old_state["contract_sha256"], original_hash)
         self.assertEqual(cnw_runner.sha(old_artifact.read_bytes()), original_artifact_hash)
+
+    def test_cards_consumes_its_own_run_plot_without_publishing_shared_plot(self):
+        (self.base / "06_plot").mkdir()
+        (self.base / "90_canon").mkdir()
+        public_plot = self.base / "06_plot/ep001_plot.md"
+        public_plot.write_text("frozen public plot", encoding="utf-8")
+        (self.base / "90_canon/character_bible.md").write_text("fixture character bible", encoding="utf-8")
+        first = self.base / "runs/FICT_SCENE_A"
+        second_result = self._produce_contract(self.contract, "FICT_SCENE_A2", "fixture-a2.json")
+        second = Path(second_result["path"])
+        cnw_runner._persist_stage(first, "plot", "artifacts/plot.md", "plot from run one")
+        cnw_runner._persist_stage(second, "plot", "artifacts/plot.md", "plot from run two")
+        sent = []
+
+        def messages(role, contract, materials, extra=None):
+            sent.append(materials["06_plot/<work_id>_plot.md"])
+            return [{"role": "user", "content": sent[-1]}]
+
+        cards = ("### Identity\nX\n### Cast\nX\n### Start state\nX\n### End state\nX\n"
+                 "### Required beats\nX\n### Forbidden items for this scene\nX\n### Sensory anchor\nX\n"
+                 "### Tone / pacing\nX\n### Connection to next scene\nX")
+        with patch.object(cnw_runner, "_author_messages", side_effect=messages), \
+                patch.object(cnw_runner, "_role_meta", return_value={}), \
+                patch.object(cnw_runner, "_validate_role"), \
+                patch.object(cnw_runner, "cnw_live_call", return_value=(cards, {"request_id": "MOCK-CARDS", "provider_request_id": "MOCK-PROVIDER-CARDS"})):
+            cnw_runner._planning_stage(first, "cards", "scene_cards", "artifacts/scene_cards.md", 4000, role_id="scene_card_agent")
+            cnw_runner._planning_stage(second, "cards", "scene_cards", "artifacts/scene_cards.md", 4000, role_id="scene_card_agent")
+        self.assertEqual(sent, ["plot from run one", "plot from run two"])
+        self.assertEqual(public_plot.read_text(encoding="utf-8"), "frozen public plot")
+
+    def test_stage_persist_interruption_leaves_project_output_and_stage_state_unchanged(self):
+        (self.base / "06_plot").mkdir()
+        public_plot = self.base / "06_plot/ep001_plot.md"
+        public_plot.write_text("frozen public plot", encoding="utf-8")
+        run = self.base / "runs/FICT_SCENE_A"
+        before = cnw_runner.load_state(run)["stages"]["plot"]
+        with patch.object(cnw_runner, "save_state", side_effect=OSError("fixture interruption")):
+            with self.assertRaisesRegex(OSError, "fixture interruption"):
+                cnw_runner._persist_stage(run, "plot", "artifacts/plot.md", "unregistered candidate")
+        after = cnw_runner.load_state(run)["stages"]["plot"]
+        self.assertEqual(after, before)
+        self.assertEqual(public_plot.read_text(encoding="utf-8"), "frozen public plot")
+        candidates = list((run / "artifacts/candidates/plot").glob("*.md"))
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0].read_text(encoding="utf-8"), "unregistered candidate")
+        self.assertIsNone(cnw_runner.load_state(run)["stages"]["plot"].get("artifact"))
 
     def test_stage_requests_are_ordered_resumable_and_history_never_claims_live(self):
         with patch.object(cnw_runner, "ROOT", self.base):
@@ -527,6 +580,63 @@ class RunnerTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:
             list(pool.map(lambda _: update(), range(2)))
         self.assertEqual(maximum, 1)
+
+    def test_project_import_and_publish_mutations_share_one_lock(self):
+        from tools import cnw_import_workflow, cnw_revision
+        workspace_root = self.base / "workspace"
+        root = workspace_root / "shared-project"
+        workspace_project = root
+        workspace_project.mkdir(parents=True)
+        state_path = root / "authority.json"
+        state_path.write_text('{"writes":[]}', encoding="utf-8")
+        active = maximum = 0
+        guard = threading.Lock()
+
+        def mutate(kind):
+            nonlocal active, maximum
+            with guard:
+                active += 1
+                maximum = max(maximum, active)
+            current = json.loads(state_path.read_text(encoding="utf-8"))
+            time.sleep(0.03)
+            current["writes"].append(kind)
+            state_path.write_text(json.dumps(current), encoding="utf-8")
+            with guard:
+                active -= 1
+
+        def fake_import(project_root, *, incremental=False):
+            self.assertEqual(Path(project_root).resolve(), workspace_project.resolve())
+            mutate("source_import")
+            return {"status": "FIXTURE_IMPORT"}
+
+        def fake_publish(*args, **kwargs):
+            self.assertEqual(Path(args[0]).resolve(), root.resolve())
+            mutate("revision_publish")
+            return {"status": "FIXTURE_PUBLISH"}
+
+        with patch.object(cnw_import_workflow, "ROOT", self.base), \
+                patch.object(cnw_import_workflow, "_run_import", side_effect=fake_import), \
+                patch.object(cnw_revision, "_promote_revision_unlocked", side_effect=fake_publish):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                imports = pool.submit(cnw_import_workflow.run_import, workspace_project)
+                publishes = pool.submit(cnw_revision.promote_revision, root, root / "runs/R1", "candidate.md", {}, {})
+                imports.result()
+                publishes.result()
+        self.assertEqual(maximum, 1)
+        self.assertCountEqual(json.loads(state_path.read_text(encoding="utf-8"))["writes"],
+                              ["source_import", "revision_publish"])
+
+    def test_semantic_import_accepts_registered_datahome_root(self):
+        from tools import cnw_import_workflow, cnw_project
+        root = self.base / "data-home" / "projects" / "P1"
+        root.mkdir(parents=True)
+        identity = {"project_id": "P1", "project_instance_id": "11111111-1111-4111-8111-111111111111"}
+        with patch.object(cnw_import_workflow, "ROOT", self.base), \
+                patch.object(cnw_project, "_registered_project_identity", return_value=identity), \
+                patch.object(cnw_import_workflow, "_run_import", return_value={"status": "FIXTURE_IMPORT"}) as importer:
+            result = cnw_import_workflow.run_import(root)
+        self.assertEqual(result["status"], "FIXTURE_IMPORT")
+        importer.assert_called_once()
 
     def test_stage_inputs_reject_absolute_escape_and_symlink(self):
         run_dir = self.base / "runs/FICT_SCENE_A"

@@ -155,7 +155,8 @@ def resolve_arc(project_root: Path, work_id: str, arc_ref: str | None = None) ->
                         f"Arc for {work_id}; supply story.arc_ref or an Arc Index episode range")
 
 
-def resolve_author_reads(role: str, project_root: Path, work_id: str, *, arc_ref: str | None = None) -> dict[str, Path]:
+def resolve_author_reads(project_root: Path, role: str, work_id: str, *, arc_ref: str | None = None,
+                         content_overrides: dict[str, str] | None = None) -> dict[str, Path]:
     """Resolve the author reading list to concrete private project files."""
     if role not in AUTHOR_ROLE_READS:
         raise ContractError("ROLE_UNKNOWN", role)
@@ -167,14 +168,24 @@ def resolve_author_reads(role: str, project_root: Path, work_id: str, *, arc_ref
             resolved[template] = project_root / template.replace("<work_id>", work_id)
         else:
             resolved[template] = project_root / template
+    overrides = content_overrides or {}
+    unauthorized = set(overrides) - set(resolved)
+    if unauthorized:
+        raise ContractError("ROLE_INPUT_OVERRIDE_UNAUTHORIZED", ", ".join(sorted(unauthorized)))
     for template, path in resolved.items():
+        if template in overrides:
+            continue
         if not path.is_file() or path.is_symlink():
             raise ContractError("AUTHOR_READ_MISSING", template)
     return resolved
 
 
-def read_actual_texts(project_root: Path, role: str, work_id: str, *, arc_ref: str | None = None) -> dict[str, str]:
-    return {template: path.read_text(encoding="utf-8-sig") for template, path in resolve_author_reads(role, project_root, work_id, arc_ref=arc_ref).items()}
+def read_actual_texts(project_root: Path, role: str, work_id: str, *, arc_ref: str | None = None,
+                      content_overrides: dict[str, str] | None = None) -> dict[str, str]:
+    overrides = content_overrides or {}
+    paths = resolve_author_reads(project_root, role, work_id, arc_ref=arc_ref, content_overrides=overrides)
+    return {template: overrides[template] if template in overrides else path.read_text(encoding="utf-8-sig")
+            for template, path in paths.items()}
 
 
 def read_production_preparation(project_root: Path, contract: dict) -> dict:

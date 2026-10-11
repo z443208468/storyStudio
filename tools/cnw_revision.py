@@ -135,6 +135,15 @@ def build_rereview_packets(v0:str,v1:str,affected_lenses:list[str],sources:dict[
 
 
 def promote_revision(project_root:str|Path,run_dir:str|Path,candidate_path:str|Path,contract:dict,review_evidence:dict,*,test_fixture:bool=False)->dict:
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(project_root):
+        return _promote_revision_unlocked(project_root, run_dir, candidate_path, contract, review_evidence, test_fixture=test_fixture)
+
+
+def _promote_revision_unlocked(project_root:str|Path,run_dir:str|Path,candidate_path:str|Path,contract:dict,review_evidence:dict,*,test_fixture:bool=False)->dict:
     """Promote only an externally accepted, hash-bound candidate; preserve prior text and index."""
     project_input=Path(project_root).absolute(); run_input=Path(run_dir).absolute()
     for value in (project_input,run_input):
@@ -196,6 +205,11 @@ def promote_revision(project_root:str|Path,run_dir:str|Path,candidate_path:str|P
     for output in (project/"07_draft",destination.parent,index):
         if output.is_symlink(): raise ContractError("PROMOTION_OUTPUT_SYMLINK_REJECTED",str(output))
         if output.exists() and not output.resolve().is_relative_to(project): raise ContractError("PROMOTION_OUTPUT_OUTSIDE_PROJECT",str(output))
+    if "expected_current_sha" not in review_evidence:
+        raise ContractError("PUBLISH_EXPECTATION_REQUIRED", "review evidence must bind the current published version SHA or null")
+    current_sha = hashlib.sha256(destination.read_bytes()).hexdigest() if destination.is_file() else None
+    if review_evidence.get("expected_current_sha") != current_sha:
+        raise ContractError("PUBLISH_CONFLICT", "published project output changed after candidate review began")
     destination.parent.mkdir(parents=True,exist_ok=True)
     if destination.exists():
         prior=destination.read_bytes(); prior_sha=hashlib.sha256(prior).hexdigest()

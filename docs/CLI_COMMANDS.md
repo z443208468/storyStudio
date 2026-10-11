@@ -56,3 +56,7 @@ without exposing source text. `project-contract -InputFile` consumes explicit
 source ID, source revision, manifest revision, index revision, and adaptation
 range fields; it never selects the first imported source implicitly. Setup can
 also receive an explicit `-DataHomePointer` for isolated, testable setup state.
+`review` includes the SHA of the project output that was current when the
+candidate entered external review. Promotion evidence must preserve that
+`expected_current_sha` (or explicit `null` for a new output); a concurrent
+publish returns `PUBLISH_CONFLICT` and leaves the candidate unpromoted.

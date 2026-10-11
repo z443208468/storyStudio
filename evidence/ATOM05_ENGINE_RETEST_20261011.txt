@@ -1,0 +1,38 @@
+ATOM-05 engine-side retest — 2026-10-11
+
+Scope
+- New same-work-id run creation no longer rewrites older run_state bytes or
+  invalidates its prior stage/cache state.
+- Stage outputs are content-addressed under each run's artifacts/candidates;
+  each stage artifact and its role metadata are written before the run state is
+  atomically updated to reference them. Plot/Cards/
+  Brief/Prose dependencies read the hash-verified predecessor from that same
+  run. Candidate generation no longer publishes Plot, Cards, Brief, or Refine
+  outputs into shared project manuscript paths.
+- A common project write lock now covers source import, contract registration,
+  maintenance, Sprint publication, registered project initialization, and
+  revision promotion. Promotion evidence freezes expected_current_sha and a
+  changed target fails with PUBLISH_CONFLICT before writing. Semantic import
+  also accepts explicitly registered DataHome projects and validates their
+  project identity before work begins.
+- Export change notes resolve the actual run-scoped candidate paths.
+
+Verification (self-contained fixtures; no production data, model request, or
+provider/API call)
+- `python -m py_compile tools/cnw_runner.py tools/cnw_roles.py tools/project_transactions.py tools/cnw_project.py tools/cnw_revision.py tools/cnw_sprint.py tools/cnw_sprint_live.py tools/cnw_import_workflow.py tools/cnw_maintenance.py tools/cnw_export.py` — passed.
+- `python -m unittest test_cnw_runner test_cnw_generation test_cnw_recovery test_cnw_export` — 72 tests, OK.
+- `python -m unittest test_cnw_project_import test_project_paths test_cnw_maintenance` — 40 tests, OK (250.416s).
+- Focused shared-lock race test calls the actual `run_import` and
+  `promote_revision` wrappers concurrently with fixture transaction bodies;
+  no overlapping writes or lost fixture updates were observed.
+- Focused promotion test verifies a changed published target is rejected as
+  PUBLISH_CONFLICT and remains unchanged by the attempted promotion.
+- `git diff --check` — passed.
+
+Boundary
+- No DataHome, legacy J19 root, v5 private project, global cost ledger, run, or
+  W10 file was selected, read, copied, or modified. No migration or cutover was
+  attempted. `CUTOVER_READ_ONLY_ACCEPT` remains unavailable until an explicit
+  DataHome/project target and the required read-only freeze evidence exist.
+- This is Writer evidence only. It is not an Atom-05 Controller verdict or a
+  private-data migration acceptance. Candidate C/T and remote push are pending.

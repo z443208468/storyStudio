@@ -70,6 +70,9 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     review_record = state["stages"].get("re_review", {})
     review_text = stage_text("re_review")
     review = json.loads(review_text) if review_text else {}
+    cards_path = (state.get("stages", {}).get("scene_cards", {}).get("artifact") or {}).get("path", "NOT_MATERIALIZED")
+    brief_path = (state.get("stages", {}).get("writing_brief", {}).get("artifact") or {}).get("path", "NOT_MATERIALIZED")
+    refine_path = (state.get("stages", {}).get("refine", {}).get("artifact") or {}).get("path", "NOT_MATERIALIZED")
     reviewed = review_record.get("status") in ("STAGE_MATERIALIZED", "CONTROLLER_ACCEPTED") and review.get("status") in ("CLEAN", "NO_CHANGED_TEXT")
     candidate_status = "REVIEWED_CANDIDATE" if reviewed else "UNREVIEWED_CANDIDATE"
     execution = {"pipeline_status": state.get("status", "UNKNOWN"),
@@ -118,7 +121,7 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     (deliverables / "01_初稿.md").write_text(v0, encoding="utf-8")
     (deliverables / "02_修订稿.md").write_text(v1, encoding="utf-8")
     (deliverables / "04_修改说明.md").write_text(
-        f"# 修改说明 — {unit['id']}\n\n- Run: `{run_id}`\n- Scene Cards: `artifacts/scene_cards.md`\n- Writing Brief: `artifacts/writing_brief.md`\n- 修订记录见 `artifacts/refine` 与 `09_revision`。\n",
+        f"# 修改说明 — {unit['id']}\n\n- Run: `{run_id}`\n- Scene Cards: `{cards_path}`\n- Writing Brief: `{brief_path}`\n- Refinement candidate: `{refine_path}`。\n",
         encoding="utf-8")
     sources = "\n".join(f"- {key}: {value}" for key, value in contract["source"].items() if isinstance(value, str))
     (deliverables / "06_原作者方法覆盖报告.md").write_text(

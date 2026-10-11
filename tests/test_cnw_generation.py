@@ -226,7 +226,7 @@ class CnwGenerationTests(unittest.TestCase):
         plan=build_revision_plan(accepted,allow_fixture=True)
         validation={"finish_reason":"stop","v0_beat_evidence":self.evidence,"v1_beat_evidence":self.evidence,"dialogue_evidence":self.dialogue,"action_evidence":self.action,"start_state_evidence":"她推开门。","end_state_evidence":"他收起信。"}
         record=build_revision_record(v0_path.read_text(encoding="utf-8"),candidate.read_text(encoding="utf-8"),plan)
-        evidence={"status":"EXTERNAL_ACCEPTED","fixture_only":True,"work_id":"SCENE-1","candidate_sha256":candidate_sha,"source_identity_sha256":source_sha,"contract_sha256":contract_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY","accepted_review":accepted,"revision_plan":plan,"v0_path":"artifacts/v0.md","validation_evidence":validation,"revision_record":record}
+        evidence={"status":"EXTERNAL_ACCEPTED","fixture_only":True,"work_id":"SCENE-1","candidate_sha256":candidate_sha,"source_identity_sha256":source_sha,"contract_sha256":contract_sha,"controller_acceptance_ref":"TEST_FIXTURE_ONLY","accepted_review":accepted,"revision_plan":plan,"v0_path":"artifacts/v0.md","validation_evidence":validation,"revision_record":record,"expected_current_sha":hashlib.sha256(old.read_bytes()).hexdigest()}
         prod_project=repo/"workspace/project"; prod_run=prod_project/"runs/R1"; prod_candidate=prod_run/"artifacts/scene.md"
         prod_candidate.parent.mkdir(parents=True); prod_candidate.write_bytes(candidate.read_bytes())
         prod_evidence={**evidence,"candidate_sha256":hashlib.sha256(prod_candidate.read_bytes()).hexdigest()}
@@ -239,6 +239,11 @@ class CnwGenerationTests(unittest.TestCase):
             invalid={**evidence,"validation_evidence":{**validation,"finish_reason":"length"}}
             with self.assertRaisesRegex(ContractError,"REVISION_CONTRACT_VALIDATION_FAILED"):
                 promote_revision(project,run,candidate,contract,invalid,test_fixture=True)
+            old.write_text("concurrent publication",encoding="utf-8")
+            with self.assertRaisesRegex(ContractError,"PUBLISH_CONFLICT"):
+                promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+            self.assertEqual(old.read_text(encoding="utf-8"),"concurrent publication")
+            old.write_text("prior accepted copy",encoding="utf-8")
             result=promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
         self.assertEqual(result["status"],"PROMOTED")
         self.assertEqual(old.read_text(encoding="utf-8"),self.prose[:180])

@@ -29,6 +29,15 @@ def run_fixture_sprint(project_root: str | Path, sprint_id: str, plan_path: str 
         except ImportError:
             from cnw_project import _registered_project_identity
         _registered_project_identity(root)
+    try:
+        from .project_transactions import project_write_lock
+    except ImportError:
+        from project_transactions import project_write_lock
+    with project_write_lock(root):
+        return _run_fixture_sprint_locked(root, sprint_id, plan_path)
+
+
+def _run_fixture_sprint_locked(root: Path, sprint_id: str, plan_path: str | Path) -> dict:
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,63}", sprint_id):
         raise ContractError("SPRINT_ID_INVALID", sprint_id)
     supplied = Path(plan_path).absolute()
