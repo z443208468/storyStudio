@@ -314,6 +314,12 @@ def validate_v2_source_identity(contract: dict[str, Any], *, source_root: str | 
                 raise ContractError("SOURCE_SPAN_EMPTY", "JSON Pointer must select a non-empty value")
             selected_bytes = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
             expected_format = "json_pointer_canonical_value_sha256"
+            canonical_digest = _sha256(selected_bytes)
+            wire_excerpt = json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8")
+            if (selection.get("canonical_selected_value_sha256") != canonical_digest or
+                    selection.get("wire_excerpt_sha256") != _sha256(wire_excerpt)):
+                raise ContractError("SOURCE_WIRE_EXCERPT_HASH_MISMATCH",
+                                    "canonical selected-value and actual Plot excerpt hashes must be recorded separately")
         elif item.get("format") in {"md", "txt"}:
             start, end = selection.get("start_line"), selection.get("end_line")
             lines = raw.splitlines(keepends=True)

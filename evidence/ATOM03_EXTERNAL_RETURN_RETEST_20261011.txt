@@ -1,0 +1,27 @@
+ATOM-03 external RETURN correction retest — 2026-10-11
+
+Scope
+- Corrected Plot source-scope instructions for INSERT_BETWEEN, ADAPT_SOURCE,
+  ORIGINAL_EPISODE, while preserving the pinned historical fallback for legacy
+  contracts.
+- Separated canonical JSON Pointer value identity from the exact pretty-printed
+  excerpt supplied to the Plot request. Contract creation, contract validation,
+  production preparation, and ADAPT export now use their corresponding hashes.
+- Added A-then-B source-import evidence: B is explicitly selected and its source
+  revision, actual prepared excerpt, and real offline Plot request materials are
+  checked. The unselected A canary remains absent.
+- Prose message boundary assertions remain in the same synthetic-fixture suite.
+
+Verification (self-contained fictional fixtures; no project workspace reads,
+provider requests, or API spend)
+- `python -m py_compile tools/cnw_project.py tools/cnw_contract.py tools/cnw_roles.py tools/cnw_export.py` — passed.
+- `python -m unittest test_cnw_work_intent_v2.GenericWorkIntentV2Tests.test_json_object_and_array_keep_canonical_and_plot_wire_hashes_separate` — 1 test, OK. Covers object and array JSON Pointer values, canonical and exact Plot excerpt SHA256 values, the actual request payload, and rejection of a tampered wire hash.
+- `python -m unittest test_cnw_export` — 5 tests, OK. Covers anchor-free ADAPT export against the recomputed frozen excerpt.
+- `python -m unittest test_cnw_work_intent_v2` — 5 tests, OK (204.885 seconds). Covers A→B selection in the actual Plot request, Prose canary isolation, INSERT/ADAPT/ORIGINAL behavior, and the original first-episode offline path.
+
+Governance
+- This file records Writer verification only. It is not Controller acceptance.
+- The Atom-04 work-in-progress in `tools/studio.ps1`, the separate CLI route
+  registry/test, and Atom-04 portions of `tools/cnw_project.py` are not part of
+  the Atom-03 corrective candidate.
+- No story text or private data was added. No W10 file was read or changed.

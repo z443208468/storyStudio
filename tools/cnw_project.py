@@ -470,7 +470,12 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
                     raise ContractError("SOURCE_JSON_INVALID", "selected JSON source is invalid or has duplicate keys") from exc
                 value = resolve_json_pointer(parsed, pointer)
                 selected_bytes = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-                selection.update(json_pointer=pointer, hash_semantics="json_pointer_canonical_value_sha256", selected_sha256=sha(selected_bytes))
+                excerpt = json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)
+                canonical_sha = sha(selected_bytes)
+                selection.update(json_pointer=pointer, hash_semantics="json_pointer_canonical_value_sha256",
+                                 selected_sha256=canonical_sha,
+                                 canonical_selected_value_sha256=canonical_sha,
+                                 wire_excerpt_sha256=sha(excerpt.encode("utf-8")))
             elif selected.get("format") in {"md", "txt"}:
                 start, end = draft.get("start_line"), draft.get("end_line")
                 lines = source_file.read_bytes().splitlines(keepends=True)

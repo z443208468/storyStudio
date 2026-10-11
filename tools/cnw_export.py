@@ -90,7 +90,8 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
                 from cnw_roles import read_production_preparation
             prepared = read_production_preparation(project, contract)
             selected_adapt_excerpt = prepared["documents"].get("selected_source_excerpt")
-            selected_hash = contract["story"].get("source_selection", {}).get("selected_sha256")
+            selection = contract["story"].get("source_selection", {})
+            selected_hash = selection.get("wire_excerpt_sha256", selection.get("selected_sha256"))
             saved_path = run / "artifacts/production_preparation.json"
             if (not isinstance(selected_adapt_excerpt, str) or
                     prepared["source_hashes"].get("selected_source_excerpt") != selected_hash or

@@ -245,10 +245,17 @@ def read_production_preparation(project_root: Path, contract: dict) -> dict:
                 parsed = json.loads(source_bytes.decode("utf-8-sig"))
                 selected = resolve_json_pointer(parsed, selection.get("json_pointer"))
                 excerpt = json.dumps(selected, ensure_ascii=False, sort_keys=True, indent=2)
+                canonical_raw = json.dumps(selected, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                canonical_sha = sha256_bytes(canonical_raw)
+                excerpt_sha = sha256_bytes(excerpt.encode("utf-8"))
+                if (selection.get("canonical_selected_value_sha256") != canonical_sha or
+                        selection.get("selected_sha256") != canonical_sha or
+                        selection.get("wire_excerpt_sha256") != excerpt_sha):
+                    raise ContractError("SOURCE_WIRE_EXCERPT_HASH_MISMATCH", "canonical value or Plot excerpt bytes changed")
             else:
                 lines = source_bytes.splitlines(keepends=True)
                 excerpt = b"".join(lines[selection["start_line"]-1:selection["end_line"]]).decode("utf-8-sig")
-            excerpt_sha = selection["selected_sha256"]
+                excerpt_sha = selection["selected_sha256"]
         else:
             lines = source_bytes.splitlines(keepends=True)
             before, after = story["before_anchor"], story["after_anchor"]
@@ -259,7 +266,10 @@ def read_production_preparation(project_root: Path, contract: dict) -> dict:
         hashes["selected_source_excerpt"] = excerpt_sha
         documents["selected_source_identity"] = json.dumps({"source_id": contract["source"]["source_id"],
             "source_revision_id": source_hash, "manifest_revision_sha256": contract["source"]["manifest_revision_sha256"],
-            "source_index_sha256": contract["source"]["source_index_sha256"]}, sort_keys=True)
+            "source_index_sha256": contract["source"]["source_index_sha256"],
+            "canonical_selected_value_sha256": story.get("source_selection", {}).get("canonical_selected_value_sha256",
+                                                                                      story.get("source_selection", {}).get("selected_sha256")),
+            "wire_excerpt_sha256": excerpt_sha}, sort_keys=True)
         hashes["selected_source_identity"] = sha256_bytes(documents["selected_source_identity"].encode("utf-8"))
     return {"documents": documents, "source_hashes": hashes,
             "source_method": "example_project/00_meta/episode_production_manual.md#production-reading-order",
@@ -435,6 +445,16 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
             "只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
         )
     if role == "plot":
+        intent = contract.get("work_intent")
+        if intent == "INSERT_BETWEEN":
+            source_scope = "所有新增动作必须与合同指定的前后锚点和原文连续；不得把来源中已有的位置和动作改写成未经支持的离场或返场。"
+        elif intent == "ADAPT_SOURCE":
+            source_scope = "仅依据合同明确选定的来源修订与选段设计改编；保留选段中可确认的来源事实，不把未选来源或未选范围当作事实。"
+        elif intent == "ORIGINAL_EPISODE":
+            source_scope = "这是无导入来源的原创工作：依据所选项目 Arc、Canon、人物资料和合法前章上下文设计；不得要求或臆造不存在的来源前后锚点。"
+        else:
+            # Preserve the pinned historical prompt semantics for legacy contracts.
+            source_scope = "所有动作必须与所给前后原文连续；不得把来源中已有的位置和动作改写成未经支持的离场或返场。"
         system += (
             "\n[plot_design_responsibility]\n"
             "依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、"
@@ -446,8 +466,8 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
             "本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。"
             "输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；"
             "不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。"
-            "所有动作必须与所给前后原文连续；不得把来源中已有的位置和动作改写成未经支持的离场或返场。"
-            "他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。"
+            + source_scope
+            + "他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。"
             "不得从执行器的记账元数据推导创作要求。\n"
         )
     payload = {

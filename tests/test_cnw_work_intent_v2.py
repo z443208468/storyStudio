@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
 import shutil
 import tempfile
 import unittest
@@ -138,21 +139,59 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "IMPORT_JSON_DUPLICATE_KEY"):
             import_source(input_file=duplicate, project_root=root)
 
+    def test_json_object_and_array_keep_canonical_and_plot_wire_hashes_separate(self):
+        root = self.project("JSON-NODES")
+        raw = b'{"episodes":[{"text":"A friend answers.","emotion":"calm"},{"text":"Mira listens.","emotion":"wary"}]}'
+        imported = self.import_bytes(root, "nodes.json", raw)
+        parsed = json.loads(raw)
+        for suffix, pointer in (("OBJECT", "/episodes/0"), ("ARRAY", "/episodes")):
+            with self.subTest(pointer=pointer):
+                contract = self.draft(root, imported, intent="ADAPT_SOURCE", unit_id=f"JSON-{suffix}",
+                                      json_pointer=pointer)
+                value = parsed["episodes"][0] if suffix == "OBJECT" else parsed["episodes"]
+                selection = contract["story"]["source_selection"]
+                canonical = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                wire_excerpt = json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)
+                canonical_sha, wire_sha = sha(canonical), sha(wire_excerpt.encode("utf-8"))
+                self.assertEqual(selection["canonical_selected_value_sha256"], canonical_sha)
+                self.assertEqual(selection["selected_sha256"], canonical_sha)
+                self.assertEqual(selection["wire_excerpt_sha256"], wire_sha)
+                self.assertNotEqual(canonical_sha, wire_sha)
+                preparation = read_production_preparation(root, contract)
+                self.assertEqual(preparation["documents"]["selected_source_excerpt"], wire_excerpt)
+                self.assertEqual(preparation["source_hashes"]["selected_source_excerpt"], wire_sha)
+                identity = json.loads(preparation["documents"]["selected_source_identity"])
+                self.assertEqual(identity["canonical_selected_value_sha256"], canonical_sha)
+                self.assertEqual(identity["wire_excerpt_sha256"], wire_sha)
+                request = build_plot_request(root, contract)
+                request_payload = json.loads(request["messages"][1]["content"])
+                consumed_preparation = request_payload["support"]["production_preparation"]
+                self.assertEqual(consumed_preparation["documents"]["selected_source_excerpt"], wire_excerpt)
+                self.assertEqual(consumed_preparation["source_hashes"]["selected_source_excerpt"], wire_sha)
+                tampered = copy.deepcopy(contract)
+                tampered["story"]["source_selection"]["wire_excerpt_sha256"] = "0" * 64
+                with self.assertRaisesRegex(ContractError, "SOURCE_WIRE_EXCERPT_HASH_MISMATCH"):
+                    build_plot_request(root, tampered)
+
     def test_selected_source_and_prose_messages_exclude_unselected_source_canary(self):
         root = self.project("CANARY")
-        selected_source = self.import_bytes(root, "selected.md", b"Mira offers one small repair.")
         unselected_text = "UNAUTHORIZED_SOURCE_CANARY: Mira secretly owns the lighthouse."
-        unselected_source = self.import_bytes(
-            root, "unselected.md", unselected_text.encode("utf-8"))
-        selection = dict(unselected_source)
-        selection.update(source_id=selected_source["source_id"],
-                         source_revision_id=selected_source["source_revision_id"])
-        contract = self.draft(root, selection, intent="ADAPT_SOURCE", unit_id="CANARY-ADAPT",
+        unselected_source = self.import_bytes(root, "a-unselected.md", unselected_text.encode("utf-8"))
+        selected_text = "B_SOURCE_CANARY: Mira offers one small repair."
+        selected_source = self.import_bytes(root, "b-selected.md", selected_text.encode("utf-8"))
+        contract = self.draft(root, selected_source, intent="ADAPT_SOURCE", unit_id="CANARY-ADAPT",
                               start_line=1, end_line=1)
         plot_request = build_plot_request(root, contract)
         plot_messages = json.dumps(plot_request["messages"], ensure_ascii=False)
-        self.assertIn("Mira offers one small repair.", plot_messages)
+        self.assertIn(selected_text, plot_messages)
         self.assertNotIn("UNAUTHORIZED_SOURCE_CANARY", plot_messages)
+        prepared = plot_request["production_preparation"]
+        self.assertEqual(prepared["documents"]["selected_source_excerpt"], selected_text)
+        self.assertEqual(prepared["source_hashes"]["selected_source_excerpt"],
+                         selected_source["source_revision_id"])
+        selected_identity = json.loads(prepared["documents"]["selected_source_identity"])
+        self.assertEqual(selected_identity["source_id"], selected_source["source_id"])
+        self.assertEqual(selected_identity["source_revision_id"], selected_source["source_revision_id"])
 
         brief = ("# Writing Brief\n## Voice References\n- Mira — use her sample\n"
                  "## Hard Constraints\nKeep to the selected source.\n")
@@ -234,6 +273,8 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
         self.assertEqual(request["provider_call"], "none")
         joined = json.dumps(request["messages"], ensure_ascii=False)
         self.assertIn("Mira accepts one limited offer of help", joined)
+        self.assertIn("这是无导入来源的原创工作", request["messages"][0]["content"])
+        self.assertNotIn("与所给前后原文连续", request["messages"][0]["content"])
         self.assertIn("The story opens on Mira's first evening", joined)
         self.assertNotIn("Cangqi", joined)
 
