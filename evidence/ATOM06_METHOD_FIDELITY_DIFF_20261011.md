@@ -61,7 +61,7 @@ adapter and full-chain simulation gates.
 The final command and exact stdout/stderr bytes, SHA-256 values, exit code, base
 commit, and tested source-file SHA values are archived in
 `evidence/ATOM06_RETURN_RAW_20261011.json`. It records exit `0`, stdout SHA-256
-`997ed26c6ced510151f3ff68d6cbf2d17221857332bac9e2d296752995e790f6`, empty
+`0488f5fd075f6c192a61a7cce02267492b24c5b3582ab1b2b2a7156669c177b2`, empty
 stderr SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
 and `102 passed, 13 subtests passed`. The raw stdout is retained as Base64, not
 paraphrased.
@@ -69,7 +69,7 @@ paraphrased.
 Exact synthetic requests, input field lists, source/message hashes, offline
 responses, and downstream outcomes are archived in
 `evidence/ATOM06_SYNTHETIC_REQUEST_TRACE_20261011.json`, SHA-256
-`0b83dc40618ee95403781f678b88e4e31271dad61b0ef04352b9dedf94a803b1`. The trace
+`fbbd6ac9567c4ecb908424b72f2f24a6683a344a99922417b978b58f03b22b57`. The trace
 includes two projects × four author roles, English and Chinese continuation
 messages, five isolated Lens messages, six verifier messages for two findings,
 the Completeness→Refine→Lens-feedback chain, disabled/unavailable supplement
