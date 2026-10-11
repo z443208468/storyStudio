@@ -74,7 +74,9 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
                 "required_beats": [{"beat_id": "B01", "goal": "Make the choice visible."}],
                 "characters_in_scene": ["Mira"], "character_knowledge_boundary_ref": "90_canon/canon.md",
                 "forbidden_future_revelations": ["Do not reveal later events."],
-                "voice_sample_refs": ["Mira"], **selection}
+                "voice_sample_refs": ["Mira"],
+                "review": {"fifth_lens": {"id": "reader-promise",
+                    "responsibility": "Check the synthetic project's confirmed reader promise."}}, **selection}
         if intent != "ORIGINAL_EPISODE":
             data.update(source_id=result["source_id"], source_revision_id=result["source_revision_id"],
                         source_manifest_revision_sha256=result["source_manifest_sha256"],
@@ -82,7 +84,12 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
         path = root / "contracts" / f"{unit_id}.draft.json"
         path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         write_contract_draft(root, path)
-        return json.loads((root / "contracts" / f"{unit_id}.json").read_text(encoding="utf-8"))
+        contract = json.loads((root / "contracts" / f"{unit_id}.json").read_text(encoding="utf-8"))
+        duty = data["review"]["fifth_lens"]["responsibility"]
+        self.assertEqual(contract["review"]["fifth_lens"]["id"], "reader-promise")
+        self.assertEqual(contract["review"]["fifth_lens"]["responsibility"], duty)
+        self.assertEqual(contract["review"]["fifth_lens"]["responsibility_sha256"], sha(duty.encode("utf-8")))
+        return contract
 
     def test_import_order_never_selects_first_source_and_old_manifest_identity_survives_append(self):
         root = self.project("ORDERED")
@@ -265,6 +272,8 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
                 "character_knowledge_boundary_ref": "90_canon/canon.md",
                 "forbidden_future_revelations": ["Do not reveal the lighthouse secret."],
                 "voice_sample_refs": ["Mira"], "first_episode": True,
+                "review": {"fifth_lens": {"id": "reader-promise",
+                    "responsibility": "Check the synthetic opening's reader promise."}},
                 "arc_ref": "04_chapter_design/arc_01.md"}
         path = root / "contracts/BOOK-OPENING.draft.json"
         path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")

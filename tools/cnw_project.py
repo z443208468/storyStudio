@@ -585,6 +585,15 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
     if not isinstance(integration_draft, dict):
         raise ContractError("SUPPORT_INTEGRATION_CONFIG_INVALID", "integrations must be an object")
     integrations = {name: integration_draft.get(name, "DISABLED") for name in ("nk", "critics")}
+    review_draft = draft.get("review")
+    fifth_lens = review_draft.get("fifth_lens") if isinstance(review_draft, dict) else None
+    if (not isinstance(fifth_lens, dict) or not isinstance(fifth_lens.get("id"), str) or
+            not fifth_lens["id"].strip() or
+            not isinstance(fifth_lens.get("responsibility"), str) or
+            not fifth_lens["responsibility"].strip()):
+        raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", "review.fifth_lens.id/responsibility")
+    fifth_lens_id = fifth_lens["id"].strip()
+    fifth_lens_responsibility = fifth_lens["responsibility"].strip()
     policy_path = ROOT / "config/policies/app_policy.v1.json"
     contract = {
         "schema_version": "cnw_work_unit_v2", "project_id": identity["project_id"],
@@ -609,6 +618,8 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
                   "voice_sample_refs": voice_refs},
         "review": {"workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15", "require_cnw_11_stages": True,
                    "require_3_verifiers": True, "require_completeness_critic": True, "require_re_review": True,
+                   "fifth_lens": {"id": fifth_lens_id, "responsibility": fifth_lens_responsibility,
+                                  "responsibility_sha256": sha(fifth_lens_responsibility.encode("utf-8"))},
                    "cnw_reference_manifest_sha256": sha((ROOT / "runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json").read_bytes())},
     }
     if kind == "episode":

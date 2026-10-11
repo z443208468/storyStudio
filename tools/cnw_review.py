@@ -183,11 +183,18 @@ def build_lens_input(lens_id: str, full_draft: str, sources: dict[str, str]) -> 
     if missing:
         raise ValueError(f"LENS_SOURCES_MISSING:{lens_id}:{','.join(sorted(missing))}")
     selected = {name: sources[name] for name in LENSES[lens_id]}
+    project_duty = sources.get("fifth_lens_responsibility") if lens_id == "story_specific" else None
+    if project_duty:
+        selected["fifth_lens_id"] = sources.get("fifth_lens_id", "story_specific")
+        selected["fifth_lens_responsibility"] = project_duty
+    project_lens_id = sources.get("fifth_lens_id", "story_specific") if lens_id == "story_specific" else None
     packet = {
         "lens_id": lens_id,
         "draft": full_draft,
         "sources": selected,
-        "author_lens_definition": LENS_GOALS[lens_id],
+        "author_lens_definition": LENS_GOALS[lens_id] + (
+            f" 项目配置的第五 Lens 标识为「{project_lens_id}」，批准的专属职责：{project_duty}"
+            if project_duty else ""),
         "execution_mode": "LIVE_REQUEST_READY",
     }
     feedback = sources.get(f"lens_feedback:{lens_id}")

@@ -92,6 +92,7 @@ class ExportTests(unittest.TestCase):
             "reader_reward": "See one fictional choice.", "entry_state": "Unsettled.", "exit_state": "Chosen.",
             "required_beats": [{"beat_id": "B01", "goal": "Make a choice."}],
             "characters_in_scene": ["Mira"], "character_knowledge_boundary_ref": "90_canon/canon.md",
+            "review": {"fifth_lens": {"id": "adaptation-integrity", "responsibility": "Check the synthetic adaptation's reader promise."}},
             "forbidden_future_revelations": ["No later reveal."], "voice_sample_refs": ["Mira"],
             "source_id": imported["source_id"], "source_revision_id": imported["source_revision_id"],
             "source_manifest_revision_sha256": imported["source_manifest_sha256"],

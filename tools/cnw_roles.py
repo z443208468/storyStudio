@@ -426,6 +426,10 @@ def creative_assignment(contract: dict[str, Any]) -> dict[str, Any]:
 
 
 def _project_language_instruction(contract: dict[str, Any]) -> str:
+    # V1 requests predate project locale instructions; retain their exact
+    # historical prompt bytes even if a legacy display field says en-US.
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        return ""
     locale = contract.get("unit", {}).get("language_locale", contract.get("unit", {}).get("language"))
     if locale == "zh-CN":
         return ("[project_language_contract]\n本工作单元的输出语言为简体中文（zh-CN）。"
@@ -433,9 +437,7 @@ def _project_language_instruction(contract: dict[str, Any]) -> str:
     if locale == "en-US":
         return ("[project_language_contract]\nWrite this work unit in English (en-US). "
                 "Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.")
-    if contract.get("schema_version") == "cnw_work_unit_v2":
-        raise ContractError("LOCALE_UNSUPPORTED", str(locale))
-    return ""
+    raise ContractError("LOCALE_UNSUPPORTED", str(locale))
 
 
 def build_author_role_messages(role: str, contract: dict[str, Any], materials: dict[str, str], *, extra: dict[str, Any] | None = None) -> list[dict]:
@@ -450,7 +452,7 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
         # Canon, plot, contract.story, and review rules must reach prose only
         # through the Brief. The orchestrator retains validation metadata.
         return [
-            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary.\n" + language_instruction},
+            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary." + ("\n" + language_instruction if language_instruction else "")},
             {"role": "user", "content": json.dumps({"writing_brief": brief, "voice_samples": voices}, ensure_ascii=False)},
         ]
     template_text, blob = _pinned_upstream(ROLE_TO_AUTHOR_TEMPLATE[role])

@@ -66,6 +66,7 @@ class NewProjectImportTests(unittest.TestCase):
             "character_knowledge_boundary_ref":"90_canon/canon_candidates.json#status=TODO_CONFIRM",
             "forbidden_future_revelations":["Do not use unconfirmed source claims."],
             "voice_sample_refs":["90_canon/canon_candidates.json#voice-sample-review-required"],
+            "review":{"fifth_lens":{"id":"source-integrity","responsibility":"Check the synthetic source's reader promise."}},
             "source_id":result["source_id"], "source_revision_id":result["source_revision_id"],
             "source_manifest_revision_sha256":result["source_manifest_sha256"],
             "source_index_revision_sha256":result["source_index_sha256"]}

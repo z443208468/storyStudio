@@ -160,14 +160,15 @@ class Atom06Tests(unittest.TestCase):
                 return next(prose_responses), {"request_id": f"OFFLINE_LEGACY_PROSE_{len(prose_messages)}"}
             with patch.object(cnw_runner, "_contract_for", return_value=contract), \
                  patch.object(cnw_runner, "load_state", return_value=prose_state), \
-                 patch.object(cnw_runner, "_role_sources", return_value={"writing_brief": "synthetic"}), \
-                 patch.object(cnw_runner, "_author_messages", return_value=[
-                     {"role": "system", "content": "Write the complete prose in Chinese."},
-                     {"role": "user", "content": "synthetic brief"}]), \
+                 patch.object(cnw_runner, "_role_sources", return_value={
+                     "07_draft/<work_id>_writing_brief.md": "## Voice References\n- Speaker\n## Hard Constraints\nFixture only.",
+                     "92_style_engine/character_voice_samples.md": "## Speaker\nSynthetic voice."}), \
                  patch.object(cnw_runner, "cnw_live_call", side_effect=prose_dispatch), \
                  patch.object(cnw_runner, "_persist_stage"):
                 cnw_runner.execute_prose(run)
             self.assertEqual(len(prose_messages), 2)
+            self.assertEqual(prose_messages[0][0], {"role": "system", "content":
+                "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary."})
             self.assertIn("续写同一章简体中文正文", prose_messages[1][0]["content"])
             self.assertNotIn("Continue the same chapter in English", prose_messages[1][0]["content"])
 
@@ -196,9 +197,10 @@ class Atom06Tests(unittest.TestCase):
             self.assertNotIn("You are the CNW Refine Agent", refine_messages[0][0]["content"])
             _record_trace("legacy_v1_chinese_compatibility", {
                 "contract": contract, "locale_field": "absent", "legacy_language_field": "en-US",
+                "historical_first_prose_prompt": "exact match to pre-Atom-06 builder at 659a1bd",
                 "prose_requests": prose_messages, "prose_responses": ["短", "这是正文"],
                 "refine_requests": refine_messages, "refine_response": "修订后的正文",
-                "consumer_result": "v1 continuation recovery and Refine both retained historical Chinese instructions",
+                "consumer_result": "actual v1 first Prose builder retained historical prompt identity; continuation and Refine retained Chinese instructions",
                 "message_sha256": [hashlib.sha256(json.dumps(item, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
                     for item in prose_messages + refine_messages]})
 
@@ -235,6 +237,108 @@ class Atom06Tests(unittest.TestCase):
                 cnw_runner._assert_support_components_available(contract)
         _record_trace("support_enabled_unavailable", {"integrations": contract["integrations"],
             "result": "ENABLED_BUT_UNAVAILABLE", "provider_dispatch": "not reached"})
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+                        cnw_runner._critics_hook(run, "plot")
+                self.assertEqual(len(records), 1)
+                self.assertIn(records[0]["status"], {"ENABLED_BUT_UNAVAILABLE", "CRITICS_INVOCATION_FAILED", "FAILED"})
+                self.assertEqual(records[0].get("input_sha256"), hashlib.sha256(input_path.read_bytes()).hexdigest())
+                if failure_kind == "missing":
+                    process.assert_not_called()
+                _record_trace(f"critics_failure_{failure_kind}", {"recorded_hook": records[0],
+                    "consumer_result": "blocking ContractError; no CNW continuation", "provider_call": "none"})
+
+    def test_plot_and_refine_propagate_enabled_critics_failures(self):
+        failure = cnw_contract.ContractError("CRITICS_INVOCATION_FAILED", "synthetic failure")
+        contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"},
+            "unit": {"id": "synthetic", "kind": "scene", "language_locale": "en-US",
+                "target_visible_chars": 10, "min_visible_chars": 5, "max_visible_chars": 15},
+            "story": {"required_beats": []}}
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            run = project / "runs" / "RUN"
+            (run / "artifacts/revisions").mkdir(parents=True)
+            with patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                 patch.object(cnw_runner, "_run_dir_base", return_value=project), \
+                 patch.object(cnw_runner, "build_plot_request", return_value={"production_preparation": {}, "messages": []}), \
+                 patch.object(cnw_runner, "load_state", return_value={"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}}}), \
+                 patch.object(cnw_runner, "locked_run"), \
+                 patch.object(cnw_runner, "_role_sources", return_value={}), \
+                 patch.object(cnw_runner, "_author_messages", return_value=[]), \
+                 patch.object(cnw_runner, "_planning_stage", return_value={"stage": "plot"}), \
+                 patch.object(cnw_runner, "_critics_hook", side_effect=failure) as hook:
+                with self.assertRaisesRegex(cnw_contract.ContractError, "CRITICS_INVOCATION_FAILED"):
+                    cnw_runner.execute_plot(run)
+                hook.assert_called_once_with(run, "plot")
+
+            with patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                 patch.object(cnw_runner, "load_state", return_value={"stages": {
+                     "refine": {"pending_findings": None, "refinement_attempt": None},
+                     "prose": {}, "completeness_critic": {}}}), \
+                 patch.object(cnw_runner, "_read_stage_text", side_effect=lambda _run, _state, stage:
+                     '{"candidate_findings": []}' if stage == "completeness_critic" else "synthetic draft"), \
+                 patch.object(cnw_runner, "_confirmed_findings", return_value=[]), \
+                 patch.object(cnw_runner, "_critics_hook", side_effect=failure) as hook:
+                with self.assertRaisesRegex(cnw_contract.ContractError, "CRITICS_INVOCATION_FAILED"):
+                    cnw_runner.execute_refine(run)
+                hook.assert_called_once_with(run, "prose")
+
+    def test_project_specific_fifth_lens_responsibility_changes_only_its_packet(self):
+        sources = {"style_guide": "style", "forbidden_patterns": "lint", "character_bible": "character",
+            "voice_samples": "voice", "scene_cards": "cards", "writing_brief": "brief",
+            "glossary": "glossary", "timeline": "timeline", "world_bible": "world",
+            "project_specific_canon": "project canon"}
+        first, second = dict(sources), dict(sources)
+        first["fifth_lens_id"] = "reader-promise"
+        second["fifth_lens_id"] = "argument-evidence"
+        first["fifth_lens_responsibility"] = "Check whether the promised mystery receives an earned clue."
+        second["fifth_lens_responsibility"] = "Check whether the argument's central claim is supported."
+        first_packets = {lens: cnw_review.build_lens_input(lens, "synthetic draft", first) for lens in cnw_review.LENSES}
+        second_packets = {lens: cnw_review.build_lens_input(lens, "synthetic draft", second) for lens in cnw_review.LENSES}
+        for lens in cnw_review.LENSES:
+            self.assertEqual(first_packets[lens]["input_sha256"] == second_packets[lens]["input_sha256"],
+                lens != "story_specific")
+        self.assertEqual(first_packets["story_specific"]["sources"]["fifth_lens_id"], "reader-promise")
+        self.assertEqual(second_packets["story_specific"]["sources"]["fifth_lens_id"], "argument-evidence")
+        self.assertIn(first["fifth_lens_responsibility"], first_packets["story_specific"]["author_lens_definition"])
+        self.assertIn(second["fifth_lens_responsibility"], second_packets["story_specific"]["author_lens_definition"])
+
+    def test_review_source_consumer_rejects_changed_frozen_fifth_lens_duty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            for relative in ("92_style_engine/style_guide.md", "92_style_engine/forbidden_patterns.md",
+                "90_canon/character_bible.md", "92_style_engine/character_voice_samples.md",
+                "90_canon/glossary.md", "90_canon/timeline.md", "90_canon/world_bible.md", "90_canon/canon.md"):
+                _write(project, relative, "synthetic")
+            contract = {"schema_version": "cnw_work_unit_v2", "review": {"fifth_lens": {
+                "id": "reader-promise", "responsibility": "Approved synthetic responsibility.",
+                "responsibility_sha256": "0" * 64}}}
+            with patch.object(cnw_runner, "_read_stage_text", return_value="same-run synthetic stage"):
+                with self.assertRaisesRegex(cnw_contract.ContractError, "FIFTH_LENS_CONTRACT_INVALID"):
+                    cnw_runner._review_sources(Path(tmp) / "run", {"stages": {}}, contract, project)
 
     def test_fict_project_id_cannot_enable_live_fixture_path(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -302,6 +406,8 @@ class Atom06Tests(unittest.TestCase):
                 "glossary": "GLOSSARY_SOURCE", "timeline": "TIMELINE_SOURCE",
                 "world_bible": "WORLD_SOURCE", "scene_cards": "SAME_RUN_CARDS",
                 "writing_brief": "SAME_RUN_BRIEF", "project_specific_canon": "PROJECT_CANON",
+                "fifth_lens_id": "reader-promise",
+                "fifth_lens_responsibility": "Check the project's confirmed reader promise.",
             }
             state = {"max_in_flight": 1, "stages": {
                 "prose": {"status": "STAGE_MATERIALIZED", "artifact": {
@@ -309,8 +415,11 @@ class Atom06Tests(unittest.TestCase):
                     "sha256": hashlib.sha256(prose_path.read_bytes()).hexdigest()}},
                 "lint_layer2": _artifact_record(run, "lint2", json.dumps({"findings": []})),
             }}
+            responsibility = "Check the project's confirmed reader promise."
             contract = {"schema_version": "cnw_work_unit_v2", "project_id": "FICT_REVIEW",
-                        "unit": {"id": "ep01", "kind": "episode"}, "story": {}}
+                        "unit": {"id": "ep01", "kind": "episode"}, "story": {},
+                        "review": {"fifth_lens": {"id": "reader-promise", "responsibility": responsibility,
+                            "responsibility_sha256": hashlib.sha256(responsibility.encode("utf-8")).hexdigest()}}}
             lens_requests = []
             lens_responses = []
             def lenses(_run, calls):
@@ -337,7 +446,12 @@ class Atom06Tests(unittest.TestCase):
             self.assertEqual({item["role_id"] for item in lens_requests}, set(cnw_review.LENSES))
             packets = [json.loads(item["messages"][1]["content"]) for item in lens_requests]
             self.assertEqual(len({item["lens_id"] for item in packets}), 5)
-            self.assertTrue(all(set(item["sources"]) == set(cnw_review.LENSES[item["lens_id"]]) for item in packets))
+            self.assertTrue(all(set(item["sources"]) == set(cnw_review.LENSES[item["lens_id"]]) |
+                ({"fifth_lens_id", "fifth_lens_responsibility"} if item["lens_id"] == "story_specific" else set()) for item in packets))
+            fifth_packet = next(item for item in packets if item["lens_id"] == "story_specific")
+            self.assertEqual(fifth_packet["sources"]["fifth_lens_id"], "reader-promise")
+            self.assertEqual(fifth_packet["sources"]["fifth_lens_responsibility"], responsibility)
+            self.assertIn(responsibility, fifth_packet["author_lens_definition"])
             self.assertTrue(all("findings" not in item for item in packets))
             index_path = run / "artifacts/multi_lens_review.index.json"
             state["stages"]["multi_lens_review"] = {"status": "STAGE_MATERIALIZED", "artifact": {
@@ -392,7 +506,10 @@ class Atom06Tests(unittest.TestCase):
                 "integrations": {"nk": "DISABLED", "critics": "DISABLED"},
                 "unit": {"id": "ep01", "kind": "scene", "language": "en-US", "language_locale": "en-US",
                     "length_metric": "unicode_visible_code_points", "target_visible_chars": 16,
-                    "min_visible_chars": 10, "max_visible_chars": 24}, "story": {"required_beats": []}}
+                "min_visible_chars": 10, "max_visible_chars": 24}, "story": {"required_beats": []},
+                "review": {"fifth_lens": {"id": "story_specific",
+                    "responsibility": "Check the synthetic project's confirmed reader promise.",
+                    "responsibility_sha256": hashlib.sha256(b"Check the synthetic project's confirmed reader promise.").hexdigest()}}}
             _write(run, "artifacts/contract.json", json.dumps(contract))
             source_files = {
                 "92_style_engine/style_guide.md": "STYLE", "92_style_engine/forbidden_patterns.md": "LINT",

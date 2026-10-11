@@ -1509,6 +1509,18 @@ def _review_sources(run_dir: Path, state: dict, contract: dict, project_root: Pa
         "writing_brief": _read_stage_text(run_dir, state, "writing_brief"),
         "project_specific_canon": (project_root / "90_canon/canon.md").read_text(encoding="utf-8-sig"),
     }
+    review_contract = contract.get("review") if isinstance(contract.get("review"), dict) else {}
+    fifth_lens = review_contract.get("fifth_lens", {})
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        responsibility = fifth_lens.get("responsibility") if isinstance(fifth_lens, dict) else None
+        responsibility_sha = fifth_lens.get("responsibility_sha256") if isinstance(fifth_lens, dict) else None
+        configured_id = fifth_lens.get("id") if isinstance(fifth_lens, dict) else None
+        if (not isinstance(configured_id, str) or not configured_id.strip() or
+                not isinstance(responsibility, str) or not responsibility.strip() or
+                responsibility_sha != sha(responsibility.encode("utf-8"))):
+            raise ContractError("FIFTH_LENS_CONTRACT_INVALID", "project-specific responsibility is missing or its frozen SHA256 differs")
+        sources["fifth_lens_id"] = configured_id
+        sources["fifth_lens_responsibility"] = responsibility
     for lens_id in LENS_IDS:
         feedback = project_root / "08_review/lens_feedback" / f"{lens_id}.json"
         if feedback.is_file():
@@ -2030,18 +2042,25 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         _record_hook(run_dir, hook_name, evidence)
         return evidence
     if not python.is_file():
-        raise ContractError("ENABLED_BUT_UNAVAILABLE", "CritiCS runtime missing after enabled preflight")
+        evidence = {"status": "ENABLED_BUT_UNAVAILABLE", "action": action, "input_sha256": input_sha,
+                    "input_artifact": input_artifact, "reason": "CritiCS runtime missing after enabled preflight"}
+        _record_hook(run_dir, hook_name, evidence)
+        raise ContractError("ENABLED_BUT_UNAVAILABLE", evidence["reason"])
     run_name = f"{run_dir.name}-critics-{action}-{uuid.uuid4().hex[:8]}"
     command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action, "--input", str(input_path), "--run-name", run_name, "--ledger-run-id", run_dir.name]
     try:
         completed = subprocess.run(command, cwd=str(ROOT), capture_output=True, text=True, timeout=600)
     except Exception as exc:
-        evidence = {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__, "run_name": run_name}
+        evidence = {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__, "run_name": run_name,
+                    "action": action, "input_sha256": input_sha, "input_artifact": input_artifact}
         _record_hook(run_dir, hook_name, evidence)
-        return evidence
+        raise ContractError("CRITICS_INVOCATION_FAILED", f"CritiCS {action} invocation failed ({type(exc).__name__})") from exc
     evidence = {"status": "SUCCEEDED" if completed.returncode == 0 else "FAILED", "action": action, "run_name": run_name, "returncode": completed.returncode, "input_sha256": input_sha}
     if completed.returncode != 0:
         evidence["stderr_tail"] = (completed.stderr or "")[-300:]
+        evidence["input_artifact"] = input_artifact
+        _record_hook(run_dir, hook_name, evidence)
+        raise ContractError("CRITICS_INVOCATION_FAILED", f"CritiCS {action} exited with status {completed.returncode}")
     else:
         # Persist the successful native invocation before dependency validation.
         # A validator repair can re-read its paid evidence without another call.
