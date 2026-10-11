@@ -1,0 +1,54 @@
+{
+  "schema": "atom05_return_retest_raw_outputs_v1",
+  "candidate_commit": "87eee044df5de95ec2b69d3b6e405dfe41c04ea5",
+  "candidate_tree": "5aef30ba29498bbb527a71f0befd3a0dae7d5793",
+  "working_tree_mutation": "evidence only; validation commands are read-only apart from Python bytecode cache output",
+  "output_sha256_definition": "SHA256(b'stdout\\0' + exact_stdout_bytes + b'\\0stderr\\0' + exact_stderr_bytes)",
+  "commands": [
+    {
+      "command": "python -m py_compile tools/cnw_runner.py tools/cnw_project.py tests/test_cnw_runner.py",
+      "exit_code": 0,
+      "stdout_base64": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_base64": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_sha256": "ff6a19276c40004b65ae9d91a0b8bd7f25d297e43ec2d4dc014186ee8415b7fb"
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_cnw_runner.py",
+      "exit_code": 0,
+      "stdout_base64": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_base64": "Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KUmFuIDM0IHRlc3RzIGluIDEuMjU1cw0KDQpPSw0K",
+      "stderr_sha256": "0b47b87fe05d735d09a854dbc883470292c17076d397cc0b61ed801195f27935",
+      "result_sha256": "dd315a8188db277b7fba80601bd312e339aaeec527995e3457e25abba6841d91"
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_cnw_project_import.py",
+      "exit_code": 0,
+      "stdout_base64": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_base64": "Li4uLi4uLi4uLi4uLi4NCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NClJhbiAxNCB0ZXN0cyBpbiA0NS4zNjJzDQoNCk9LDQo=",
+      "stderr_sha256": "dee4b9c5641cb876afd7596b14c6ad2953d6c2d80e5dbad2cb4d0b0d60c11b24",
+      "result_sha256": "fe8b4cf3a9ee2044bc430435a8c3e5c32caa0db503c9322515615081d597e019"
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_cnw_maintenance.py",
+      "exit_code": 0,
+      "stdout_base64": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_base64": "Li4uLi4uLi4uLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KUmFuIDEwIHRlc3RzIGluIDAuNjgxcw0KDQpPSw0K",
+      "stderr_sha256": "1e4d50d0be3fbbb4eb5233763ae1b4edef6e5b5cc453ea69b5944c68371437b3",
+      "result_sha256": "deb7b8d6404cf47956bc0f2d434ab3fa41f09e59ad8fd5955edde04ba37573f8"
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_cnw_generation.py",
+      "exit_code": 0,
+      "stdout_base64": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_base64": "Li4uLi4uLi4uLi4uLi4uLi4uLi4uLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KUmFuIDIyIHRlc3RzIGluIDAuMTY4cw0KDQpPSw0K",
+      "stderr_sha256": "9433dcc7840d25a1f6af4e489457940d3f2c1f910bc857a3ec3680dab9d9ac0e",
+      "result_sha256": "5d4ffe5f0884c6dbddf30d6f37a69bfb73ca3bce970e165d878020322e492d65"
+    }
+  ]
+}

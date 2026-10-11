@@ -49,6 +49,17 @@ Return repair retest — 2026-10-11 (Writer evidence; pending independent Contro
 - The first direct dotted unittest invocation could not import `tests.test_cnw_runner`
   because `tests` is not a package; rerunning through repository unittest discovery
   passed. No test used private projects or a Provider/API call.
+- Controller RETURN evidence gap closed by rerunning against code candidate
+  C=`87eee044df5de95ec2b69d3b6e405dfe41c04ea5`,
+  T=`5aef30ba29498bbb527a71f0befd3a0dae7d5793`. The exact stdout/stderr bytes
+  are losslessly archived (Base64) with each command's exit code and SHA-256 in
+  `ATOM05_RETURN2_RAW_87eee04.json`; all five commands exited 0. Per-command
+  framed-result SHA256 values:
+  - py_compile: `ff6a19276c40004b65ae9d91a0b8bd7f25d297e43ec2d4dc014186ee8415b7fb`
+  - runner (34 tests): `dd315a8188db277b7fba80601bd312e339aaeec527995e3457e25abba6841d91`
+  - project import (14 tests): `fe8b4cf3a9ee2044bc430435a8c3e5c32caa0db503c9322515615081d597e019`
+  - maintenance (10 tests): `deb7b8d6404cf47956bc0f2d434ab3fa41f09e59ad8fd5955edde04ba37573f8`
+  - generation/publish (22 tests): `5d4ffe5f0884c6dbddf30d6f37a69bfb73ca3bce970e165d878020322e492d65`
 
 Boundary
 - No DataHome, legacy J19 root, v5 private project, global cost ledger, run, or

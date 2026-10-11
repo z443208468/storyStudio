@@ -29,6 +29,10 @@ project lock:
 | `execute_completeness()` Lens feedback | Read/de-duplicate/update now runs under `project_write_lock`; it re-reads the locked preimage and atomically replaces the feedback file. | Two concurrent synthetic updates to one Lens preserve both instructions while revision publication uses the same critical section (`test_lens_feedback_publication_serializes_concurrent_feedback_and_publish`). |
 | `incremental_update()` source staging + semantic import | The public Workflow 02 operation acquires the project lock before state recovery/checks and raw `_INBOX/originals` staging, and runs both supported source/semantic import bodies without nested acquisition. | Fixture races the actual incremental staging entrypoint and revision publication, checking the staged source exists before semantic import, one active writer, and no lost authority updates (`test_incremental_staging_and_publish_share_one_project_lock`). |
 
-Focused retest results are recorded in `ATOM05_ENGINE_RETEST_20261011.txt`.
-These new results are Writer evidence only. Exact repaired C/T remains subject
-to independent Controller review; nothing here authorizes private-data cutover.
+Focused retest results and losslessly archived raw command outputs (exit codes,
+stdout/stderr bytes and framed SHA-256) are recorded in
+`ATOM05_ENGINE_RETEST_20261011.txt` and `ATOM05_RETURN2_RAW_87eee04.json`. The
+raw result manifest binds to the tested code candidate C=`87eee044df5de95ec2b69d3b6e405dfe41c04ea5`,
+T=`5aef30ba29498bbb527a71f0befd3a0dae7d5793`. These remain Writer evidence
+only; the evidence-only follow-up commit must itself receive independent
+Controller review. Nothing here authorizes private-data cutover.
