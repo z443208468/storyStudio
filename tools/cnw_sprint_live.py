@@ -198,7 +198,11 @@ def render_batch_report(report: dict) -> str:
 def run_live_sprint(project_root: str | Path, sprint_id: str, plan_path: str | Path) -> dict:
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
-        raise ContractError("SPRINT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+        try:
+            from .cnw_project import _registered_project_identity
+        except ImportError:
+            from cnw_project import _registered_project_identity
+        _registered_project_identity(root)
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,63}", sprint_id):
         raise ContractError("SPRINT_ID_INVALID", sprint_id)
     supplied = Path(plan_path)

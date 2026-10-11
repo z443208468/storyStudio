@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import hashlib
 import shutil
 import subprocess
 import tempfile
@@ -9,7 +10,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tools import cnw_project, cnw_maintenance, cnw_sprint
+from tools import cnw_project, cnw_maintenance, cnw_sprint, cnw_sprint_live, studio_health
+from tools.project_paths import create_project, setup_data_home
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO = ROOT / "tools" / "studio.ps1"
@@ -61,6 +63,72 @@ class StudioCliRouteTests(unittest.TestCase):
         self.assertEqual(payload["project"], "NOT_SELECTED")
         self.assertEqual(payload["provider_call"], "none")
         self.assertEqual(payload["generic_live_production"], "NOT_RUN")
+        self.assertNotEqual(payload["author_reference"], "PINNED_REFERENCE_AVAILABLE")
+        self.assertIn(payload["author_reference"], {
+            "PINNED_REFERENCE_VERIFIED", "PIN_MISMATCH", "RUNTIME_MISSING", "UNVERIFIED",
+        })
+
+    def test_health_checks_reject_reference_and_build_identity_mismatch(self):
+        with tempfile.TemporaryDirectory(prefix="studio-health-") as temporary:
+            root = Path(temporary)
+            reference_root = root / "runtime/reference/cnw_97ad71fe5e5e"
+            rows = []
+            for source_path, blob in studio_health.REFERENCE_BLOBS.items():
+                relative = f"runtime/reference/cnw_97ad71fe5e5e/{source_path}"
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                content = f"fixture:{source_path}\n".encode()
+                target.write_bytes(content)
+                rows.append({"source_path": source_path, "local_reference": relative,
+                             "upstream_git_blob": blob, "bytes": len(content),
+                             "sha256": hashlib.sha256(content).hexdigest()})
+            reference_root.mkdir(parents=True, exist_ok=True)
+            manifest_path = reference_root / "CNW_LOCAL_REFERENCE_MANIFEST.json"
+            manifest = {"project": "MintoTsukino/claude-novel-workflow",
+                        "upstream_commit": studio_health.REFERENCE_COMMIT,
+                        "file_count": len(rows), "references": rows}
+            manifest_path.write_text(__import__("json").dumps(manifest), encoding="utf-8")
+            self.assertEqual(studio_health.verify_author_reference(root), "PINNED_REFERENCE_VERIFIED")
+            manifest["upstream_commit"] = "wrong-pin"
+            manifest_path.write_text(__import__("json").dumps(manifest), encoding="utf-8")
+            self.assertEqual(studio_health.verify_author_reference(root), "PIN_MISMATCH")
+
+            patch_bytes, lock_bytes = b"synthetic patch\n", b"synthetic lock\n"
+            (root / "patches/critics").mkdir(parents=True)
+            (root / "patches/critics/patch.diff").write_bytes(patch_bytes)
+            (root / "requirements").mkdir()
+            (root / "requirements/critics.lock").write_bytes(lock_bytes)
+            patch_hash, lock_hash = hashlib.sha256(patch_bytes).hexdigest(), hashlib.sha256(lock_bytes).hexdigest()
+            build_id = f"p2-02-12345678-{patch_hash[:12]}-{lock_hash[:12]}"
+            build = root / "runtime/patched/CritiCS" / build_id
+            (build / "critics/plan").mkdir(parents=True)
+            (build / "critics/text").mkdir(parents=True)
+            (build / "critics/plan/plan.py").write_text("# fixture\n", encoding="utf-8")
+            (build / "critics/text/text.py").write_text("# fixture\n", encoding="utf-8")
+            index_path = root / "patches/critics/PATCH_INDEX.json"
+            index = {"source_commit": "1234567890abcdef", "ordered_patch_files": ["patches/critics/patch.diff"],
+                     "patch_sha256": [patch_hash], "dependency_lock": "requirements/critics.lock",
+                     "dependency_lock_sha256": lock_hash, "runtime_build_id": build_id,
+                     "runtime_path": f"runtime/patched/CritiCS/{build_id}"}
+            index_path.write_text(__import__("json").dumps(index), encoding="utf-8")
+            self.assertEqual(studio_health.verify_optional_build(root, "critics"), "AVAILABLE_PINNED")
+            index["runtime_build_id"] = "unrelated-build"
+            index_path.write_text(__import__("json").dumps(index), encoding="utf-8")
+            self.assertEqual(studio_health.verify_optional_build(root, "critics"), "IDENTITY_MISMATCH")
+
+    def test_live_sprint_accepts_registered_root_before_plan_validation(self):
+        with tempfile.TemporaryDirectory(prefix="studio-live-sprint-root-") as temporary:
+            base = Path(temporary)
+            data_home = base / "data-home"
+            pointer = base / "config" / "StoryStudio" / "setup.json"
+            setup_data_home(data_home, pointer_path=pointer)
+            project = create_project(project_id="SPRINT_FIXTURE", pointer_path=pointer)
+            project_root = Path(project["project_root"])
+            plan = project_root / "sprint-plan.json"
+            plan.write_text("{}", encoding="utf-8")
+            with self.assertRaises(cnw_project.ContractError) as caught:
+                cnw_sprint_live.run_live_sprint(project_root, "fixture-sprint", plan)
+            self.assertEqual(str(caught.exception).split(":", 1)[0], "SPRINT_REQUIRES_FIVE_EPISODES")
 
     def test_project_routes_fail_closed_before_dispatch(self):
         guarded = re.search(r"\$ProjectCommands\s*=\s*@\((.*?)\)", self.script, re.S)

@@ -1,22 +1,33 @@
 ATOM-04 Writer verification record — 2026-10-11
-Status: local verification passed; independent Controller verdict pending; no candidate commit exists yet.
+Status: initial candidate received RETURN; corrected candidate is locally verified and awaiting independent Controller verdict.
 
 Plan: plans/MASTER_PLAN_GENERIC_APP_R5.md
 Plan SHA256: 5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF
-Current branch before candidate: main
+Returned candidate: C=743b4fa8be38cf3dc54c6cd2ff0a66aac4cbe402, T=dfcf83b53c065a06b1411f5be0bed09840b19713
+Corrected candidate identity: record the new C/T after its local commit; no remote push until Controller ACCEPT.
 
 Checks performed on synthetic/temp data only:
 - python -m unittest discover -s tests -p test_studio_cli_routes.py
-  Result: 9 tests, OK (134.108s)
+  Initial result before Controller RETURN: 9 tests, OK (134.108s)
+- python -m unittest discover -s tests -p test_studio_cli_routes.py
+  Corrected result after Controller RETURN: 11 tests, OK (66.123s)
+- Targeted registered-root live Sprint admission test
+  Result: 1 test, OK (6.021s); invalid synthetic plan is rejected at plan validation after root identity admission, before any provider route.
+- Synthetic health verifier checks
+  Included in corrected route suite; validates correct synthetic reference/build identity and rejects wrong pin/build ID.
 - python -m unittest discover -s tests -p test_cnw_maintenance.py
   Result: 10 tests, OK (0.691s)
 - py_compile for tools/cnw_project.py, tools/cnw_maintenance.py, tools/cnw_sprint.py
   Result: OK
+- py_compile for tools/studio_health.py and tools/cnw_sprint_live.py
+  Result: OK (along with cnw_project.py, cnw_maintenance.py, and cnw_sprint.py).
 - PowerShell parser validation for tools/studio.ps1
   Result: OK
 - Dedicated registered setup/import/source-list integration test through studio.ps1
   Included in route suite; uses a temporary DataHome, temporary setup pointer, and fictional Markdown source.
 
-Coverage includes app-only doctor without project selection; project-route fail-closed behavior; explicit legacy scene checkpoint path; setup → project-import → source-list; source registry identity verification; and maintenance/Sprint generic-root identity boundary checks.
+Coverage includes app-only doctor without project selection; project-route fail-closed behavior; explicit legacy scene checkpoint path; setup → project-import → source-list; source registry identity verification; offline and live Sprint generic-root identity boundaries; and doctor rejection of synthetic reference/build identity mismatches.
+
+Current checkout `doctor` health result: author reference `PINNED_REFERENCE_VERIFIED`; optional CritiCS and NK each report `IDENTITY_MISMATCH` because current patch/lock bytes do not match the indexed values. Doctor makes no availability claim for either optional runtime.
 
 No private project/source data or old run was read or changed. No W10 protected local file was read, staged, or modified. No API/provider call, fee request, or story generation was made. No existing project, historical artifact, run, cost ledger, or source registry was changed. This record does not claim complete command semantics, 11-stage execution, or Live readiness; those remain for the plan's later gates.

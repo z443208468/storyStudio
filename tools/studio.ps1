@@ -96,15 +96,22 @@ switch ($Command) {
     'doctor' {
         $EngineFiles=@('tools/cnw_runner.py','tools/cnw_roles.py','tools/cnw_contract.py','tools/project_paths.py','templates/config/workflow.template.yml')
         $MissingEngineFiles=@($EngineFiles | Where-Object { -not (Test-Path -LiteralPath (Join-Path $Root $_) -PathType Leaf) })
-        $ReferenceManifest=Join-Path $Root 'runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json'
         $CoreRuntime='RUNTIME_MISSING'
         if ($Python -and (Test-Path -LiteralPath $Python -PathType Leaf)) {
             & $Python -c 'import httpx' 2>$null
             if ($LASTEXITCODE -eq 0) { $CoreRuntime='READY' }
         }
-        $OptionalCritics=if ((Test-Path -LiteralPath (Join-Path $Root 'patches/critics/PATCH_INDEX.json')) -and (Test-Path -LiteralPath (Join-Path $Root 'runtime/patched/CritiCS'))) { 'AVAILABLE' } else { 'UNAVAILABLE' }
-        $OptionalNk=if ((Test-Path -LiteralPath (Join-Path $Root 'patches/nk/PATCH_INDEX.json')) -and (Test-Path -LiteralPath (Join-Path $Root 'runtime/patched/NK'))) { 'AVAILABLE' } else { 'UNAVAILABLE' }
-        $Result=[ordered]@{status=$(if ($MissingEngineFiles.Count -eq 0) { 'ENGINE_READY' } else { 'ENGINE_INCOMPLETE' });missing_engine_files=$MissingEngineFiles;core_runtime=$CoreRuntime;author_reference=$(if (Test-Path -LiteralPath $ReferenceManifest -PathType Leaf) { 'PINNED_REFERENCE_AVAILABLE' } else { 'RUNTIME_MISSING' });optional_critics=$OptionalCritics;optional_nk=$OptionalNk;project=$(if ($AppOnly -or -not $ProjectRootPath) { 'NOT_SELECTED' } else { $ProjectRootPath });provider_call='none';generic_live_production='NOT_RUN'}
+        $AssetHealth=[ordered]@{author_reference='UNVERIFIED';optional_critics='UNVERIFIED';optional_nk='UNVERIFIED'}
+        if ($Python -and (Test-Path -LiteralPath $Python -PathType Leaf)) {
+            $HealthOutput=& $Python (Join-Path $Root 'tools/studio_health.py') --repo-root $Root
+            if ($LASTEXITCODE -eq 0) {
+                $Health=$HealthOutput | ConvertFrom-Json
+                $AssetHealth.author_reference=$Health.author_reference
+                $AssetHealth.optional_critics=$Health.optional_critics
+                $AssetHealth.optional_nk=$Health.optional_nk
+            }
+        }
+        $Result=[ordered]@{status=$(if ($MissingEngineFiles.Count -eq 0) { 'ENGINE_READY' } else { 'ENGINE_INCOMPLETE' });missing_engine_files=$MissingEngineFiles;core_runtime=$CoreRuntime;author_reference=$AssetHealth.author_reference;optional_critics=$AssetHealth.optional_critics;optional_nk=$AssetHealth.optional_nk;project=$(if ($AppOnly -or -not $ProjectRootPath) { 'NOT_SELECTED' } else { $ProjectRootPath });provider_call='none';generic_live_production='NOT_RUN'}
         $Result | ConvertTo-Json -Depth 4
     }
     'setup' {

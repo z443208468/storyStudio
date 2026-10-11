@@ -13,7 +13,7 @@ entrypoint checks.
 
 | COMMAND | REFERENCED_IMPL | IMPLEMENTATION_TRACKED? | PURE_GENERIC? | STATUS | CLEAN_CLONE_SMOKE_TEST |
 |---|---|---:|---:|---|---|
-| doctor | `tools/studio.ps1` | YES | YES | SUPPORTED | `test_doctor_app_only_needs_no_project` |
+| doctor | `tools/studio.ps1` → `tools/studio_health.py` | YES | YES | SUPPORTED | `test_health_checks_reject_reference_and_build_identity_mismatch` |
 | setup | `tools/cnw_project.py:setup` → `tools/project_paths.py:setup_data_home` | YES | YES | SUPPORTED | `test_registered_project_commands_use_temp_data_home` |
 | project-init | `tools/cnw_project.py:registered-init` | YES | YES | SUPPORTED | `test_registered_project_commands_use_temp_data_home` |
 | project-import | `tools/cnw_project.py:registered-import` | YES | YES | SUPPORTED | `test_registered_project_commands_use_temp_data_home` |
@@ -36,7 +36,7 @@ entrypoint checks.
 | show-run | `tools/cnw_runner.py:show-run` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
 | verify-history | `tools/cnw_runner.py:verify-history` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
 | verify-live | `tools/cnw_runner.py:verify-live` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
-| sprint | `tools/cnw_runner.py:sprint` / `tools/cnw_sprint.py` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
+| sprint | `tools/cnw_runner.py:sprint` → `tools/cnw_sprint.py` / `tools/cnw_sprint_live.py` | YES | YES | SUPPORTED | `test_live_sprint_accepts_registered_root_before_plan_validation` |
 | prepare | `tools/studio.ps1:Assert-Prepared` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | verify | `tools/studio.ps1` (legacy offline patch check; live delegates to run-bound `verify-live`) | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | prepare-live | `tools/cnw_live_executor.py` | NO (protected local WIP) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
