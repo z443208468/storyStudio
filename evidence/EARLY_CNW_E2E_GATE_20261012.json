@@ -4,12 +4,12 @@
   "run_identity": {
     "run_id": "EARLY-E2E-ADAPT",
     "project_id": "TIDELINE",
-    "project_instance_id": "46b23446-4c27-4a6e-906d-48b81d6a8426",
-    "contract_sha256": "01b63a3a72408f8fa4f03b2d1e06a60bf77db52a0ea6374b1b9f4f0009eef70e",
+    "project_instance_id": "d4a6b857-b812-4f96-8c5c-695a01f69c96",
+    "contract_sha256": "b64852471c4262b709e5f5006177b0153568ca1d03fa594d59a2520ae23aadd5",
     "work_intent": "ADAPT_SOURCE",
     "source_id": "61f61b74038ace77",
     "source_revision_id": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
-    "source_manifest_revision_sha256": "9b735fd57f8bc246da62ef742fb09ea8ac66a5797dd9ada56b910728611f8a43",
+    "source_manifest_revision_sha256": "2b907913e97348868cee8009f6290c916176aaf880b1c8439311106ca38b74ee",
     "selected_excerpt_sha256": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
     "unselected_source_sha256": "180507a34ee2287f153bc24d3634fb8adbd8c480f6f2501a526207eb8fb8f0fb"
   },
@@ -23,10 +23,10 @@
       },
       "artifact_path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
       "artifact_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
-      "execution_identity_sha256": "401ecb4b6e97b65bfcfe43d922a8bfd5d85cbcaff96fdd0890c01dae8a9b9ad0",
-      "execution_input_sha256": "cf9591bb31bb27a174830d2cd49d3f4fa2012f49898590ec0417b1f0c15d80e6",
+      "execution_identity_sha256": "559ba93b49ab370595c37003200a89593d3b7ce1273c50ed3812e53d34602a95",
+      "execution_input_sha256": "a281acacf473485f2a43b8659b7f38603638affa6c2c40a79697dba65277387c",
       "execution_input_hashes": {
-        "messages": "5d09b348ac22d5bf6155fb0067d01cf70a1e835fd1a8c95f825f02a0e77d0a68"
+        "messages": "dda378b09b59dec45b65d96c4efcabebc106be92f07004bdc03923facf2c7488"
       },
       "provider_request_ids": [
         "MOCK-0001-plot-plot_agent"
@@ -41,7 +41,7 @@
       },
       "artifact_path": "artifacts/candidates/scene_cards/2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf.md",
       "artifact_sha256": "2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf",
-      "execution_identity_sha256": "4f42b1f4a3af52d0ba1d1c716b3c723bea4534fc270045c18d93f73a78f533ec",
+      "execution_identity_sha256": "c8d04917a3735fb981a4047f7e32b2552aa711598a7552d5e3c59f5d9fda0a71",
       "execution_input_sha256": "4fcdfdf8beedec0224c7dbae6019f837d15d2eaccb5e34b902fa6c4654476003",
       "execution_input_hashes": {
         "messages": "882aaef20b82cab9550409dd081252f2a7ed345b4a9a501930cce536a7bc71e7"
@@ -59,7 +59,7 @@
       },
       "artifact_path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
       "artifact_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
-      "execution_identity_sha256": "dc114688d7c35f2358c091750161856eeebf4b6182e6784cb3f5db7054548bdb",
+      "execution_identity_sha256": "8a4031189936aa6f127f5e8260d78ef77cfa09cabfc73001dc9c957c5c4c4af8",
       "execution_input_sha256": "5770b3e713cfa2a30a78602134d8506380629738e3386cfcd6425076861f35aa",
       "execution_input_hashes": {
         "messages": "4bff206e74c5563ce11ed3ebf5ecd86f1299bd15f78936decdb64691ab90f031"
@@ -79,7 +79,7 @@
       },
       "artifact_path": "artifacts/candidates/prose/0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709.md",
       "artifact_sha256": "0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709",
-      "execution_identity_sha256": "072ba259d0a1783ae9417f73b740704b21a3e6c593911e22aded2db23f1068bf",
+      "execution_identity_sha256": "c54213aad68679006ec38613863c32fea5c3e70340ecd2c0d0405a3870ba4904",
       "execution_input_sha256": "58fd1910298af5218041c2ee7a9d4117e0a8a0717457735e5149c13dc1f26a4b",
       "execution_input_hashes": {
         "messages": "f514e39c1f254598b170cf334156cdd1ffd3b564c4ba7e93f2f9a76f9d80db35"
@@ -95,9 +95,9 @@
         "findings": 0,
         "provider_call": "none"
       },
-      "artifact_path": "artifacts/candidates/lint_layer1/9f6e2546c76e1957bbac6057e9165ecbca5c4346a103d39ad0384f451162939d.json",
-      "artifact_sha256": "9f6e2546c76e1957bbac6057e9165ecbca5c4346a103d39ad0384f451162939d",
-      "execution_identity_sha256": "6f5d5a60bc83e7a513dd39d9b2a1139f8c3af71d7dbc243d9c0909300e86759b",
+      "artifact_path": "artifacts/candidates/lint_layer1/02e274dface4277d39540457e887abd84d98a3c8ea8c631661e24d667124359c.json",
+      "artifact_sha256": "02e274dface4277d39540457e887abd84d98a3c8ea8c631661e24d667124359c",
+      "execution_identity_sha256": "387c9bcd7f0b5be014dfdee3b246f6a993609be98cdfb4925e3b8ef1dbed1824",
       "execution_input_sha256": "d51691324070435ffad027b9efe25e9983cd8381f4939238be9b08b9b7112059",
       "execution_input_hashes": {
         "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
@@ -112,9 +112,9 @@
         "findings": 0,
         "provider_call": "none"
       },
-      "artifact_path": "artifacts/candidates/lint_layer2/9ca4c1740fc6be5403ceae5bdb31208fb6f16b92ae2fe2d2c61f3911007a17e3.json",
-      "artifact_sha256": "9ca4c1740fc6be5403ceae5bdb31208fb6f16b92ae2fe2d2c61f3911007a17e3",
-      "execution_identity_sha256": "6ca9458d51022c03919091d9cc4074d1e91c02678f8c982567f0c6d7ecf76c3b",
+      "artifact_path": "artifacts/candidates/lint_layer2/ddf4f555573d2ab03235412ec311f5ec83424257ce9464d16de25284dcd525d4.json",
+      "artifact_sha256": "ddf4f555573d2ab03235412ec311f5ec83424257ce9464d16de25284dcd525d4",
+      "execution_identity_sha256": "2c4f5889e49f134f1989665a851923405cb8c61a33be84aa4c2d0877dc74f0d8",
       "execution_input_sha256": "d51691324070435ffad027b9efe25e9983cd8381f4939238be9b08b9b7112059",
       "execution_input_hashes": {
         "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
@@ -131,7 +131,7 @@
       },
       "artifact_path": "artifacts/candidates/multi_lens_review/1d006b0a866a30d3ff7635b669246322ed8a7ed31c2a565cde097777abab3da3.json",
       "artifact_sha256": "1d006b0a866a30d3ff7635b669246322ed8a7ed31c2a565cde097777abab3da3",
-      "execution_identity_sha256": "7465d001f849e2390950d4068b668a75cfb41472837977b7e8e27c0e82740396",
+      "execution_identity_sha256": "7a799e66964b3c4191c60074edb91a46e7ce3fcd1e648c784f9749c1458abbf3",
       "execution_input_sha256": "94a7bcc6fc961dc6f80e40d62f321dca95cb9ae5cd508fc99324852ad400ee4d",
       "execution_input_hashes": {
         "lens_messages": "1b32a569e47a126f96bad6791f9da71a57f310a6085d79a0d8e269a23cf81d5f",
@@ -154,11 +154,11 @@
       },
       "artifact_path": "artifacts/candidates/adversarial_verify/796741dd6138b430aeb848da6f7a732c5aa2a6e67759fdc988de7b7f4a7e97d0.json",
       "artifact_sha256": "796741dd6138b430aeb848da6f7a732c5aa2a6e67759fdc988de7b7f4a7e97d0",
-      "execution_identity_sha256": "811dba188e7fcbac0284d5b6fd56699f151ec7149d5e3a7a79761304db6d4369",
-      "execution_input_sha256": "e71e97a762d8740a2dcdaec8542f8847569354fe06d8d13bce6f14b18d26767e",
+      "execution_identity_sha256": "f2029b1267bf19b04fc94f4be56a287c86005d754b8aeaae59003b9b0a51b070",
+      "execution_input_sha256": "a1569ea8d99dd382b02ee1631618fd93eae1626895c7399349d0a91ff384bcd7",
       "execution_input_hashes": {
         "evidence": "31aed5548d2063a2cbe1220d5ff3fa4bb795875eb840eb851e35646b4b6e5e2d",
-        "lint2": "e198b92fa4ff6245fa981630920a4f3b7f81263c10f0ae8686c8947e90e252f4",
+        "lint2": "47c9f995d0bcd545ba0a5988b2b9181c58082ef36e611cd62b72eab95de68dc3",
         "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
         "review": "85115246562bbf292e062042881c0d73105db9d56914617338484f2a9a4c8c16",
         "verifier_goals": "c6a82c90ead37b3345e9ceb749a977fe573c198a009bf964590473bf4b6c7c47"
@@ -177,7 +177,7 @@
       },
       "artifact_path": "artifacts/candidates/completeness_critic/1b57ce4aa04f65d212bd37cff5a211d196280f11621ebcdb537f1d0ccb3615fe.json",
       "artifact_sha256": "1b57ce4aa04f65d212bd37cff5a211d196280f11621ebcdb537f1d0ccb3615fe",
-      "execution_identity_sha256": "851626c3efaa9a1c75c7f0aedb227515844ace15758f3734ee5de4667a4068cf",
+      "execution_identity_sha256": "c5bb1ac21e5a8e4a6f41d6138df06918c6e8bb8b36991581a65021a6ced98baa",
       "execution_input_sha256": "d20c40c45819fd9ef35d353920cfa81415437f2e16832b92eefee5ca7911a101",
       "execution_input_hashes": {
         "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
@@ -203,7 +203,7 @@
       },
       "artifact_path": "artifacts/candidates/refine/f1cef658a245548e9dc5d7f57f2a1144b536bafa94e94ba15cdc7969337d77a1.md",
       "artifact_sha256": "f1cef658a245548e9dc5d7f57f2a1144b536bafa94e94ba15cdc7969337d77a1",
-      "execution_identity_sha256": "354170847440ca67782243f42f0a626aabb8c0cb7184cb7aa45c8dbf0fa8acdd",
+      "execution_identity_sha256": "89061977ed7aa85e4bd63676a3e750fbe8ce51764f89144f3439d2a2a49847e4",
       "execution_input_sha256": "6bb8a48f9cb1914401915616d2fa62cae486b9098e417f6cba6be1001ac496d5",
       "execution_input_hashes": {
         "brief": "2ca978186d00325e03f31a9bb534df36ca5d49a35ce57f25ca4cbf0e81cf281b",
@@ -225,7 +225,7 @@
       },
       "artifact_path": "artifacts/candidates/re_review/03c2fd1119399e95aefa797b78a419ba5b7521237cd7df758fb158ea649f2b7d.json",
       "artifact_sha256": "03c2fd1119399e95aefa797b78a419ba5b7521237cd7df758fb158ea649f2b7d",
-      "execution_identity_sha256": "1af8d54c67fc71655c407b1dc5a788f9de2919a23550441cf6c29a0f538162aa",
+      "execution_identity_sha256": "6f9166da5aa34315a1a0bd8f9de4a3b5a99ad49ad52b3c70ee25ce8c9f28bf89",
       "execution_input_sha256": "ba927d43c1d6408a5bdf8ff0d17a7e2130ab5e7249eba3fb39d6b4e5a1db7773",
       "execution_input_hashes": {
         "affected": "b4a929ecfd92ae77ec65279138cd9dd0ce36dc697daabd0e058b767d9e72fba6",
@@ -268,15 +268,15 @@
     },
     {
       "stage": "lint_layer1",
-      "artifact_path": "artifacts/candidates/lint_layer1/9f6e2546c76e1957bbac6057e9165ecbca5c4346a103d39ad0384f451162939d.json",
-      "sha256": "9f6e2546c76e1957bbac6057e9165ecbca5c4346a103d39ad0384f451162939d",
-      "content": "{\n  \"layer\": \"surface\",\n  \"findings\": [],\n  \"source_sha256\": \"0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709\",\n  \"text_modified\": false,\n  \"status\": \"NO_EXECUTABLE_RULES\",\n  \"rules_source\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-a1i0v_b4\\\\ExplicitTestDataHome\\\\projects\\\\46b23446-4c27-4a6e-906d-48b81d6a8426\\\\92_style_engine\\\\forbidden_patterns.md\",\n  \"rules_sha256\": \"660540f2d5326f5fd4f031cf6b67ea09944e7292aea7cf81f57e3f5c8d86350e\",\n  \"executable_rule_count\": 0,\n  \"semantic_review_items\": [],\n  \"stage\": \"lint_layer1\",\n  \"role\": \"local_deterministic_runner\"\n}"
+      "artifact_path": "artifacts/candidates/lint_layer1/02e274dface4277d39540457e887abd84d98a3c8ea8c631661e24d667124359c.json",
+      "sha256": "02e274dface4277d39540457e887abd84d98a3c8ea8c631661e24d667124359c",
+      "content": "{\n  \"layer\": \"surface\",\n  \"findings\": [],\n  \"source_sha256\": \"0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709\",\n  \"text_modified\": false,\n  \"status\": \"NO_EXECUTABLE_RULES\",\n  \"rules_source\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-rs7qkd1t\\\\ExplicitTestDataHome\\\\projects\\\\d4a6b857-b812-4f96-8c5c-695a01f69c96\\\\92_style_engine\\\\forbidden_patterns.md\",\n  \"rules_sha256\": \"660540f2d5326f5fd4f031cf6b67ea09944e7292aea7cf81f57e3f5c8d86350e\",\n  \"executable_rule_count\": 0,\n  \"semantic_review_items\": [],\n  \"stage\": \"lint_layer1\",\n  \"role\": \"local_deterministic_runner\"\n}"
     },
     {
       "stage": "lint_layer2",
-      "artifact_path": "artifacts/candidates/lint_layer2/9ca4c1740fc6be5403ceae5bdb31208fb6f16b92ae2fe2d2c61f3911007a17e3.json",
-      "sha256": "9ca4c1740fc6be5403ceae5bdb31208fb6f16b92ae2fe2d2c61f3911007a17e3",
-      "content": "{\n  \"layer\": \"structural\",\n  \"findings\": [],\n  \"source_sha256\": \"0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709\",\n  \"text_modified\": false,\n  \"status\": \"NO_EXECUTABLE_RULES\",\n  \"rules_source\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-a1i0v_b4\\\\ExplicitTestDataHome\\\\projects\\\\46b23446-4c27-4a6e-906d-48b81d6a8426\\\\92_style_engine\\\\forbidden_patterns.md\",\n  \"rules_sha256\": \"660540f2d5326f5fd4f031cf6b67ea09944e7292aea7cf81f57e3f5c8d86350e\",\n  \"executable_rule_count\": 0,\n  \"semantic_review_items\": [],\n  \"stage\": \"lint_layer2\",\n  \"role\": \"local_deterministic_runner\"\n}"
+      "artifact_path": "artifacts/candidates/lint_layer2/ddf4f555573d2ab03235412ec311f5ec83424257ce9464d16de25284dcd525d4.json",
+      "sha256": "ddf4f555573d2ab03235412ec311f5ec83424257ce9464d16de25284dcd525d4",
+      "content": "{\n  \"layer\": \"structural\",\n  \"findings\": [],\n  \"source_sha256\": \"0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709\",\n  \"text_modified\": false,\n  \"status\": \"NO_EXECUTABLE_RULES\",\n  \"rules_source\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-rs7qkd1t\\\\ExplicitTestDataHome\\\\projects\\\\d4a6b857-b812-4f96-8c5c-695a01f69c96\\\\92_style_engine\\\\forbidden_patterns.md\",\n  \"rules_sha256\": \"660540f2d5326f5fd4f031cf6b67ea09944e7292aea7cf81f57e3f5c8d86350e\",\n  \"executable_rule_count\": 0,\n  \"semantic_review_items\": [],\n  \"stage\": \"lint_layer2\",\n  \"role\": \"local_deterministic_runner\"\n}"
     },
     {
       "stage": "multi_lens_review",
@@ -314,8 +314,8 @@
       "stage": "plot",
       "role_id": "plot_agent",
       "request_id": "MOCK-0001-plot-plot_agent",
-      "input_sha256": "ca10ff77581804fe481bc0f1179722d61a1f6df3071d3759ea7209f705daeaa7",
-      "request_sha256": "cf9591bb31bb27a174830d2cd49d3f4fa2012f49898590ec0417b1f0c15d80e6",
+      "input_sha256": "cc94292bc7b16e47b492ffa194be21a0dafa6a2fa252a294dfd4999e32e7fe9d",
+      "request_sha256": "a281acacf473485f2a43b8659b7f38603638affa6c2c40a79697dba65277387c",
       "raw_response_sha256": "a923f24f7d28a5c5e348089251be7d79168ef2f2374d2c19d6625fb9884f3952",
       "output_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
       "mode": "MOCK_ONLY",
@@ -367,6 +367,17 @@
     },
     {
       "stage": "multi_lens_review",
+      "role_id": "plot",
+      "request_id": "MOCK-0007-multi_lens_review-plot",
+      "input_sha256": "e5ab39ed3e6c4b620d2ae564b4a50596e8a1bcbfbc1f9b9feb95be6d4791ead3",
+      "request_sha256": "50a0c0739be50ad95fec95e449e15f11400a8807ad1835e7d531b75d2bb6a5dc",
+      "raw_response_sha256": "12724739c4e3edcf34566e32a2a580f0eda083f63b73f67c748098cf1f58f790",
+      "output_sha256": "5847dabf902f5beda2983e903bf8e3ae5fdd68120b1962b884c2577ecbbeb1cb",
+      "mode": "MOCK_ONLY",
+      "simulation_status": "SIMULATED"
+    },
+    {
+      "stage": "multi_lens_review",
       "role_id": "style",
       "request_id": "MOCK-0005-multi_lens_review-style",
       "input_sha256": "5f0335d59452528dd39d3dc948dd29d9c10635dca0709b7343b07ff9669e41fc",
@@ -384,17 +395,6 @@
       "request_sha256": "90e1957775bd4b810a827fed32112d36631ef77db9b14d8bb682ff4ec47f35b0",
       "raw_response_sha256": "a7e5ad1d0960cda9e80098f9c7fc7141bd32e4c4eae043f4a63672af39ed0e03",
       "output_sha256": "42c59f6eacd047782e66e3c44c3103e2f12a58c8867073360a4000ae8954eebb",
-      "mode": "MOCK_ONLY",
-      "simulation_status": "SIMULATED"
-    },
-    {
-      "stage": "multi_lens_review",
-      "role_id": "plot",
-      "request_id": "MOCK-0007-multi_lens_review-plot",
-      "input_sha256": "e5ab39ed3e6c4b620d2ae564b4a50596e8a1bcbfbc1f9b9feb95be6d4791ead3",
-      "request_sha256": "50a0c0739be50ad95fec95e449e15f11400a8807ad1835e7d531b75d2bb6a5dc",
-      "raw_response_sha256": "12724739c4e3edcf34566e32a2a580f0eda083f63b73f67c748098cf1f58f790",
-      "output_sha256": "5847dabf902f5beda2983e903bf8e3ae5fdd68120b1962b884c2577ecbbeb1cb",
       "mode": "MOCK_ONLY",
       "simulation_status": "SIMULATED"
     },
@@ -492,8 +492,8 @@
       "stage": "plot",
       "role_id": "plot_agent",
       "request_id": "MOCK-0001-plot-plot_agent",
-      "input_sha256": "ca10ff77581804fe481bc0f1179722d61a1f6df3071d3759ea7209f705daeaa7",
-      "request_sha256": "cf9591bb31bb27a174830d2cd49d3f4fa2012f49898590ec0417b1f0c15d80e6",
+      "input_sha256": "cc94292bc7b16e47b492ffa194be21a0dafa6a2fa252a294dfd4999e32e7fe9d",
+      "request_sha256": "a281acacf473485f2a43b8659b7f38603638affa6c2c40a79697dba65277387c",
       "mode": "MOCK_ONLY",
       "messages": [
         {
@@ -502,7 +502,7 @@
         },
         {
           "role": "user",
-          "content": "{\"assignment\": {\"project_id\": \"TIDELINE\", \"story\": {\"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1}, \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"max_visible_chars\": 250, \"min_visible_chars\": 100, \"planning_mode\": \"author_plot\", \"policy_sha256\": \"aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472\", \"pov\": \"Mira\", \"target_visible_chars\": 150}}, \"materials\": {\"04_chapter_design/arc_<NN>.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\", \"90_canon/canon.md\": \"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\"}, \"support\": {\"production_preparation\": {\"documents\": {\"04_chapter_design/arc_01.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\", \"04_chapter_design/arc_01_episode_details.md\": \"Keep the action to one hinge repair and its immediate social consequence.\", \"07_draft/manuscript_index.md\": \"No prior story chapter has been accepted.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\", \"92_style_engine/character_voice_samples.md\": \"## Mira\\n'I would rather ask than guess.'\\n\\n## Keeper\\n'Try this screwdriver.'\\n\", \"94_runtime/current_state.md\": \"Mira and the keeper are neighbors; their relationship is not familial.\", \"selected_source_excerpt\": \"Mira asks the keeper to help with a loose hinge.\\r\\n\", \"selected_source_identity\": \"{\\\"canonical_selected_value_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"manifest_revision_sha256\\\": \\\"9b735fd57f8bc246da62ef742fb09ea8ac66a5797dd9ada56b910728611f8a43\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_index_sha256\\\": \\\"fd6f35ab038aa58e7e1be84264af9f38f318cef5e4cc9e20bdce9019ec01d874\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"wire_excerpt_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\"}\"}, \"previous_episode\": \"SCENE_SOURCE_ANCHORS\", \"source_hashes\": {\"04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\", \"07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\", \"90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\", \"92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\", \"94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\", \"selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"selected_source_identity\": \"2739f23c1505027ce8c668477d612c4d871b496faf945ab723208abeb63e6308\"}, \"source_method\": \"example_project/00_meta/episode_production_manual.md#production-reading-order\"}}}"
+          "content": "{\"assignment\": {\"project_id\": \"TIDELINE\", \"story\": {\"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1}, \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"max_visible_chars\": 250, \"min_visible_chars\": 100, \"planning_mode\": \"author_plot\", \"policy_sha256\": \"aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472\", \"pov\": \"Mira\", \"target_visible_chars\": 150}}, \"materials\": {\"04_chapter_design/arc_<NN>.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\", \"90_canon/canon.md\": \"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\"}, \"support\": {\"production_preparation\": {\"documents\": {\"04_chapter_design/arc_01.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\", \"04_chapter_design/arc_01_episode_details.md\": \"Keep the action to one hinge repair and its immediate social consequence.\", \"07_draft/manuscript_index.md\": \"No prior story chapter has been accepted.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\", \"92_style_engine/character_voice_samples.md\": \"## Mira\\n'I would rather ask than guess.'\\n\\n## Keeper\\n'Try this screwdriver.'\\n\", \"94_runtime/current_state.md\": \"Mira and the keeper are neighbors; their relationship is not familial.\", \"selected_source_excerpt\": \"Mira asks the keeper to help with a loose hinge.\\r\\n\", \"selected_source_identity\": \"{\\\"canonical_selected_value_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"manifest_revision_sha256\\\": \\\"2b907913e97348868cee8009f6290c916176aaf880b1c8439311106ca38b74ee\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_index_sha256\\\": \\\"8f0f4741779b0e32b3c8c026dec4ef14222958a2e26a028b671fd3daba2da18d\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"wire_excerpt_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\"}\"}, \"previous_episode\": \"SCENE_SOURCE_ANCHORS\", \"source_hashes\": {\"04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\", \"07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\", \"90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\", \"92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\", \"94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\", \"selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"selected_source_identity\": \"1d271c2591fc530e30b21453d4c6a23fd56dfedcb0938da082b6fc0e74b903b1\"}, \"source_method\": \"example_project/00_meta/episode_production_manual.md#production-reading-order\"}}}"
         }
       ],
       "material_keys": [
@@ -603,6 +603,24 @@
     },
     {
       "stage": "multi_lens_review",
+      "role_id": "plot",
+      "request_id": "MOCK-0007-multi_lens_review-plot",
+      "input_sha256": "e5ab39ed3e6c4b620d2ae564b4a50596e8a1bcbfbc1f9b9feb95be6d4791ead3",
+      "request_sha256": "50a0c0739be50ad95fec95e449e15f11400a8807ad1835e7d531b75d2bb6a5dc",
+      "mode": "MOCK_ONLY",
+      "messages": [
+        {
+          "role": "system",
+          "content": "你是独立的 plot Lens。核验 Scene Card 与 Writing Brief 中每个必需节拍、Hook 与连接是否真正落在正文。 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+        },
+        {
+          "role": "user",
+          "content": "{\"author_lens_definition\": \"核验 Scene Card 与 Writing Brief 中每个必需节拍、Hook 与连接是否真正落在正文。\", \"draft\": \"Mira found the hinge loose again. ‘Could you help me with this?’ she asked. The keeper offered a screwdriver, and they steadied the door together. Someone told Mira the keeper was her brother, though the project Canon says they are neighbors.\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"plot\", \"sources\": {\"scene_cards\": \"### Identity\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Cast\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Start state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### End state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Required beats\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Forbidden items for this scene\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Sensory anchor\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Tone / pacing\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Connection to next scene\\nB01 Mira asks; the keeper responds with a screwdriver.\", \"writing_brief\": \"## Quick Header\\nSynthetic project constraints.\\n\\n## Active Canon\\nSynthetic project constraints.\\n\\n## Scene-by-Scene Instructions\\nOne scene; 100–250 visible characters; preserve B01.\\n\\n## Voice References\\nMira: direct question. Keeper: brief practical offer.\\n\\n## Hard Constraints\\nSynthetic project constraints.\\n\\n## Style Targets\\nSynthetic project constraints.\\n\\n## What NOT to include in the prose\\nSynthetic project constraints.\"}}"
+        }
+      ]
+    },
+    {
+      "stage": "multi_lens_review",
       "role_id": "style",
       "request_id": "MOCK-0005-multi_lens_review-style",
       "input_sha256": "5f0335d59452528dd39d3dc948dd29d9c10635dca0709b7343b07ff9669e41fc",
@@ -634,24 +652,6 @@
         {
           "role": "user",
           "content": "{\"author_lens_definition\": \"核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「harbor-reader-promise」，批准的专属职责：Check whether this project makes a practical offer feel emotionally earned.\", \"draft\": \"Mira found the hinge loose again. ‘Could you help me with this?’ she asked. The keeper offered a screwdriver, and they steadied the door together. Someone told Mira the keeper was her brother, though the project Canon says they are neighbors.\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"story_specific\", \"sources\": {\"fifth_lens_id\": \"harbor-reader-promise\", \"fifth_lens_responsibility\": \"Check whether this project makes a practical offer feel emotionally earned.\", \"project_specific_canon\": \"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\"}}"
-        }
-      ]
-    },
-    {
-      "stage": "multi_lens_review",
-      "role_id": "plot",
-      "request_id": "MOCK-0007-multi_lens_review-plot",
-      "input_sha256": "e5ab39ed3e6c4b620d2ae564b4a50596e8a1bcbfbc1f9b9feb95be6d4791ead3",
-      "request_sha256": "50a0c0739be50ad95fec95e449e15f11400a8807ad1835e7d531b75d2bb6a5dc",
-      "mode": "MOCK_ONLY",
-      "messages": [
-        {
-          "role": "system",
-          "content": "你是独立的 plot Lens。核验 Scene Card 与 Writing Brief 中每个必需节拍、Hook 与连接是否真正落在正文。 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
-        },
-        {
-          "role": "user",
-          "content": "{\"author_lens_definition\": \"核验 Scene Card 与 Writing Brief 中每个必需节拍、Hook 与连接是否真正落在正文。\", \"draft\": \"Mira found the hinge loose again. ‘Could you help me with this?’ she asked. The keeper offered a screwdriver, and they steadied the door together. Someone told Mira the keeper was her brother, though the project Canon says they are neighbors.\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"plot\", \"sources\": {\"scene_cards\": \"### Identity\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Cast\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Start state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### End state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Required beats\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Forbidden items for this scene\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Sensory anchor\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Tone / pacing\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Connection to next scene\\nB01 Mira asks; the keeper responds with a screwdriver.\", \"writing_brief\": \"## Quick Header\\nSynthetic project constraints.\\n\\n## Active Canon\\nSynthetic project constraints.\\n\\n## Scene-by-Scene Instructions\\nOne scene; 100–250 visible characters; preserve B01.\\n\\n## Voice References\\nMira: direct question. Keeper: brief practical offer.\\n\\n## Hard Constraints\\nSynthetic project constraints.\\n\\n## Style Targets\\nSynthetic project constraints.\\n\\n## What NOT to include in the prose\\nSynthetic project constraints.\"}}"
         }
       ]
     },
@@ -890,9 +890,9 @@
       },
       {
         "path": "06_原作者方法覆盖报告.md",
-        "sha256": "20506e2b8eef8b4bcc8d2c006f65391bff40dca12b7e936351d912b5512e03db",
+        "sha256": "a202500926f99286f99bbb274eaace8db8f36148b742967346819bebf4008d93",
         "size": 1233,
-        "content": "# 原作者方法覆盖报告\n\n- CNW pin: 97ad71fe5e5e76a82275c6c63d4add06fb60ab6e\n- Workflow: plot → scene_cards → writing_brief → prose → lint_layer1 → lint_layer2 → multi_lens_review → adversarial_verify → completeness_critic → refine → re_review\n- 五 Lens: style / character / plot / canon / story_specific\n- 反证: correctness / character_consistency / continuity_plausibility\n\n## 来源\n- source_origin: IMPORTED_PROJECT\n- project_instance_id: 46b23446-4c27-4a6e-906d-48b81d6a8426\n- source_id: 61f61b74038ace77\n- source_revision_id: 61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\n- source_file_sha256: 61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\n- manifest_file: _INBOX/revisions/manifests/9b735fd57f8bc246da62ef742fb09ea8ac66a5797dd9ada56b910728611f8a43.json\n- source_manifest_sha256: 9b735fd57f8bc246da62ef742fb09ea8ac66a5797dd9ada56b910728611f8a43\n- manifest_revision_sha256: 9b735fd57f8bc246da62ef742fb09ea8ac66a5797dd9ada56b910728611f8a43\n- source_index_file: _INBOX/revisions/indexes/fd6f35ab038aa58e7e1be84264af9f38f318cef5e4cc9e20bdce9019ec01d874.json\n- source_index_sha256: fd6f35ab038aa58e7e1be84264af9f38f318cef5e4cc9e20bdce9019ec01d874\n"
+        "content": "# 原作者方法覆盖报告\n\n- CNW pin: 97ad71fe5e5e76a82275c6c63d4add06fb60ab6e\n- Workflow: plot → scene_cards → writing_brief → prose → lint_layer1 → lint_layer2 → multi_lens_review → adversarial_verify → completeness_critic → refine → re_review\n- 五 Lens: style / character / plot / canon / story_specific\n- 反证: correctness / character_consistency / continuity_plausibility\n\n## 来源\n- source_origin: IMPORTED_PROJECT\n- project_instance_id: d4a6b857-b812-4f96-8c5c-695a01f69c96\n- source_id: 61f61b74038ace77\n- source_revision_id: 61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\n- source_file_sha256: 61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\n- manifest_file: _INBOX/revisions/manifests/2b907913e97348868cee8009f6290c916176aaf880b1c8439311106ca38b74ee.json\n- source_manifest_sha256: 2b907913e97348868cee8009f6290c916176aaf880b1c8439311106ca38b74ee\n- manifest_revision_sha256: 2b907913e97348868cee8009f6290c916176aaf880b1c8439311106ca38b74ee\n- source_index_file: _INBOX/revisions/indexes/8f0f4741779b0e32b3c8c026dec4ef14222958a2e26a028b671fd3daba2da18d.json\n- source_index_sha256: 8f0f4741779b0e32b3c8c026dec4ef14222958a2e26a028b671fd3daba2da18d\n"
       },
       {
         "path": "manifest.json",

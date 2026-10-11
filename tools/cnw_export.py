@@ -12,9 +12,9 @@ from pathlib import Path
 import re
 
 try:
-    from .cnw_contract import ContractError, load_contract
+    from .cnw_contract import ContractError, SUPPORTED_LOCALE_MATRIX, load_contract
 except ImportError:
-    from cnw_contract import ContractError, load_contract
+    from cnw_contract import ContractError, SUPPORTED_LOCALE_MATRIX, load_contract
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,6 +47,8 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
         locale = unit.get("language_locale", unit.get("language"))
     if not isinstance(locale, str) or not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", locale):
         raise ContractError("EXPORT_LOCALE_INVALID", str(locale))
+    if contract.get("schema_version") == "cnw_work_unit_v2" and locale not in SUPPORTED_LOCALE_MATRIX:
+        raise ContractError("EXPORT_LOCALE_UNSUPPORTED", locale)
     run_id = state["run_id"]
     if contract.get("schema_version") == "cnw_work_unit_v2":
         try:

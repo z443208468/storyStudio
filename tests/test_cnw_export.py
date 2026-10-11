@@ -130,6 +130,15 @@ class ExportTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "EXPORT_LOCALE_INVALID"):
             cnw_export.export_reading_package(run, state, project_root=project)
 
+    def test_v2_export_rejects_well_formed_but_unsupported_locale(self):
+        project = self._registered_project("UNSUPPORTLOCALE")
+        contract = self._v2_original_contract(project)
+        contract["unit"]["language"] = "eo"
+        contract["unit"]["language_locale"] = "eo"
+        run, state = self._make_v2_run(project, "UNSUPPORTED-LOCALE", contract)
+        with self.assertRaisesRegex(ContractError, "EXPORT_LOCALE_UNSUPPORTED"):
+            cnw_export.export_reading_package(run, state, project_root=project)
+
     def test_v2_exports_for_same_project_id_stay_in_distinct_instances(self):
         first = self._registered_project("SAMEID")
         second = self._registered_project("SAMEID")
