@@ -1,8 +1,9 @@
 # ATOM-07 METHOD FIDELITY DIFF — 2026-10-11
 
-**Status:** Local Writer evidence for an Atom-07 candidate. Controller verdict
-and candidate C/T are pending. This document is not an acceptance or a claim
-that historical TS recovery eligibility has been established. The sole plan is
+**Status:** ATOM-07 is `RETURN` at the current candidate. The code repair is
+reviewed, but required actual TS/W10 gates remain unverified. This document is
+not an acceptance or a claim that historical TS recovery eligibility has been
+established. The sole plan is
 `plans/MASTER_PLAN_GENERIC_APP_R5.md`, SHA-256
 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`.
 
@@ -111,10 +112,13 @@ It does not include `tests/test_cnw_recovery.py`, whose module setup reads an
 existing private project. No test read project data outside a self-contained
 temporary fixture.
 
-**Controller:** pending review of the exact local candidate C/T. This document
-does not claim Atom-07 acceptance or authorize push. The actual protected W10
-executor audit and real TS evidence reconciliation remain open; no cutover,
-TS resume eligibility, or overall application completion is claimed.
+**Controller:** RETURN on reviewed C=`f92ac33f35367f331b4719708e6719367a836696`,
+T=`75c6e0a099e4c968024e7164deb622ee29f5cf72`. The code repair itself passed
+read-only review, but this is not Atom acceptance or push authorization. The
+actual protected W10 executor audit and real TS evidence reconciliation remain
+open; no cutover, TS resume eligibility, or overall application completion is
+claimed. The original controller message is preserved in
+`ATOM07_CONTROLLER_RETURN_20261012.md`.
 
 ## Atom-07 RETURN repair — 2026-10-12
 
