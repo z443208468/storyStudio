@@ -1,29 +1,23 @@
-# StoryStudio 治理 P3：原方法落实与产品质量复核
+# StoryStudio 治理：通用写作应用 R5
 
 ## 1. 当前权威与状态
 
-当前唯一活动计划为 `plans/MASTER_PLAN_P3.md`，按 W00–W11 及相应验收合同执行。P2 的计划、实现、日志和签收保留为历史事实；不得把历史工程 ACCEPT 扩写成 CNW 全流程或文学质量通过。P2-06/07 的旧 EP001 定位为 `HISTORIC_SMOKE_SAMPLE`。当前状态以 `evidence/P3_CURRENT_STATE.md` 为准。
+唯一活动计划为 [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](../../plans/MASTER_PLAN_GENERIC_APP_R5.md)，原始文件 SHA256 为 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`。当前目标是支持彼此隔离的多类写作项目，同时严格保留原开源 CNW 工作流及其职责。计划逐 Atom 推进；实现状态只由实际候选、验证、独立 Controller verdict 与远端回读证明。P2/P3/P3.1、J19/Cangqi 计划、实现与签收均为历史事实，不能作为本目标的活动范围或完成证据；历史原字节不得删除。
 
-已验证的环境、NK Live、CritiCS Live 可按原身份复用；CNW 全生产仍为 `NOT_VERIFIED`，产品里程碑重新打开。此分类用于防止状态混淆，不撤销既有 P2 技术签收。
+## 2. Writer 与独立只读 Controller
 
-## 2. 方法与适配边界
+Writer 负责当前 Atom 的实现及必要验证；按 R5 先沿唯一 `main` 分支形成该 Atom 的本地候选提交 C/T（不推送）。Controller 必须是独立只读子智能体，自行读取活动计划、权威上游来源、当前实现、精确候选提交/树和真实证据，并给出 ACCEPT 或指出最小修正。Writer、被测程序和同一上下文不得代签。Controller 不可用时停在 `CONTROLLER_UNAVAILABLE`。仅 Controller ACCEPT 后正常推送并核对远端回读；不创建候选分支、不强推、不 reset/clean、不删除用户进度。
 
-CNW 固定上游公开文档、模板和方法为工作流依据；项目可增加本地 Canon、知识边界、语言适配与确定性调度。保留 Plot → Scene Cards → Writing Brief → Prose、Layer 1/2、五个独立 Lens、三个独立 Verifier、Completeness、Refine、Re-review 和晋升/索引职责。NK POV 与 CritiCS 剧情批评按其原职责接入，不能替代 CNW 角色。
+## 3. CNW 方法与可选适配
 
-适配应记录来源与实际运行证据。不宣称私有脚本、研究模型、论文复现实验或作者专属评分体系已原样部署。输出规模在模型调用前由场景合同和可追溯的内容节拍确定；不得以旧的 500–700 字限制或事后降标通过。
+CNW 固定上游公开方法仍是核心生产方法。必须保留 Plot → Scene Cards → Writing Brief → Prose、原作者岗位读边界、两层 Lint、五个独立 Lens、三个逐项 Verifier、Completeness → Refine → 受影响项 Re-review、Canon 审批/晋升及五集 Sprint 门。映射差异须明确记录并由 M01–M16 验收，不可用阶段名称存在替代职责和真实消费证据。NK POV 与 CritiCS 剧情批评是可选独立工具；缺席或禁用不得冒充 CNW，也不得阻止核心工作流。
 
-## 3. Writer 与独立 Controller
+## 4. 通用项目、私有数据与费用
 
-Writer 执行；受委任的独立只读子智能体担任 Controller。Controller 按 P3 Controller 指令审查当前 Atom 的原件、实现、差异、测试与 C/T，给出 ACCEPT 或具体 RETURN。Writer 不得自签。Controller 工程签收不代替用户对作品的创意接受。
+每个项目实例使用不可变内部身份，与可重复显示名区分；合同、来源、run、票、审稿、费用和导出按计划建立稳定关联。`app_root`、用户选定的 `data_home`、显式项目上下文、来源和导出路径不得混用。没有用户选择时，项目写入与缓存初始化安全拒绝，不默认落到苍歧目录或系统盘。私有项目资料、密钥、运行数据和用户正文留在 Git 外；测试仅使用自包含虚构素材和临时目录。共享成本账本保持唯一，历史票、未知费用与账本记录不得改写或复制成多个可写账本。
 
-验收限于当前阶段、必要依赖和实际功能/安全影响。对可逆机械问题直接修复并复验；对无关问题不扩范围。已经由同一身份验证的环节可复用。API 调用受既有 DeepSeek Flash 授权和费用护栏约束，不改用其他供应商、不泄露密钥、不超出剩余预算。
+本次通用化不发起生产 API 请求、不生成故事正文。计划未另行授权前，不得重用旧 J19 历史 run 作为新项目活动输入。未经计划指定门禁，不移动旧实现、项目数据、账本或工具链。
 
-## 4. 作品和私有数据
+## 5. 验收与状态
 
-源稿、密钥、请求响应、运行产物和交付稿保留在忽略目录。不得把私有创作材料推入公开仓库。只重做已批准的 J19 插场，不扩写第二场或批量内容。Canon、时间线、人物知识边界和前后锚不得被候选正文反向改写。
-
-`USER_CREATIVE_ACCEPTED` 只能由用户亲读后决定；工程完成状态可记为 `ENGINEERED_WORKFLOW_READY_FOR_USER_READING`，不能替代用户判断。
-
-## 5. Git 与阶段记录
-
-当前沿唯一 `main` 分支推进。每个 W 阶段先冻结候选 C/T，由 Controller 独立检查；接受后正常提交、推送并回读远端。禁止创建多余分支、force-push、破坏性 reset/clean，或覆盖未审查的用户 WIP。状态记录忠实区分候选、签收与推送，不伪造审查 ID 或供应商证据。
+每 Atom 的验收限于当前阶段必要事实。证据须区分源码存在、功能真实执行、离线与 Live、工程 ACCEPT 与用户创意接受。已由同一身份验证的证据可按计划复用。候选 C/T、Controller 原始 verdict、验证结果、提交/推送和远端回读分别记载；不得伪造身份、结果或用户接受。历史 P2/P3 文档保留历史定位，不得覆盖当前唯一活动指针。
