@@ -115,3 +115,29 @@ temporary fixture.
 does not claim Atom-07 acceptance or authorize push. The actual protected W10
 executor audit and real TS evidence reconciliation remain open; no cutover,
 TS resume eligibility, or overall application completion is claimed.
+
+## Atom-07 RETURN repair — 2026-10-12
+
+Added `legacy-recovery-plan` as a separate, read-only v1 assessment route. It
+reuses the explicit project/run/source-map bindings and validates the legacy
+contract, source freeze, workflow template, and production policy before
+summarizing the 11-stage history. It reports failure-history hashes/counts,
+computes the next-stage identity offline when available, and reports
+provider-receipt status counts plus a canonical
+digest. It labels receipts `PRESERVED_UNVERIFIED` and the cost ledger
+`NOT_READ_RECONCILIATION_REQUIRED`; it never claims resume eligibility when
+history or receipts exist. It hashes the run-state bytes before/after and
+returns `V5_RECOVERY_REVIEW_REQUIRED`, without calling resume, a provider, or
+the private ledger. The existing stricter `legacy-source-preflight` behavior
+is preserved.
+
+The self-contained legacy path-map fixture covers a synthetic
+`EXECUTION_INCOMPLETE` Plot stage with an `UNKNOWN_NOT_ZERO` receipt, verifies
+that the same stage is proposed, and checks exact run/contract bytes remain
+unchanged. It also verifies the existing empty-history preflight still rejects
+that run. This does not reconcile the actual TS run, validate actual receipt
+payloads against the private cost ledger, or establish
+`V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK`. No private root was selected or
+accessed; `CUTOVER_BLOCKED` remains in force. Exact run output and tested source
+hashes are recorded in `ATOM07_LEGACY_RECOVERY_RETEST_20261012.md` and its
+adjacent raw-output file.
