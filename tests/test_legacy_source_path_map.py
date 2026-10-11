@@ -285,8 +285,11 @@ class LegacySourcePathMapTests(unittest.TestCase):
         manifest_sha = contract["source"]["source_manifest_sha256"]
         project_id = contract["project_id"]
         instance_id = legacy_external_project_instance_id(project_root=external_root,
-            project_id=project_id, run_id="SYNTHETIC-LEGACY",
-            contract_sha256=sha(contract_raw), source_manifest_sha256=manifest_sha)
+            project_id=project_id)
+        self.assertEqual(instance_id, legacy_external_project_instance_id(
+            project_root=external_root, project_id=project_id))
+        self.assertNotEqual(instance_id, legacy_external_project_instance_id(
+            project_root=external_root, project_id=project_id + "-different-instance"))
         categories = {}
         for category in CATEGORIES:
             categories[category] = {"status": "UNAVAILABLE",

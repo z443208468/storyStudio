@@ -105,14 +105,11 @@ def _read_json_object(path: Path, code: str) -> tuple[dict, bytes]:
     return value, raw
 
 
-def legacy_external_project_instance_id(*, project_root: str | Path, project_id: str,
-                                        run_id: str, contract_sha256: str,
-                                        source_manifest_sha256: str) -> str:
-    """Derive an explicitly external identity for a historical project without an identity file."""
+def legacy_external_project_instance_id(*, project_root: str | Path, project_id: str) -> str:
+    """Derive a stable external instance identity, independent of any particular run."""
     root = Path(project_root).resolve(strict=True)
     canonical_root = str(root).replace("/", "\\").casefold()
-    binding = "\0".join((canonical_root, project_id, run_id,
-                         contract_sha256.lower(), source_manifest_sha256.lower()))
+    binding = "\0".join((canonical_root, project_id))
     return str(uuid.uuid5(LEGACY_EXTERNAL_ID_NAMESPACE, binding))
 
 
@@ -200,9 +197,7 @@ def validate_legacy_source_path_map(
         project_id = contract.get("project_id")
         binding = target.get("legacy_identity_binding")
         derived_id = legacy_external_project_instance_id(project_root=root,
-            project_id=project_id if isinstance(project_id, str) else "",
-            run_id=state.get("run_id", ""), contract_sha256=contract_sha,
-            source_manifest_sha256=source_manifest_sha or "")
+            project_id=project_id if isinstance(project_id, str) else "")
         if (not isinstance(project_id, str) or not project_id.strip() or
                 not isinstance(recorded_root, str) or recorded_root.replace("/", "\\").casefold() != canonical_target_root or
                 target.get("identity_kind") != "LEGACY_EXTERNAL_V1" or
