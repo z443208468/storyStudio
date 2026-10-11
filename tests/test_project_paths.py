@@ -30,12 +30,13 @@ class GenericProjectPathTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.temp, ignore_errors=True)
 
-    def _grant_everyone_full_control(self, path: Path):
+    def _grant_everyone_full_control(self, path: Path, *, inherit: bool = True):
         icacls = shutil.which("icacls.exe") or shutil.which("icacls")
         if not icacls:
             self.skipTest("icacls is unavailable")
+        grant = "*S-1-1-0:(OI)(CI)F" if inherit else "*S-1-1-0:F"
         result = subprocess.run(
-            [icacls, str(path), "/grant", "*S-1-1-0:(OI)(CI)F"],
+            [icacls, str(path), "/grant", grant],
             capture_output=True, text=True,
         )
         if result.returncode != 0:
@@ -195,6 +196,16 @@ class GenericProjectPathTests(unittest.TestCase):
         self._grant_everyone_full_control(project_root)
         with self.assertRaises(PathResolutionError) as unsafe:
             resolve_project(project_root, pointer_path=self.pointer)
+        self.assertEqual(unsafe.exception.code, "DATA_HOME_ACL_TOO_BROAD")
+
+    @unittest.skipUnless(os.name == "nt", "Windows ACL behavior")
+    def test_broad_shared_parent_acl_is_rejected_during_resolution(self):
+        setup_data_home(self.data_home, pointer_path=self.pointer)
+        project = create_project(project_id="WIDE-SHARED", pointer_path=self.pointer)
+        shared = self.data_home / "shared"
+        self._grant_everyone_full_control(shared, inherit=False)
+        with self.assertRaises(PathResolutionError) as unsafe:
+            resolve_project(project["project_root"], pointer_path=self.pointer)
         self.assertEqual(unsafe.exception.code, "DATA_HOME_ACL_TOO_BROAD")
 
     def test_project_root_from_another_volume_is_rejected_when_available(self):

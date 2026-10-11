@@ -463,6 +463,7 @@ def resolve_project(
     _assert_no_reparse(projects_root_path, code="PROJECT_PATH_UNSAFE")
     _assert_no_reparse(_registry_root(root), code="PROJECT_REGISTRY_UNSAFE")
     _assert_no_reparse(root / "shared", code="PROJECT_REGISTRY_UNSAFE")
+    _assert_private_permissions(root / "shared", require_independent_acl=False)
     projects_root = projects_root_path.resolve(strict=True)
     _assert_private_permissions(projects_root, require_independent_acl=False)
     _assert_private_permissions(_registry_root(root), require_independent_acl=False)
