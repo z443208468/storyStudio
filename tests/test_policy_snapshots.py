@@ -208,6 +208,21 @@ class PolicySnapshotTests(unittest.TestCase):
             self.store.resolve_policy_by_sha(digest)
         self.assertEqual(error.exception.code, "PROVIDER_ADAPTER_UNSUPPORTED")
 
+    def test_provider_policy_cannot_override_author_method(self):
+        weakened = provider_policy()
+        weakened["verifier_count"] = 0
+        digest = self.put(weakened, "provider_policy", "method-override-provider.json")
+        with self.assertRaises(PolicySnapshotError) as error:
+            self.store.resolve_policy_by_sha(digest)
+        self.assertEqual(error.exception.code, "PROVIDER_POLICY_SCOPE_INVALID")
+
+        nested = provider_policy()
+        nested["request_policy"]["sprint"] = {"size": 1}
+        nested_digest = self.put(nested, "provider_policy", "nested-method-override-provider.json")
+        with self.assertRaises(PolicySnapshotError) as nested_error:
+            self.store.resolve_policy_by_sha(nested_digest)
+        self.assertEqual(nested_error.exception.code, "PROVIDER_POLICY_SCOPE_INVALID")
+
     def test_fixed_method_constants_cannot_be_weakened_in_app_policy(self):
         weakened = app_policy()
         weakened["method"]["adversarial"]["verifier_count"] = 1

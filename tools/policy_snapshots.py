@@ -209,7 +209,8 @@ def validate_policy_document(document: Any, *, expected_kind: str | None = None)
                 accounting.get("auto_top_up") is not False or
                 accounting.get("new_project_inherits_historical_campaign_limit") is not False):
             raise PolicySnapshotError("PROVIDER_POLICY_INVALID", "provider accounting must preserve reserve/send/settle and prevent historical cap inheritance")
-        if "method" in document or "workflow" in document or "project_id" in document:
+        if ("method" in document or "workflow" in document or "project_id" in document or
+                _contains_forbidden_override(document)):
             raise PolicySnapshotError("PROVIDER_POLICY_SCOPE_INVALID", "provider policy cannot own method or project settings")
         if document.get("supported_project_override_ids") != ["deepseek_flash"]:
             raise PolicySnapshotError("PROVIDER_ADAPTER_UNSUPPORTED", "provider override registry must list only the implemented adapter")
