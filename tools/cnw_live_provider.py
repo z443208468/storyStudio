@@ -242,6 +242,7 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
     _, pricing = p2_cost_guard.load_config()
     from decimal import Decimal, ROUND_CEILING
     actual_cost = p2_cost_guard.estimate(usage["prompt_tokens"], usage["completion_tokens"], pricing)
+    simulated = transport is not None
     receipt = {"stage": stage, "request_id": request_id, "provider_request_id": provider_id,
         "model": returned_model, "status": "SUCCEEDED", "http_status": status_code,
         "finish_reason": finish, "usage": {"prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"]},
@@ -249,7 +250,8 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
         "stage_fingerprint": state["stages"][stage].get("fingerprint"),
         "raw_response_path": raw_path.relative_to(run).as_posix(), "raw_response_sha256": sha(raw_path.read_bytes()),
         "cost_cny": float(actual_cost.quantize(Decimal("0.000001"), rounding=ROUND_CEILING)),
-        "ledger_settlement": settlement, "mode": "LIVE", "fixture_only": False}
+        "ledger_settlement": settlement, "mode": "MOCK_ONLY" if simulated else "LIVE",
+        "fixture_only": simulated}
     if role_field:
         receipt[role_field] = role_id
     receipt_path = evidence / "receipt.json"
@@ -299,6 +301,8 @@ def accept_validated_stage(run_dir: str | Path, *, stage: str, content: str,
                for dependency in stage_predecessors(stage, state["unit_kind"])):
             raise ContractError("STAGE_DEPENDENCY_NOT_ACCEPTED", stage)
         matching = [row for row in state.get("provider_requests", []) if row.get("stage") == stage]
+        if any(row.get("mode") == "MOCK_ONLY" or row.get("fixture_only") is True for row in matching):
+            raise ContractError("LIVE_MOCK_PROVIDER_ACCEPTANCE_FORBIDDEN", stage)
         content_sha = sha(content.encode("utf-8"))
         local_stage = stage in {"lint1", "lint2"}
         if local_stage:

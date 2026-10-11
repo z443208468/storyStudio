@@ -74,7 +74,8 @@ class LiveProviderTransportTests(unittest.TestCase):
                 input_token_cap=500, output_token_cap=250, transport=self.transport())
         self.assertEqual(content, "A complete stage result.")
         self.assertEqual(receipt["lens_id"], "canon")
-        self.assertEqual(receipt["mode"], "LIVE")
+        self.assertEqual(receipt["mode"], "MOCK_ONLY")
+        self.assertTrue(receipt["fixture_only"])
         self.assertEqual(receipt["ledger_settlement"]["status"], "SETTLED")
         raw = self.run / receipt["raw_response_path"]
         self.assertEqual(hashlib.sha256(raw.read_bytes()).hexdigest(), receipt["raw_response_sha256"])
@@ -140,12 +141,12 @@ class LiveProviderTransportTests(unittest.TestCase):
                 self.run, stage="plot", messages=[{"role": "user", "content": source}],
                 input_sha256=self.input_hash([{"role": "user", "content": source}]),
                 input_token_cap=500, output_token_cap=250, transport=self.transport())
-        accepted = cnw_live_provider.accept_validated_stage(self.run, stage="plot", content=content,
-            validation={"status": "ROLE_OUTPUT_VALID"})
-        self.assertEqual(accepted["status"], "ACCEPTED")
+        with self.assertRaisesRegex(Exception, "LIVE_MOCK_PROVIDER_ACCEPTANCE_FORBIDDEN"):
+            cnw_live_provider.accept_validated_stage(self.run, stage="plot", content=content,
+                validation={"status": "ROLE_OUTPUT_VALID"})
         state = json.loads((self.run / "run_state.json").read_text(encoding="utf-8"))
-        artifact = self.run / state["stages"]["plot"]["artifact"]["path"]
-        self.assertTrue(artifact.is_file())
+        self.assertEqual(state["stages"]["plot"]["status"], "READY_FOR_EXECUTION")
+        self.assertNotIn("artifact", state["stages"]["plot"])
 
     def test_stage_acceptance_cannot_replace_receipted_provider_output(self):
         source = "frozen plot packet"
@@ -154,7 +155,7 @@ class LiveProviderTransportTests(unittest.TestCase):
                 self.run, stage="plot", messages=[{"role": "user", "content": source}],
                 input_sha256=self.input_hash([{"role": "user", "content": source}]),
                 input_token_cap=500, output_token_cap=250, transport=self.transport())
-        with self.assertRaisesRegex(Exception, "LIVE_STAGE_OUTPUT_RECEIPT_MISMATCH"):
+        with self.assertRaisesRegex(Exception, "LIVE_MOCK_PROVIDER_ACCEPTANCE_FORBIDDEN"):
             cnw_live_provider.accept_validated_stage(self.run, stage="plot", content="changed output",
                 validation={"status": "ROLE_OUTPUT_VALID"})
 
