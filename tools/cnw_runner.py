@@ -258,11 +258,28 @@ def _source_root(contract: dict, project_root: Path) -> Path:
     if source.get("identity_type") == "imported_project":
         return (project_root / source.get("source_root", ".")).resolve(strict=True)
     if source.get("identity_type") is None and "zip_sha256" in source:
-        return ROOT / "inputs/private/release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
+        raise ContractError("LEGACY_MIGRATION_REQUIRED", "legacy Release reads require an explicitly pinned, read-only source map")
     raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
 
 
-def literary_source_freeze(contract: dict, project_root: Path) -> dict[str, str]:
+def _resolve_legacy_frozen_path(key: str, digest: str, project_root: Path, *,
+                                legacy_run_dir: str | Path | None,
+                                legacy_map_path: str | Path | None,
+                                legacy_map_sha256: str | None) -> Path:
+    if not legacy_run_dir or not legacy_map_path or not legacy_map_sha256:
+        raise ContractError("LEGACY_MIGRATION_REQUIRED", "select the historical run, registered target project, external map, and exact map SHA256")
+    try:
+        from .legacy_source_path_map import resolve_legacy_key
+    except ImportError:
+        from legacy_source_path_map import resolve_legacy_key
+    return resolve_legacy_key(target_project_root=project_root,
+        legacy_run_dir=legacy_run_dir, manifest_path=legacy_map_path,
+        expected_manifest_sha256=legacy_map_sha256, legacy_key=key,
+        expected_file_sha256=digest)
+
+
+def literary_source_freeze(contract: dict, project_root: Path, *, legacy_run_dir=None,
+                           legacy_map_path=None, legacy_map_sha256=None) -> dict[str, str]:
     if contract.get("schema_version") == "cnw_work_unit_v2":
         try:
             from .cnw_roles import read_production_preparation
@@ -296,14 +313,29 @@ def literary_source_freeze(contract: dict, project_root: Path) -> dict[str, str]
     arc_index = project_root / "04_chapter_design/arc_index.md"
     if arc_index.is_file():
         paths["04_chapter_design/arc_index.md"] = arc_index
-    source_root = _source_root(contract, project_root)
-    script = (source_root / contract["story"]["source_file"]).resolve(strict=True)
-    manifest = (source_root / contract["source"]["manifest_file"]).resolve(strict=True)
     result = {f"project:{name}": sha(path.read_bytes()) for name, path in paths.items() if path.is_file()}
     result["preparation:identity"] = sha(json.dumps({"files": preparation["source_hashes"],
         "arc_index": sha(arc_index.read_bytes()) if arc_index.is_file() else None}, sort_keys=True).encode("utf-8"))
-    result[f"source:{script.relative_to(ROOT).as_posix()}"] = sha(script.read_bytes())
-    result[f"manifest:{manifest.relative_to(ROOT).as_posix()}"] = sha(manifest.read_bytes())
+    source = contract.get("source", {})
+    if source.get("identity_type") == "imported_project":
+        source_root = _source_root(contract, project_root)
+        script = (source_root / contract["story"]["source_file"]).resolve(strict=True)
+        manifest = (source_root / source["manifest_file"]).resolve(strict=True)
+        source_key = f"source:{script.relative_to(ROOT).as_posix()}"
+        manifest_key = f"manifest:{manifest.relative_to(ROOT).as_posix()}"
+    elif source.get("identity_type") is None and "zip_sha256" in source:
+        legacy_root_key = f"inputs/private/release/{source['zip_sha256'].lower()}/Cangqi_Jun_Release_2_3"
+        source_key = f"source:{(Path(legacy_root_key) / contract['story']['source_file']).as_posix()}"
+        manifest_key = f"manifest:{(Path(legacy_root_key) / source['manifest_file']).as_posix()}"
+        script = _resolve_legacy_frozen_path(source_key, source.get("script_sha256", ""), project_root,
+            legacy_run_dir=legacy_run_dir, legacy_map_path=legacy_map_path, legacy_map_sha256=legacy_map_sha256)
+        manifest_sha = source.get("local_private_source_manifest_sha256", "").lower()
+        manifest = _resolve_legacy_frozen_path(manifest_key, manifest_sha, project_root,
+            legacy_run_dir=legacy_run_dir, legacy_map_path=legacy_map_path, legacy_map_sha256=legacy_map_sha256)
+    else:
+        raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
+    result[source_key] = sha(script.read_bytes())
+    result[manifest_key] = sha(manifest.read_bytes())
     lines = script.read_text(encoding="utf-8-sig").splitlines()
     start = int(contract["story"]["before_anchor"].get("source_line_end", contract["story"]["before_anchor"]["source_line"]))
     end = int(contract["story"]["after_anchor"].get("source_line_end", contract["story"]["after_anchor"]["source_line"]))
@@ -312,7 +344,8 @@ def literary_source_freeze(contract: dict, project_root: Path) -> dict[str, str]
     return result
 
 
-def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
+def validate_literary_source_freeze(state: dict, project_root: Path, *, legacy_run_dir=None,
+                                    legacy_map_path=None, legacy_map_sha256=None) -> str:
     expected = state.get("literary_source_hashes")
     if not isinstance(expected, dict) or not expected:
         raise ContractError("LITERARY_SOURCE_FREEZE_MISSING", state.get("run_id", "unknown"))
@@ -340,7 +373,17 @@ def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
         if key.startswith("project:"):
             path = project_root / key.removeprefix("project:")
         elif key.startswith(("source:", "manifest:")) and key.rsplit(":", 1)[-1] != "anchor_excerpt":
-            path = ROOT / key.split(":", 1)[1]
+            if contract.get("source", {}).get("identity_type") == "imported_project" and not legacy_map_path:
+                source_root = _source_root(contract, project_root)
+                relative = (contract["story"]["source_file"] if key.startswith("source:")
+                            else contract["source"]["manifest_file"])
+                path = (source_root / relative).resolve(strict=True)
+                if not path.is_relative_to(source_root.resolve()):
+                    raise ContractError("SOURCE_PATH_UNSAFE", relative)
+            else:
+                path = _resolve_legacy_frozen_path(key, digest, project_root,
+                    legacy_run_dir=legacy_run_dir, legacy_map_path=legacy_map_path,
+                    legacy_map_sha256=legacy_map_sha256)
         elif key == "source:anchor_excerpt":
             continue
         else:
@@ -358,8 +401,17 @@ def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
                 continue
         raise ContractError("LITERARY_SOURCE_CHANGED", key)
     contract_path = project_root / state["contract_path"]
+    if legacy_map_path and (not contract_path.is_file() or sha(contract_path.read_bytes()) != state.get("contract_sha256")):
+        raise ContractError("LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH", "project contract bytes differ from the selected run snapshot")
     contract = load_contract(contract_path)
-    source_script = next((ROOT / key.split(":", 1)[1] for key in expected if key.startswith("source:") and not key.endswith("anchor_excerpt")), None)
+    source_key = next((key for key in expected if key.startswith("source:") and not key.endswith("anchor_excerpt")), None)
+    if source_key and contract.get("source", {}).get("identity_type") == "imported_project" and not legacy_map_path:
+        source_root = _source_root(contract, project_root)
+        source_script = (source_root / contract["story"]["source_file"]).resolve(strict=True)
+    else:
+        source_script = (_resolve_legacy_frozen_path(source_key, expected[source_key], project_root,
+            legacy_run_dir=legacy_run_dir, legacy_map_path=legacy_map_path,
+            legacy_map_sha256=legacy_map_sha256) if source_key else None)
     if source_script is None:
         raise ContractError("LITERARY_SOURCE_FREEZE_INVALID", "source script path missing")
     lines = source_script.read_text(encoding="utf-8-sig").splitlines()
@@ -656,8 +708,7 @@ def produce(args) -> dict:
             raise ContractError("SOURCE_PATH_UNSAFE", "import source root escapes the private project")
         validate_source_identity(contract, source_root=source_root, expected_version=source["version"], expected_zip_sha256=source["import_id"], expected_manifest_sha256=source["source_manifest_sha256"])
     elif source.get("identity_type") is None and "zip_sha256" in source and not is_fixture:
-        release_root = ROOT / "inputs/private/release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
-        validate_source_identity(contract, source_root=release_root, expected_version=source["version"], expected_zip_sha256=source["zip_sha256"], expected_manifest_sha256=source["local_private_source_manifest_sha256"])
+        raise ContractError("LEGACY_MIGRATION_REQUIRED", "legacy Release execution requires a selected, pinned migration context")
     elif contract.get("schema_version") != "cnw_work_unit_v2" and not is_fixture:
         raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
     source_freeze = literary_source_freeze(contract, project_root) if (not is_fixture or contract.get("schema_version") == "cnw_work_unit_v2") else {}
@@ -2050,6 +2101,72 @@ def verify_history(args) -> dict:
     return {"status": "HISTORICAL_EVIDENCE_FOUND", "run_id": args.run_id, "provider_call": "none", "provider_requests": len(state["provider_requests"])}
 
 
+def legacy_source_preflight(args) -> dict:
+    """Read-only source-map check for one explicitly selected legacy run."""
+    project_root = Path(args.project_root).resolve(strict=True)
+    run_dir = run_path(args.run_id, project_root / "runs").resolve(strict=True)
+    state_path = run_dir / "run_state.json"
+    contract_artifact = run_dir / "artifacts" / "contract.json"
+    state_before = sha(state_path.read_bytes())
+    contract_before = sha(contract_artifact.read_bytes())
+    state = load_state(run_dir)
+    contract = load_contract(contract_artifact)
+    project_contract = project_root / state.get("contract_path", "")
+    if not project_contract.is_file() or sha(project_contract.read_bytes()) != contract_before:
+        raise ContractError("LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH", "selected project contract differs from the run snapshot")
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        raise ContractError("LEGACY_PREFLIGHT_NOT_APPLICABLE", "select a historical v1 run")
+    if contract.get("source", {}).get("identity_type") != "imported_project":
+        raise ContractError("LEGACY_PREFLIGHT_UNSUPPORTED", "this preflight supports an explicitly migrated TS project-source run")
+    validate_literary_source_freeze(state, project_root,
+        legacy_run_dir=run_dir, legacy_map_path=args.legacy_source_map,
+        legacy_map_sha256=args.legacy_source_map_sha256)
+    if sha(state_path.read_bytes()) != state_before or sha(contract_artifact.read_bytes()) != contract_before:
+        raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
+    if state.get("contract_sha256") != contract_before:
+        raise ContractError("LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH", "run contract snapshot SHA differs")
+    if not state.get("literary_source_hashes"):
+        raise ContractError("LITERARY_SOURCE_FREEZE_MISSING", args.run_id)
+    source = contract.get("source", {})
+    source_key = next((key for key in state["literary_source_hashes"]
+                       if key.startswith("source:") and not key.endswith("anchor_excerpt")), None)
+    manifest_key = next((key for key in state["literary_source_hashes"] if key.startswith("manifest:")), None)
+    if not source_key or not manifest_key:
+        raise ContractError("LITERARY_SOURCE_FREEZE_INVALID", "source or manifest freeze key missing")
+    source_path = _resolve_legacy_frozen_path(source_key, state["literary_source_hashes"][source_key], project_root,
+        legacy_run_dir=run_dir, legacy_map_path=args.legacy_source_map,
+        legacy_map_sha256=args.legacy_source_map_sha256)
+    manifest_path = _resolve_legacy_frozen_path(manifest_key, state["literary_source_hashes"][manifest_key], project_root,
+        legacy_run_dir=run_dir, legacy_map_path=args.legacy_source_map,
+        legacy_map_sha256=args.legacy_source_map_sha256)
+    try:
+        from .cnw_contract import validate_source_identity
+    except ImportError:
+        from cnw_contract import validate_source_identity
+    mapped = json.loads(json.dumps(contract))
+    mapped["story"]["source_file"] = source_path.relative_to(project_root).as_posix()
+    mapped["source"]["manifest_file"] = manifest_path.relative_to(project_root).as_posix()
+    validate_source_identity(mapped, source_root=project_root,
+        expected_version=source["version"], expected_zip_sha256=source["import_id"],
+        expected_manifest_sha256=source["source_manifest_sha256"])
+    if state.get("workflow_template_sha256") != sha(WORKFLOW_PATH.read_bytes()):
+        raise ContractError("CNW_METHOD_IDENTITY_MISMATCH", "historical workflow template SHA differs")
+    policy = ROOT / "config/cnw_production_policy.json"
+    if contract.get("unit", {}).get("policy_sha256", "").lower() != sha(policy.read_bytes()):
+        raise ContractError("PRODUCTION_POLICY_IDENTITY_MISMATCH", "historical policy SHA differs")
+    stages = state.get("stages", {})
+    if stages:
+        plot = stages.get("plot", {})
+        if plot.get("status") != "NOT_RUN" or plot.get("execution_identity") or plot.get("artifact") or plot.get("request_artifact"):
+            raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "preflight only admits an untouched Plot stage; completed or partial Plot evidence needs separate identity review")
+        if any(record.get("status") != "NOT_RUN" for name, record in stages.items() if name != "plot"):
+            raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "downstream historical stages are not empty")
+    identity = json.loads((project_root / "project_identity.json").read_text(encoding="utf-8"))
+    return {"status": "V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK",
+            "run_id": args.run_id, "project_instance_id": identity["project_instance_id"],
+            "source_freeze": "VERIFIED", "provider_call": "none", "run_state_unchanged": True}
+
+
 def verify_live(args) -> dict:
     run_root = run_path(args.run_id, runs_root_for(args))
     state = load_state(run_root)
@@ -2261,6 +2378,12 @@ def make_parser() -> argparse.ArgumentParser:
         item.add_argument("--run-id", required=True)
         item.add_argument("--project-root")
         item.set_defaults(func=func)
+    preflight = sub.add_parser("legacy-source-preflight")
+    preflight.add_argument("--run-id", required=True)
+    preflight.add_argument("--project-root", required=True)
+    preflight.add_argument("--legacy-source-map", required=True)
+    preflight.add_argument("--legacy-source-map-sha256", required=True)
+    preflight.set_defaults(func=legacy_source_preflight)
     for command, func in (("review", review_run), ("promote", promote_run), ("export", export_run), ("sprint", sprint_run)):
         item = sub.add_parser(command)
         item.add_argument("--run-id", required=True)

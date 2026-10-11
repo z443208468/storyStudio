@@ -11,7 +11,7 @@ from pathlib import Path
 from tools.project_paths import create_project, setup_data_home
 from tools.cnw_contract import ContractError, validate_source_identity
 from tools.cnw_project import import_source, init_registered_project, write_contract_draft
-from tools.cnw_roles import read_production_preparation
+from tools.cnw_roles import build_author_role_messages, read_production_preparation
 from tools.cnw_runner import build_plot_request, load_state, produce, validate_literary_source_freeze
 from tools.cnw_generate import _project_root
 
@@ -137,6 +137,39 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
         duplicate.write_text('{"same":1,"same":2}', encoding="utf-8")
         with self.assertRaisesRegex(ContractError, "IMPORT_JSON_DUPLICATE_KEY"):
             import_source(input_file=duplicate, project_root=root)
+
+    def test_selected_source_and_prose_messages_exclude_unselected_source_canary(self):
+        root = self.project("CANARY")
+        selected_source = self.import_bytes(root, "selected.md", b"Mira offers one small repair.")
+        unselected_text = "UNAUTHORIZED_SOURCE_CANARY: Mira secretly owns the lighthouse."
+        unselected_source = self.import_bytes(
+            root, "unselected.md", unselected_text.encode("utf-8"))
+        selection = dict(unselected_source)
+        selection.update(source_id=selected_source["source_id"],
+                         source_revision_id=selected_source["source_revision_id"])
+        contract = self.draft(root, selection, intent="ADAPT_SOURCE", unit_id="CANARY-ADAPT",
+                              start_line=1, end_line=1)
+        plot_request = build_plot_request(root, contract)
+        plot_messages = json.dumps(plot_request["messages"], ensure_ascii=False)
+        self.assertIn("Mira offers one small repair.", plot_messages)
+        self.assertNotIn("UNAUTHORIZED_SOURCE_CANARY", plot_messages)
+
+        brief = ("# Writing Brief\n## Voice References\n- Mira — use her sample\n"
+                 "## Hard Constraints\nKeep to the selected source.\n")
+        voices = ("## Mira\n'I can repair the hinge.'\n"
+                  "## Unselected Source\nUNRELATED_VOICE_CANARY: sample not referenced by the Brief\n")
+        prose_messages = build_author_role_messages("prose", contract, {
+            "07_draft/<work_id>_writing_brief.md": brief,
+            "92_style_engine/character_voice_samples.md": voices,
+            "unselected_source_excerpt": unselected_text,
+        })
+        prose_wire = json.dumps(prose_messages, ensure_ascii=False)
+        self.assertNotIn("UNAUTHORIZED_SOURCE_CANARY", prose_wire)
+        self.assertNotIn("UNRELATED_VOICE_CANARY", prose_wire)
+        payload = json.loads(prose_messages[1]["content"])
+        self.assertEqual(set(payload), {"writing_brief", "voice_samples"})
+        self.assertIn("'I can repair the hinge.'", payload["voice_samples"])
+        self.assertNotIn("Unselected Source", payload["voice_samples"])
 
     def test_original_first_episode_requires_real_canon_arc_and_style_then_builds_plot_offline(self):
         root = self.project("ORIGINAL")

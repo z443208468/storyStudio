@@ -500,10 +500,7 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
         import_id = source["import_id"]
         manifest_hash = source["source_manifest_sha256"]
     elif source.get("identity_type") is None and "zip_sha256" in source:
-        release_root = ROOT / "inputs" / "private" / "release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
-        version = source["version"]
-        import_id = source["zip_sha256"]
-        manifest_hash = source["local_private_source_manifest_sha256"]
+        raise ContractError("LEGACY_MIGRATION_REQUIRED", "legacy Release role reads require a selected, pinned migration context")
     else:
         raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
     if contract.get("schema_version") != "cnw_work_unit_v2":

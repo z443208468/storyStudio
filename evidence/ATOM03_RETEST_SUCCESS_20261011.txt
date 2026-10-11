@@ -1,0 +1,10 @@
+Atom03 return-remediation verification transcript
+Plan SHA256: 5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF
+Scope: synthetic temporary projects only; no production API; no private project data
+Python unittest with local tests package injected to avoid external tests package shadowing
+
+............................................................................................................
+----------------------------------------------------------------------
+Ran 108 tests in 56.673s
+
+OK
