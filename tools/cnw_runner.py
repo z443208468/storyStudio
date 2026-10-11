@@ -2340,6 +2340,9 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
     project_contract_bytes = project_contract.read_bytes()
     project_identity_path = project_root / "project_identity.json"
     identity_bytes = project_identity_path.read_bytes()
+    if (sha(state_bytes) != state_before or sha(run_contract_bytes) != contract_before or
+            sha(project_contract_bytes) != contract_before):
+        raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
     try:
         from .cnw_recovery import stage_identity
     except ImportError:

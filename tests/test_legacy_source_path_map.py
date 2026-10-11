@@ -223,6 +223,20 @@ class LegacySourcePathMapTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED"):
             cnw_runner.legacy_source_preflight(args)
 
+    def test_legacy_recovery_plan_rejects_run_state_changed_during_source_validation(self):
+        args = SimpleNamespace(project_root=str(self.project), run_id="SYNTHETIC-LEGACY",
+            legacy_source_map=str(self.map_path), legacy_source_map_sha256=self.map_sha)
+        original_validate = cnw_runner.validate_literary_source_freeze
+
+        def mutate_after_validation(*call_args, **call_kwargs):
+            result = original_validate(*call_args, **call_kwargs)
+            self.state_path.write_bytes(self.state_path.read_bytes() + b"\n")
+            return result
+
+        with patch.object(cnw_runner, "validate_literary_source_freeze", side_effect=mutate_after_validation):
+            with self.assertRaisesRegex(ContractError, "LEGACY_RUN_MUTATED_DURING_READ"):
+                cnw_runner.legacy_recovery_plan(args)
+
     def test_map_sha_path_traversal_and_missing_key_fail_closed(self):
         with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_MAP_SHA_MISMATCH"):
             validate_legacy_source_path_map(target_project_root=self.project, legacy_run_dir=self.run,
