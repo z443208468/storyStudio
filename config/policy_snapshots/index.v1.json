@@ -165,6 +165,16 @@
       "kinds": [
         "tool"
       ],
+      "sha256": "53ff9eb31aba9f29e61ff897c655140b77975ca50159ae3131714016a8902c8d",
+      "source_refs": [
+        "tools/cnw_runner.py"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
+        "tool"
+      ],
       "sha256": "55e69ae79a7fe4aaa5f07175de3b707e73bb793c9bd35e568ab140d56ed006e2",
       "source_refs": [
         "tools/cnw_roles.py"

@@ -142,6 +142,66 @@ class Atom06Tests(unittest.TestCase):
                     "messages": messages, "response_texts": ["abc", "def"], "consumer_result": "length accepted",
                     "message_sha256": [hashlib.sha256(json.dumps(item, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest() for item in messages]})
 
+    def test_legacy_v1_without_locale_keeps_historical_chinese_prose_and_refine(self):
+        # v1 had no locale contract. Even when its legacy display-language field
+        # says en-US, the historical CNW continuation and Refine prompts are Chinese.
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp) / "project" / "runs" / "RUN"
+            (run / "artifacts/revisions").mkdir(parents=True)
+            contract = {"schema_version": "cnw_work_unit_v1", "project_id": "FICT_LEGACY",
+                "unit": {"id": "ep01", "kind": "episode", "language": "en-US",
+                    "target_visible_chars": 5, "min_visible_chars": 4, "max_visible_chars": 20,
+                    "pov": "Speaker"}, "story": {"required_beats": []}}
+            prose_state = {"run_id": "RUN", "stages": {"prose": {"status": "NOT_RUN"}}}
+            prose_messages = []
+            prose_responses = iter(("短", "这是正文"))
+            def prose_dispatch(*args, **kwargs):
+                prose_messages.append(kwargs["messages"])
+                return next(prose_responses), {"request_id": f"OFFLINE_LEGACY_PROSE_{len(prose_messages)}"}
+            with patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                 patch.object(cnw_runner, "load_state", return_value=prose_state), \
+                 patch.object(cnw_runner, "_role_sources", return_value={"writing_brief": "synthetic"}), \
+                 patch.object(cnw_runner, "_author_messages", return_value=[
+                     {"role": "system", "content": "Write the complete prose in Chinese."},
+                     {"role": "user", "content": "synthetic brief"}]), \
+                 patch.object(cnw_runner, "cnw_live_call", side_effect=prose_dispatch), \
+                 patch.object(cnw_runner, "_persist_stage"):
+                cnw_runner.execute_prose(run)
+            self.assertEqual(len(prose_messages), 2)
+            self.assertIn("续写同一章简体中文正文", prose_messages[1][0]["content"])
+            self.assertNotIn("Continue the same chapter in English", prose_messages[1][0]["content"])
+
+            state = {"run_id": "RUN", "stages": {
+                stage: {"status": "NOT_RUN", "dependencies": [], "artifact": None}
+                for stage in cnw_runner.CNW_STAGES}}
+            cnw_runner.save_state(run, state)
+            cnw_runner._persist_stage(run, "prose", "artifacts/prose.md", "这是原始正文")
+            cnw_runner._persist_stage(run, "writing_brief", "artifacts/writing_brief.md", "保留合成节拍")
+            cnw_runner._persist_stage(run, "adversarial_verify", "artifacts/verify.json",
+                json.dumps({"findings": [], "verdicts": {}}))
+            cnw_runner._persist_stage(run, "completeness_critic", "artifacts/completeness.json",
+                json.dumps({"candidate_findings": [{"finding_id": "SYNTHETIC-1",
+                    "lens_id": "story_specific", "issue": "synthetic omission", "evidence": "fixture"}]}))
+            refine_messages = []
+            def refine_dispatch(*args, **kwargs):
+                refine_messages.append(kwargs["messages"])
+                return "修订后的正文", {"request_id": "OFFLINE_LEGACY_REFINE"}
+            with patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                 patch.object(cnw_runner, "_critics_hook", return_value={"status": "DISABLED"}), \
+                 patch.object(cnw_runner, "cnw_live_call", side_effect=refine_dispatch):
+                cnw_runner.execute_refine(run)
+            self.assertEqual(len(refine_messages), 1)
+            self.assertIn("你是 CNW Refine Agent", refine_messages[0][0]["content"])
+            self.assertIn("按合同语言简体中文（zh-CN）修订", refine_messages[0][0]["content"])
+            self.assertNotIn("You are the CNW Refine Agent", refine_messages[0][0]["content"])
+            _record_trace("legacy_v1_chinese_compatibility", {
+                "contract": contract, "locale_field": "absent", "legacy_language_field": "en-US",
+                "prose_requests": prose_messages, "prose_responses": ["短", "这是正文"],
+                "refine_requests": refine_messages, "refine_response": "修订后的正文",
+                "consumer_result": "v1 continuation recovery and Refine both retained historical Chinese instructions",
+                "message_sha256": [hashlib.sha256(json.dumps(item, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+                    for item in prose_messages + refine_messages]})
+
     def test_disabled_support_hooks_do_not_call_supplemental_components(self):
         contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"nk": "DISABLED", "critics": "DISABLED"},
                     "unit": {"id": "ep01", "kind": "episode", "language": "en-US", "language_locale": "en-US",

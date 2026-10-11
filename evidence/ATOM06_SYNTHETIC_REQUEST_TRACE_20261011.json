@@ -699,6 +699,71 @@
         "refine_status": "STAGE_MATERIALIZED"
       },
       "re_review": "DEFERRED_TO_ATOM_09"
+    },
+    "legacy_v1_chinese_compatibility": {
+      "contract": {
+        "schema_version": "cnw_work_unit_v1",
+        "project_id": "FICT_LEGACY",
+        "unit": {
+          "id": "ep01",
+          "kind": "episode",
+          "language": "en-US",
+          "target_visible_chars": 5,
+          "min_visible_chars": 4,
+          "max_visible_chars": 20,
+          "pov": "Speaker"
+        },
+        "story": {
+          "required_beats": []
+        }
+      },
+      "locale_field": "absent",
+      "legacy_language_field": "en-US",
+      "prose_requests": [
+        [
+          {
+            "role": "system",
+            "content": "Write the complete prose in Chinese."
+          },
+          {
+            "role": "user",
+            "content": "synthetic brief"
+          }
+        ],
+        [
+          {
+            "role": "system",
+            "content": "你是在续写同一章简体中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到整章完整且达到合同可见字数。保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。"
+          },
+          {
+            "role": "user",
+            "content": "{\"already_written_tail\": \"短\", \"brief\": \"synthetic brief\", \"instruction\": \"只续写，不重复。\", \"still_needed_visible_chars\": 3}"
+          }
+        ]
+      ],
+      "prose_responses": [
+        "短",
+        "这是正文"
+      ],
+      "refine_requests": [
+        [
+          {
+            "role": "system",
+            "content": "你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订整章正文，保留有效戏剧内容与所有必需节拍，保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。按合同语言简体中文（zh-CN）修订，长度按可见 Unicode 码点计算。 不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。"
+          },
+          {
+            "role": "user",
+            "content": "{\"brief_constraints\": \"保留合成节拍\", \"confirmed_findings\": {\"completeness_candidates\": [{\"evidence\": \"fixture\", \"finding_id\": \"SYNTHETIC-1\", \"issue\": \"synthetic omission\", \"lens_id\": \"story_specific\"}], \"confirmed\": []}, \"v0\": \"这是原始正文\"}"
+          }
+        ]
+      ],
+      "refine_response": "修订后的正文",
+      "consumer_result": "v1 continuation recovery and Refine both retained historical Chinese instructions",
+      "message_sha256": [
+        "d8742961f125f2119ee8d43180ec1a3770a5e559ac23f9841ceb73fa3e2862e6",
+        "924c624fd1ff601c83e9e0460d5e48ade535f909f0bae936d061f8adc453f792",
+        "ea580c5a3d63d73f22c94adedd8a58b2479ea1f49cfee3665e019b8a07c477bb"
+      ]
     }
   }
 }

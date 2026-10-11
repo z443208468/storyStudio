@@ -1,7 +1,8 @@
 # ATOM-06 METHOD_FIDELITY_DIFF — 2026-10-11
 
-**Status:** Writer evidence for local candidate review. Controller verdict and
-candidate C/T are pending; this document is not an acceptance. The only plan is
+**Status:** Repair evidence for a new local candidate after the first Atom-06
+candidate received an independent Controller `RETURN`; the repaired candidate
+C/T is pending review. This document is not an acceptance. The only plan is
 `plans/MASTER_PLAN_GENERIC_APP_R5.md`, SHA-256
 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`.
 The fixed method remains `claude-novel-workflow@97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`;
@@ -62,7 +63,7 @@ commit, and tested source-file SHA values are archived in
 `evidence/ATOM06_RETURN_RAW_20261011.json`. It records exit `0`, stdout SHA-256
 `997ed26c6ced510151f3ff68d6cbf2d17221857332bac9e2d296752995e790f6`, empty
 stderr SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-and `101 passed, 13 subtests passed`. The raw stdout is retained as Base64, not
+and `102 passed, 13 subtests passed`. The raw stdout is retained as Base64, not
 paraphrased.
 
 Exact synthetic requests, input field lists, source/message hashes, offline
@@ -72,7 +73,8 @@ responses, and downstream outcomes are archived in
 includes two projects × four author roles, English and Chinese continuation
 messages, five isolated Lens messages, six verifier messages for two findings,
 the Completeness→Refine→Lens-feedback chain, disabled/unavailable supplement
-cases, and the `FICT_BAD` pre-Provider rejection. Its schema marks the complete
+cases, the `FICT_BAD` pre-Provider rejection, and legacy v1 Chinese continuation
+and Refine compatibility requests. Its schema marks the complete
 trace `SYNTHETIC_OFFLINE_ONLY`.
 
 The test set also covers policy snapshots, source import, maintenance, contract
@@ -81,6 +83,22 @@ legacy runner behavior with self-contained temporary fixtures. Six protected
 untracked W10 files were neither read nor staged. `CUTOVER_BLOCKED` remains in
 force: no DataHome or project root was selected, and no project migration or
 activity-pointer change occurred.
+
+## Controller RETURN and minimum repair
+
+The first local Atom-06 candidate `53ad1043604ce194b1bb7d3c6b206b172b0e01c8`
+(`78b99aface15a59cde75625dd60457710d7ce3e2`) received an independent `RETURN`
+for M14 / §06.1 compatibility: the locale update treated legacy v1 contracts
+without an explicit locale as English. This could change existing CNW Chinese
+continuation and Refine requests. That rejected candidate was not pushed.
+
+The minimum repair makes `cnw_runner.execute_prose` and `execute_refine` preserve
+their historical Chinese instructions for every non-v2 contract; v2 continues
+to follow its explicitly validated `zh-CN`/`en-US` locale. A temporary synthetic
+v1 contract with no locale and legacy `language="en-US"` now exercises the actual
+under-length continuation and Refine request builders. Both captured requests
+contain the historical Chinese instructions and no English switch. This repair
+does not alter CNW stages, roles, data, or project state.
 
 **Controller:** pending review of the exact local candidate C/T. This document
 does not claim Atom-06 acceptance or authorize push; normal push and remote

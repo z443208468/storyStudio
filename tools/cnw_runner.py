@@ -1391,7 +1391,11 @@ def execute_prose(run_dir: Path) -> dict:
     project_root = _run_dir_base(run_dir)
     materials = _role_sources("prose", run_dir, state, contract, project_root)
     base_messages = _author_messages("prose", contract, materials)
-    is_chinese = contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN"
+    # Legacy v1 runs predate locale contracts and have always used the pinned
+    # Chinese continuation/recovery prompts. Preserve that behavior instead of
+    # inferring English from an absent locale or a legacy display-language field.
+    is_chinese = (contract.get("schema_version") != "cnw_work_unit_v2"
+                  or contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN")
     if contract.get("schema_version") == "cnw_work_unit_v2" and not is_chinese and contract["unit"].get("language_locale") != "en-US":
         raise ContractError("LOCALE_UNSUPPORTED", str(contract["unit"].get("language_locale")))
     if is_chinese:
@@ -1745,7 +1749,9 @@ def _confirmed_findings(run_dir: Path, state: dict) -> list[dict]:
 def execute_refine(run_dir: Path) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
-    is_chinese = contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN"
+    # v1 has no locale contract; retain its historical Chinese Refine behavior.
+    is_chinese = (contract.get("schema_version") != "cnw_work_unit_v2"
+                  or contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN")
     if is_chinese:
         whole = "整章" if contract["unit"]["kind"] == "episode" else "整场"
         scenes = "保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。" if contract["unit"]["kind"] == "episode" else "保持同一场范围。"
