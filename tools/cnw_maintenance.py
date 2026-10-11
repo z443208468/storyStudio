@@ -234,7 +234,11 @@ def _apply(root, run, journal):
 def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False, sources=()):
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+        try:
+            from .cnw_project import _registered_project_identity
+        except ImportError:
+            from cnw_project import _registered_project_identity
+        _registered_project_identity(root)
     if operation not in {"audit", "handoff", "arc_review"} | set(operations.OPERATIONS) or scope not in {"full", "light", "targeted"}:
         raise ContractError("MAINTENANCE_OPERATION_INVALID", str(operation))
     if operation == "arc_review" and (not isinstance(target, str) or not target.strip()):

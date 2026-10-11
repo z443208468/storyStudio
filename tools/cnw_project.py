@@ -356,6 +356,53 @@ def _registered_project_identity(root: Path) -> dict:
     return identity
 
 
+def list_source_revisions(project_root: str | Path) -> dict:
+    """List verified source identities and immutable registry revisions, without exposing source text."""
+    root = Path(project_root).resolve(strict=True)
+    identity = _registered_project_identity(root)
+    manifest_path = _safe_source_file(root, "_INBOX/source_manifest.json")
+    index_path = _safe_source_file(root, "_INBOX/source_index.json")
+    try:
+        manifest_raw, index_raw = manifest_path.read_bytes(), index_path.read_bytes()
+        manifest, source_index = json.loads(manifest_raw), json.loads(index_raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError("SOURCE_REGISTRY_INVALID", "current source registry is unreadable") from exc
+    manifest_sha, index_sha = sha(manifest_raw), sha(index_raw)
+    if (not isinstance(manifest, dict) or not isinstance(source_index, dict) or
+            not isinstance(manifest.get("sources"), list) or
+            source_index.get("schema_version") != "cnw_source_index_v2" or
+            source_index.get("manifest_revision_sha256") != manifest_sha):
+        raise ContractError("SOURCE_REGISTRY_INVALID", "source registry revisions are not mutually bound")
+    if manifest.get("schema_version") != "cnw_source_manifest_v2":
+        raise ContractError("SOURCE_REGISTRY_INVALID", "current source manifest is not v2")
+    _source_manifest_revision(root, manifest_sha)
+    index_snapshot = _safe_source_file(root, f"_INBOX/revisions/indexes/{index_sha}.json")
+    if sha(index_snapshot.read_bytes()) != index_sha:
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "immutable source-index revision SHA256 differs")
+    index_rows = source_index.get("source_revisions")
+    if not isinstance(index_rows, list) or any(not isinstance(item, dict) for item in index_rows):
+        raise ContractError("SOURCE_REGISTRY_INVALID", "source-index revision list is malformed")
+    listed = []
+    for item in manifest.get("sources", []):
+        if not isinstance(item, dict):
+            raise ContractError("SOURCE_REGISTRY_INVALID", "source manifest contains a malformed source row")
+        source_id, revision_id = item.get("source_id"), item.get("source_revision_id")
+        indexed = [row for row in index_rows if row.get("source_id") == source_id and
+                   row.get("source_revision_id") == revision_id]
+        if len(indexed) != 1 or indexed[0].get("stored_path") != item.get("stored_path"):
+            raise ContractError("SOURCE_REGISTRY_INVALID", "manifest source is missing from the bound source index")
+        source = _safe_source_file(root, item["stored_path"])
+        if sha(source.read_bytes()) != revision_id:
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "stored source bytes differ from the recorded revision")
+        listed.append({"source_id": source_id, "source_revision_id": revision_id,
+                       "format": item.get("format"), "stored_path": item["stored_path"]})
+    return {"status": "SOURCE_REVISIONS_LISTED", "project_id": identity["project_id"],
+            "project_instance_id": identity["project_instance_id"],
+            "source_manifest_revision_sha256": manifest_sha,
+            "source_index_revision_sha256": index_sha, "sources": listed,
+            "provider_call": "none"}
+
+
 def _source_manifest_revision(root: Path, digest: str) -> tuple[dict, str]:
     if not re.fullmatch(r"[0-9a-f]{64}", str(digest)):
         raise ContractError("SOURCE_MANIFEST_REVISION_REQUIRED", "select an exact immutable source-manifest SHA256")
@@ -680,7 +727,7 @@ def support_workflow_prompt(project_root: str | Path, number: str) -> dict:
         raise ContractError("SUPPORT_WORKFLOW_UNKNOWN", number)
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((ROOT / "workspace").resolve()):
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+        _registered_project_identity(root)
     source = REFERENCE_ROOT / SUPPORT_WORKFLOW_SOURCE[number]
     if not source.is_file():
         raise ContractError("SUPPORT_WORKFLOW_SOURCE_MISSING", str(source))
@@ -696,6 +743,29 @@ def support_workflow_prompt(project_root: str | Path, number: str) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+    setup = sub.add_parser("setup", help="select and persist an explicit private DataHome")
+    setup.add_argument("--data-home", required=True)
+    setup.add_argument("--pointer-path")
+    registered_init = sub.add_parser("registered-init", help="create a registered project instance in an explicitly selected DataHome")
+    registered_init.add_argument("--project-id", required=True)
+    registered_init.add_argument("--display-name", default="")
+    registered_init.add_argument("--data-home", required=True)
+    registered_import = sub.add_parser("registered-import", help="create a new registered project and import one explicitly selected source")
+    registered_import.add_argument("--project-id", required=True)
+    registered_import.add_argument("--display-name", default="")
+    registered_import.add_argument("--data-home", required=True)
+    registered_import.add_argument("--input", required=True)
+    registered_import.add_argument("--format", choices=("md", "txt", "json"))
+    source_import = sub.add_parser("source-import", help="import a source revision into an explicitly selected registered project")
+    source_import.add_argument("--project-root", required=True)
+    source_import.add_argument("--input", required=True)
+    source_import.add_argument("--format", choices=("md", "txt", "json"))
+    registered_incremental = sub.add_parser("registered-incremental", help="append a source revision and run Workflow 02 in an explicitly selected registered project")
+    registered_incremental.add_argument("--project-root", required=True)
+    registered_incremental.add_argument("--input", required=True)
+    registered_incremental.add_argument("--format", choices=("md", "txt", "json"))
+    source_list = sub.add_parser("source-list", help="list verified source IDs and immutable revisions without exposing source text")
+    source_list.add_argument("--project-root", required=True)
     init = sub.add_parser("init")
     init.add_argument("--project-id", required=True)
     init.add_argument("--workspace-root", required=True)
@@ -732,7 +802,51 @@ def main(argv=None) -> int:
     support.add_argument("--project-root", required=True)
     support.add_argument("--number", required=True, choices=tuple(SUPPORT_WORKFLOW_SOURCE))
     args = parser.parse_args(argv)
-    if args.command == "init":
+    if args.command == "setup":
+        try:
+            from .project_paths import setup_data_home
+        except ImportError:
+            from project_paths import setup_data_home
+        selected = setup_data_home(args.data_home, pointer_path=args.pointer_path)
+        result = {"status": "DATA_HOME_READY", "data_home": str(selected), "provider_call": "none"}
+    elif args.command == "source-list":
+        result = list_source_revisions(args.project_root)
+    elif args.command == "registered-init":
+        try:
+            from .project_paths import create_project
+        except ImportError:
+            from project_paths import create_project
+        project = create_project(project_id=args.project_id, display_name=args.display_name or args.project_id,
+                                 data_home=args.data_home)
+        result = init_registered_project(project["project_root"])
+    elif args.command == "registered-import":
+        try:
+            from .project_paths import create_project
+        except ImportError:
+            from project_paths import create_project
+        if args.format and Path(args.input).suffix.lower().lstrip(".") != args.format:
+            raise ContractError("IMPORT_FORMAT_MISMATCH", args.format)
+        project = create_project(project_id=args.project_id, display_name=args.display_name or args.project_id,
+                                 data_home=args.data_home)
+        init_registered_project(project["project_root"])
+        imported = import_source(input_file=args.input, project_root=project["project_root"])
+        result = {**project, "status": "SOURCE_IMPORTED", "import": imported, "provider_call": "none"}
+    elif args.command == "source-import":
+        if args.format and Path(args.input).suffix.lower().lstrip(".") != args.format:
+            raise ContractError("IMPORT_FORMAT_MISMATCH", args.format)
+        result = import_source(input_file=args.input, project_root=args.project_root)
+    elif args.command == "registered-incremental":
+        root = Path(args.project_root).resolve(strict=True)
+        _registered_project_identity(root)
+        if not (root / "00_meta/import_state.json").is_file():
+            raise ContractError("INCREMENTAL_REQUIRES_INITIAL_IMPORT", "run Workflow 01 before an incremental source update")
+        if args.format and Path(args.input).suffix.lower().lstrip(".") != args.format:
+            raise ContractError("IMPORT_FORMAT_MISMATCH", args.format)
+        imported = import_source(input_file=args.input, project_root=root)
+        result = semantic_import(root, incremental=True)
+        result["source_revision_id"] = imported["source_revision_id"]
+        result["project_instance_id"] = json.loads((root / "project_identity.json").read_text(encoding="utf-8"))["project_instance_id"]
+    elif args.command == "init":
         result = init_project(args.workspace_root, args.project_id)
     elif args.command == "import-source":
         if args.format and Path(args.input).suffix.lower().lstrip(".") != args.format:
@@ -759,6 +873,6 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (ContractError, OSError, ValueError, json.JSONDecodeError) as exc:
+    except (ContractError, OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"CNW_PROJECT_FAILED:{exc}", file=sys.stderr)
         raise SystemExit(2)

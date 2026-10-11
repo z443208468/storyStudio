@@ -1,0 +1,22 @@
+ATOM-04 Writer verification record — 2026-10-11
+Status: local verification passed; independent Controller verdict pending; no candidate commit exists yet.
+
+Plan: plans/MASTER_PLAN_GENERIC_APP_R5.md
+Plan SHA256: 5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF
+Current branch before candidate: main
+
+Checks performed on synthetic/temp data only:
+- python -m unittest discover -s tests -p test_studio_cli_routes.py
+  Result: 9 tests, OK (134.108s)
+- python -m unittest discover -s tests -p test_cnw_maintenance.py
+  Result: 10 tests, OK (0.691s)
+- py_compile for tools/cnw_project.py, tools/cnw_maintenance.py, tools/cnw_sprint.py
+  Result: OK
+- PowerShell parser validation for tools/studio.ps1
+  Result: OK
+- Dedicated registered setup/import/source-list integration test through studio.ps1
+  Included in route suite; uses a temporary DataHome, temporary setup pointer, and fictional Markdown source.
+
+Coverage includes app-only doctor without project selection; project-route fail-closed behavior; explicit legacy scene checkpoint path; setup → project-import → source-list; source registry identity verification; and maintenance/Sprint generic-root identity boundary checks.
+
+No private project/source data or old run was read or changed. No W10 protected local file was read, staged, or modified. No API/provider call, fee request, or story generation was made. No existing project, historical artifact, run, cost ledger, or source registry was changed. This record does not claim complete command semantics, 11-stage execution, or Live readiness; those remain for the plan's later gates.
