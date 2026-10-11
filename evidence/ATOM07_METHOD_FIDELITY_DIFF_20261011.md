@@ -133,9 +133,11 @@ is preserved.
 
 The self-contained legacy path-map fixture covers a synthetic
 `EXECUTION_INCOMPLETE` Plot stage with an `UNKNOWN_NOT_ZERO` receipt, verifies
-that the same stage is proposed, and checks exact run/contract bytes remain
-unchanged. It also verifies the existing empty-history preflight still rejects
-that run. This does not reconcile the actual TS run, validate actual receipt
+that the same stage is proposed and its identity is computed offline; it also
+injects a concurrent state change and verifies fail-closed rejection. The
+normal plan checks exact run/contract bytes remain unchanged. It verifies the
+existing empty-history preflight still rejects that run. This does not
+reconcile the actual TS run, validate actual receipt
 payloads against the private cost ledger, or establish
 `V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK`. No private root was selected or
 accessed; `CUTOVER_BLOCKED` remains in force. Exact run output and tested source
