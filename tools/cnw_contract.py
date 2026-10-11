@@ -46,7 +46,21 @@ def check_required_fields(contract: dict[str, Any], required: list[str] | None =
             code = "PREFLIGHT_TARGET_MISSING" if key == "target_visible_chars" else "PREFLIGHT_REQUIRED_FIELD_MISSING"
             raise ContractError(code, f"unit.{key} is required")
     story = contract.get("story", {})
-    for key in ("role_in_story", "reader_reward", "entry_state", "exit_state", "before_anchor", "after_anchor", "required_beats", "characters_in_scene", "character_knowledge_boundary_ref", "forbidden_future_revelations", "voice_sample_refs"):
+    intent = contract.get("work_intent") if contract.get("schema_version") == "cnw_work_unit_v2" else None
+    story_fields = ["role_in_story", "reader_reward", "entry_state", "exit_state", "required_beats", "characters_in_scene", "character_knowledge_boundary_ref", "forbidden_future_revelations", "voice_sample_refs"]
+    if intent == "INSERT_BETWEEN":
+        story_fields.extend(("before_anchor", "after_anchor"))
+    elif intent == "ORIGINAL_EPISODE":
+        story_fields.extend(("first_episode", "arc_ref"))
+        if not story.get("first_episode"):
+            story_fields.append("previous_episode_ref")
+    elif intent == "ADAPT_SOURCE":
+        story_fields.append("source_selection")
+    elif intent is None:
+        story_fields.extend(("before_anchor", "after_anchor"))
+    else:
+        raise ContractError("WORK_INTENT_UNSUPPORTED", str(intent))
+    for key in story_fields:
         if key == "required_beats" and unit.get("planning_mode") == "author_plot":
             continue
         if key not in story or story[key] in (None, "", []):
@@ -88,12 +102,21 @@ def validate_source_identity(
     expected_manifest_sha256: str,
 ) -> None:
     source = contract.get("source", {})
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        validate_v2_source_identity(contract, source_root=source_root)
+        return
     if source.get("identity_type") == "imported_project":
         if source.get("version") != expected_version or source.get("import_id") != expected_zip_sha256:
             raise ContractError("SOURCE_IDENTITY_MISMATCH", "imported source version or import ID differs")
         manifest_path = _safe_source_file(source_root, source.get("manifest_file", ""))
         if _sha256(manifest_path.read_bytes()) != expected_manifest_sha256.lower():
-            raise ContractError("SOURCE_IDENTITY_MISMATCH", "actual imported source manifest SHA256 differs")
+            snapshot = f"_INBOX/revisions/legacy-manifests/{expected_manifest_sha256.lower()}.json"
+            try:
+                manifest_path = _safe_source_file(source_root, snapshot)
+            except (ContractError, OSError) as exc:
+                raise ContractError("LEGACY_SOURCE_SNAPSHOT_MISSING", "the v1 contract's exact source-manifest bytes are unavailable") from exc
+            if _sha256(manifest_path.read_bytes()) != expected_manifest_sha256.lower():
+                raise ContractError("SOURCE_IDENTITY_MISMATCH", "exact imported source-manifest snapshot SHA256 differs")
         source_file = contract.get("story", {}).get("source_file")
         if not source_file:
             raise ContractError("SOURCE_IDENTITY_MISSING", "story.source_file is required")
@@ -102,6 +125,8 @@ def validate_source_identity(
             raise ContractError("SOURCE_IDENTITY_MISMATCH", "imported source file SHA256 differs")
         _validate_story_anchors(contract, source_root, path)
         return
+    if source.get("identity_type") is not None or "zip_sha256" not in source:
+        raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
     if source.get("version") != expected_version or source.get("zip_sha256", "").lower() != expected_zip_sha256.lower():
         raise ContractError("SOURCE_IDENTITY_MISMATCH", "source version or release ZIP SHA256 differs")
     if source.get("local_private_source_manifest_sha256", "").lower() != expected_manifest_sha256.lower():
@@ -126,21 +151,206 @@ def validate_source_identity(
         raise ContractError("PREFLIGHT_REQUIRED_FIELD_MISSING", "unit.id is required")
 
 
+def resolve_json_pointer(document: Any, pointer: str) -> Any:
+    """Resolve an RFC 6901 pointer without coercion or first-match behavior."""
+    if not isinstance(pointer, str) or not pointer.startswith("/"):
+        raise ContractError("SOURCE_JSON_POINTER_INVALID", "JSON Pointer must be a non-root absolute pointer")
+    current = document
+    for encoded in pointer[1:].split("/"):
+        if re.search(r"~(?![01])", encoded):
+            raise ContractError("SOURCE_JSON_POINTER_INVALID", "invalid JSON Pointer escape")
+        part = encoded.replace("~1", "/").replace("~0", "~")
+        if isinstance(current, dict):
+            if part not in current:
+                raise ContractError("SOURCE_JSON_POINTER_MISSING", pointer)
+            current = current[part]
+        elif isinstance(current, list):
+            if not re.fullmatch(r"0|[1-9][0-9]*", part) or int(part) >= len(current):
+                raise ContractError("SOURCE_JSON_POINTER_MISSING", pointer)
+            current = current[int(part)]
+        else:
+            raise ContractError("SOURCE_JSON_POINTER_MISSING", pointer)
+    return current
+
+
+def _strict_json_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ContractError("SOURCE_JSON_DUPLICATE_KEY", key)
+        result[key] = value
+    return result
+
+
+def validate_v2_source_identity(contract: dict[str, Any], *, source_root: str | Path) -> None:
+    source = contract.get("source", {})
+    if not isinstance(source, dict) or not isinstance(contract.get("story"), dict):
+        raise ContractError("CONTRACT_INVALID", "v2 source and story must be objects")
+    intent = contract.get("work_intent")
+    origin = source.get("source_origin")
+    root = Path(source_root).resolve(strict=True)
+    identity_path = _safe_source_file(root, "project_identity.json")
+    try:
+        identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity is unreadable") from exc
+    if not isinstance(identity, dict):
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity must be an object")
+    instance_id = identity.get("project_instance_id")
+    if (instance_id != source.get("project_instance_id") or
+            instance_id != contract.get("project_instance_id") or
+            identity.get("project_id") != contract.get("project_id")):
+        raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "contract identity differs from the registered project")
+    if intent == "ORIGINAL_EPISODE":
+        story = contract["story"]
+        if origin != "ORIGINAL_PROJECT" or any(key in story for key in ("source_file", "before_anchor", "after_anchor")):
+            raise ContractError("SOURCE_TYPE_UNSUPPORTED", "original work cannot fabricate source files or anchors")
+        if source.get("source_file_sha256") or source.get("source_manifest_sha256"):
+            raise ContractError("SOURCE_TYPE_UNSUPPORTED", "original work cannot claim an imported source identity")
+        arc_ref, arc_sha = story.get("arc_ref"), story.get("arc_sha256")
+        if not isinstance(arc_ref, str) or not isinstance(arc_sha, str):
+            raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", "story.arc_ref and story.arc_sha256 are required")
+        arc_path = _safe_source_file(root, arc_ref)
+        if _sha256(arc_path.read_bytes()) != arc_sha.lower():
+            raise ContractError("PROJECT_CONTEXT_IDENTITY_MISMATCH", "selected Arc bytes differ from the work contract")
+        if story.get("first_episode") is True:
+            if story.get("previous_episode_ref") or story.get("previous_episode_sha256"):
+                raise ContractError("PRODUCTION_CONTEXT_INVALID", "first episode cannot claim a previous episode")
+        elif story.get("first_episode") is False:
+            previous_ref, previous_sha = story.get("previous_episode_ref"), story.get("previous_episode_sha256")
+            if not isinstance(previous_ref, str) or not isinstance(previous_sha, str):
+                raise ContractError("PREVIOUS_EPISODE_REFERENCE_REQUIRED", contract.get("unit", {}).get("id", ""))
+            previous_path = _safe_source_file(root, previous_ref)
+            if _sha256(previous_path.read_bytes()) != previous_sha.lower():
+                raise ContractError("PREVIOUS_EPISODE_IDENTITY_MISMATCH", previous_ref)
+        else:
+            raise ContractError("PRODUCTION_CONTEXT_INVALID", "first_episode must be explicitly true or false")
+        return
+    if intent not in {"INSERT_BETWEEN", "ADAPT_SOURCE"}:
+        raise ContractError("WORK_INTENT_UNSUPPORTED", str(intent))
+    if origin != "IMPORTED_PROJECT":
+        raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(origin))
+    manifest_rel = source.get("manifest_file")
+    if not isinstance(manifest_rel, str):
+        raise ContractError("SOURCE_IDENTITY_MISSING", "source.manifest_file is required")
+    manifest_path = _safe_source_file(root, manifest_rel)
+    manifest_raw = manifest_path.read_bytes()
+    manifest_sha = _sha256(manifest_raw)
+    if manifest_sha != str(source.get("source_manifest_sha256", "")).lower():
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "source manifest revision SHA256 differs")
+    try:
+        manifest = json.loads(manifest_raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("SOURCE_MANIFEST_INVALID", "source revision is not valid UTF-8 JSON") from exc
+    if not isinstance(manifest, dict):
+        raise ContractError("SOURCE_MANIFEST_INVALID", "source-manifest root must be an object")
+    if manifest.get("schema_version") != "cnw_source_manifest_v2":
+        raise ContractError("SOURCE_MANIFEST_INVALID", "v2 contract requires an immutable v2 source manifest")
+    if manifest.get("project_id") != contract.get("project_id"):
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "source manifest belongs to a different project")
+    if source.get("manifest_revision_sha256") != manifest_sha:
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "manifest revision identity differs")
+    index_rel = source.get("source_index_file")
+    index_expected = source.get("source_index_sha256")
+    if not isinstance(index_rel, str) or not isinstance(index_expected, str):
+        raise ContractError("SOURCE_INDEX_REVISION_REQUIRED", "contract must freeze an immutable source-index revision")
+    index_path = _safe_source_file(root, index_rel)
+    index_raw = index_path.read_bytes()
+    if _sha256(index_raw) != index_expected.lower():
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "source-index revision SHA256 differs")
+    try:
+        source_index = json.loads(index_raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("SOURCE_INDEX_INVALID", "source-index revision is not valid JSON") from exc
+    if not isinstance(source_index, dict):
+        raise ContractError("SOURCE_INDEX_INVALID", "source-index root must be an object")
+    if (source_index.get("schema_version") != "cnw_source_index_v2" or
+            source_index.get("project_id") != contract.get("project_id") or
+            source_index.get("manifest_revision_sha256") != manifest_sha):
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "source-index does not bind the selected manifest revision")
+    manifest_sources = manifest.get("sources")
+    index_sources = source_index.get("source_revisions")
+    if (not isinstance(manifest_sources, list) or not all(isinstance(entry, dict) for entry in manifest_sources) or
+            not isinstance(index_sources, list) or not all(isinstance(entry, dict) for entry in index_sources)):
+        raise ContractError("SOURCE_MANIFEST_INVALID", "source manifest and index require object entry lists")
+    matches = [item for item in manifest_sources
+               if item.get("source_id") == source.get("source_id") and
+               item.get("source_revision_id") == source.get("source_revision_id")]
+    if len(matches) != 1:
+        raise ContractError("SOURCE_SELECTION_INVALID", "source identity is absent or ambiguous in the frozen manifest")
+    item = matches[0]
+    indexed = [entry for entry in index_sources
+               if entry.get("source_id") == source.get("source_id") and
+               entry.get("source_revision_id") == source.get("source_revision_id")]
+    if len(indexed) != 1 or indexed[0].get("stored_path") != item.get("stored_path"):
+        raise ContractError("SOURCE_SELECTION_INVALID", "selected source is absent or ambiguous in the frozen source index")
+    source_path = item.get("stored_path")
+    if (item.get("sha256") != source.get("source_revision_id") or
+            not isinstance(source_path, str) or
+            source_path != contract.get("story", {}).get("source_file")):
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "selected source path or byte identity differs")
+    raw_path = _safe_source_file(root, source_path)
+    raw = raw_path.read_bytes()
+    if _sha256(raw) != source.get("source_revision_id"):
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "selected source bytes differ")
+    if intent == "INSERT_BETWEEN":
+        _validate_story_anchors(contract, root, raw_path)
+        before, after = contract["story"]["before_anchor"], contract["story"]["after_anchor"]
+        if before.get("source_line_end", before["source_line"]) >= after.get("source_line_end", after["source_line"]):
+            raise ContractError("SOURCE_ANCHOR_INVALID", "before anchor must precede after anchor")
+    else:
+        selection = contract["story"].get("source_selection")
+        if not isinstance(selection, dict):
+            raise ContractError("SOURCE_SELECTION_REQUIRED", "ADAPT_SOURCE needs an explicit source span")
+        if selection.get("source_id") != source.get("source_id") or selection.get("source_revision_id") != source.get("source_revision_id"):
+            raise ContractError("SOURCE_SELECTION_INVALID", "selection does not bind the selected source revision")
+        if item.get("format") == "json":
+            try:
+                parsed = json.loads(raw.decode("utf-8-sig"), object_pairs_hook=_strict_json_object)
+            except (UnicodeError, json.JSONDecodeError, ContractError) as exc:
+                raise ContractError("SOURCE_JSON_INVALID", "selected JSON source cannot be parsed") from exc
+            value = resolve_json_pointer(parsed, selection.get("json_pointer"))
+            if value in (None, "", [], {}):
+                raise ContractError("SOURCE_SPAN_EMPTY", "JSON Pointer must select a non-empty value")
+            selected_bytes = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            expected_format = "json_pointer_canonical_value_sha256"
+        elif item.get("format") in {"md", "txt"}:
+            start, end = selection.get("start_line"), selection.get("end_line")
+            lines = raw.splitlines(keepends=True)
+            if (not isinstance(start, int) or isinstance(start, bool) or
+                    not isinstance(end, int) or isinstance(end, bool) or
+                    start < 1 or end < start or end > len(lines)):
+                raise ContractError("SOURCE_SPAN_INVALID", "text source span must be a non-empty valid line range")
+            selected_bytes = b"".join(lines[start - 1:end])
+            if not selected_bytes.decode("utf-8-sig").strip():
+                raise ContractError("SOURCE_SPAN_EMPTY", "text span must contain non-whitespace source text")
+            expected_format = "raw_line_span_sha256"
+        else:
+            raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(item.get("format")))
+        if selection.get("hash_semantics") != expected_format or selection.get("selected_sha256") != _sha256(selected_bytes):
+            raise ContractError("SOURCE_SPAN_HASH_MISMATCH", "selected source span identity differs")
+
+
 def _validate_story_anchors(contract: dict[str, Any], source_root: str | Path, path: Path) -> None:
     story = contract.get("story", {})
     data = path.read_bytes()
     for field in ("before_anchor", "after_anchor"):
         anchor = story.get(field, {})
+        if not isinstance(anchor, dict):
+            raise ContractError("SOURCE_ANCHOR_INVALID", f"{field} must be an object")
         start = anchor.get("source_line")
         end = anchor.get("source_line_end", start)
-        expected = anchor.get("sha256", "").lower()
-        if not isinstance(start, int) or not isinstance(end, int) or start < 1 or end < start or not expected:
+        expected = anchor.get("sha256", "")
+        if (not isinstance(start, int) or isinstance(start, bool) or
+                not isinstance(end, int) or isinstance(end, bool) or
+                start < 1 or end < start or
+                not isinstance(expected, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", expected)):
             raise ContractError("SOURCE_ANCHOR_INVALID", f"{field} requires source_line, optional source_line_end and sha256")
         lines = data.splitlines(keepends=True)
         if end > len(lines):
             raise ContractError("SOURCE_ANCHOR_MISMATCH", f"{field} exceeds source line count")
         actual = _sha256(b"".join(lines[start - 1 : end]))
-        if actual != expected:
+        if actual != expected.lower():
             raise ContractError("SOURCE_ANCHOR_MISMATCH", f"{field} SHA256 differs")
 
 

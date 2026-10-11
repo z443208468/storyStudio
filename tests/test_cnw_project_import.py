@@ -11,6 +11,7 @@ from tools.cnw_contract import ContractError, load_contract, validate_source_ide
 from tools.cnw_project import import_source, write_contract_draft
 from tools.cnw_roles import build_role_packet, REFERENCE_ROOT
 from tools.cnw_runner import produce, step, review_run
+from tools.project_paths import create_project, setup_data_home
 from tools import cnw_import_workflow as workflow
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,15 +26,22 @@ class NewProjectImportTests(unittest.TestCase):
     def setUp(self):
         WORKSPACE.mkdir(exist_ok=True)
         self.tmp = Path(tempfile.mkdtemp(prefix=".p31-import-", dir=WORKSPACE))
+        self.secure_temp = tempfile.TemporaryDirectory(prefix="storystudio-import-projects-")
+        self.data_home = Path(self.secure_temp.name) / "private-data"
+        self.pointer = Path(self.secure_temp.name) / "user-config" / "StoryStudio" / "setup.json"
+        setup_data_home(self.data_home, pointer_path=self.pointer)
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
+        self.secure_temp.cleanup()
 
     def import_case(self, project_id, source_name, raw, source_format, anchor_lines):
         incoming = self.tmp / source_name
         incoming.write_bytes(raw)
-        result = import_source(self.tmp, project_id, incoming)
-        project = self.tmp / project_id
+        registered = create_project(project_id=project_id, display_name=project_id,
+                                    data_home=self.data_home)
+        project = Path(registered["project_root"])
+        result = import_source(input_file=incoming, project_root=project)
         self.assertEqual((project / "AGENTS.md").read_bytes(), (REFERENCE_ROOT / "templates/CLAUDE.md").read_bytes())
         manifest_path = project / result["source_manifest"]
         index_path = project / result["source_index"]
@@ -48,9 +56,24 @@ class NewProjectImportTests(unittest.TestCase):
         target = 120
         draft_path = project / "contracts" / "scene-draft.json"
         draft_path.parent.mkdir(parents=True, exist_ok=True)
-        draft_path.write_text(json.dumps({"unit_id":f"{project_id}-SCENE","pov":"First-person","target_visible_chars":target,"min_visible_chars":80,"max_visible_chars":160,
-            "before_line":anchor_lines[0],"after_line":anchor_lines[1],"required_beats":[{"beat_id":"B01","goal":"Use the source-supported opening event.","budget_visible_chars":60},{"beat_id":"B02","goal":"Reach the source-supported next state.","budget_visible_chars":60}],
-            "entry_state":"Source-backed opening.","exit_state":"Source-backed next event.","role_in_story":"Connect source events.","reader_reward":"A clear character choice.","characters_in_scene":["Source character"]}, ensure_ascii=False), encoding="utf-8")
+        work_intent = "ADAPT_SOURCE" if source_format == "json" else "INSERT_BETWEEN"
+        draft = {"schema_version":"cnw_work_unit_draft_v2", "work_intent":work_intent,
+            "unit_id":f"{project_id}-SCENE","pov":"First-person","language_locale":"zh-CN",
+            "target_visible_chars":target,"min_visible_chars":80,"max_visible_chars":160,
+            "required_beats":[{"beat_id":"B01","goal":"Use the source-supported opening event."},{"beat_id":"B02","goal":"Reach the source-supported next state."}],
+            "chapter_context":"A fictional source-bound unit.", "entry_state":"Source-backed opening.","exit_state":"Source-backed next event.",
+            "role_in_story":"Connect source events.","reader_reward":"A clear character choice.","characters_in_scene":["Source character"],
+            "character_knowledge_boundary_ref":"90_canon/canon_candidates.json#status=TODO_CONFIRM",
+            "forbidden_future_revelations":["Do not use unconfirmed source claims."],
+            "voice_sample_refs":["90_canon/canon_candidates.json#voice-sample-review-required"],
+            "source_id":result["source_id"], "source_revision_id":result["source_revision_id"],
+            "source_manifest_revision_sha256":result["source_manifest_sha256"],
+            "source_index_revision_sha256":result["source_index_sha256"]}
+        if source_format == "json":
+            draft["json_pointer"] = "/event"
+        else:
+            draft.update(before_line=anchor_lines[0], after_line=anchor_lines[1])
+        draft_path.write_text(json.dumps(draft, ensure_ascii=False), encoding="utf-8")
         drafted = write_contract_draft(project, draft_path)
         self.assertEqual(drafted["status"], "CONTRACT_DRAFT_READY_FOR_HUMAN_PREFLIGHT")
         contract_path = project / "contracts" / f"{project_id}-SCENE.json"

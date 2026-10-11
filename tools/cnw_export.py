@@ -60,8 +60,8 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     (deliverables / "00_运行状态.md").write_text(
         "# 运行状态\n\n" + "\n".join(f"- {name}: `{value}`" for name, value in execution.items())
         + "\n\n导出是可读候选的保存，不代表完整工作流验收或用户创意接受。\n", encoding="utf-8")
-    before_anchor = contract["story"]["before_anchor"]
-    after_anchor = contract["story"]["after_anchor"]
+    before_anchor = contract.get("story", {}).get("before_anchor")
+    after_anchor = contract.get("story", {}).get("after_anchor")
     before_text = after_text = ""
     if contract["story"].get("source_file"):
         try:
@@ -103,17 +103,29 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
         encoding="utf-8")
 
     reading_parts = []
-    if before_anchor:
-        reading_parts.append(f"<!-- 前文锚点 {before_anchor.get('scene')} 行 {before_anchor.get('source_line')}–{before_anchor.get('source_line_end')} -->")
-        if before_text:
-            reading_parts.append(before_text)
-    reading_parts.append(f"<!-- 插场开始 {unit['id']} -->")
-    reading_parts.append(v1)
-    reading_parts.append(f"<!-- 插场结束 {unit['id']} -->")
-    if after_anchor:
-        reading_parts.append(f"<!-- 后文锚点 {after_anchor.get('scene')} 行 {after_anchor.get('source_line')}–{after_anchor.get('source_line_end')} -->")
-        if after_text:
-            reading_parts.append(after_text)
+    intent = contract.get("work_intent")
+    if intent == "ADAPT_SOURCE":
+        preparation_file = run / "artifacts/production_preparation.json"
+        if preparation_file.is_file():
+            preparation = json.loads(preparation_file.read_text(encoding="utf-8"))
+            excerpt = preparation.get("documents", {}).get("selected_source_excerpt", "")
+            if excerpt:
+                reading_parts.extend(("<!-- 选定来源片段 -->", excerpt, "<!-- 改编稿开始 -->"))
+        reading_parts.append(v1)
+    elif intent == "ORIGINAL_EPISODE":
+        reading_parts.append(v1)
+    else:
+        if before_anchor:
+            reading_parts.append(f"<!-- 前文锚点 {before_anchor.get('scene')} 行 {before_anchor.get('source_line')}–{before_anchor.get('source_line_end')} -->")
+            if before_text:
+                reading_parts.append(before_text)
+        reading_parts.append(f"<!-- 插场开始 {unit['id']} -->")
+        reading_parts.append(v1)
+        reading_parts.append(f"<!-- 插场结束 {unit['id']} -->")
+        if after_anchor:
+            reading_parts.append(f"<!-- 后文锚点 {after_anchor.get('scene')} 行 {after_anchor.get('source_line')}–{after_anchor.get('source_line_end')} -->")
+            if after_text:
+                reading_parts.append(after_text)
     reading = "\n\n".join(reading_parts) + "\n"
     (deliverables / "03_前后文连读.md").write_text(reading, encoding="utf-8")
     html = (

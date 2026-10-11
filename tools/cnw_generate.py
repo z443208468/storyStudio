@@ -255,13 +255,34 @@ def assemble_segment_outputs(contract: dict, base_request: dict, outputs: list[d
     return {"status": "DRAFT_CONTENT_AND_COST_VALIDATED" if validation["status"] == "CONTENT_VALID" else "DRAFT_RETURN", "scope": "content_and_settlement_reconciled; raw_provider_authentication_requires_runner_verify_live", "prose": prose, "segment_order": [output["segment_id"] for output in outputs], "segment_response_ids": [output["provider_request_id"] for output in outputs], "settled_cost_cny": str(sum((Decimal(str(output["cost_cny"])) for output in outputs), Decimal("0"))), "cost_ledger_sha256": hashlib.sha256(ledger_bytes).hexdigest(), "validation": validation}
 
 
-def _private_project_root(value: str | Path) -> Path:
+def _project_root(value: str | Path) -> Path:
     candidate = Path(value).absolute()
     if any(part.is_symlink() for part in (candidate, *candidate.parents) if part.exists()):
         raise ContractError("PROJECT_PATH_UNSAFE", "project root contains a symlink")
     root = candidate.resolve(strict=True)
-    workspace = (ROOT / "workspace").resolve(strict=True)
-    if not root.is_relative_to(workspace) or not root.is_dir():
+    workspace = (ROOT / "workspace").resolve()
+    if root.is_relative_to(workspace) and root.is_dir():
+        return root
+    try:
+        try:
+            from .project_paths import resolve_project
+        except ImportError:
+            from project_paths import resolve_project
+        registration = resolve_project(root, data_home=root.parent.parent)
+    except Exception as exc:
+        raise ContractError("PROJECT_ROOT_NOT_REGISTERED", str(root)) from exc
+    identity_path = root / "project_identity.json"
+    if (not identity_path.is_file() or identity_path.is_symlink() or
+            registration.get("project_id") is None or not root.is_dir()):
+        raise ContractError("PROJECT_ROOT_NOT_REGISTERED", str(root))
+    return root
+
+
+def _private_project_root(value: str | Path) -> Path:
+    """Preserve the private-workspace-only boundary for legacy revision tools."""
+    root = _project_root(value)
+    workspace = (ROOT / "workspace").resolve()
+    if not root.is_relative_to(workspace):
         raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
     return root
 
@@ -327,7 +348,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if args.mode == "live":
         raise ContractError("LIVE_EXECUTOR_NOT_AVAILABLE", "W06 constructs and validates requests offline; live execution remains gated for W10")
-    project_root = _private_project_root(args.project_root)
+    project_root = _project_root(args.project_root)
     run_id = args.run_id
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", run_id) or run_id in {".", ".."}:
         raise ContractError("RUN_ID_INVALID", run_id)
@@ -355,6 +376,15 @@ def main(argv=None) -> int:
         raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "run must contain frozen contract and accepted Brief artifacts") from exc
     if not brief_path.is_relative_to(run_root):
         raise ContractError("PROSE_INPUTS_NOT_ACCEPTED", "Brief artifact escapes run directory")
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_contract import validate_v2_source_identity
+            from .cnw_runner import validate_literary_source_freeze
+        except ImportError:
+            from cnw_contract import validate_v2_source_identity
+            from cnw_runner import validate_literary_source_freeze
+        validate_v2_source_identity(contract, source_root=project_root)
+        validate_literary_source_freeze(state, project_root)
     if (state.get("run_id") != run_id or state.get("fixture_only") is True
             or state.get("contract_sha256") != hashlib.sha256(contract_bytes).hexdigest()
             or state.get("contract_approval", {}).get("status") != "ACCEPTED"

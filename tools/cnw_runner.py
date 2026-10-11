@@ -249,12 +249,34 @@ def locked_run(path: Path, *, lock_name: str = "run.lock"):
 # --------------------------------------------------------------------------
 def _source_root(contract: dict, project_root: Path) -> Path:
     source = contract["source"]
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        if source.get("source_origin") == "IMPORTED_PROJECT":
+            return (project_root / source.get("source_root", ".")).resolve(strict=True)
+        if source.get("source_origin") == "ORIGINAL_PROJECT":
+            return project_root.resolve(strict=True)
+        raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("source_origin")))
     if source.get("identity_type") == "imported_project":
         return (project_root / source.get("source_root", ".")).resolve(strict=True)
-    return ROOT / "inputs/private/release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
+    if source.get("identity_type") is None and "zip_sha256" in source:
+        return ROOT / "inputs/private/release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
+    raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
 
 
 def literary_source_freeze(contract: dict, project_root: Path) -> dict[str, str]:
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_roles import read_production_preparation
+        except ImportError:
+            from cnw_roles import read_production_preparation
+        preparation = read_production_preparation(project_root, contract)
+        result = {f"project:{name}": digest for name, digest in preparation["source_hashes"].items()}
+        arc_index = project_root / "04_chapter_design/arc_index.md"
+        if arc_index.is_file():
+            result["project:04_chapter_design/arc_index.md"] = sha(arc_index.read_bytes())
+        result["preparation:identity"] = sha(json.dumps({"files": preparation["source_hashes"],
+            "arc_index": sha(arc_index.read_bytes()) if arc_index.is_file() else None,
+            "work_intent": contract.get("work_intent"), "source_identity": contract.get("source")}, sort_keys=True).encode("utf-8"))
+        return result
     paths = {
         "90_canon/canon.md": project_root / "90_canon/canon.md",
         "90_canon/character_bible.md": project_root / "90_canon/character_bible.md",
@@ -296,6 +318,14 @@ def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
         raise ContractError("LITERARY_SOURCE_FREEZE_MISSING", state.get("run_id", "unknown"))
     actual = {}
     contract = load_contract(project_root / state["contract_path"])
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        if state.get("literary_source_freeze_version") != "literary_source_freeze_v2":
+            raise ContractError("LITERARY_SOURCE_FREEZE_VERSION_UNSUPPORTED", str(state.get("literary_source_freeze_version")))
+        actual = literary_source_freeze(contract, project_root)
+        if actual != expected:
+            changed = sorted(key for key in set(actual) | set(expected) if actual.get(key) != expected.get(key))
+            raise ContractError("LITERARY_SOURCE_CHANGED", ", ".join(changed))
+        return sha(json.dumps(expected, sort_keys=True).encode("utf-8"))
     for key, digest in expected.items():
         if key == "preparation:identity":
             try:
@@ -316,8 +346,17 @@ def validate_literary_source_freeze(state: dict, project_root: Path) -> str:
         else:
             raise ContractError("LITERARY_SOURCE_FREEZE_INVALID", key)
         if path.is_symlink() or not path.is_file():
-            raise ContractError("LITERARY_SOURCE_CHANGED", key)
-        actual[key] = sha(path.read_bytes())
+            if not key.startswith("manifest:"):
+                raise ContractError("LITERARY_SOURCE_CHANGED", key)
+        if path.is_file() and not path.is_symlink() and sha(path.read_bytes()) == digest:
+            actual[key] = digest
+            continue
+        if key.startswith("manifest:"):
+            snapshot = project_root / "_INBOX" / "revisions" / "legacy-manifests" / f"{digest}.json"
+            if snapshot.is_file() and not snapshot.is_symlink() and sha(snapshot.read_bytes()) == digest:
+                actual[key] = digest
+                continue
+        raise ContractError("LITERARY_SOURCE_CHANGED", key)
     contract_path = project_root / state["contract_path"]
     contract = load_contract(contract_path)
     source_script = next((ROOT / key.split(":", 1)[1] for key in expected if key.startswith("source:") and not key.endswith("anchor_excerpt")), None)
@@ -590,18 +629,38 @@ def produce(args) -> dict:
     check_required_fields(contract)
     is_fixture = str(contract.get("project_id", "")).startswith("FICT_")
     private_workspace = (ROOT / "workspace").resolve()
-    if not project_root.is_relative_to(private_workspace) and not is_fixture:
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(project_root))
+    if not project_root.is_relative_to(private_workspace) and (not is_fixture or contract.get("schema_version") == "cnw_work_unit_v2"):
+        if contract.get("schema_version") != "cnw_work_unit_v2":
+            raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(project_root))
+        try:
+            try:
+                from .project_paths import resolve_project
+            except ImportError:
+                from project_paths import resolve_project
+            registered = resolve_project(project_root, data_home=project_root.parent.parent)
+        except Exception as exc:
+            raise ContractError("PROJECT_ROOT_NOT_REGISTERED", str(project_root)) from exc
+        if (registered.get("project_instance_id") != contract.get("project_instance_id") or
+                registered.get("project_id") != contract.get("project_id")):
+            raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "contract does not belong to the registered project")
     source = contract.get("source", {})
-    if source.get("identity_type") == "imported_project":
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_contract import validate_v2_source_identity
+        except ImportError:
+            from cnw_contract import validate_v2_source_identity
+        validate_v2_source_identity(contract, source_root=project_root)
+    elif source.get("identity_type") == "imported_project":
         source_root = (project_root / source.get("source_root", ".")).resolve()
         if not source_root.is_relative_to(project_root):
             raise ContractError("SOURCE_PATH_UNSAFE", "import source root escapes the private project")
         validate_source_identity(contract, source_root=source_root, expected_version=source["version"], expected_zip_sha256=source["import_id"], expected_manifest_sha256=source["source_manifest_sha256"])
-    elif not is_fixture:
+    elif source.get("identity_type") is None and "zip_sha256" in source and not is_fixture:
         release_root = ROOT / "inputs/private/release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
         validate_source_identity(contract, source_root=release_root, expected_version=source["version"], expected_zip_sha256=source["zip_sha256"], expected_manifest_sha256=source["local_private_source_manifest_sha256"])
-    source_freeze = literary_source_freeze(contract, project_root) if not is_fixture else {}
+    elif contract.get("schema_version") != "cnw_work_unit_v2" and not is_fixture:
+        raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
+    source_freeze = literary_source_freeze(contract, project_root) if (not is_fixture or contract.get("schema_version") == "cnw_work_unit_v2") else {}
     kind = args.unit or contract["unit"].get("kind")
     if kind != contract["unit"].get("kind"):
         raise ContractError("UNIT_KIND_MISMATCH", f"requested {kind}; contract has {contract['unit'].get('kind')}")
@@ -612,11 +671,16 @@ def produce(args) -> dict:
     validate_work_unit(contract)
     production_config = ROOT / "config/production.example.json"
     cost_guard_runner = ROOT / "tools/p2_cost_guard.py"
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        production_config = ROOT / "config/policies/provider_policy.deepseek_flash.v1.json"
+        if args.mode == "live":
+            raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "generic v2 live execution remains closed until project authorization is integrated")
     provider_settings = json.loads(production_config.read_text(encoding="utf-8-sig"))
-    max_in_flight = provider_settings.get("provider", {}).get("max_in_flight")
+    max_in_flight = (provider_settings.get("request_policy", {}).get("max_in_flight") if contract.get("schema_version") == "cnw_work_unit_v2" else provider_settings.get("provider", {}).get("max_in_flight"))
     if type(max_in_flight) is not int or not 1 <= max_in_flight <= 5:
         raise ContractError("MAX_IN_FLIGHT_POLICY_MISMATCH", "max_in_flight must be an integer from 1 to 5")
-    if provider_settings.get("cost_guard", {}).get("persist_across_run_ids") is not True:
+    accounting_persist = (provider_settings.get("accounting", {}).get("persist_across_run_ids") if contract.get("schema_version") == "cnw_work_unit_v2" else provider_settings.get("cost_guard", {}).get("persist_across_run_ids"))
+    if accounting_persist is not True:
         raise ContractError("COST_GUARD_POLICY_MISMATCH", "persistent campaign accounting is required")
     path = run_path(run_id, project_root / "runs")
     try:
@@ -640,8 +704,10 @@ def produce(args) -> dict:
             "cnw_stages": list(CNW_STAGES), "support_hooks": {}, "next_stage": CNW_STAGES[0],
             "provider_requests": [], "stages": stages, "max_in_flight": max_in_flight,
             "literary_source_hashes": source_freeze,
+            **({"literary_source_freeze_version": "literary_source_freeze_v2"}
+               if contract.get("schema_version") == "cnw_work_unit_v2" else {}),
             "provider_config_sha256": sha(production_config.read_bytes()),
-            "cost_guard_runner_sha256": sha(cost_guard_runner.read_bytes()),
+            "cost_guard_runner_sha256": None if contract.get("schema_version") == "cnw_work_unit_v2" else sha(cost_guard_runner.read_bytes()),
         }
         save_state(path, state)
         for previous_path in (project_root / "runs").iterdir():
@@ -654,6 +720,17 @@ def produce(args) -> dict:
                 previous = json.loads(previous_state_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
+            # New generic contracts must never rewrite a pre-existing v1 run
+            # merely because its unit ID is reused. Run supersession is a
+            # later, explicit promotion/isolation operation.
+            if contract.get("schema_version") == "cnw_work_unit_v2":
+                previous_contract_path = previous_path / "artifacts" / "contract.json"
+                try:
+                    previous_contract = load_contract(previous_contract_path)
+                except (ContractError, OSError):
+                    previous_contract = None
+                if not previous_contract or previous_contract.get("schema_version") != "cnw_work_unit_v2":
+                    continue
             if previous.get("work_id") == unit_id and previous.get("contract_sha256") != state["contract_sha256"]:
                 previous["status"] = "INVALIDATED"
                 previous["updated_at"] = now()
@@ -936,12 +1013,12 @@ def _dispatch_cnw_stage(run_dir: Path, stage: str) -> dict:
     raise ContractError("UNKNOWN_STAGE", stage)
 
 
-def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, output_cap: int, *, extra=None, project_dir: str | None, role_id: str) -> dict:
+def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, output_cap: int, *, extra=None, project_dir: str | None, role_id: str, prebuilt_messages: list[dict] | None = None) -> dict:
     state = load_state(run_dir)
     contract = _contract_for(run_dir)
     project_root = _run_dir_base(run_dir)
     materials = _role_sources(role, run_dir, state, contract, project_root)
-    messages = _author_messages(role, contract, materials, extra)
+    messages = prebuilt_messages if prebuilt_messages is not None else _author_messages(role, contract, materials, extra)
     meta = _role_meta(role, contract)
     content, receipt = cnw_live_call(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap)
     _validate_role(role, contract, content, meta)
@@ -964,14 +1041,39 @@ def _planning_stage(run_dir: Path, role: str, stage: str, output_name: str, outp
     return {"stage": stage, "receipt": receipt["request_id"], "provider_request_id": receipt["provider_request_id"]}
 
 
-def execute_plot(run_dir: Path) -> dict:
+def build_plot_request(project_root: str | Path, contract: dict) -> dict:
+    """Construct the real CNW Plot messages without transport or file writes."""
     try:
-        from .cnw_roles import read_production_preparation
+        from .cnw_contract import check_required_fields, validate_v2_source_identity, validate_work_unit
+        from .cnw_roles import read_actual_texts, read_production_preparation
     except ImportError:
-        from cnw_roles import read_production_preparation
+        from cnw_contract import check_required_fields, validate_v2_source_identity, validate_work_unit
+        from cnw_roles import read_actual_texts, read_production_preparation
+    project = Path(project_root).resolve(strict=True)
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_project import _registered_project_identity
+        except ImportError:
+            from cnw_project import _registered_project_identity
+        registered = _registered_project_identity(project)
+        if registered.get("project_instance_id") != contract.get("project_instance_id") or registered.get("project_id") != contract.get("project_id"):
+            raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "Plot request contract differs from its registered project")
+        check_required_fields(contract)
+        validate_v2_source_identity(contract, source_root=project)
+        validate_work_unit(contract)
+    preparation = read_production_preparation(project, contract)
+    materials = read_actual_texts(project, "plot", contract["unit"]["id"], arc_ref=contract["story"].get("arc_ref"))
+    messages = _author_messages("plot", contract, materials, {"production_preparation": preparation})
+    return {"messages": messages, "production_preparation": preparation,
+            "input_sha256": {name: sha(text.encode("utf-8")) for name, text in materials.items()},
+            "provider_call": "none"}
+
+
+def execute_plot(run_dir: Path) -> dict:
     contract = _contract_for(run_dir)
-    preparation = read_production_preparation(_run_dir_base(run_dir), contract)
-    if contract["unit"]["kind"] == "scene":
+    request = build_plot_request(_run_dir_base(run_dir), contract)
+    preparation = request["production_preparation"]
+    if contract.get("schema_version") != "cnw_work_unit_v2" and contract["unit"]["kind"] == "scene":
         source = _source_root(contract, _run_dir_base(run_dir)) / contract["story"]["source_file"]
         lines = source.read_text(encoding="utf-8-sig").splitlines()
         anchor = contract["story"]["before_anchor"]
@@ -983,8 +1085,12 @@ def execute_plot(run_dir: Path) -> dict:
         current = load_state(run_dir)
         current["production_preparation"] = {"path": "artifacts/production_preparation.json", "sha256": sha(context_path.read_bytes())}
         save_state(run_dir, current)
+        # Retain the historical source-anchor augmentation in the actual request.
+        materials = _role_sources("plot", run_dir, load_state(run_dir), contract, _run_dir_base(run_dir))
+        request["messages"] = _author_messages("plot", contract, materials, {"production_preparation": preparation})
     result = _planning_stage(run_dir, "plot", "plot", "artifacts/plot.md", 4000,
-                            extra={"production_preparation": preparation}, project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent")
+                            project_dir="06_plot/<work_id>_plot.md", role_id="plot_agent",
+                            prebuilt_messages=request["messages"])
     _critics_hook(run_dir, "plot")  # user-authorized supplement, not a CNW completion gate
     return result
 

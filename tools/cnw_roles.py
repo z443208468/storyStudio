@@ -82,11 +82,13 @@ def sha256_file(path: str | Path) -> str:
 
 
 def _read_project_file(path: str | Path, project_root: Path | None = None) -> tuple[Path, str]:
+    if project_root is None:
+        raise ContractError("PROJECT_REQUIRED", "role inputs require an explicit project root")
     candidate = Path(path)
     if not candidate.is_absolute():
-        candidate = ROOT / candidate
+        candidate = Path(project_root) / candidate
     resolved = candidate.resolve(strict=True)
-    allowed = ((project_root or (ROOT / "workspace" / "cangqi")).resolve(), (ROOT / "runs").resolve())
+    allowed = (Path(project_root).resolve(), (ROOT / "runs").resolve())
     if not any(resolved.is_relative_to(root) for root in allowed) or not resolved.is_file():
         raise ContractError("ROLE_INPUT_PATH_UNSAFE", "role input must be a private project or run file")
     return resolved, resolved.read_text(encoding="utf-8-sig")
@@ -118,7 +120,10 @@ def resolve_arc(project_root: Path, work_id: str, arc_ref: str | None = None) ->
     """Resolve the work's Arc from an explicit reference or the author's index."""
     directory = project_root / "04_chapter_design"
     if arc_ref:
-        candidate = (project_root / arc_ref).resolve(strict=True)
+        raw_candidate = project_root / arc_ref
+        if raw_candidate.is_symlink():
+            raise ContractError("ARC_REFERENCE_UNSAFE", arc_ref)
+        candidate = raw_candidate.resolve(strict=True)
         if (not candidate.is_relative_to(directory.resolve()) or not candidate.is_file()
                 or not re.fullmatch(r"arc_[A-Za-z0-9_-]+\.md", candidate.name)
                 or candidate.name == "arc_index.md" or candidate.stem.endswith("_episode_details")):
@@ -174,15 +179,20 @@ def read_actual_texts(project_root: Path, role: str, work_id: str, *, arc_ref: s
 
 def read_production_preparation(project_root: Path, contract: dict) -> dict:
     """Read the public production manual's preparation sources before Plot."""
-    arc = resolve_arc(project_root, contract["unit"]["id"], contract["story"].get("arc_ref"))
+    story = contract.get("story", {})
+    intent = contract.get("work_intent")
+    arc_ref = story.get("arc_ref")
+    if intent == "ORIGINAL_EPISODE" and not arc_ref:
+        raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", "story.arc_ref")
+    arc = resolve_arc(project_root, contract["unit"]["id"], arc_ref)
     paths = [project_root / "94_runtime/current_state.md", project_root / "07_draft/manuscript_index.md", arc,
              arc.with_name(arc.stem + "_episode_details.md"),
              project_root / "92_style_engine/character_voice_samples.md", project_root / "90_canon/character_bible.md"]
-    previous = contract["story"].get("previous_episode_ref")
+    previous = story.get("previous_episode_ref")
     episode = re.fullmatch(r"(ep|ch)(\d+)", contract["unit"]["id"], re.I)
     if not previous and episode and int(episode.group(2)) > 1:
         previous = f"07_draft/episodes/{episode.group(1)}{int(episode.group(2))-1:0{len(episode.group(2))}d}.md"
-    if not previous and contract["unit"].get("kind") == "episode" and not episode and not contract["story"].get("first_episode"):
+    if not previous and contract["unit"].get("kind") == "episode" and not episode and not story.get("first_episode"):
         raise ContractError("PREVIOUS_EPISODE_REFERENCE_REQUIRED", contract["unit"]["id"])
     if previous:
         paths.append(project_root / previous)
@@ -196,9 +206,64 @@ def read_production_preparation(project_root: Path, contract: dict) -> dict:
         relative = resolved.relative_to(project_root.resolve()).as_posix()
         documents[relative] = resolved.read_text(encoding="utf-8-sig")
         hashes[relative] = sha256_file(resolved)
+    if intent == "ORIGINAL_EPISODE":
+        required_authority = ("90_canon/canon.md", "90_canon/character_bible.md", "90_canon/world_bible.md",
+                              "90_canon/timeline.md", "90_canon/glossary.md", "92_style_engine/style_guide.md",
+                              "92_style_engine/forbidden_patterns.md", "92_style_engine/character_voice_samples.md")
+        for relative in required_authority:
+            path = project_root / relative
+            if not path.is_file() or path.is_symlink():
+                raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", relative)
+            text = path.read_text(encoding="utf-8-sig").strip()
+            if not text or re.search(r"^\s*TODO(?:_CONFIRM)?\s*:", text, re.I | re.M):
+                raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", relative)
+            documents[relative] = text
+            hashes[relative] = sha256_file(path)
+        previous_ref = story.get("previous_episode_ref")
+        if previous_ref:
+            path = (project_root / previous_ref).resolve(strict=True)
+            if not path.is_relative_to(project_root.resolve()) or path.is_symlink() or sha256_file(path) != story.get("previous_episode_sha256"):
+                raise ContractError("PREVIOUS_EPISODE_IDENTITY_MISMATCH", previous_ref)
+        elif story.get("first_episode") is not True:
+            raise ContractError("PREVIOUS_EPISODE_REFERENCE_REQUIRED", contract["unit"]["id"])
+    if intent in {"INSERT_BETWEEN", "ADAPT_SOURCE"}:
+        try:
+            from .cnw_contract import _safe_source_file, resolve_json_pointer
+            from .cnw_runner import _source_root
+        except ImportError:
+            from cnw_contract import _safe_source_file, resolve_json_pointer
+            from cnw_runner import _source_root
+        source_root = _source_root(contract, project_root)
+        source_file = _safe_source_file(source_root, story.get("source_file", ""))
+        source_bytes = source_file.read_bytes()
+        source_hash = sha256_bytes(source_bytes)
+        if source_hash != contract["source"].get("source_revision_id"):
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "selected source bytes changed before Plot")
+        if intent == "ADAPT_SOURCE":
+            selection = story.get("source_selection", {})
+            if source_file.suffix.lower() == ".json":
+                parsed = json.loads(source_bytes.decode("utf-8-sig"))
+                selected = resolve_json_pointer(parsed, selection.get("json_pointer"))
+                excerpt = json.dumps(selected, ensure_ascii=False, sort_keys=True, indent=2)
+            else:
+                lines = source_bytes.splitlines(keepends=True)
+                excerpt = b"".join(lines[selection["start_line"]-1:selection["end_line"]]).decode("utf-8-sig")
+            excerpt_sha = selection["selected_sha256"]
+        else:
+            lines = source_bytes.splitlines(keepends=True)
+            before, after = story["before_anchor"], story["after_anchor"]
+            excerpt = json.dumps({"before_anchor": b"".join(lines[before["source_line"]-1:before["source_line_end"]]).decode("utf-8-sig"),
+                                  "after_anchor": b"".join(lines[after["source_line"]-1:after["source_line_end"]]).decode("utf-8-sig")}, ensure_ascii=False)
+            excerpt_sha = sha256_bytes(excerpt.encode("utf-8"))
+        documents["selected_source_excerpt"] = excerpt
+        hashes["selected_source_excerpt"] = excerpt_sha
+        documents["selected_source_identity"] = json.dumps({"source_id": contract["source"]["source_id"],
+            "source_revision_id": source_hash, "manifest_revision_sha256": contract["source"]["manifest_revision_sha256"],
+            "source_index_sha256": contract["source"]["source_index_sha256"]}, sort_keys=True)
+        hashes["selected_source_identity"] = sha256_bytes(documents["selected_source_identity"].encode("utf-8"))
     return {"documents": documents, "source_hashes": hashes,
             "source_method": "example_project/00_meta/episode_production_manual.md#production-reading-order",
-            "previous_episode": previous or ("FIRST_EPISODE" if episode or contract["story"].get("first_episode") else "SCENE_SOURCE_ANCHORS")}
+            "previous_episode": previous or ("FIRST_EPISODE" if episode or story.get("first_episode") else "SCENE_SOURCE_ANCHORS")}
 
 
 def relevant_voice_samples(text: str, characters: list[str]) -> str:
@@ -406,29 +471,52 @@ def build_role_packet(role: str, contract_path: str | Path, inputs: dict[str, st
     contract_file = raw_contract.resolve(strict=True)
     contract_path = contract_file
     project_root = contract_file.parent.parent
-    if not contract_file.is_relative_to((ROOT / "workspace").resolve()):
-        raise ContractError("ROLE_INPUT_PATH_UNSAFE", "contract must belong to a private workspace project")
     contract = load_contract(contract_path)
+    if not contract_file.is_relative_to((ROOT / "workspace").resolve()):
+        if contract.get("schema_version") != "cnw_work_unit_v2":
+            raise ContractError("ROLE_INPUT_PATH_UNSAFE", "legacy contracts must remain inside their private workspace project")
+        try:
+            try:
+                from .project_paths import resolve_project
+            except ImportError:
+                from project_paths import resolve_project
+            registered = resolve_project(project_root, data_home=project_root.parent.parent)
+        except Exception as exc:
+            raise ContractError("PROJECT_ROOT_NOT_REGISTERED", str(project_root)) from exc
+        if (registered.get("project_instance_id") != contract.get("project_instance_id") or
+                registered.get("project_id") != contract.get("project_id")):
+            raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "role packet contract differs from registered project")
     check_required_fields(contract)
     source = contract["source"]
-    if source.get("identity_type") == "imported_project":
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_contract import validate_v2_source_identity
+        except ImportError:
+            from cnw_contract import validate_v2_source_identity
+        validate_v2_source_identity(contract, source_root=project_root)
+    elif source.get("identity_type") == "imported_project":
         release_root = (project_root / source.get("source_root", ".")).resolve()
         version = source["version"]
         import_id = source["import_id"]
         manifest_hash = source["source_manifest_sha256"]
-    else:
+    elif source.get("identity_type") is None and "zip_sha256" in source:
         release_root = ROOT / "inputs" / "private" / "release" / source["zip_sha256"].lower() / "Cangqi_Jun_Release_2_3"
         version = source["version"]
         import_id = source["zip_sha256"]
         manifest_hash = source["local_private_source_manifest_sha256"]
-    validate_source_identity(
-        contract,
-        source_root=release_root,
-        expected_version=version,
-        expected_zip_sha256=import_id,
-        expected_manifest_sha256=manifest_hash,
-    )
+    else:
+        raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(source.get("identity_type")))
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        validate_source_identity(
+            contract,
+            source_root=release_root,
+            expected_version=version,
+            expected_zip_sha256=import_id,
+            expected_manifest_sha256=manifest_hash,
+        )
     policy_path = ROOT / "config" / "cnw_production_policy.json"
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        policy_path = ROOT / "config" / "policies" / "app_policy.v1.json"
     if contract["unit"].get("policy_sha256", "").lower() != sha256_file(policy_path):
         raise ContractError("PRODUCTION_POLICY_IDENTITY_MISMATCH", "policy SHA256 differs from the frozen contract")
     cnw_manifest = ROOT / "runtime" / "reference" / "cnw_97ad71fe5e5e" / "CNW_LOCAL_REFERENCE_MANIFEST.json"

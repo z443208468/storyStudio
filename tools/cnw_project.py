@@ -16,9 +16,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
+    from .cnw_contract import ContractError, _safe_source_file, assert_output_within_root, check_required_fields, resolve_json_pointer, validate_scene_budget, validate_source_identity, validate_v2_source_identity, validate_work_unit
 except ImportError:  # direct script execution
-    from cnw_contract import ContractError, assert_output_within_root, check_required_fields, validate_scene_budget, validate_source_identity, validate_work_unit
+    from cnw_contract import ContractError, _safe_source_file, assert_output_within_root, check_required_fields, resolve_json_pointer, validate_scene_budget, validate_source_identity, validate_v2_source_identity, validate_work_unit
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{1,63}\Z")
@@ -43,11 +43,28 @@ def project_directory(workspace_root: str | Path, project_id: str) -> Path:
 
 def init_project(workspace_root: str | Path, project_id: str) -> dict:
     root = project_directory(workspace_root, project_id)
+    new_project = not root.exists()
+    _initialize_project_root(root, project_id, new_project=new_project)
+    return {"status": "PROJECT_READY", "project_id": project_id, "project_root": str(root), "provider_call": "none"}
+
+
+def init_registered_project(project_root: str | Path) -> dict:
+    root = Path(project_root).resolve(strict=True)
+    identity = _registered_project_identity(root)
+    _initialize_project_root(root, identity["project_id"], new_project=not (root / "CLAUDE.md").exists())
+    return {"status": "PROJECT_READY", "project_id": identity["project_id"],
+            "project_instance_id": identity["project_instance_id"], "project_root": str(root), "provider_call": "none"}
+
+
+def _initialize_project_root(root: Path, project_id: str, *, new_project: bool) -> None:
     for folder in ("_INBOX/originals", "00_meta", "01_theme", "02_logline", "03_project_design",
                    "04_chapter_design", "05_scene_cards", "06_plot", "07_draft", "08_review", "09_revision",
                    "90_canon", "91_jet_engine", "92_style_engine", "93_data", "93_exports",
                    "contracts", "runs"):
-        (root / folder).mkdir(parents=True, exist_ok=True)
+        directory = root / folder
+        if directory.is_symlink():
+            raise ContractError("PROJECT_PATH_UNSAFE", f"project folder is a symlink: {folder}")
+        directory.mkdir(parents=True, exist_ok=True)
     try:
         from .cnw_roles import REFERENCE_ROOT, _pinned_upstream
     except ImportError:
@@ -58,7 +75,30 @@ def init_project(workspace_root: str | Path, project_id: str) -> dict:
         target = root / name
         if not target.exists():
             target.write_bytes(instructions)
-    return {"status": "PROJECT_READY", "project_id": project_id, "project_root": str(root), "provider_call": "none"}
+    if new_project:
+        placeholders = {
+            "94_runtime/current_state.md": "TODO_CONFIRM: Author must record the current story state; this file contains no story facts.\n",
+            "07_draft/manuscript_index.md": "TODO_CONFIRM: Author must list approved manuscript versions; none are registered.\n",
+            "04_chapter_design/arc_index.md": "TODO_CONFIRM: Author must define Arc ranges and episode assignments.\n",
+            "04_chapter_design/arc_01.md": "TODO_CONFIRM: Author must establish this Arc before writing.\n",
+            "04_chapter_design/arc_01_episode_details.md": "TODO_CONFIRM: Author must define episode details for this Arc.\n",
+            "90_canon/canon.md": "TODO_CONFIRM: No approved Canon facts have been supplied.\n",
+            "90_canon/character_bible.md": "TODO_CONFIRM: No character facts have been supplied.\n",
+            "90_canon/world_bible.md": "TODO_CONFIRM: No world facts have been supplied.\n",
+            "90_canon/timeline.md": "TODO_CONFIRM: No timeline facts have been supplied.\n",
+            "90_canon/glossary.md": "TODO_CONFIRM: No glossary terms have been supplied.\n",
+            "92_style_engine/style_guide.md": "TODO_CONFIRM: Author must establish style and tone.\n",
+            "92_style_engine/forbidden_patterns.md": "TODO_CONFIRM: Author must define project-specific exclusions.\n",
+            "92_style_engine/character_voice_samples.md": "TODO_CONFIRM: No approved voice samples have been supplied.\n",
+        }
+        for relative, value in placeholders.items():
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                with target.open("x", encoding="utf-8", newline="\n") as stream:
+                    stream.write(value)
+            except FileExistsError:
+                pass
 
 
 def _json_scalars(value, pointer=""):
@@ -72,8 +112,48 @@ def _json_scalars(value, pointer=""):
         yield pointer or "/", str(value)
 
 
-def import_source(workspace_root: str | Path, project_id: str, input_file: str | Path) -> dict:
-    root = project_directory(workspace_root, project_id)
+def _reject_duplicate_json_keys(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ContractError("IMPORT_JSON_DUPLICATE_KEY", f"duplicate object key: {key}")
+        value[key] = item
+    return value
+
+
+def _write_immutable_snapshot(project_root: Path, category: str, raw: bytes) -> tuple[str, str]:
+    digest = sha(raw)
+    relative = Path("_INBOX/revisions") / category / f"{digest}.json"
+    target = project_root / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        if target.is_symlink() or target.read_bytes() != raw:
+            raise ContractError("SOURCE_REVISION_COLLISION", relative.as_posix())
+    else:
+        with target.open("xb") as stream:
+            stream.write(raw)
+            stream.flush()
+    return relative.as_posix(), digest
+
+
+def _json_bytes(value: dict) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+
+
+def import_source(workspace_root: str | Path | None = None, project_id: str | None = None, input_file: str | Path | None = None, *, project_root: str | Path | None = None) -> dict:
+    if input_file is None:
+        raise ContractError("IMPORT_INPUT_REQUIRED", "select an explicit source file")
+    if project_root is not None:
+        root = Path(project_root).resolve(strict=True)
+        identity = _registered_project_identity(root)
+        if project_id is not None and identity.get("project_id") != project_id:
+            raise ContractError("PROJECT_IDENTITY_MISMATCH", "display project_id differs from the registered project")
+        project_id = identity["project_id"]
+        _initialize_project_root(root, project_id, new_project=not (root / "CLAUDE.md").exists())
+    else:
+        if workspace_root is None or project_id is None:
+            raise ContractError("PROJECT_REQUIRED", "supply a registered project_root or legacy workspace_root and project_id")
+        root = project_directory(workspace_root, project_id)
     source_path = Path(input_file).resolve(strict=True)
     if not source_path.is_file() or source_path.suffix.lower() not in {".md", ".txt", ".json"}:
         raise ContractError("IMPORT_NEEDS_FORMAT_ADAPTER", "supported source files are UTF-8 .md, .txt, or structured .json")
@@ -86,18 +166,24 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
     is_json = source_path.suffix.lower() == ".json"
     if is_json:
         try:
-            parsed = json.loads(text)
+            parsed = json.loads(text, object_pairs_hook=_reject_duplicate_json_keys)
         except json.JSONDecodeError as exc:
             raise ContractError("IMPORT_JSON_INVALID", str(exc)) from exc
         if not isinstance(parsed, (dict, list)):
             raise ContractError("IMPORT_NEEDS_FORMAT_ADAPTER", "JSON root must be an object or array")
     else:
         parsed = None
-    init_project(workspace_root, project_id)
+    if project_root is None:
+        init_project(workspace_root, project_id)
     inbox = root / "_INBOX"
     manifest_path = inbox / "source_manifest.json"
     index_path = inbox / "source_index.json"
     canon_path = root / "90_canon" / "canon_candidates.json"
+    if inbox.is_symlink() or (inbox / "originals").is_symlink() or (root / "90_canon").is_symlink():
+        raise ContractError("SOURCE_PATH_UNSAFE", "source registry and review-state roots must not be symlinks")
+    for path in (manifest_path, index_path, canon_path):
+        if path.is_symlink():
+            raise ContractError("SOURCE_PATH_UNSAFE", f"source registry or derived review state is a symlink: {path.name}")
     previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else None
     previous_index = json.loads(index_path.read_text(encoding="utf-8")) if previous else None
     previous_canon = json.loads(canon_path.read_text(encoding="utf-8")) if previous else None
@@ -112,6 +198,8 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
                         "provider_call": "none"}
     original_rel = Path("_INBOX/originals") / f"{digest[:16]}_{source_path.name}"
     original = root / original_rel
+    if original.is_symlink():
+        raise ContractError("SOURCE_PATH_UNSAFE", str(original_rel))
     if original.exists() and sha(original.read_bytes()) != digest:
         raise ContractError("EXISTING_SOURCE_COLLISION", str(original_rel))
     if not original.exists():
@@ -137,28 +225,54 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
     if not locations:
         raise ContractError("IMPORT_SOURCE_EMPTY", "no source text was indexed")
     manifest = {
-        "schema_version": "cnw_source_manifest_v1", "project_id": project_id,
-        "import_id": digest, "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "source_count": 1,
-        "sources": [{"source_id": digest[:16], "original_path": str(source_path), "stored_path": original_rel.as_posix(), "format": source_path.suffix.lower().lstrip("."), "sha256": digest, "bytes": len(raw), "encoding": "utf-8", "location_count": len(locations)}],
+        "schema_version": "cnw_source_manifest_v2", "project_id": project_id,
+        "import_id": digest,
+        "parent_revision_sha256": None,
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "sources": [{"source_id": digest[:16], "source_revision_id": digest,
+                     "original_path": str(source_path), "stored_path": original_rel.as_posix(),
+                     "format": source_path.suffix.lower().lstrip("."), "sha256": digest,
+                     "bytes": len(raw), "encoding": "utf-8", "location_count": len(locations)}],
     }
-    index = {"schema_version": "cnw_source_index_v1", "project_id": project_id, "source_sha256": digest, "locations": locations}
+    index = {"schema_version": "cnw_source_index_v1", "project_id": project_id, "source_sha256": digest,
+             "source_revisions": [{"source_id": digest[:16], "source_revision_id": digest,
+                                   "stored_path": original_rel.as_posix(), "format": source_path.suffix.lower().lstrip(".")}],
+             "locations": locations}
     for location in locations:
         location["source_id"] = digest[:16]
         location["source_file"] = original_rel.as_posix()
     if previous:
-        # Keep the first-import identity and every previous source revision.
-        # Changed files append a new revision; prior conclusions stay intact.
-        manifest = {**previous, "sources": previous["sources"] + manifest["sources"],
-                    "updated_at": manifest["imported_at"]}
-        manifest["source_count"] = len(manifest["sources"])
+        previous_bytes = manifest_path.read_bytes()
+        # Any extant contract/run may still name either current pointer. Preserve
+        # the exact previous revisions before advancing those mutable aliases.
+        _write_immutable_snapshot(root, "legacy-manifests", previous_bytes)
+        _write_immutable_snapshot(root, "legacy-indexes", index_path.read_bytes())
+        if previous.get("schema_version") != "cnw_source_manifest_v2":
+            # Preserve every v1 byte identity before advancing the mutable current pointer.
+            if canon_path.is_file():
+                _write_immutable_snapshot(root, "legacy-state", canon_path.read_bytes())
+            prior_sources = []
+            for item in previous.get("sources", []):
+                prior_sources.append({**item, "source_revision_id": item.get("source_revision_id", item["sha256"])})
+            parent_sha = sha(previous_bytes)
+        else:
+            prior_sources = list(previous.get("sources", []))
+            parent_sha = sha(previous_bytes)
+        manifest = {**manifest, "import_id": previous.get("import_id", prior_sources[0]["sha256"]),
+                    "sources": prior_sources + manifest["sources"],
+                    "parent_revision_sha256": parent_sha}
         old_locations = previous_index["locations"]
         if len(previous["sources"]) == 1:
             first = previous["sources"][0]
             old_locations = [{"source_id": first["source_id"],
                               "source_file": first["stored_path"], **item}
                              for item in old_locations]
-        index = {**previous_index, "locations": old_locations + locations}
+        old_revisions = previous_index.get("source_revisions") or [
+            {"source_id": item["source_id"], "source_revision_id": item.get("source_revision_id", item["sha256"]),
+             "stored_path": item["stored_path"], "format": item["format"]}
+            for item in prior_sources]
+        index = {**previous_index, "source_revisions": old_revisions + index["source_revisions"],
+                 "locations": old_locations + locations}
         used_ids = {item["candidate_id"] for item in previous_canon["candidates"]}
         next_id = 1
         for candidate in candidates:
@@ -167,19 +281,29 @@ def import_source(workspace_root: str | Path, project_id: str, input_file: str |
             candidate["candidate_id"] = f"C{next_id:04d}"
             used_ids.add(candidate["candidate_id"])
         candidates = previous_canon["candidates"] + candidates
-    (inbox / "source_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (inbox / "source_index.json").write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest_raw = _json_bytes(manifest)
+    manifest_revision_path, manifest_revision_sha = _write_immutable_snapshot(root, "manifests", manifest_raw)
+    index = {**index, "schema_version": "cnw_source_index_v2", "project_id": project_id,
+             "manifest_revision_sha256": manifest_revision_sha}
+    index_raw = _json_bytes(index)
+    index_revision_path, index_revision_sha = _write_immutable_snapshot(root, "indexes", index_raw)
+    # These names are compatibility/current-list pointers only. Contracts bind the immutable revisions above.
+    manifest_path.write_bytes(manifest_raw)
+    index_path.write_bytes(index_raw)
     canon_document = previous_canon or {"schema_version": "cnw_canon_candidates_v1", "project_id": project_id, "policy": "Every entry requires human confirmation; importer makes no Canon inference."}
     canon_document.update(source_manifest_sha256=sha(manifest_path.read_bytes()), candidates=candidates)
     canon_path.write_text(json.dumps(canon_document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return {"status": "SOURCE_IMPORTED_FOR_REVIEW", "project_id": project_id, "project_root": str(root), "source_manifest": "_INBOX/source_manifest.json", "source_index": "_INBOX/source_index.json", "canon_candidates": "90_canon/canon_candidates.json", "source_sha256": digest, "source_locations": len(locations), "canon_candidate_count": len(candidates), "canon_status": "TODO_CONFIRM", "provider_call": "none"}
+    return {"status": "SOURCE_IMPORTED_FOR_REVIEW", "project_id": project_id, "project_root": str(root), "source_manifest": manifest_revision_path, "source_index": index_revision_path, "source_manifest_sha256": manifest_revision_sha, "source_index_sha256": index_revision_sha, "source_id": digest[:16], "source_revision_id": digest, "canon_candidates": "90_canon/canon_candidates.json", "source_sha256": digest, "source_locations": len(locations), "canon_candidate_count": len(candidates), "canon_status": "TODO_CONFIRM", "provider_call": "none"}
 
 
-def build_source_bound_contract(project_root: str | Path, *, unit_id: str, pov: str, target: int, minimum: int, maximum: int, before_line: int, after_line: int, beat_specs: list[dict] | None = None, entry_state: str, exit_state: str, role_in_story: str, reader_reward: str, characters: list[str] | None = None, kind: str = "scene", planning_mode: str = "author_plot", arc_ref: str | None = None, previous_episode_ref: str | None = None, first_episode: bool | None = None) -> dict:
+def build_source_bound_contract(project_root: str | Path, *, unit_id: str, pov: str, language: str, target: int, minimum: int, maximum: int, before_line: int, after_line: int, beat_specs: list[dict] | None = None, entry_state: str, exit_state: str, role_in_story: str, reader_reward: str, characters: list[str] | None = None, kind: str = "scene", planning_mode: str = "author_plot", arc_ref: str | None = None, previous_episode_ref: str | None = None, first_episode: bool | None = None) -> dict:
     root = Path(project_root).resolve()
-    manifest_file = root / "_INBOX/source_manifest.json"
+    manifest_file = _safe_source_file(root, "_INBOX/source_manifest.json")
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
-    index = json.loads((root / "_INBOX/source_index.json").read_text(encoding="utf-8"))
+    if manifest.get("schema_version") == "cnw_source_manifest_v2":
+        raise ContractError("WORK_INTENT_REQUIRED", "v2 source registries require an explicit source revision and work intent")
+    language = _required_text(language, "unit.language")
+    index = json.loads(_safe_source_file(root, "_INBOX/source_index.json").read_text(encoding="utf-8"))
     source = manifest["sources"][0]
     raw_path = root / source["stored_path"]
     lines = raw_path.read_bytes().splitlines(keepends=True)
@@ -194,16 +318,231 @@ def build_source_bound_contract(project_root: str | Path, *, unit_id: str, pov: 
     return {
         "schema_version": "cnw_work_unit_v1", "project_id": manifest["project_id"], "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
         "source": {"identity_type": "imported_project", "version": "IMPORTED-SOURCE-v1", "import_id": manifest["import_id"], "source_file_sha256": source["sha256"], "source_manifest_sha256": sha(manifest_file.read_bytes()), "manifest_file": "_INBOX/source_manifest.json", "source_root": "."},
-        "unit": {"id": unit_id, "kind": kind, "planning_mode": planning_mode, "language": "zh-CN", "pov": pov, "target_visible_chars": target, "min_visible_chars": minimum, "max_visible_chars": maximum, "policy_sha256": sha((ROOT / "config/cnw_production_policy.json").read_bytes())},
+        "unit": {"id": unit_id, "kind": kind, "planning_mode": planning_mode, "language": language, "pov": pov, "target_visible_chars": target, "min_visible_chars": minimum, "max_visible_chars": maximum, "policy_sha256": sha((ROOT / "config/cnw_production_policy.json").read_bytes())},
         "story": {**({"arc_ref": arc_ref} if arc_ref is not None else {}), **({"previous_episode_ref": previous_episode_ref} if previous_episode_ref is not None else {}), **({"first_episode": first_episode} if first_episode is not None else {}), "source_file": source["stored_path"], "chapter_context": f"Imported source {source['source_id']} with {len(index['locations'])} indexed source locations; confirm all facts before production.", "role_in_story": role_in_story, "reader_reward": reader_reward, "entry_state": entry_state, "exit_state": exit_state, "before_anchor": {"scene": "IMPORTED", "source_line": before_line, "sha256": sha(b"".join(lines[before_line-1:before_line]))}, "after_anchor": {"scene": "IMPORTED", "source_line": after_line, "sha256": sha(b"".join(lines[after_line-1:after_line]))}, "required_beats": beats, "characters_in_scene": characters or [], "character_knowledge_boundary_ref": "90_canon/canon_candidates.json#status=TODO_CONFIRM", "forbidden_future_revelations": ["Do not use unconfirmed Canon candidates or facts outside the approved Writing Brief."], "voice_sample_refs": ["90_canon/canon_candidates.json#voice-sample-review-required"]},
         "review": {"workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15", "require_cnw_11_stages": True, "require_3_verifiers": True, "require_completeness_critic": True, "require_re_review": True, "cnw_reference_manifest_sha256": sha((ROOT / "runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json").read_bytes())},
     }
 
 
+def _required_text(value, field: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", field)
+    return value.strip()
+
+
+def _registered_project_identity(root: Path) -> dict:
+    if root.parent.name != "projects":
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "project is not a registered DataHome/projects instance")
+    try:
+        try:
+            from .project_paths import resolve_project
+        except ImportError:
+            from project_paths import resolve_project
+        registration = resolve_project(root, data_home=root.parent.parent)
+    except Exception as exc:
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity or registry could not be verified") from exc
+    identity_path = root / "project_identity.json"
+    if identity_path.is_symlink() or not identity_path.is_file():
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "register this project before creating a v2 work contract")
+    try:
+        identity = json.loads(identity_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity is unreadable") from exc
+    instance_id = identity.get("project_instance_id") if isinstance(identity, dict) else None
+    if not isinstance(instance_id, str) or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", instance_id):
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity must contain a canonical instance UUID")
+    if registration.get("project_instance_id") != instance_id or registration.get("project_id") != identity.get("project_id"):
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "project identity differs from its registration")
+    return identity
+
+
+def _source_manifest_revision(root: Path, digest: str) -> tuple[dict, str]:
+    if not re.fullmatch(r"[0-9a-f]{64}", str(digest)):
+        raise ContractError("SOURCE_MANIFEST_REVISION_REQUIRED", "select an exact immutable source-manifest SHA256")
+    relative = f"_INBOX/revisions/manifests/{digest}.json"
+    try:
+        path = _safe_source_file(root, relative)
+    except (ContractError, OSError) as exc:
+        raise ContractError("LEGACY_SOURCE_SNAPSHOT_MISSING", relative) from exc
+    raw = path.read_bytes()
+    if sha(raw) != digest:
+        raise ContractError("SOURCE_IDENTITY_MISMATCH", "immutable source-manifest revision SHA256 differs")
+    try:
+        manifest = json.loads(raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("SOURCE_MANIFEST_INVALID", "source-manifest revision is not valid JSON") from exc
+    if manifest.get("schema_version") != "cnw_source_manifest_v2":
+        raise ContractError("SOURCE_MANIFEST_INVALID", "new contracts require a v2 immutable source-manifest revision")
+    return manifest, relative
+
+
+def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_identity: dict | None = None) -> dict:
+    """Build one explicit intent/source contract; no default source or anchors."""
+    if not isinstance(draft, dict):
+        raise ContractError("CONTRACT_DRAFT_INVALID", "work-unit draft root must be an object")
+    root = Path(project_root).resolve(strict=True)
+    identity = registered_identity or _registered_project_identity(root)
+    instance_id = identity["project_instance_id"]
+    unit_id = draft.get("unit_id")
+    if not isinstance(unit_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", unit_id):
+        raise ContractError("WORK_UNIT_ID_INVALID", str(unit_id))
+    intent = draft.get("work_intent")
+    if intent not in {"INSERT_BETWEEN", "ADAPT_SOURCE", "ORIGINAL_EPISODE"}:
+        raise ContractError("WORK_INTENT_UNSUPPORTED", str(intent))
+    kind = draft.get("kind", "scene")
+    if kind not in {"scene", "episode"}:
+        raise ContractError("WORK_UNIT_KIND_INVALID", str(kind))
+    locale = _required_text(draft.get("language_locale"), "language.locale")
+    target, minimum, maximum = (draft.get("target_visible_chars"), draft.get("min_visible_chars"), draft.get("max_visible_chars"))
+    if not all(isinstance(v, int) and not isinstance(v, bool) for v in (target, minimum, maximum)) or not (1 <= minimum <= target <= maximum):
+        raise ContractError("SCENE_BUDGET_INVALID", "visible-character minimum, target, and maximum must be explicit and ordered")
+    root_source: dict
+    story_source_fields: dict = {}
+    if intent == "ORIGINAL_EPISODE":
+        if draft.get("source_id") or draft.get("source_revision_id") or draft.get("source_manifest_revision_sha256"):
+            raise ContractError("SOURCE_TYPE_UNSUPPORTED", "original work cannot select or fabricate an imported source")
+        if not isinstance(draft.get("first_episode"), bool):
+            raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", "story.first_episode")
+        arc_ref = _required_text(draft.get("arc_ref"), "story.arc_ref")
+        root_source = {"source_origin": "ORIGINAL_PROJECT", "project_instance_id": instance_id}
+        story_source_fields["first_episode"] = draft["first_episode"]
+        story_source_fields["arc_ref"] = arc_ref
+        if not draft["first_episode"]:
+            previous = _required_text(draft.get("previous_episode_ref"), "story.previous_episode_ref")
+            path = _safe_source_file(root, previous)
+            story_source_fields["previous_episode_ref"] = previous.replace("\\", "/")
+            story_source_fields["previous_episode_sha256"] = sha(path.read_bytes())
+        arc_path = _safe_source_file(root, arc_ref)
+        arc_text = arc_path.read_text(encoding="utf-8-sig").strip()
+        if not arc_text or re.search(r"^\s*TODO(?:_CONFIRM)?\s*:", arc_text, re.I | re.M):
+            raise ContractError("PRE_FLIGHT_MISSING_PROJECT_INPUT", arc_ref)
+        story_source_fields["arc_sha256"] = sha(arc_path.read_bytes())
+    else:
+        for field in ("source_id", "source_revision_id", "source_manifest_revision_sha256", "source_index_revision_sha256"):
+            if not isinstance(draft.get(field), str) or not draft[field]:
+                raise ContractError("SOURCE_SELECTION_REQUIRED", f"{field} must be explicitly selected")
+        manifest, manifest_rel = _source_manifest_revision(root, draft["source_manifest_revision_sha256"])
+        index_rel = f"_INBOX/revisions/indexes/{draft['source_index_revision_sha256']}.json"
+        index_path = _safe_source_file(root, index_rel)
+        index_raw = index_path.read_bytes()
+        if sha(index_raw) != draft["source_index_revision_sha256"]:
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "immutable source-index revision SHA256 differs")
+        try:
+            source_index = json.loads(index_raw.decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError) as exc:
+            raise ContractError("SOURCE_INDEX_INVALID", "source-index revision is not valid JSON") from exc
+        if source_index.get("schema_version") != "cnw_source_index_v2" or source_index.get("manifest_revision_sha256") != draft["source_manifest_revision_sha256"]:
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "source index does not bind the selected manifest revision")
+        matches = [item for item in manifest["sources"] if item.get("source_id") == draft["source_id"] and item.get("source_revision_id") == draft["source_revision_id"]]
+        if len(matches) != 1:
+            raise ContractError("SOURCE_SELECTION_AMBIGUOUS" if sum(item.get("source_id") == draft["source_id"] for item in manifest["sources"]) > 1 else "SOURCE_SELECTION_INVALID", "select one source ID and source revision present in the exact manifest revision")
+        selected = matches[0]
+        source_file = _safe_source_file(root, selected["stored_path"])
+        if sha(source_file.read_bytes()) != draft["source_revision_id"]:
+            raise ContractError("SOURCE_IDENTITY_MISMATCH", "selected source bytes differ from the immutable manifest")
+        root_source = {"source_origin": "IMPORTED_PROJECT", "project_instance_id": instance_id,
+                       "source_id": draft["source_id"], "source_revision_id": draft["source_revision_id"],
+                       "source_file_sha256": draft["source_revision_id"],
+                       "manifest_file": manifest_rel,
+                       "source_manifest_sha256": draft["source_manifest_revision_sha256"],
+                       "manifest_revision_sha256": draft["source_manifest_revision_sha256"],
+                       "source_index_file": index_rel,
+                       "source_index_sha256": draft["source_index_revision_sha256"]}
+        story_source_fields["source_file"] = selected["stored_path"]
+        if intent == "INSERT_BETWEEN":
+            if selected.get("format") not in {"md", "txt"}:
+                raise ContractError("SOURCE_TYPE_UNSUPPORTED", "INSERT_BETWEEN requires an ordered text source")
+            before_line, after_line = draft.get("before_line"), draft.get("after_line")
+            lines = source_file.read_bytes().splitlines(keepends=True)
+            if (not isinstance(before_line, int) or isinstance(before_line, bool) or
+                    not isinstance(after_line, int) or isinstance(after_line, bool) or
+                    before_line < 1 or after_line <= before_line or after_line > len(lines)):
+                raise ContractError("SOURCE_ANCHOR_INVALID", "both real ordered source line anchors are required")
+            story_source_fields["before_anchor"] = {"scene": "SOURCE", "source_line": before_line, "source_line_end": before_line, "sha256": sha(lines[before_line - 1])}
+            story_source_fields["after_anchor"] = {"scene": "SOURCE", "source_line": after_line, "source_line_end": after_line, "sha256": sha(lines[after_line - 1])}
+        else:
+            selection = {"source_id": draft["source_id"], "source_revision_id": draft["source_revision_id"]}
+            if selected.get("format") == "json":
+                pointer = draft.get("json_pointer")
+                try:
+                    parsed = json.loads(source_file.read_text(encoding="utf-8-sig"), object_pairs_hook=_reject_duplicate_json_keys)
+                except (UnicodeError, json.JSONDecodeError, ContractError) as exc:
+                    raise ContractError("SOURCE_JSON_INVALID", "selected JSON source is invalid or has duplicate keys") from exc
+                value = resolve_json_pointer(parsed, pointer)
+                selected_bytes = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                selection.update(json_pointer=pointer, hash_semantics="json_pointer_canonical_value_sha256", selected_sha256=sha(selected_bytes))
+            elif selected.get("format") in {"md", "txt"}:
+                start, end = draft.get("start_line"), draft.get("end_line")
+                lines = source_file.read_bytes().splitlines(keepends=True)
+                if (not isinstance(start, int) or isinstance(start, bool) or
+                        not isinstance(end, int) or isinstance(end, bool) or
+                        start < 1 or end < start or end > len(lines)):
+                    raise ContractError("SOURCE_SPAN_INVALID", "ADAPT_SOURCE requires a non-empty valid line range")
+                selected_bytes = b"".join(lines[start-1:end])
+                if not selected_bytes.decode("utf-8-sig").strip():
+                    raise ContractError("SOURCE_SPAN_EMPTY", "ADAPT_SOURCE text span must contain non-whitespace source text")
+                selection.update(start_line=start, end_line=end, hash_semantics="raw_line_span_sha256", selected_sha256=sha(selected_bytes))
+            else:
+                raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(selected.get("format")))
+            story_source_fields["source_selection"] = selection
+
+    beats = draft.get("required_beats", [])
+    if not isinstance(beats, list):
+        raise ContractError("REQUIRED_BEAT_INVALID", "required_beats must be a list")
+    beat_ids = set()
+    for beat in beats:
+        if (not isinstance(beat, dict) or not isinstance(beat.get("beat_id"), str) or
+                not beat["beat_id"].strip() or beat["beat_id"] in beat_ids or
+                not isinstance(beat.get("goal"), str) or not beat["goal"].strip()):
+            raise ContractError("REQUIRED_BEAT_INVALID", "required beats need unique IDs and non-empty goals")
+        beat_ids.add(beat["beat_id"])
+    def _text_list(value, field: str) -> list[str]:
+        if not isinstance(value, list) or any(not isinstance(item, str) or not item.strip() for item in value):
+            raise ContractError("CONTRACT_FIELD_INVALID", f"{field} must be a list of non-empty strings")
+        return value
+    characters = _text_list(draft.get("characters_in_scene"), "story.characters_in_scene")
+    forbidden = _text_list(draft.get("forbidden_future_revelations"), "story.forbidden_future_revelations")
+    voice_refs = _text_list(draft.get("voice_sample_refs"), "story.voice_sample_refs")
+    policy_path = ROOT / "config/policies/app_policy.v1.json"
+    contract = {
+        "schema_version": "cnw_work_unit_v2", "project_id": identity["project_id"],
+        "project_instance_id": instance_id, "status": "PROPOSED_FOR_HUMAN_PREFLIGHT", "work_intent": intent,
+        "source": root_source,
+        "unit": {"id": unit_id, "kind": kind, "planning_mode": "author_plot", "language": locale,
+                 "language_locale": locale, "length_metric": "unicode_visible_code_points",
+                 "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+                 "pov": _required_text(draft.get("pov"), "unit.pov"), "target_visible_chars": target,
+                 "min_visible_chars": minimum, "max_visible_chars": maximum,
+                 "policy_sha256": sha(policy_path.read_bytes())},
+        "story": {**story_source_fields,
+                  "chapter_context": _required_text(draft.get("chapter_context"), "story.chapter_context"),
+                  "role_in_story": _required_text(draft.get("role_in_story"), "story.role_in_story"),
+                  "reader_reward": _required_text(draft.get("reader_reward"), "story.reader_reward"),
+                  "entry_state": _required_text(draft.get("entry_state"), "story.entry_state"),
+                  "exit_state": _required_text(draft.get("exit_state"), "story.exit_state"),
+                  "required_beats": beats, "characters_in_scene": characters,
+                  "character_knowledge_boundary_ref": _required_text(draft.get("character_knowledge_boundary_ref"), "story.character_knowledge_boundary_ref"),
+                  "forbidden_future_revelations": forbidden,
+                  "voice_sample_refs": voice_refs},
+        "review": {"workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15", "require_cnw_11_stages": True,
+                   "require_3_verifiers": True, "require_completeness_critic": True, "require_re_review": True,
+                   "cnw_reference_manifest_sha256": sha((ROOT / "runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json").read_bytes())},
+    }
+    if kind == "episode":
+        scene_targets = draft.get("scene_targets") or [{"id": f"{unit_id}-S01", "target_visible_chars": target}]
+        contract["unit"]["chapter_target_visible_chars"] = target
+        contract["unit"]["scenes"] = scene_targets
+    check_required_fields(contract)
+    validate_work_unit(contract)
+    validate_v2_source_identity(contract, source_root=root)
+    return contract
+
+
 def write_contract_draft(project_root: str | Path, draft_path: str | Path) -> dict:
     root = Path(project_root).resolve(strict=True)
+    registered_identity = None
     if not root.is_relative_to((ROOT / "workspace").resolve()):
-        raise ContractError("PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE", str(root))
+        registered_identity = _registered_project_identity(root)
     raw_source = Path(draft_path)
     if raw_source.is_symlink():
         raise ContractError("CONTRACT_PATH_UNSAFE", str(raw_source))
@@ -217,17 +556,31 @@ def write_contract_draft(project_root: str | Path, draft_path: str | Path) -> di
     unit_id = draft["unit_id"]
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", unit_id) or unit_id in {".", ".."}:
         raise ContractError("WORK_UNIT_ID_INVALID", str(unit_id))
-    contract = build_source_bound_contract(root, unit_id=unit_id, pov=draft["pov"], target=draft["target_visible_chars"], minimum=draft["min_visible_chars"], maximum=draft["max_visible_chars"], before_line=draft["before_line"], after_line=draft["after_line"], beat_specs=draft.get("required_beats", []), entry_state=draft["entry_state"], exit_state=draft["exit_state"], role_in_story=draft["role_in_story"], reader_reward=draft["reader_reward"], characters=draft.get("characters_in_scene"), kind=draft.get("kind", "scene"), planning_mode=draft.get("planning_mode", "author_plot"), arc_ref=draft.get("arc_ref"), previous_episode_ref=draft.get("previous_episode_ref"), first_episode=draft.get("first_episode"))
+    if draft.get("schema_version") == "cnw_work_unit_draft_v2" or "work_intent" in draft:
+        contract = build_work_contract_v2(root, draft, registered_identity=registered_identity)
+    else:
+        current_manifest = root / "_INBOX/source_manifest.json"
+        if current_manifest.is_file():
+            try:
+                current_schema = json.loads(current_manifest.read_text(encoding="utf-8")).get("schema_version")
+            except (OSError, json.JSONDecodeError) as exc:
+                raise ContractError("SOURCE_MANIFEST_INVALID", "current source registry is unreadable") from exc
+            if current_schema == "cnw_source_manifest_v2":
+                raise ContractError("WORK_INTENT_REQUIRED", "new contracts must explicitly select INSERT_BETWEEN, ADAPT_SOURCE, or ORIGINAL_EPISODE")
+        contract = build_source_bound_contract(root, unit_id=unit_id, pov=draft["pov"], language=draft.get("language"), target=draft["target_visible_chars"], minimum=draft["min_visible_chars"], maximum=draft["max_visible_chars"], before_line=draft["before_line"], after_line=draft["after_line"], beat_specs=draft.get("required_beats", []), entry_state=draft["entry_state"], exit_state=draft["exit_state"], role_in_story=draft["role_in_story"], reader_reward=draft["reader_reward"], characters=draft.get("characters_in_scene"), kind=draft.get("kind", "scene"), planning_mode=draft.get("planning_mode", "author_plot"), arc_ref=draft.get("arc_ref"), previous_episode_ref=draft.get("previous_episode_ref"), first_episode=draft.get("first_episode"))
     check_required_fields(contract)
     validate_work_unit(contract)
-    manifest = json.loads((root / "_INBOX/source_manifest.json").read_text(encoding="utf-8"))
-    validate_source_identity(contract, source_root=root, expected_version=contract["source"]["version"], expected_zip_sha256=manifest["import_id"], expected_manifest_sha256=contract["source"]["source_manifest_sha256"])
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        validate_v2_source_identity(contract, source_root=root)
+    else:
+        manifest = json.loads((root / "_INBOX/source_manifest.json").read_text(encoding="utf-8"))
+        validate_source_identity(contract, source_root=root, expected_version=contract["source"]["version"], expected_zip_sha256=manifest["import_id"], expected_manifest_sha256=contract["source"]["source_manifest_sha256"])
     output = root / "contracts" / f"{contract['unit']['id']}.json"
     if output.exists():
         raise ContractError("CONTRACT_OUTPUT_COLLISION", output.name)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(contract, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return {"status": "CONTRACT_DRAFT_READY_FOR_HUMAN_PREFLIGHT", "project_id": contract["project_id"], "contract": str(output), "contract_sha256": sha(output.read_bytes()), "source_manifest_sha256": contract["source"]["source_manifest_sha256"], "provider_call": "none"}
+    return {"status": "CONTRACT_DRAFT_READY_FOR_HUMAN_PREFLIGHT", "project_id": contract["project_id"], "contract": str(output), "contract_sha256": sha(output.read_bytes()), "source_manifest_sha256": contract.get("source", {}).get("source_manifest_sha256"), "provider_call": "none"}
 
 
 SUPPORT_WORKFLOW_SOURCE = {
