@@ -4,7 +4,7 @@ Status: initial candidate received RETURN; corrected candidate is locally verifi
 Plan: plans/MASTER_PLAN_GENERIC_APP_R5.md
 Plan SHA256: 5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF
 Returned candidate: C=743b4fa8be38cf3dc54c6cd2ff0a66aac4cbe402, T=dfcf83b53c065a06b1411f5be0bed09840b19713
-Corrected candidate identity: record the new C/T after its local commit; no remote push until Controller ACCEPT.
+The corrected candidate C/T is supplied in the independent Controller review request and its original verdict record; this test log records the evidence scope and results without embedding a self-referential commit SHA. No remote push until Controller ACCEPT.
 
 Checks performed on synthetic/temp data only:
 - python -m unittest discover -s tests -p test_studio_cli_routes.py
