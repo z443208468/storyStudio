@@ -84,7 +84,7 @@ def _canonical_existing_or_missing(path: Path, *, code: str) -> Path:
         raise PathResolutionError(code, "path cannot be canonicalized") from exc
 
 
-def _windows_private_acl(path: Path, *, create: bool) -> None:
+def _windows_private_acl(path: Path, *, create: bool, require_independent: bool = True) -> None:
     icacls = shutil.which("icacls.exe") or shutil.which("icacls")
     whoami = shutil.which("whoami.exe") or shutil.which("whoami")
     if not icacls or not whoami:
@@ -120,7 +120,7 @@ def _windows_private_acl(path: Path, *, create: bool) -> None:
             if not principal:
                 raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "Windows ACL output could not be parsed")
             entries.append((principal.casefold(), match.group(1)))
-    if not entries or any("(I)" in flags for _, flags in entries):
+    if not entries or (require_independent and any("(I)" in flags for _, flags in entries)):
         raise PathResolutionError("DATA_HOME_ACL_NOT_INDEPENDENT", "DataHome ACL inherits access from its parent")
     for principal, flags in entries:
         normalized = principal.removeprefix("*")
@@ -130,13 +130,44 @@ def _windows_private_acl(path: Path, *, create: bool) -> None:
             continue
 
 
-def _assert_private_permissions(path: Path) -> None:
+def _assert_private_permissions(path: Path, *, require_independent_acl: bool = True) -> None:
     if os.name == "nt":
-        _windows_private_acl(path, create=False)
+        _windows_private_acl(path, create=False, require_independent=require_independent_acl)
         return
     mode = stat.S_IMODE(path.stat().st_mode)
     if mode & 0o077:
         raise PathResolutionError("DATA_HOME_ACL_TOO_BROAD", "DataHome must not grant group or other access")
+
+
+def _ensure_private_directory(path: Path, *, root: Path, code: str) -> Path:
+    """Create or validate every DataHome child directory before writing beneath it."""
+    root = root.resolve(strict=True)
+    try:
+        relative = path.relative_to(root)
+    except ValueError as exc:
+        raise PathResolutionError(code, "private directory must remain inside DataHome") from exc
+    current = root
+    for part in relative.parts:
+        current = current / part
+        _assert_no_reparse(current, code=code)
+        try:
+            current.mkdir()
+        except FileExistsError:
+            if not current.is_dir():
+                raise PathResolutionError(code, "a required private directory path is not a directory")
+            _assert_private_permissions(current, require_independent_acl=False)
+        except OSError as exc:
+            if not current.is_dir():
+                raise PathResolutionError(code, "cannot create a required private directory") from exc
+            _assert_private_permissions(current, require_independent_acl=False)
+        else:
+            if os.name == "nt":
+                _windows_private_acl(current, create=True)
+            else:
+                current.chmod(0o700)
+            _assert_private_permissions(current, require_independent_acl=False)
+        _assert_no_reparse(current, code=code)
+    return current
 
 
 def _write_json_new(path: Path, value: dict) -> None:
@@ -310,6 +341,7 @@ def _data_home_identity(data_home: Path, *, create: bool) -> str:
     _assert_no_reparse(marker.parent, code="DATA_HOME_REPARSE_POINT")
     _assert_no_reparse(marker, code="DATA_HOME_REPARSE_POINT")
     if marker.exists():
+        _assert_private_permissions(marker, require_independent_acl=False)
         try:
             payload = json.loads(marker.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
@@ -366,19 +398,19 @@ def create_project(
     projects_root = root / "projects"
     registry_root = _registry_root(root)
     _assert_no_reparse(root, code="DATA_HOME_REPARSE_POINT")
-    projects_root.mkdir(parents=True, exist_ok=True)
-    registry_root.mkdir(parents=True, exist_ok=True)
-    _assert_no_reparse(projects_root, code="PROJECT_PATH_UNSAFE")
-    _assert_no_reparse(registry_root, code="PROJECT_REGISTRY_UNSAFE")
+    _ensure_private_directory(projects_root, root=root, code="PROJECT_PATH_UNSAFE")
+    _ensure_private_directory(registry_root, root=root, code="PROJECT_REGISTRY_UNSAFE")
 
     with _registry_lock(registry_root):
         _assert_no_reparse(root, code="DATA_HOME_REPARSE_POINT")
+        _assert_private_permissions(projects_root, require_independent_acl=False)
+        _assert_private_permissions(registry_root, require_independent_acl=False)
         _assert_no_reparse(projects_root, code="PROJECT_PATH_UNSAFE")
         _assert_no_reparse(registry_root, code="PROJECT_REGISTRY_UNSAFE")
         data_home_id = _data_home_identity(root, create=True)
         instance_id = str(uuid.uuid4())
         project_root = projects_root / instance_id
-        project_root.mkdir()
+        _ensure_private_directory(project_root, root=root, code="PROJECT_PATH_UNSAFE")
         identity_path = project_root / "project_identity.json"
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
         identity = {
@@ -427,10 +459,18 @@ def resolve_project(
         canonical = candidate.resolve(strict=True)
     except OSError as exc:
         raise PathResolutionError("PROJECT_REQUIRED", "project root is unavailable") from exc
-    projects_root = (root / "projects").resolve(strict=True)
+    projects_root_path = root / "projects"
+    _assert_no_reparse(projects_root_path, code="PROJECT_PATH_UNSAFE")
+    _assert_no_reparse(_registry_root(root), code="PROJECT_REGISTRY_UNSAFE")
+    _assert_no_reparse(root / "shared", code="PROJECT_REGISTRY_UNSAFE")
+    projects_root = projects_root_path.resolve(strict=True)
+    _assert_private_permissions(projects_root, require_independent_acl=False)
+    _assert_private_permissions(_registry_root(root), require_independent_acl=False)
     if canonical.parent != projects_root:
         raise PathResolutionError("PROJECT_PATH_OUTSIDE_DATA_HOME", "registered writable projects must be immediate DataHome children")
+    _assert_private_permissions(canonical, require_independent_acl=False)
     identity_path = canonical / "project_identity.json"
+    _assert_private_permissions(identity_path, require_independent_acl=False)
     try:
         identity = json.loads(identity_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -447,6 +487,8 @@ def resolve_project(
     if canonical_instance_id != instance_id:
         raise PathResolutionError("PROJECT_IDENTITY_INVALID", "project instance identity must be a canonical lowercase UUID")
     registry_path = _registry_root(root) / f"{instance_id}.json"
+    _assert_no_reparse(registry_path, code="PROJECT_REGISTRY_UNSAFE")
+    _assert_private_permissions(registry_path, require_independent_acl=False)
     try:
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -462,4 +504,5 @@ def resolve_project(
         raise PathResolutionError("PROJECT_INSTANCE_COLLISION", "identity is not active at this unique registered root")
     if identity.get("data_home_id") != _data_home_identity(root, create=False):
         raise PathResolutionError("PROJECT_DATA_HOME_MISMATCH", "project is registered to a different DataHome")
+    _assert_private_permissions(root / "shared" / "data_home_identity.json", require_independent_acl=False)
     return {"status": "PROJECT_READY", "project_instance_id": instance_id, "project_id": identity.get("project_id"), "project_root": str(canonical)}

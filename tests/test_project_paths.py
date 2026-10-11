@@ -30,6 +30,17 @@ class GenericProjectPathTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.temp, ignore_errors=True)
 
+    def _grant_everyone_full_control(self, path: Path):
+        icacls = shutil.which("icacls.exe") or shutil.which("icacls")
+        if not icacls:
+            self.skipTest("icacls is unavailable")
+        result = subprocess.run(
+            [icacls, str(path), "/grant", "*S-1-1-0:(OI)(CI)F"],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            self.skipTest(f"cannot construct the broad-ACL fixture: {result.stderr or result.stdout}")
+
     def test_missing_or_corrupt_setup_pointer_fails_closed(self):
         with self.assertRaises(PathResolutionError) as missing:
             resolve_data_home(pointer_path=self.pointer)
@@ -148,6 +159,43 @@ class GenericProjectPathTests(unittest.TestCase):
         finally:
             if junction.exists():
                 os.rmdir(junction)
+
+    @unittest.skipUnless(os.name == "nt", "Windows ACL behavior")
+    def test_broad_projects_child_acl_is_rejected_before_project_files_are_created(self):
+        setup_data_home(self.data_home, pointer_path=self.pointer)
+        projects = self.data_home / "projects"
+        projects.mkdir()
+        self._grant_everyone_full_control(projects)
+        with self.assertRaises(PathResolutionError) as unsafe:
+            create_project(project_id="WIDE-PROJECTS", pointer_path=self.pointer)
+        self.assertEqual(unsafe.exception.code, "DATA_HOME_ACL_TOO_BROAD")
+        self.assertEqual(list(projects.iterdir()), [])
+
+    @unittest.skipUnless(os.name == "nt", "Windows ACL behavior")
+    def test_broad_registry_child_acl_is_rejected_before_project_files_are_created(self):
+        setup_data_home(self.data_home, pointer_path=self.pointer)
+        shared = self.data_home / "shared"
+        shared.mkdir()
+        registry = shared / "project_instances"
+        registry.mkdir()
+        self._grant_everyone_full_control(registry)
+        with self.assertRaises(PathResolutionError) as unsafe:
+            create_project(project_id="WIDE-REGISTRY", pointer_path=self.pointer)
+        self.assertEqual(unsafe.exception.code, "DATA_HOME_ACL_TOO_BROAD")
+        projects = self.data_home / "projects"
+        self.assertTrue(projects.is_dir())
+        self.assertEqual(list(projects.iterdir()), [])
+        self.assertEqual(list(registry.iterdir()), [])
+
+    @unittest.skipUnless(os.name == "nt", "Windows ACL behavior")
+    def test_broad_existing_project_acl_is_rejected_during_resolution(self):
+        setup_data_home(self.data_home, pointer_path=self.pointer)
+        project = create_project(project_id="WIDE-ROOT", pointer_path=self.pointer)
+        project_root = Path(project["project_root"])
+        self._grant_everyone_full_control(project_root)
+        with self.assertRaises(PathResolutionError) as unsafe:
+            resolve_project(project_root, pointer_path=self.pointer)
+        self.assertEqual(unsafe.exception.code, "DATA_HOME_ACL_TOO_BROAD")
 
     def test_project_root_from_another_volume_is_rejected_when_available(self):
         setup_data_home(self.data_home, pointer_path=self.pointer)
