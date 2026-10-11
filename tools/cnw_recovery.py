@@ -352,3 +352,146 @@ def refresh_references(args) -> dict:
         r.save_state(run_dir, state)
         return {"status": "REFERENCES_REOPENED", "run_id": args.run_id,
             "changed": changed, "reopened": reopened, "provider_call": "none"}
+
+
+def plan_recovery(run_dir: Path, project_root: Path) -> dict:
+    """Build a read-only recovery plan for one explicitly selected v2 run.
+
+    Historical v1 runs use the separately pinned legacy-source preflight. This
+    function never calls resume, invalidates stages, or writes run/project data.
+    """
+    r, _, _ = _modules()
+    project = Path(project_root).resolve(strict=True)
+    raw_run = Path(run_dir)
+    if raw_run.is_symlink():
+        raise r.ContractError("RUN_PATH_SYMLINK_REJECTED", str(raw_run))
+    selected_run = raw_run.resolve(strict=True)
+    expected_runs = (project / "runs").resolve(strict=False)
+    if selected_run.parent != expected_runs or selected_run.is_symlink():
+        raise r.ContractError("RECOVERY_RUN_ROOT_MISMATCH", str(selected_run))
+    run_id = selected_run.name
+    selected_run = r.run_path(run_id, expected_runs).resolve(strict=True)
+    state_path = r.assert_output_within_root(selected_run, "run_state.json")
+    contract_snapshot = r.assert_output_within_root(selected_run, "artifacts/contract.json")
+    state_bytes = state_path.read_bytes()
+    contract_bytes = contract_snapshot.read_bytes()
+    identity_path = r.assert_output_within_root(project, "project_identity.json")
+    identity_bytes = identity_path.read_bytes()
+    state = r.load_state(selected_run)
+    if state.get("run_id") != run_id:
+        raise r.ContractError("RUN_ID_MISMATCH", run_id)
+    contract_path = r.assert_output_within_root(project, state.get("contract_path", ""))
+    project_contract_bytes = contract_path.read_bytes()
+    if (r.sha(contract_bytes) != state.get("contract_sha256") or
+            r.sha(project_contract_bytes) != state.get("contract_sha256")):
+        raise r.ContractError("RUN_CONTRACT_CHANGED", state.get("contract_path", ""))
+    contract = r.load_contract(contract_snapshot)
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        raise r.ContractError("LEGACY_RECOVERY_PREFLIGHT_REQUIRED", "use the separately pinned v1 source-map preflight")
+    if (contract.get("project_id") != state.get("project_id") or
+            contract.get("unit", {}).get("id") != state.get("work_id") or
+            state.get("literary_source_freeze_version") != "literary_source_freeze_v2"):
+        raise r.ContractError("RECOVERY_RUN_IDENTITY_MISMATCH", run_id)
+    r.check_required_fields(contract)
+    r.validate_work_unit(contract)
+    try:
+        from .cnw_contract import validate_v2_source_identity
+    except ImportError:
+        from cnw_contract import validate_v2_source_identity
+    validate_v2_source_identity(contract, source_root=project)
+    current_workflow_sha = r.sha(r.WORKFLOW_PATH.read_bytes())
+    if state.get("workflow_template_sha256") != current_workflow_sha:
+        raise r.ContractError("CNW_METHOD_IDENTITY_MISMATCH", "run workflow template differs from the pinned current source")
+    current_app_policy_sha = r.sha((r.ROOT / "config/policies/app_policy.v1.json").read_bytes())
+    if contract.get("unit", {}).get("policy_sha256", "").lower() != current_app_policy_sha:
+        raise r.ContractError("POLICY_IDENTITY_MISMATCH", "run contract differs from current generic application policy")
+    provider_policy = r.ROOT / "config/policies/provider_policy.deepseek_flash.v1.json"
+    if state.get("provider_config_sha256") != r.sha(provider_policy.read_bytes()):
+        raise r.ContractError("PROVIDER_POLICY_IDENTITY_MISMATCH", "run provider policy differs from current configuration")
+    r.validate_literary_source_freeze(state, project)
+    if set(state.get("stages", {})) != set(r.CNW_STAGES):
+        raise r.ContractError("RECOVERY_STAGE_RECORD_INVALID", "stage identities do not match the pinned 11-stage workflow")
+
+    def verify_artifacts(value):
+        if isinstance(value, dict):
+            if isinstance(value.get("path"), str) and "sha256" in value:
+                target = r.assert_output_within_root(selected_run, value["path"])
+                if not target.is_file() or r.sha(target.read_bytes()) != value["sha256"]:
+                    raise r.ContractError("RUN_ARTIFACT_HASH_MISMATCH", value["path"])
+            for child in value.values():
+                verify_artifacts(child)
+        elif isinstance(value, list):
+            for child in value:
+                verify_artifacts(child)
+    verify_artifacts(state.get("stages", {}))
+    verify_artifacts(state.get("support_hooks", {}))
+    for receipt in r.cached_receipts(state):
+        if receipt.get("status") == "SUCCEEDED":
+            r._receipt_content(selected_run, receipt)
+
+    failures, stage_results, support_reviews = [], [], []
+    for name in ("critics_plot", "critics_text"):
+        hook = state.get("support_hooks", {}).get(name, {})
+        if hook.get("status") == "SUCCEEDED":
+            # The native CritiCS result verifier may materialize an input
+            # snapshot; this dry-run preserves the run and marks it for review.
+            support_reviews.append({"hook": name, "assessment": "NATIVE_SUPPORT_EVIDENCE_REVIEW_REQUIRED"})
+    stale = []
+    for stage in r.CNW_STAGES:
+        record = state.get("stages", {}).get(stage)
+        if not isinstance(record, dict):
+            raise r.ContractError("RECOVERY_STAGE_RECORD_INVALID", stage)
+        execution_failures = record.get("execution_failures", [])
+        if execution_failures or record.get("status") == "EXECUTION_INCOMPLETE":
+            failures.append({"stage": stage, "status": record.get("status"),
+                             "execution_failure_count": len(execution_failures)})
+            stage_results.append({"stage": stage, "assessment": "EXECUTION_HISTORY_REQUIRES_REVIEW",
+                                  "status": record.get("status"),
+                                  "execution_failure_count": len(execution_failures)})
+            continue
+        if record.get("status") in r._MATERIALIZED:
+            stored = record.get("execution_identity")
+            if not isinstance(stored, dict) or not stored.get("sha256"):
+                stale.append(stage)
+                stage_results.append({"stage": stage, "assessment": "VERSIONED_IDENTITY_REVIEW_REQUIRED",
+                                      "status": record.get("status"), "stored_identity": None})
+                continue
+            current = stage_identity(selected_run, stage, project_root=project)
+            matches = stored.get("sha256") == current.get("sha256")
+            if not matches:
+                stale.append(stage)
+            stage_results.append({"stage": stage,
+                "assessment": "REUSABLE" if matches else "IDENTITY_CHANGED_REVIEW_REQUIRED",
+                "status": record.get("status"), "stored_identity_sha256": stored.get("sha256"),
+                "current_identity_sha256": current["sha256"]})
+        elif record.get("status") in {"NOT_RUN", "INVALIDATED"}:
+            stage_results.append({"stage": stage, "assessment": "NOT_STARTED" if record["status"] == "NOT_RUN" else "INVALIDATED",
+                                  "status": record["status"]})
+        else:
+            stale.append(stage)
+            stage_results.append({"stage": stage, "assessment": "UNKNOWN_STAGE_STATE_REVIEW_REQUIRED",
+                                  "status": record.get("status")})
+
+    if failures:
+        status = "RECOVERY_BLOCKED_EXECUTION_HISTORY"
+    elif stale or support_reviews:
+        status = "RECOVERY_PLAN_REQUIRES_IDENTITY_REVIEW"
+    else:
+        status = "RECOVERY_PLAN_READY"
+    next_stage = next((row["stage"] for row in stage_results
+                       if row["assessment"] in {"NOT_STARTED", "INVALIDATED",
+                                                "IDENTITY_CHANGED_REVIEW_REQUIRED",
+                                                "VERSIONED_IDENTITY_REVIEW_REQUIRED",
+                                                "UNKNOWN_STAGE_STATE_REVIEW_REQUIRED",
+                                                "EXECUTION_HISTORY_REQUIRES_REVIEW"}), None)
+    r.validate_literary_source_freeze(state, project)
+    if (state_path.read_bytes() != state_bytes or contract_snapshot.read_bytes() != contract_bytes or
+            contract_path.read_bytes() != project_contract_bytes or identity_path.read_bytes() != identity_bytes):
+        raise r.ContractError("RECOVERY_PLAN_MUTATED_INPUT", run_id)
+    return {"schema_version": "cnw_recovery_plan_v1", "status": status,
+        "run_id": run_id, "project_id": state["project_id"], "work_id": state["work_id"],
+        "contract_sha256": state["contract_sha256"],
+        "run_state_sha256": r.sha(state_bytes), "next_stage_candidate": next_stage,
+        "stage_results": stage_results, "stale_stages": stale, "execution_failures": failures,
+        "support_evidence_reviews": support_reviews,
+        "provider_call": "none", "resume_executed": False, "state_mutated": False}

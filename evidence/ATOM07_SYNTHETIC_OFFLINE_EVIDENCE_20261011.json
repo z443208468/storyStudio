@@ -1,0 +1,368 @@
+{
+  "schema_version": "atom07_synthetic_offline_evidence_v1",
+  "execution": "SYNTHETIC_OFFLINE_ONLY",
+  "groups": {
+    "contract_preflight_and_recovery": {
+      "preflight_reports": [
+        {
+          "schema_version": "cnw_contract_preflight_v1",
+          "preflight_version": "cnw_contract_preflight_v1",
+          "status": "READY_FOR_LIVE_PRODUCTION",
+          "reviewer_identity": "StoryStudio.CNW.OfflineContractPreflight/1",
+          "reviewer_type": "DETERMINISTIC_OFFLINE_VALIDATOR",
+          "project_instance_id": "1064f5cc-b097-486d-aed6-73501a0cea4e",
+          "project_id": "PREFLIGHTA",
+          "work_id": "INSERT-PREFLIGHT",
+          "run_id": "PREFLIGHT-INSERT",
+          "run_id_claim": "NOT_RESERVED",
+          "contract_sha256": "06df2a566e10c47868f601ae6bebdc19154e2b45376a752bf0059b335f35ff90",
+          "work_intent": "INSERT_BETWEEN",
+          "source_identity": {
+            "source_origin": "IMPORTED_PROJECT",
+            "project_instance_id": "1064f5cc-b097-486d-aed6-73501a0cea4e",
+            "source_id": "66bc183f7d107909",
+            "source_revision_id": "66bc183f7d107909f592801fd0f0ca842a57ef573adff9e115c3bff09204a5f0",
+            "source_file_sha256": "66bc183f7d107909f592801fd0f0ca842a57ef573adff9e115c3bff09204a5f0",
+            "manifest_file": "_INBOX/revisions/manifests/f5fb45e3c36cd68554f0045013eae024672926a389cc2a10a9daf3a369052ce7.json",
+            "source_manifest_sha256": "f5fb45e3c36cd68554f0045013eae024672926a389cc2a10a9daf3a369052ce7",
+            "manifest_revision_sha256": "f5fb45e3c36cd68554f0045013eae024672926a389cc2a10a9daf3a369052ce7",
+            "source_index_file": "_INBOX/revisions/indexes/0fc9d8f2217f6822071d1369eea83ad19fed89e12de1b21e3efb1fd4675a7c66.json",
+            "source_index_sha256": "0fc9d8f2217f6822071d1369eea83ad19fed89e12de1b21e3efb1fd4675a7c66"
+          },
+          "source_root_identity": {
+            "project_instance_id": "1064f5cc-b097-486d-aed6-73501a0cea4e",
+            "project_identity_sha256": "2893d2c34fdf2093875aaf71af06c3a8e8f120cbcb857364312039ece8e2c36a"
+          },
+          "selected_scope_sha256": "c7b8e7c358f29ff7760b978ab9805f3943ca4fad8cba3558c993a5ad2eb3162d",
+          "policy_version": {
+            "app_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472",
+            "contract_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472"
+          },
+          "plot_request_sha256": "b52b18f80e7b676ae643be404adcc7d07e22984f85da07ccacfc923c1da5a7e4",
+          "production_preparation_hashes": {
+            "94_runtime/current_state.md": "2eb6a4469c19b81ad0d3dde7126e6b84b9be272d58591a8afce3b5f3e9cf282d",
+            "07_draft/manuscript_index.md": "311a50ea939ec7941f17d4c81b69b119589142fb73a762a0c83ffc2814cb4e47",
+            "04_chapter_design/arc_01.md": "e540e97af99c4becad01b2b5eed12448b6588f1d1502e027689ff723a8c5df46",
+            "04_chapter_design/arc_01_episode_details.md": "a5f2bc9507257d102b9f2ce07928469785d2c86de8079c20eea2484547c877f6",
+            "92_style_engine/character_voice_samples.md": "489c9f0a943705ef7e312eb1fda74a8db0a4c4c8ce9ac6dcec1f95e46c33d8c6",
+            "90_canon/character_bible.md": "47cb67d6b6c69f71262b399a9fcc7a16bb85c9fb6df57cfdcd5761cfd4f5c6c0",
+            "selected_source_excerpt": "04a842af8f08fb39b7e4a9182a09ad38cc18dd5449c2dee83b50f8d6e3461d78",
+            "selected_source_identity": "17c7fea85f51bcb520a59e0ce037fb452fdb1fc203d0145649c01cefcb5be192"
+          },
+          "provider_call": "none",
+          "live_evidence_status": "NOT_RUN",
+          "user_creative_acceptance": "PENDING_USER_READING",
+          "evidence_digest": "c91a32cfc078565062229e7ce34d762cc9f0c54d320e8e6f50cb59fe30f119be"
+        },
+        {
+          "schema_version": "cnw_contract_preflight_v1",
+          "preflight_version": "cnw_contract_preflight_v1",
+          "status": "READY_FOR_LIVE_PRODUCTION",
+          "reviewer_identity": "StoryStudio.CNW.OfflineContractPreflight/1",
+          "reviewer_type": "DETERMINISTIC_OFFLINE_VALIDATOR",
+          "project_instance_id": "830e3d80-aa41-48ed-a0f5-92ac8fe33e6e",
+          "project_id": "PREFLIGHTB",
+          "work_id": "ADAPT-PREFLIGHT",
+          "run_id": "PREFLIGHT-ADAPT",
+          "run_id_claim": "NOT_RESERVED",
+          "contract_sha256": "93f057d4883ad64858b71e8aacdea47de7f0b36fe5a8dd0769f580a05c5d6c91",
+          "work_intent": "ADAPT_SOURCE",
+          "source_identity": {
+            "source_origin": "IMPORTED_PROJECT",
+            "project_instance_id": "830e3d80-aa41-48ed-a0f5-92ac8fe33e6e",
+            "source_id": "1443aa017a12ff14",
+            "source_revision_id": "1443aa017a12ff141bbe662b5c64ad880730e4a2aee053bf566ab9398aa66fbd",
+            "source_file_sha256": "1443aa017a12ff141bbe662b5c64ad880730e4a2aee053bf566ab9398aa66fbd",
+            "manifest_file": "_INBOX/revisions/manifests/177dfb89fb99c0850692677cf0770c5fdc85f279c575d8d6ae1f9b5ab5fd79fd.json",
+            "source_manifest_sha256": "177dfb89fb99c0850692677cf0770c5fdc85f279c575d8d6ae1f9b5ab5fd79fd",
+            "manifest_revision_sha256": "177dfb89fb99c0850692677cf0770c5fdc85f279c575d8d6ae1f9b5ab5fd79fd",
+            "source_index_file": "_INBOX/revisions/indexes/d6fcefc84ed80794ee8e789ab9f0d9e86218c9ad561950c4d196c0cd539d65cb.json",
+            "source_index_sha256": "d6fcefc84ed80794ee8e789ab9f0d9e86218c9ad561950c4d196c0cd539d65cb"
+          },
+          "source_root_identity": {
+            "project_instance_id": "830e3d80-aa41-48ed-a0f5-92ac8fe33e6e",
+            "project_identity_sha256": "e756672be66b859bdc0c2f6bf66120c2e635810712ffe89631d1f4b5eb63c301"
+          },
+          "selected_scope_sha256": "56c8d96b5eaca0a465a52b8f14359ca2cc3064c48a1cdd2c176defeb0a5d1315",
+          "policy_version": {
+            "app_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472",
+            "contract_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472"
+          },
+          "plot_request_sha256": "98e0c3e4ed9d2087efff4e2acd7c7f650348e0e4f0c5db4820c19da8a15fa691",
+          "production_preparation_hashes": {
+            "94_runtime/current_state.md": "2eb6a4469c19b81ad0d3dde7126e6b84b9be272d58591a8afce3b5f3e9cf282d",
+            "07_draft/manuscript_index.md": "311a50ea939ec7941f17d4c81b69b119589142fb73a762a0c83ffc2814cb4e47",
+            "04_chapter_design/arc_01.md": "e540e97af99c4becad01b2b5eed12448b6588f1d1502e027689ff723a8c5df46",
+            "04_chapter_design/arc_01_episode_details.md": "a5f2bc9507257d102b9f2ce07928469785d2c86de8079c20eea2484547c877f6",
+            "92_style_engine/character_voice_samples.md": "489c9f0a943705ef7e312eb1fda74a8db0a4c4c8ce9ac6dcec1f95e46c33d8c6",
+            "90_canon/character_bible.md": "47cb67d6b6c69f71262b399a9fcc7a16bb85c9fb6df57cfdcd5761cfd4f5c6c0",
+            "selected_source_excerpt": "56c8d96b5eaca0a465a52b8f14359ca2cc3064c48a1cdd2c176defeb0a5d1315",
+            "selected_source_identity": "e09f6550d72f5320a459ac77c0b833d4be999a7b42355f0d72596ff062ec17b5"
+          },
+          "provider_call": "none",
+          "live_evidence_status": "NOT_RUN",
+          "user_creative_acceptance": "PENDING_USER_READING",
+          "evidence_digest": "c3852ac16d7cb494463d90bf341ac2c58bd52ad79b1cf684a9e4ac58a08dca85"
+        },
+        {
+          "schema_version": "cnw_contract_preflight_v1",
+          "preflight_version": "cnw_contract_preflight_v1",
+          "status": "READY_FOR_LIVE_PRODUCTION",
+          "reviewer_identity": "StoryStudio.CNW.OfflineContractPreflight/1",
+          "reviewer_type": "DETERMINISTIC_OFFLINE_VALIDATOR",
+          "project_instance_id": "830e3d80-aa41-48ed-a0f5-92ac8fe33e6e",
+          "project_id": "PREFLIGHTB",
+          "work_id": "ADAPT-PREFLIGHT",
+          "run_id": "PREFLIGHT-ADAPT-RECHECK",
+          "run_id_claim": "NOT_RESERVED",
+          "contract_sha256": "93f057d4883ad64858b71e8aacdea47de7f0b36fe5a8dd0769f580a05c5d6c91",
+          "work_intent": "ADAPT_SOURCE",
+          "source_identity": {
+            "source_origin": "IMPORTED_PROJECT",
+            "project_instance_id": "830e3d80-aa41-48ed-a0f5-92ac8fe33e6e",
+            "source_id": "1443aa017a12ff14",
+            "source_revision_id": "1443aa017a12ff141bbe662b5c64ad880730e4a2aee053bf566ab9398aa66fbd",
+            "source_file_sha256": "1443aa017a12ff141bbe662b5c64ad880730e4a2aee053bf566ab9398aa66fbd",
+            "manifest_file": "_INBOX/revisions/manifests/177dfb89fb99c0850692677cf0770c5fdc85f279c575d8d6ae1f9b5ab5fd79fd.json",
+            "source_manifest_sha256": "177dfb89fb99c0850692677cf0770c5fdc85f279c575d8d6ae1f9b5ab5fd79fd",
+            "manifest_revision_sha256": "177dfb89fb99c0850692677cf0770c5fdc85f279c575d8d6ae1f9b5ab5fd79fd",
+            "source_index_file": "_INBOX/revisions/indexes/d6fcefc84ed80794ee8e789ab9f0d9e86218c9ad561950c4d196c0cd539d65cb.json",
+            "source_index_sha256": "d6fcefc84ed80794ee8e789ab9f0d9e86218c9ad561950c4d196c0cd539d65cb"
+          },
+          "source_root_identity": {
+            "project_instance_id": "830e3d80-aa41-48ed-a0f5-92ac8fe33e6e",
+            "project_identity_sha256": "e756672be66b859bdc0c2f6bf66120c2e635810712ffe89631d1f4b5eb63c301"
+          },
+          "selected_scope_sha256": "56c8d96b5eaca0a465a52b8f14359ca2cc3064c48a1cdd2c176defeb0a5d1315",
+          "policy_version": {
+            "app_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472",
+            "contract_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472"
+          },
+          "plot_request_sha256": "98e0c3e4ed9d2087efff4e2acd7c7f650348e0e4f0c5db4820c19da8a15fa691",
+          "production_preparation_hashes": {
+            "94_runtime/current_state.md": "2eb6a4469c19b81ad0d3dde7126e6b84b9be272d58591a8afce3b5f3e9cf282d",
+            "07_draft/manuscript_index.md": "311a50ea939ec7941f17d4c81b69b119589142fb73a762a0c83ffc2814cb4e47",
+            "04_chapter_design/arc_01.md": "e540e97af99c4becad01b2b5eed12448b6588f1d1502e027689ff723a8c5df46",
+            "04_chapter_design/arc_01_episode_details.md": "a5f2bc9507257d102b9f2ce07928469785d2c86de8079c20eea2484547c877f6",
+            "92_style_engine/character_voice_samples.md": "489c9f0a943705ef7e312eb1fda74a8db0a4c4c8ce9ac6dcec1f95e46c33d8c6",
+            "90_canon/character_bible.md": "47cb67d6b6c69f71262b399a9fcc7a16bb85c9fb6df57cfdcd5761cfd4f5c6c0",
+            "selected_source_excerpt": "56c8d96b5eaca0a465a52b8f14359ca2cc3064c48a1cdd2c176defeb0a5d1315",
+            "selected_source_identity": "e09f6550d72f5320a459ac77c0b833d4be999a7b42355f0d72596ff062ec17b5"
+          },
+          "provider_call": "none",
+          "live_evidence_status": "NOT_RUN",
+          "user_creative_acceptance": "PENDING_USER_READING",
+          "evidence_digest": "5912c9417a4c4c6e9f3903694923b06c5cd1c2200c29f7f622e5c9dba9734d71"
+        },
+        {
+          "schema_version": "cnw_contract_preflight_v1",
+          "preflight_version": "cnw_contract_preflight_v1",
+          "status": "READY_FOR_LIVE_PRODUCTION",
+          "reviewer_identity": "StoryStudio.CNW.OfflineContractPreflight/1",
+          "reviewer_type": "DETERMINISTIC_OFFLINE_VALIDATOR",
+          "project_instance_id": "ad786299-d604-4d86-9964-d94fe8c66d3f",
+          "project_id": "PREFLIGHTORIG",
+          "work_id": "ORIGINAL-PREFLIGHT",
+          "run_id": "PREFLIGHT-ORIGINAL",
+          "run_id_claim": "NOT_RESERVED",
+          "contract_sha256": "be5a49d4f77b1df2c3dd82df97b9d1e8a6cf413d95326258e0296b5c5c835704",
+          "work_intent": "ORIGINAL_EPISODE",
+          "source_identity": {
+            "source_origin": "ORIGINAL_PROJECT",
+            "project_instance_id": "ad786299-d604-4d86-9964-d94fe8c66d3f"
+          },
+          "source_root_identity": {
+            "project_instance_id": "ad786299-d604-4d86-9964-d94fe8c66d3f",
+            "project_identity_sha256": "eec0a4f13208bac8ccc51a798f988a2b7fe17887905e6b89b5932dd2df4fd839"
+          },
+          "selected_scope_sha256": "f52558c4dd195acb846fe13ba3d76d384c9750a2c7a5ea499470b994aa6a076c",
+          "policy_version": {
+            "app_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472",
+            "contract_policy_sha256": "aeeab576dbe94f81101bb900cc207804ceb2d6976be1d26f6c9473beeecd1472"
+          },
+          "plot_request_sha256": "d1ad3d649b7981f13cf59c70269e098c2e47153c1fb2bfaeedfcbeb36c2bc781",
+          "production_preparation_hashes": {
+            "94_runtime/current_state.md": "9f7b9ebcc72a1cf2fb91d7f1213339fc6f0eb4ae1303757f73f796601c934a59",
+            "07_draft/manuscript_index.md": "5cfe1f487a33b6bc3d0740ab9736e6af340a6913b0bd359171634e0c9241248b",
+            "04_chapter_design/arc_01.md": "f0c0213376292e3b8c4a9fa9ba90b15631093c6eabb8e80bb73d3c4552d2fba4",
+            "04_chapter_design/arc_01_episode_details.md": "dc9c3a23d8ac5c80f864c0426cf6bc6585de32d5ab72d90ce1fada889e768d75",
+            "92_style_engine/character_voice_samples.md": "208cd886b9e5463fdd2d1aed616f66a4baffc3f34e5f7b79451125d3dc7c534b",
+            "90_canon/character_bible.md": "e4c423206b68b6d088545df4ecc7428a242b8474c87b5fe594613a6d24f7b165",
+            "90_canon/canon.md": "0b2f235f8ae7c2753647c38f87de377be78838547d20e57237c0f1c98f55b38c",
+            "90_canon/world_bible.md": "d6de21ae61cda4ada694f8272e415fe8d4d1cf11304b829f14041866a196ae9e",
+            "90_canon/timeline.md": "ab448f4439e643b0d9510110d5f19ff59d2649ad3b6484fe84b498471d6fe84f",
+            "90_canon/glossary.md": "502ac4ebaccdf702d3ea17bd34ad1b5ea206d16a23b8a37e4196f4eac32482b4",
+            "92_style_engine/style_guide.md": "9f8ac04ee70a124f0ad2a1b5aef50f60d1eeba78d75b0dd769e297e7e3ce4488",
+            "92_style_engine/forbidden_patterns.md": "0b1244f65a041176e22aa98d1423216a7aa829fb2c84d1c295fbb680b0efa96a"
+          },
+          "provider_call": "none",
+          "live_evidence_status": "NOT_RUN",
+          "user_creative_acceptance": "PENDING_USER_READING",
+          "evidence_digest": "35e55a031931b0488468f52be5b8cf538edb701ee2963aba7a6b15d8961c7690"
+        }
+      ],
+      "cross_project_rejection": "PROJECT_INSTANCE_IDENTITY_MISMATCH",
+      "cross_path_rejection": "CONTRACT_PATH_OUTSIDE_PROJECT",
+      "cross_intent_rejection": "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH",
+      "cross_source_revision_rejection": "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH",
+      "cross_run_id_rejection": "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH",
+      "run_id_collision_rejection": "PREFLIGHT_RUN_ID_COLLISION",
+      "offline_recovery_ready": {
+        "schema_version": "cnw_recovery_plan_v1",
+        "status": "RECOVERY_PLAN_READY",
+        "run_id": "RECOVERY-PLAN",
+        "project_id": "PREFLIGHTORIG",
+        "work_id": "ORIGINAL-PREFLIGHT",
+        "contract_sha256": "be5a49d4f77b1df2c3dd82df97b9d1e8a6cf413d95326258e0296b5c5c835704",
+        "run_state_sha256": "061151ff748497ea50da266f83e64e29008c5af0b138ccdcb716443a95eda3a1",
+        "next_stage_candidate": "plot",
+        "stage_results": [
+          {
+            "stage": "plot",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "scene_cards",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "writing_brief",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "prose",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "lint_layer1",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "lint_layer2",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "multi_lens_review",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "adversarial_verify",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "completeness_critic",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "refine",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "re_review",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          }
+        ],
+        "stale_stages": [],
+        "execution_failures": [],
+        "support_evidence_reviews": [],
+        "provider_call": "none",
+        "resume_executed": false,
+        "state_mutated": false
+      },
+      "failure_history_recovery_blocked": {
+        "schema_version": "cnw_recovery_plan_v1",
+        "status": "RECOVERY_BLOCKED_EXECUTION_HISTORY",
+        "run_id": "RECOVERY-PLAN",
+        "project_id": "PREFLIGHTORIG",
+        "work_id": "ORIGINAL-PREFLIGHT",
+        "contract_sha256": "be5a49d4f77b1df2c3dd82df97b9d1e8a6cf413d95326258e0296b5c5c835704",
+        "run_state_sha256": "1b2be89f33ae8ca22cf9c7781d80525a2a215065d6d11c522bb294b17e99be73",
+        "next_stage_candidate": "plot",
+        "stage_results": [
+          {
+            "stage": "plot",
+            "assessment": "EXECUTION_HISTORY_REQUIRES_REVIEW",
+            "status": "NOT_RUN",
+            "execution_failure_count": 1
+          },
+          {
+            "stage": "scene_cards",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "writing_brief",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "prose",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "lint_layer1",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "lint_layer2",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "multi_lens_review",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "adversarial_verify",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "completeness_critic",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "refine",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          },
+          {
+            "stage": "re_review",
+            "assessment": "NOT_STARTED",
+            "status": "NOT_RUN"
+          }
+        ],
+        "stale_stages": [],
+        "execution_failures": [
+          {
+            "stage": "plot",
+            "status": "NOT_RUN",
+            "execution_failure_count": 1
+          }
+        ],
+        "support_evidence_reviews": [],
+        "provider_call": "none",
+        "resume_executed": false,
+        "state_mutated": false
+      },
+      "run_state_sha256_before_failure_plan": "061151ff748497ea50da266f83e64e29008c5af0b138ccdcb716443a95eda3a1",
+      "run_state_sha256_after_failure_plan": "1b2be89f33ae8ca22cf9c7781d80525a2a215065d6d11c522bb294b17e99be73",
+      "run_state_mutated": false
+    }
+  }
+}

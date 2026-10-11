@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import copy
+import os
 import shutil
 import tempfile
 import unittest
@@ -11,14 +12,30 @@ from pathlib import Path
 
 from tools.project_paths import create_project, setup_data_home
 from tools.cnw_contract import ContractError, validate_source_identity
-from tools.cnw_project import import_source, init_registered_project, write_contract_draft
+from tools.cnw_project import (build_contract_preflight, import_source, init_registered_project,
+                               verify_contract_preflight, write_contract_draft)
 from tools.cnw_roles import build_author_role_messages, read_production_preparation
 from tools.cnw_runner import build_plot_request, load_state, produce, validate_literary_source_freeze
+from tools.cnw_runner import save_state
+from tools.cnw_recovery import plan_recovery
 from tools.cnw_generate import _project_root
 
 
 def sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def _record_atom07_evidence(group: str, evidence: dict) -> None:
+    destination = os.environ.get("ATOM07_EVIDENCE_OUTPUT")
+    if not destination:
+        return
+    path = Path(destination)
+    document = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {
+        "schema_version": "atom07_synthetic_offline_evidence_v1",
+        "execution": "SYNTHETIC_OFFLINE_ONLY", "groups": {}}
+    document["groups"][group] = evidence
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 class GenericWorkIntentV2Tests(unittest.TestCase):
@@ -277,6 +294,144 @@ class GenericWorkIntentV2Tests(unittest.TestCase):
         self.assertNotIn("与所给前后原文连续", request["messages"][0]["content"])
         self.assertIn("The story opens on Mira's first evening", joined)
         self.assertNotIn("Cangqi", joined)
+
+    def test_contract_preflight_binds_project_intent_source_and_plot_without_writes(self):
+        project_a = self.project("PREFLIGHTA")
+        project_b = self.project("PREFLIGHTB")
+        a = self.import_bytes(project_a, "a.md", b"A source begins.\nA source ends.\n")
+        a_unselected = self.import_bytes(project_b, "a-unselected.md", b"UNSELECTED_A_CANARY\n")
+        b = self.import_bytes(project_b, "b-selected.md", b"B selected source begins.\nB selected source ends.\n")
+        insert_contract = self.draft(project_a, a, intent="INSERT_BETWEEN", unit_id="INSERT-PREFLIGHT",
+                                     before_line=1, after_line=2)
+        adapt_contract = self.draft(project_b, b, intent="ADAPT_SOURCE", unit_id="ADAPT-PREFLIGHT",
+                                    start_line=1, end_line=1)
+        adapt_a_contract = self.draft(project_b, a_unselected, intent="ADAPT_SOURCE",
+            unit_id="ADAPT-A-PREFLIGHT", start_line=1, end_line=1)
+        preflight_reports = []
+        for root, contract, run_id in ((project_a, insert_contract, "PREFLIGHT-INSERT"),
+                                       (project_b, adapt_contract, "PREFLIGHT-ADAPT")):
+            contract_path = root / "contracts" / f"{contract['unit']['id']}.json"
+            before = contract_path.read_bytes()
+            report = build_contract_preflight(root, contract_path, run_id=run_id)
+            self.assertEqual(report["status"], "READY_FOR_LIVE_PRODUCTION")
+            self.assertEqual(report["contract_sha256"], sha(before))
+            self.assertEqual(report["work_intent"], contract["work_intent"])
+            self.assertEqual(report["provider_call"], "none")
+            self.assertEqual(report["live_evidence_status"], "NOT_RUN")
+            self.assertEqual(report["user_creative_acceptance"], "PENDING_USER_READING")
+            self.assertFalse((root / "runs" / run_id).exists())
+            digest_input = {key: value for key, value in report.items() if key != "evidence_digest"}
+            self.assertEqual(report["evidence_digest"], sha(json.dumps(digest_input, ensure_ascii=False,
+                sort_keys=True, separators=(",", ":")).encode("utf-8")))
+            self.assertEqual(contract_path.read_bytes(), before)
+            preflight_reports.append(report)
+        b_report = build_contract_preflight(project_b, project_b / "contracts/ADAPT-PREFLIGHT.json",
+                                            run_id="PREFLIGHT-ADAPT-RECHECK")
+        self.assertEqual(b_report["source_identity"]["source_id"], b["source_id"])
+        self.assertEqual(b_report["source_identity"]["source_revision_id"], b["source_revision_id"])
+        self.assertEqual(b_report["selected_scope_sha256"], b_report["production_preparation_hashes"]["selected_source_excerpt"])
+        self.assertEqual(verify_contract_preflight(project_b, project_b / "contracts/ADAPT-PREFLIGHT.json",
+            run_id="PREFLIGHT-ADAPT-RECHECK", evidence=b_report)["status"],
+            "CONTRACT_PREFLIGHT_EVIDENCE_VERIFIED")
+        with self.assertRaisesRegex(ContractError, "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH"):
+            verify_contract_preflight(project_b, project_b / "contracts/ADAPT-A-PREFLIGHT.json",
+                run_id="PREFLIGHT-ADAPT-RECHECK", evidence=b_report)
+        with self.assertRaisesRegex(ContractError, "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH"):
+            verify_contract_preflight(project_b, project_b / "contracts/ADAPT-PREFLIGHT.json",
+                run_id="PREFLIGHT-ADAPT-OTHER-RUN", evidence=b_report)
+        with self.assertRaisesRegex(ContractError, "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH"):
+            verify_contract_preflight(project_a, project_a / "contracts/INSERT-PREFLIGHT.json",
+                run_id="PREFLIGHT-INSERT", evidence=b_report)
+        altered_intent_evidence = dict(b_report, work_intent="INSERT_BETWEEN")
+        altered_unsigned = {key: value for key, value in altered_intent_evidence.items() if key != "evidence_digest"}
+        altered_intent_evidence["evidence_digest"] = sha(json.dumps(altered_unsigned, ensure_ascii=False,
+            sort_keys=True, separators=(",", ":")).encode("utf-8"))
+        with self.assertRaisesRegex(ContractError, "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH"):
+            verify_contract_preflight(project_b, project_b / "contracts/ADAPT-PREFLIGHT.json",
+                run_id="PREFLIGHT-ADAPT-RECHECK", evidence=altered_intent_evidence)
+        self.assertNotEqual(b_report["project_instance_id"],
+                            build_contract_preflight(project_a, project_a / "contracts/INSERT-PREFLIGHT.json",
+                                                     run_id="PREFLIGHT-INSERT-RECHECK")["project_instance_id"])
+        with self.assertRaisesRegex(ContractError, "CONTRACT_PATH_OUTSIDE_PROJECT"):
+            build_contract_preflight(project_a, project_b / "contracts/ADAPT-PREFLIGHT.json",
+                                     run_id="PREFLIGHT-CROSS-PROJECT-PATH")
+        cross_contract = project_a / "contracts/CROSS-PROJECT.json"
+        cross_contract.write_bytes((project_b / "contracts/ADAPT-PREFLIGHT.json").read_bytes())
+        with self.assertRaisesRegex(ContractError, "PROJECT_INSTANCE_IDENTITY_MISMATCH"):
+            build_contract_preflight(project_a, cross_contract, run_id="PREFLIGHT-CROSS-PROJECT")
+        (project_b / "runs/PREFLIGHT-COLLISION").mkdir(parents=True)
+        with self.assertRaisesRegex(ContractError, "PREFLIGHT_RUN_ID_COLLISION"):
+            build_contract_preflight(project_b, project_b / "contracts/ADAPT-PREFLIGHT.json",
+                                     run_id="PREFLIGHT-COLLISION")
+
+        original = self.project("PREFLIGHTORIG")
+        original_files = {
+            "94_runtime/current_state.md": "Mira arrives at the coast.",
+            "07_draft/manuscript_index.md": "No episodes published; this is the first.",
+            "04_chapter_design/arc_01.md": "Mira chooses whether to accept help.",
+            "04_chapter_design/arc_01_episode_details.md": "Establish the harbor and the offer.",
+            "04_chapter_design/arc_index.md": "Arc 01: arrival and trust.",
+            "90_canon/canon.md": "Mira has just arrived in town.",
+            "90_canon/character_bible.md": "Mira is observant and cautious.",
+            "90_canon/world_bible.md": "The town depends on a lighthouse.",
+            "90_canon/timeline.md": "The story opens on Mira's first evening.",
+            "90_canon/glossary.md": "Harbor Bell: the dusk signal.",
+            "92_style_engine/style_guide.md": "Use close third person and restrained warmth.",
+            "92_style_engine/forbidden_patterns.md": "Do not reveal the lighthouse secret.",
+            "92_style_engine/character_voice_samples.md": "## Mira\n'I ask before I assume.'\n",
+        }
+        for relative, text in original_files.items():
+            target = original / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, encoding="utf-8")
+        original_contract = self.draft(original, None, intent="ORIGINAL_EPISODE",
+            unit_id="ORIGINAL-PREFLIGHT", first_episode=True, arc_ref="04_chapter_design/arc_01.md")
+        original_report = build_contract_preflight(original,
+            original / "contracts/ORIGINAL-PREFLIGHT.json", run_id="PREFLIGHT-ORIGINAL")
+        self.assertEqual(original_report["source_identity"]["source_origin"], "ORIGINAL_PROJECT")
+        self.assertEqual(original_report["work_intent"], "ORIGINAL_EPISODE")
+        self.assertNotIn("source_file", original_contract["story"])
+        self.assertNotIn("before_anchor", original_contract["story"])
+        self.assertNotIn("after_anchor", original_contract["story"])
+        self.assertEqual(original_report["status"], "READY_FOR_LIVE_PRODUCTION")
+        args = type("OfflineProduceArgs", (), {"mode": "offline", "unit": None,
+            "run_id": "RECOVERY-PLAN", "work_id": original_contract["unit"]["id"],
+            "contract": str(original / "contracts/ORIGINAL-PREFLIGHT.json"),
+            "project_root": str(original)})()
+        run = produce(args)
+        run_dir = Path(run["path"])
+        state_path = run_dir / "run_state.json"
+        state_raw = state_path.read_bytes()
+        recovery = plan_recovery(run_dir, original)
+        self.assertEqual(recovery["status"], "RECOVERY_PLAN_READY")
+        self.assertEqual(recovery["next_stage_candidate"], "plot")
+        self.assertEqual(recovery["provider_call"], "none")
+        self.assertFalse(recovery["resume_executed"])
+        self.assertFalse(recovery["state_mutated"])
+        self.assertEqual(state_path.read_bytes(), state_raw)
+        state = load_state(run_dir)
+        state["stages"]["plot"]["execution_failures"] = [{"error_code": "SYNTHETIC_FAILURE"}]
+        save_state(run_dir, state)
+        failed_state = state_path.read_bytes()
+        blocked_recovery = plan_recovery(run_dir, original)
+        self.assertEqual(blocked_recovery["status"], "RECOVERY_BLOCKED_EXECUTION_HISTORY")
+        self.assertEqual(blocked_recovery["execution_failures"], [{"stage": "plot",
+            "status": "NOT_RUN", "execution_failure_count": 1}])
+        self.assertEqual(state_path.read_bytes(), failed_state)
+        _record_atom07_evidence("contract_preflight_and_recovery", {
+            "preflight_reports": preflight_reports + [b_report, original_report],
+            "cross_project_rejection": "PROJECT_INSTANCE_IDENTITY_MISMATCH",
+            "cross_path_rejection": "CONTRACT_PATH_OUTSIDE_PROJECT",
+            "cross_intent_rejection": "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH",
+            "cross_source_revision_rejection": "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH",
+            "cross_run_id_rejection": "PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH",
+            "run_id_collision_rejection": "PREFLIGHT_RUN_ID_COLLISION",
+            "offline_recovery_ready": recovery,
+            "failure_history_recovery_blocked": blocked_recovery,
+            "run_state_sha256_before_failure_plan": sha(state_raw),
+            "run_state_sha256_after_failure_plan": sha(failed_state),
+            "run_state_mutated": state_path.read_bytes() != failed_state,
+        })
 
 
 if __name__ == "__main__":

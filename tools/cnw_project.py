@@ -676,6 +676,151 @@ def _write_contract_draft_unlocked(project_root: str | Path, draft_path: str | P
     return {"status": "CONTRACT_DRAFT_READY_FOR_HUMAN_PREFLIGHT", "project_id": contract["project_id"], "contract": str(output), "contract_sha256": sha(output.read_bytes()), "source_manifest_sha256": contract.get("source", {}).get("source_manifest_sha256"), "provider_call": "none"}
 
 
+def build_contract_preflight(project_root: str | Path, contract_path: str | Path, *, run_id: str) -> dict:
+    """Validate one explicit v2 contract and construct its Plot request offline.
+
+    This is a read-only, pre-run identity check. It does not create a run, call
+    a provider, or signify literary/Canon approval.
+    """
+    root = Path(project_root).resolve(strict=True)
+    identity = _registered_project_identity(root)
+    identity_path = root / "project_identity.json"
+    identity_raw = identity_path.read_bytes()
+    try:
+        if json.loads(identity_raw.decode("utf-8")) != identity:
+            raise ContractError("PROJECT_INSTANCE_IDENTITY_CHANGED_DURING_READ", str(root))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity is unreadable") from exc
+    raw_contract_path = Path(contract_path)
+    candidate = raw_contract_path if raw_contract_path.is_absolute() else root / raw_contract_path
+    for ancestor in (candidate, *candidate.parents):
+        if ancestor.is_symlink():
+            raise ContractError("CONTRACT_PATH_UNSAFE", "contract path contains a symlink")
+        if ancestor == root:
+            break
+    selected_contract_path = candidate.resolve(strict=True)
+    if not selected_contract_path.is_relative_to(root) or not selected_contract_path.is_file():
+        raise ContractError("CONTRACT_PATH_OUTSIDE_PROJECT", str(selected_contract_path))
+    if selected_contract_path.suffix.lower() != ".json":
+        raise ContractError("CONTRACT_PATH_INVALID", "contract path must name a JSON file")
+    run_id = str(run_id)
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}", run_id) or run_id in {".", ".."}:
+        raise ContractError("VALID_RUN_ID_REQUIRED", run_id)
+    run_path = root / "runs" / run_id
+    if run_path.is_symlink():
+        raise ContractError("RUN_PATH_SYMLINK_REJECTED", run_id)
+    if run_path.exists():
+        raise ContractError("PREFLIGHT_RUN_ID_COLLISION", run_id)
+
+    contract_bytes = selected_contract_path.read_bytes()
+    try:
+        contract = json.loads(contract_bytes.decode("utf-8-sig"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("CONTRACT_UNREADABLE", str(exc)) from exc
+    if not isinstance(contract, dict) or contract.get("schema_version") != "cnw_work_unit_v2":
+        raise ContractError("GENERIC_PREFLIGHT_V2_REQUIRED", "legacy v1 contracts retain their existing compatibility path")
+    if (contract.get("project_id") != identity.get("project_id") or
+            contract.get("project_instance_id") != identity.get("project_instance_id")):
+        raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "contract differs from the selected registered project")
+    check_required_fields(contract)
+    validate_work_unit(contract)
+    validate_v2_source_identity(contract, source_root=root)
+    app_policy = ROOT / "config/policies/app_policy.v1.json"
+    policy_sha256 = sha(app_policy.read_bytes())
+    if contract["unit"].get("policy_sha256", "").lower() != policy_sha256:
+        raise ContractError("POLICY_IDENTITY_MISMATCH", "contract policy differs from the current generic application policy")
+
+    try:
+        from .cnw_runner import build_plot_request
+    except ImportError:
+        from cnw_runner import build_plot_request
+    plot_request = build_plot_request(root, contract)
+    if plot_request.get("provider_call") != "none":
+        raise ContractError("PREFLIGHT_PROVIDER_DISPATCH_FORBIDDEN", "contract preflight must remain offline")
+    preparation = plot_request["production_preparation"]
+    intent = contract["work_intent"]
+    source = contract.get("source", {})
+    story = contract.get("story", {})
+    for relative, expected_sha in preparation["source_hashes"].items():
+        if relative in {"selected_source_excerpt", "selected_source_identity"}:
+            continue
+        source_path = root / relative
+        resolved_source = source_path.resolve(strict=True)
+        if (source_path.is_symlink() or not resolved_source.is_relative_to(root) or
+                sha(resolved_source.read_bytes()) != expected_sha):
+            raise ContractError("PREFLIGHT_INPUT_CHANGED_DURING_READ", relative)
+    if (selected_contract_path.read_bytes() != contract_bytes or
+            identity_path.read_bytes() != identity_raw):
+        raise ContractError("PREFLIGHT_INPUT_CHANGED_DURING_READ", "contract or project identity changed")
+    if sha(app_policy.read_bytes()) != policy_sha256:
+        raise ContractError("POLICY_IDENTITY_CHANGED_DURING_READ", str(app_policy))
+    if run_path.exists():
+        raise ContractError("PREFLIGHT_RUN_ID_COLLISION", run_id)
+    if intent == "INSERT_BETWEEN":
+        selected_scope = {"before_anchor": story["before_anchor"], "after_anchor": story["after_anchor"]}
+        selected_scope_sha256 = sha(json.dumps(selected_scope, ensure_ascii=False, sort_keys=True,
+                                              separators=(",", ":")).encode("utf-8"))
+    elif intent == "ADAPT_SOURCE":
+        selected_scope_sha256 = preparation["source_hashes"]["selected_source_excerpt"]
+    else:
+        selected_scope = {key: value for key, value in preparation["source_hashes"].items()
+                          if key.startswith(("90_canon/", "04_chapter_design/", "92_style_engine/"))}
+        selected_scope_sha256 = sha(json.dumps(selected_scope, ensure_ascii=False, sort_keys=True,
+                                               separators=(",", ":")).encode("utf-8"))
+
+    identity_sha256 = sha(identity_raw)
+    evidence = {
+        "schema_version": "cnw_contract_preflight_v1",
+        "preflight_version": "cnw_contract_preflight_v1",
+        "status": "READY_FOR_LIVE_PRODUCTION",
+        "reviewer_identity": "StoryStudio.CNW.OfflineContractPreflight/1",
+        "reviewer_type": "DETERMINISTIC_OFFLINE_VALIDATOR",
+        "project_instance_id": identity["project_instance_id"],
+        "project_id": contract["project_id"],
+        "work_id": contract["unit"]["id"],
+        "run_id": run_id,
+        "run_id_claim": "NOT_RESERVED",
+        "contract_sha256": sha(contract_bytes),
+        "work_intent": intent,
+        "source_identity": source,
+        "source_root_identity": {"project_instance_id": identity["project_instance_id"],
+                                  "project_identity_sha256": identity_sha256},
+        "selected_scope_sha256": selected_scope_sha256,
+        "policy_version": {"app_policy_sha256": policy_sha256,
+                            "contract_policy_sha256": contract["unit"]["policy_sha256"]},
+        "plot_request_sha256": sha(json.dumps(plot_request["messages"], ensure_ascii=False,
+                                              sort_keys=True, separators=(",", ":")).encode("utf-8")),
+        "production_preparation_hashes": preparation["source_hashes"],
+        "provider_call": "none",
+        "live_evidence_status": "NOT_RUN",
+        "user_creative_acceptance": "PENDING_USER_READING",
+    }
+    evidence["evidence_digest"] = sha(json.dumps(evidence, ensure_ascii=False, sort_keys=True,
+                                                 separators=(",", ":")).encode("utf-8"))
+    return evidence
+
+
+def verify_contract_preflight(project_root: str | Path, contract_path: str | Path, *,
+                              run_id: str, evidence: dict) -> dict:
+    """Recompute and bind preflight evidence to the current exact inputs."""
+    if not isinstance(evidence, dict):
+        raise ContractError("PREFLIGHT_EVIDENCE_INVALID", "evidence root must be an object")
+    received_digest = evidence.get("evidence_digest")
+    unsigned = {key: value for key, value in evidence.items() if key != "evidence_digest"}
+    expected_digest = sha(json.dumps(unsigned, ensure_ascii=False, sort_keys=True,
+                                      separators=(",", ":")).encode("utf-8"))
+    if not isinstance(received_digest, str) or received_digest != expected_digest:
+        raise ContractError("PREFLIGHT_EVIDENCE_DIGEST_MISMATCH", "evidence digest does not match its fields")
+    current = build_contract_preflight(project_root, contract_path, run_id=run_id)
+    if evidence != current:
+        raise ContractError("PREFLIGHT_EVIDENCE_IDENTITY_MISMATCH", "evidence does not bind the current project, contract, source, run ID, policy and Plot request")
+    return {"status": "CONTRACT_PREFLIGHT_EVIDENCE_VERIFIED", "evidence_digest": received_digest,
+            "project_instance_id": current["project_instance_id"], "project_id": current["project_id"],
+            "work_id": current["work_id"], "run_id": current["run_id"],
+            "work_intent": current["work_intent"], "provider_call": "none",
+            "live_evidence_status": "NOT_RUN", "user_creative_acceptance": "PENDING_USER_READING"}
+
+
 SUPPORT_WORKFLOW_SOURCE = {
     "01": "templates/_workflows/01_first_import.md",
     "02": "templates/_workflows/02_incremental_update.md",
@@ -839,6 +984,11 @@ def main(argv=None) -> int:
     draft = sub.add_parser("draft-contract")
     draft.add_argument("--project-root", required=True)
     draft.add_argument("--draft", required=True, help="private JSON with source anchors, overall length and assignment boundaries; Plot designs structure")
+    contract_preflight = sub.add_parser("contract-preflight", help="validate one v2 work contract and build its Plot request without writing or calling a provider")
+    contract_preflight.add_argument("--project-root", required=True)
+    contract_preflight.add_argument("--contract", required=True)
+    contract_preflight.add_argument("--run-id", required=True, help="name a future run identity; no directory is created or reserved")
+    contract_preflight.add_argument("--evidence-json", help="explicit existing preflight evidence JSON to verify against current inputs")
     incr = sub.add_parser("incremental-update")
     incr.add_argument("--project-id", required=True)
     incr.add_argument("--workspace-root", required=True)
@@ -922,6 +1072,16 @@ def main(argv=None) -> int:
         result = standard_operation(args.project_root, args.operation, sources=args.source, target=args.target)
     elif args.command == "support-workflow":
         result = support_workflow_prompt(args.project_root, args.number)
+    elif args.command == "contract-preflight":
+        if args.evidence_json:
+            evidence_path = Path(args.evidence_json).resolve(strict=True)
+            try:
+                evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                raise ContractError("PREFLIGHT_EVIDENCE_INVALID", str(exc)) from exc
+            result = verify_contract_preflight(args.project_root, args.contract, run_id=args.run_id, evidence=evidence)
+        else:
+            result = build_contract_preflight(args.project_root, args.contract, run_id=args.run_id)
     else:
         result = write_contract_draft(args.project_root, args.draft)
     print(json.dumps(result, ensure_ascii=False, indent=2))

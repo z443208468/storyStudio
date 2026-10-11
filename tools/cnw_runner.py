@@ -2326,6 +2326,17 @@ def legacy_source_preflight(args) -> dict:
             "provider_call": "none", "run_state_unchanged": True}
 
 
+def recovery_plan(args) -> dict:
+    """Inspect an explicitly selected v2 run without resuming or writing it."""
+    project_root = Path(args.project_root).resolve(strict=True)
+    run_dir = run_path(args.run_id, project_root / "runs")
+    try:
+        from .cnw_recovery import plan_recovery
+    except ImportError:
+        from cnw_recovery import plan_recovery
+    return plan_recovery(run_dir, project_root)
+
+
 def verify_live(args) -> dict:
     run_root = run_path(args.run_id, runs_root_for(args))
     state = load_state(run_root)
@@ -2532,6 +2543,10 @@ def make_parser() -> argparse.ArgumentParser:
     except ImportError:
         from cnw_recovery import refresh_references
     references.set_defaults(func=refresh_references)
+    recovery = sub.add_parser("recovery-plan", help="build a read-only recovery plan for an explicit v2 run; never resumes it")
+    recovery.add_argument("--run-id", required=True)
+    recovery.add_argument("--project-root", required=True)
+    recovery.set_defaults(func=recovery_plan)
     for command, func in (("show-run", show_run), ("resume", resume_run), ("verify-history", verify_history), ("verify-live", verify_live)):
         item = sub.add_parser(command)
         item.add_argument("--run-id", required=True)
