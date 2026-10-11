@@ -12,6 +12,7 @@ import os
 import re
 import stat
 import subprocess
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,8 @@ except ImportError:  # direct script execution
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_VERSION = "legacy_source_path_map_v1"
+EXTERNAL_SCHEMA_VERSION = "legacy_source_path_map_external_v1"
+LEGACY_EXTERNAL_ID_NAMESPACE = uuid.UUID("fc242318-55f7-5a78-b39b-c0b8c18be39e")
 CATEGORIES = (
     "V5_PROJECT_ORIGINALS",
     "J19_RELEASE_ROOTS",
@@ -102,6 +105,17 @@ def _read_json_object(path: Path, code: str) -> tuple[dict, bytes]:
     return value, raw
 
 
+def legacy_external_project_instance_id(*, project_root: str | Path, project_id: str,
+                                        run_id: str, contract_sha256: str,
+                                        source_manifest_sha256: str) -> str:
+    """Derive an explicitly external identity for a historical project without an identity file."""
+    root = Path(project_root).resolve(strict=True)
+    canonical_root = str(root).replace("/", "\\").casefold()
+    binding = "\0".join((canonical_root, project_id, run_id,
+                         contract_sha256.lower(), source_manifest_sha256.lower()))
+    return str(uuid.uuid5(LEGACY_EXTERNAL_ID_NAMESPACE, binding))
+
+
 def _unique_pairs(pairs):
     result = {}
     for key, value in pairs:
@@ -143,7 +157,8 @@ def validate_legacy_source_path_map(
     if sha256_bytes(map_raw) != expected_manifest_sha256:
         raise ContractError("LEGACY_SOURCE_MAP_SHA_MISMATCH", str(map_path))
 
-    if map_doc.get("schema_version") != SCHEMA_VERSION or not isinstance(map_doc.get("map_id"), str) or not map_doc["map_id"].strip():
+    schema_version = map_doc.get("schema_version")
+    if schema_version not in {SCHEMA_VERSION, EXTERNAL_SCHEMA_VERSION} or not isinstance(map_doc.get("map_id"), str) or not map_doc["map_id"].strip():
         raise ContractError("LEGACY_SOURCE_MAP_VERSION_UNSUPPORTED", str(map_doc.get("schema_version")))
     target = map_doc.get("target_project")
     source_run = map_doc.get("source_run")
@@ -151,18 +166,6 @@ def validate_legacy_source_path_map(
     categories = map_doc.get("categories")
     if not all(isinstance(item, dict) for item in (target, source_run, implementation, categories)):
         raise ContractError("LEGACY_SOURCE_MAP_INVALID", "target, source_run, implementation, and categories are required")
-
-    identity_path = root / "project_identity.json"
-    if not _no_reparse(identity_path) or not identity_path.is_file():
-        raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "legacy maps require a registered target project")
-    registration = resolve_project(root, data_home=root.parent.parent)
-    identity, identity_raw = _read_json_object(identity_path, "PROJECT_INSTANCE_ID_REQUIRED")
-    if (target.get("project_id") != identity.get("project_id") or
-            target.get("project_instance_id") != identity.get("project_instance_id") or
-            registration.get("project_id") != identity.get("project_id") or
-            registration.get("project_instance_id") != identity.get("project_instance_id") or
-            target.get("project_identity_sha256") != sha256_bytes(identity_raw)):
-        raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "migration map is bound to another target project")
 
     source_manifest_sha = (contract.get("source", {}).get("source_manifest_sha256") or
                            contract.get("source", {}).get("local_private_source_manifest_sha256"))
@@ -175,6 +178,40 @@ def validate_legacy_source_path_map(
             source_run.get("contract_sha256") != sha256_bytes(contract_raw) or
             source_run.get("source_manifest_sha256") != source_manifest_sha):
         raise ContractError("LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH", "source run, contract, or manifest identity differs")
+
+    identity_path = root / "project_identity.json"
+    if schema_version == SCHEMA_VERSION:
+        if not _no_reparse(identity_path) or not identity_path.is_file():
+            raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "v1 maps require a registered target project")
+        registration = resolve_project(root, data_home=root.parent.parent)
+        identity, identity_raw = _read_json_object(identity_path, "PROJECT_INSTANCE_ID_REQUIRED")
+        if (target.get("project_id") != identity.get("project_id") or
+                target.get("project_instance_id") != identity.get("project_instance_id") or
+                registration.get("project_id") != identity.get("project_id") or
+                registration.get("project_instance_id") != identity.get("project_instance_id") or
+                target.get("project_identity_sha256") != sha256_bytes(identity_raw)):
+            raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "migration map is bound to another target project")
+    else:
+        if identity_path.exists():
+            raise ContractError("LEGACY_EXTERNAL_IDENTITY_CONFLICT", "external legacy mapping cannot override a native identity file")
+        recorded_root = target.get("legacy_project_root")
+        canonical_target_root = str(root).replace("/", "\\").casefold()
+        contract_sha = sha256_bytes(contract_raw)
+        project_id = contract.get("project_id")
+        binding = target.get("legacy_identity_binding")
+        derived_id = legacy_external_project_instance_id(project_root=root,
+            project_id=project_id if isinstance(project_id, str) else "",
+            run_id=state.get("run_id", ""), contract_sha256=contract_sha,
+            source_manifest_sha256=source_manifest_sha or "")
+        if (not isinstance(project_id, str) or not project_id.strip() or
+                not isinstance(recorded_root, str) or recorded_root.replace("/", "\\").casefold() != canonical_target_root or
+                target.get("identity_kind") != "LEGACY_EXTERNAL_V1" or
+                target.get("project_id") != project_id or target.get("project_instance_id") != derived_id or
+                not isinstance(binding, dict) or binding.get("run_id") != state.get("run_id") or
+                binding.get("contract_sha256") != contract_sha or
+                binding.get("source_manifest_sha256") != source_manifest_sha or
+                binding.get("run_state_sha256") != sha256_bytes(state_raw)):
+            raise ContractError("LEGACY_EXTERNAL_IDENTITY_BINDING_MISMATCH", "external identity must bind this root, run, contract, and source manifest")
 
     source = contract.get("source", {})
     source_sha = (source.get("script_sha256") or source.get("source_file_sha256") or
@@ -195,25 +232,31 @@ def validate_legacy_source_path_map(
                 manifest_key not in entries_by_key or entries_by_key[manifest_key].get("sha256") != manifest_sha):
             raise ContractError("LEGACY_SOURCE_MAP_RUN_IDENTITY_MISMATCH", "mapped source or manifest does not match the v1 contract")
 
-    code_files = implementation.get("code_files")
-    policy_files = implementation.get("policy_files")
-    code_commit = implementation.get("commit_sha")
-    if (not isinstance(code_files, list) or not code_files or not isinstance(policy_files, list) or not policy_files or
-            not isinstance(code_commit, str) or not re.fullmatch(r"[0-9a-f]{40,64}", code_commit)):
-        raise ContractError("LEGACY_SOURCE_MAP_INVALID", "legacy code commit and code/policy identities are required")
-    for group, label in ((code_files, "code_files"), (policy_files, "policy_files")):
-        for item in group:
-            if not isinstance(item, dict):
-                raise ContractError("LEGACY_SOURCE_MAP_INVALID", f"{label} entries must be objects")
-            relative = _safe_relative_token(item.get("path"), f"{label}.path")
-            expected = _required_sha(item.get("sha256"), f"{label}.sha256")
-            try:
-                shown = subprocess.run(["git", "show", f"{code_commit}:{relative}"], cwd=ROOT,
-                    capture_output=True, check=False, timeout=20)
-            except (OSError, subprocess.TimeoutExpired) as exc:
-                raise ContractError("LEGACY_IMPLEMENTATION_IDENTITY_UNAVAILABLE", relative) from exc
-            if shown.returncode != 0 or sha256_bytes(shown.stdout) != expected:
-                raise ContractError("LEGACY_IMPLEMENTATION_IDENTITY_MISMATCH", str(relative))
+    if schema_version == EXTERNAL_SCHEMA_VERSION:
+        if (implementation.get("status") != "UNRECORDED" or implementation.get("commit_sha") is not None or
+                implementation.get("code_files") != [] or implementation.get("policy_files") != [] or
+                not isinstance(implementation.get("reason"), str) or not implementation["reason"].strip()):
+            raise ContractError("LEGACY_SOURCE_MAP_INVALID", "external maps must explicitly preserve an unrecorded application build identity")
+    else:
+        code_files = implementation.get("code_files")
+        policy_files = implementation.get("policy_files")
+        code_commit = implementation.get("commit_sha")
+        if (not isinstance(code_files, list) or not code_files or not isinstance(policy_files, list) or not policy_files or
+                not isinstance(code_commit, str) or not re.fullmatch(r"[0-9a-f]{40,64}", code_commit)):
+            raise ContractError("LEGACY_SOURCE_MAP_INVALID", "legacy code commit and code/policy identities are required")
+        for group, label in ((code_files, "code_files"), (policy_files, "policy_files")):
+            for item in group:
+                if not isinstance(item, dict):
+                    raise ContractError("LEGACY_SOURCE_MAP_INVALID", f"{label} entries must be objects")
+                relative = _safe_relative_token(item.get("path"), f"{label}.path")
+                expected = _required_sha(item.get("sha256"), f"{label}.sha256")
+                try:
+                    shown = subprocess.run(["git", "show", f"{code_commit}:{relative}"], cwd=ROOT,
+                        capture_output=True, check=False, timeout=20)
+                except (OSError, subprocess.TimeoutExpired) as exc:
+                    raise ContractError("LEGACY_IMPLEMENTATION_IDENTITY_UNAVAILABLE", relative) from exc
+                if shown.returncode != 0 or sha256_bytes(shown.stdout) != expected:
+                    raise ContractError("LEGACY_IMPLEMENTATION_IDENTITY_MISMATCH", str(relative))
 
     if set(categories) != set(CATEGORIES):
         raise ContractError("LEGACY_SOURCE_MAP_CATEGORIES_INCOMPLETE", ", ".join(CATEGORIES))
@@ -248,7 +291,10 @@ def validate_legacy_source_path_map(
             if (sha256_bytes(raw) != expected or type(entry.get("bytes")) is not int or
                     entry["bytes"] != len(raw)):
                 raise ContractError("LEGACY_SOURCE_SNAPSHOT_MISSING", relative)
-    if sha256_bytes(state_path.read_bytes()) != sha256_bytes(state_raw) or sha256_bytes(contract_path.read_bytes()) != sha256_bytes(contract_raw):
+    identity_raw = identity_path.read_bytes() if schema_version == SCHEMA_VERSION else None
+    if (sha256_bytes(state_path.read_bytes()) != sha256_bytes(state_raw) or
+            sha256_bytes(contract_path.read_bytes()) != sha256_bytes(contract_raw) or
+            (identity_raw is not None and sha256_bytes(identity_path.read_bytes()) != sha256_bytes(identity_raw))):
         raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
     if sha256_bytes(map_path.read_bytes()) != sha256_bytes(map_raw):
         raise ContractError("LEGACY_SOURCE_MAP_CHANGED_DURING_READ", str(map_path))

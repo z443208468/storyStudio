@@ -14,7 +14,9 @@ from unittest.mock import patch
 from tools.cnw_contract import ContractError
 from tools import cnw_runner
 from tools.cnw_runner import validate_literary_source_freeze
-from tools.legacy_source_path_map import CATEGORIES, resolve_legacy_key, resolve_legacy_mapped_file, validate_legacy_source_path_map
+from tools.legacy_source_path_map import (CATEGORIES, EXTERNAL_SCHEMA_VERSION,
+    legacy_external_project_instance_id, resolve_legacy_key,
+    resolve_legacy_mapped_file, validate_legacy_source_path_map)
 from tools.project_paths import create_project, setup_data_home
 
 
@@ -269,6 +271,78 @@ class LegacySourcePathMapTests(unittest.TestCase):
                 manifest_path=self.map_path, expected_manifest_sha256=self.map_sha,
                 category="CRITICS_RUNS_AND_NK_EVIDENCE", legacy_key="critics:unavailable",
                 expected_file_sha256="f" * 64)
+
+    def test_external_legacy_identity_map_supports_v1_without_creating_identity_or_resume(self):
+        external_root = self.temp / "legacy-v5-project"
+        shutil.copytree(self.project, external_root)
+        (external_root / "project_identity.json").unlink()
+        external_run = external_root / "runs" / "SYNTHETIC-LEGACY"
+        external_state = external_run / "run_state.json"
+        external_contract = external_run / "artifacts/contract.json"
+        state_raw = external_state.read_bytes()
+        contract_raw = external_contract.read_bytes()
+        contract = json.loads(contract_raw)
+        manifest_sha = contract["source"]["source_manifest_sha256"]
+        project_id = contract["project_id"]
+        instance_id = legacy_external_project_instance_id(project_root=external_root,
+            project_id=project_id, run_id="SYNTHETIC-LEGACY",
+            contract_sha256=sha(contract_raw), source_manifest_sha256=manifest_sha)
+        categories = {}
+        for category in CATEGORIES:
+            categories[category] = {"status": "UNAVAILABLE",
+                "reason": "synthetic legacy fixture does not contain this external dependency",
+                "evidence_ref": f"fixture:unavailable:{category}", "entries": []}
+        categories["V5_PROJECT_ORIGINALS"] = {"status": "MAPPED", "entries": [
+            {"legacy_key": "source:workspace/legacy/source.txt", "source_type": "IMPORTED_PROJECT",
+             "legacy_relative_path": "workspace/legacy/source.txt",
+             "target_project_relative_path": "_INBOX/legacy-snapshots/source.txt",
+             "sha256": sha(self.source_bytes), "bytes": len(self.source_bytes)},
+            {"legacy_key": "manifest:workspace/legacy/source_manifest.json", "source_type": "SOURCE_MANIFEST",
+             "legacy_relative_path": "workspace/legacy/source_manifest.json",
+             "target_project_relative_path": "_INBOX/legacy-snapshots/manifest.json",
+             "sha256": sha(self.manifest_bytes), "bytes": len(self.manifest_bytes)},
+        ]}
+        map_doc = {"schema_version": EXTERNAL_SCHEMA_VERSION, "map_id": "synthetic-external-map",
+            "target_project": {"identity_kind": "LEGACY_EXTERNAL_V1",
+                "legacy_project_root": str(external_root.resolve()), "project_id": project_id,
+                "project_instance_id": instance_id,
+                "legacy_identity_binding": {"run_id": "SYNTHETIC-LEGACY",
+                    "contract_sha256": sha(contract_raw), "source_manifest_sha256": manifest_sha,
+                    "run_state_sha256": sha(state_raw)}},
+            "source_run": {"run_id": "SYNTHETIC-LEGACY", "run_state_sha256": sha(state_raw),
+                "contract_path_in_run": "artifacts/contract.json", "contract_sha256": sha(contract_raw),
+                "source_manifest_sha256": manifest_sha,
+                "source_file_legacy_key": "source:workspace/legacy/source.txt",
+                "source_manifest_legacy_key": "manifest:workspace/legacy/source_manifest.json"},
+            "legacy_implementation": {"status": "UNRECORDED", "commit_sha": None,
+                "code_files": [], "policy_files": [],
+                "reason": "synthetic historical run did not record a StoryStudio application commit"},
+            "categories": categories}
+        map_path = self.temp / "external-legacy-map.json"
+        map_path.write_text(json.dumps(map_doc, sort_keys=True), encoding="utf-8")
+        map_sha = sha(map_path.read_bytes())
+        args = SimpleNamespace(project_root=str(external_root), run_id="SYNTHETIC-LEGACY",
+            legacy_source_map=str(map_path), legacy_source_map_sha256=map_sha)
+        before = {"state": external_state.read_bytes(), "contract": external_contract.read_bytes(),
+            "project_contract": (external_root / "contracts/SYNTHETIC-UNIT.json").read_bytes()}
+        result = cnw_runner.legacy_recovery_plan(args)
+        self.assertEqual(result["status"], "V5_RECOVERY_REVIEW_REQUIRED")
+        self.assertEqual(result["project_instance_id"], instance_id)
+        self.assertEqual(result["project_identity_kind"], "LEGACY_EXTERNAL_MAPPED")
+        self.assertEqual(result["legacy_implementation_identity"], "UNRECORDED")
+        self.assertEqual(result["resume_eligibility"], "NOT_ESTABLISHED")
+        self.assertEqual(result["provider_call"], "none")
+        self.assertFalse((external_root / "project_identity.json").exists())
+        self.assertEqual(before["state"], external_state.read_bytes())
+        self.assertEqual(before["contract"], external_contract.read_bytes())
+        self.assertEqual(before["project_contract"], (external_root / "contracts/SYNTHETIC-UNIT.json").read_bytes())
+
+        other_root = self.temp / "same-files-different-legacy-root"
+        shutil.copytree(external_root, other_root)
+        with self.assertRaisesRegex(ContractError, "LEGACY_EXTERNAL_IDENTITY_BINDING_MISMATCH"):
+            validate_legacy_source_path_map(target_project_root=other_root,
+                legacy_run_dir=other_root / "runs/SYNTHETIC-LEGACY", manifest_path=map_path,
+                expected_manifest_sha256=map_sha)
 
 
 if __name__ == "__main__":

@@ -2284,6 +2284,15 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
         raise ContractError("LEGACY_PREFLIGHT_NOT_APPLICABLE", "select a historical v1 run")
     if contract.get("source", {}).get("identity_type") != "imported_project":
         raise ContractError("LEGACY_PREFLIGHT_UNSUPPORTED", "this preflight supports an explicitly migrated TS project-source run")
+    try:
+        from .legacy_source_path_map import (EXTERNAL_SCHEMA_VERSION,
+            validate_legacy_source_path_map)
+    except ImportError:
+        from legacy_source_path_map import (EXTERNAL_SCHEMA_VERSION,
+            validate_legacy_source_path_map)
+    map_doc, _, _ = validate_legacy_source_path_map(target_project_root=project_root,
+        legacy_run_dir=run_dir, manifest_path=args.legacy_source_map,
+        expected_manifest_sha256=args.legacy_source_map_sha256)
     validate_literary_source_freeze(state, project_root,
         legacy_run_dir=run_dir, legacy_map_path=args.legacy_source_map,
         legacy_map_sha256=args.legacy_source_map_sha256)
@@ -2353,12 +2362,19 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
             })
         if has_history and not assess_recovery:
             raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", f"{name} contains completed or partial stage evidence")
-    identity = json.loads((project_root / "project_identity.json").read_text(encoding="utf-8"))
+    project_identity_path = project_root / "project_identity.json"
+    if map_doc.get("schema_version") == EXTERNAL_SCHEMA_VERSION:
+        identity = map_doc["target_project"]
+        identity_bytes = None
+        identity_kind = "LEGACY_EXTERNAL_MAPPED"
+        implementation_status = "UNRECORDED"
+    else:
+        identity, identity_bytes = json.loads(project_identity_path.read_text(encoding="utf-8")), project_identity_path.read_bytes()
+        identity_kind = "NATIVE_REGISTERED"
+        implementation_status = "RECORDED"
     state_bytes = state_path.read_bytes()
     run_contract_bytes = contract_artifact.read_bytes()
     project_contract_bytes = project_contract.read_bytes()
-    project_identity_path = project_root / "project_identity.json"
-    identity_bytes = project_identity_path.read_bytes()
     if (sha(state_bytes) != state_before or sha(run_contract_bytes) != contract_before or
             sha(project_contract_bytes) != contract_before):
         raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
@@ -2368,8 +2384,10 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
         from cnw_recovery import stage_identity
     prospective_plot = stage_identity(run_dir, "plot", project_root=project_root,
                                       contract_override=mapped)
+    identity_unchanged = (not project_identity_path.exists() if identity_bytes is None else
+                          project_identity_path.read_bytes() == identity_bytes)
     if (state_path.read_bytes() != state_bytes or contract_artifact.read_bytes() != run_contract_bytes or
-            project_contract.read_bytes() != project_contract_bytes or project_identity_path.read_bytes() != identity_bytes):
+            project_contract.read_bytes() != project_contract_bytes or not identity_unchanged):
         raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
     if assess_recovery:
         next_stage = state.get("next_stage")
@@ -2403,15 +2421,20 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
                 # A missing prior-stage artifact or changed input must remain a
                 # review condition; never materialize it during this plan.
                 identity_assessment = getattr(exc, "code", type(exc).__name__)
+        identity_unchanged = (not project_identity_path.exists() if identity_bytes is None else
+                              project_identity_path.read_bytes() == identity_bytes)
         unchanged = (state_path.read_bytes() == state_bytes and
             contract_artifact.read_bytes() == run_contract_bytes and
             project_contract.read_bytes() == project_contract_bytes and
-            project_identity_path.read_bytes() == identity_bytes)
+            identity_unchanged)
         if not unchanged:
             raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
         return {"status": "V5_RECOVERY_REVIEW_REQUIRED" if history_rows or provider_requests or provider_attempts
+                or implementation_status == "UNRECORDED"
                 else "V5_RECOVERY_PREFLIGHT_ONLY",
             "run_id": args.run_id, "project_instance_id": identity["project_instance_id"],
+            "project_identity_kind": identity_kind,
+            "legacy_implementation_identity": implementation_status,
             "source_freeze": "VERIFIED", "next_stage_candidate": next_stage,
             "stage_history": history_rows,
             "stage_history_sha256": sha(json.dumps(stages, ensure_ascii=False, sort_keys=True,
@@ -2425,8 +2448,11 @@ def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
             "provider_call": "none", "resume_executed": False,
             "run_state_sha256_before": state_before, "run_state_sha256_after": sha(state_path.read_bytes()),
             "run_state_unchanged": True, "resume_eligibility": "NOT_ESTABLISHED"}
-    return {"status": "V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK",
+    return {"status": "V5_RECOVERY_REVIEW_REQUIRED" if implementation_status == "UNRECORDED"
+            else "V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK",
             "run_id": args.run_id, "project_instance_id": identity["project_instance_id"],
+            "project_identity_kind": identity_kind,
+            "legacy_implementation_identity": implementation_status,
             "source_freeze": "VERIFIED", "prospective_plot_identity": prospective_plot,
             "provider_call": "none", "run_state_unchanged": True}
 
