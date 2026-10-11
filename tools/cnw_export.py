@@ -35,7 +35,25 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     contract = load_contract(run / "artifacts/contract.json")
     unit = contract["unit"]
     run_id = state["run_id"]
-    deliverables = ROOT / "deliverables" / contract["project_id"] / run_id
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_project import _registered_project_identity
+        except ImportError:
+            from cnw_project import _registered_project_identity
+        project = project.resolve(strict=True)
+        identity = _registered_project_identity(project)
+        if (identity.get("project_id") != contract.get("project_id") or
+                identity.get("project_instance_id") != contract.get("project_instance_id")):
+            raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "export contract differs from the explicitly selected project")
+        try:
+            from .cnw_contract import validate_v2_source_identity
+        except ImportError:
+            from cnw_contract import validate_v2_source_identity
+        validate_v2_source_identity(contract, source_root=project)
+        deliverables = project / "deliverables" / identity["project_instance_id"] / run_id
+    else:
+        # Keep the historical v1 destination stable for existing workflows.
+        deliverables = ROOT / "deliverables" / contract["project_id"] / run_id
     deliverables.mkdir(parents=True, exist_ok=True)
 
     def stage_text(stage: str) -> str:
@@ -63,20 +81,38 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     before_anchor = contract.get("story", {}).get("before_anchor")
     after_anchor = contract.get("story", {}).get("after_anchor")
     before_text = after_text = ""
+    selected_adapt_excerpt = None
     if contract["story"].get("source_file"):
-        try:
-            from .cnw_runner import _source_root
-            from .cnw_contract import _safe_source_file, _validate_story_anchors
-        except ImportError:
-            from cnw_runner import _source_root
-            from cnw_contract import _safe_source_file, _validate_story_anchors
-        source_root = _source_root(contract, project)
-        source = _safe_source_file(source_root, contract["story"]["source_file"])
-        _validate_story_anchors(contract, source_root, source)
-        lines = source.read_text(encoding="utf-8-sig").splitlines(keepends=True)
-        def anchor_text(anchor):
-            return "".join(lines[anchor["source_line"]-1:anchor.get("source_line_end", anchor["source_line"])]).strip()
-        before_text, after_text = anchor_text(before_anchor), anchor_text(after_anchor)
+        if contract.get("schema_version") == "cnw_work_unit_v2" and contract.get("work_intent") == "ADAPT_SOURCE":
+            try:
+                from .cnw_roles import read_production_preparation
+            except ImportError:
+                from cnw_roles import read_production_preparation
+            prepared = read_production_preparation(project, contract)
+            selected_adapt_excerpt = prepared["documents"].get("selected_source_excerpt")
+            selected_hash = contract["story"].get("source_selection", {}).get("selected_sha256")
+            saved_path = run / "artifacts/production_preparation.json"
+            if (not isinstance(selected_adapt_excerpt, str) or
+                    prepared["source_hashes"].get("selected_source_excerpt") != selected_hash or
+                    not saved_path.is_file() or saved_path.is_symlink()):
+                raise ContractError("SOURCE_SELECTION_INVALID", "ADAPT export requires the frozen selected source excerpt")
+            saved = json.loads(saved_path.read_text(encoding="utf-8"))
+            if saved.get("documents", {}).get("selected_source_excerpt") != selected_adapt_excerpt:
+                raise ContractError("SOURCE_SPAN_HASH_MISMATCH", "saved ADAPT excerpt differs from the selected source span")
+        else:
+            try:
+                from .cnw_runner import _source_root
+                from .cnw_contract import _safe_source_file, _validate_story_anchors
+            except ImportError:
+                from cnw_runner import _source_root
+                from cnw_contract import _safe_source_file, _validate_story_anchors
+            source_root = _source_root(contract, project)
+            source = _safe_source_file(source_root, contract["story"]["source_file"])
+            _validate_story_anchors(contract, source_root, source)
+            lines = source.read_text(encoding="utf-8-sig").splitlines(keepends=True)
+            def anchor_text(anchor):
+                return "".join(lines[anchor["source_line"]-1:anchor.get("source_line_end", anchor["source_line"])]).strip()
+            before_text, after_text = anchor_text(before_anchor), anchor_text(after_anchor)
     files = {}
     (deliverables / "01_初稿.md").write_text(v0, encoding="utf-8")
     (deliverables / "02_修订稿.md").write_text(v1, encoding="utf-8")
@@ -105,12 +141,8 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     reading_parts = []
     intent = contract.get("work_intent")
     if intent == "ADAPT_SOURCE":
-        preparation_file = run / "artifacts/production_preparation.json"
-        if preparation_file.is_file():
-            preparation = json.loads(preparation_file.read_text(encoding="utf-8"))
-            excerpt = preparation.get("documents", {}).get("selected_source_excerpt", "")
-            if excerpt:
-                reading_parts.extend(("<!-- 选定来源片段 -->", excerpt, "<!-- 改编稿开始 -->"))
+        if selected_adapt_excerpt:
+            reading_parts.extend(("<!-- 选定来源片段 -->", selected_adapt_excerpt, "<!-- 改编稿开始 -->"))
         reading_parts.append(v1)
     elif intent == "ORIGINAL_EPISODE":
         reading_parts.append(v1)

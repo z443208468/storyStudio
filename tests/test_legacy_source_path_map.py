@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from types import SimpleNamespace
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.cnw_contract import ContractError
 from tools import cnw_runner
@@ -19,6 +20,10 @@ from tools.project_paths import create_project, setup_data_home
 
 def sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def changed_plot_builder(run_dir):
+    return {"provider_call": "none", "fixture": "changed-builder"}
 
 
 class LegacySourcePathMapTests(unittest.TestCase):
@@ -43,7 +48,8 @@ class LegacySourcePathMapTests(unittest.TestCase):
                      "policy_sha256": sha((Path(__file__).resolve().parents[1] / "config/cnw_production_policy.json").read_bytes())},
             "source": {"identity_type": "imported_project", "version": "SYNTHETIC-v1",
                        "import_id": "fixture-import-id", "source_file_sha256": sha(self.source_bytes),
-                       "source_manifest_sha256": sha(self.manifest_bytes), "manifest_file": "_INBOX/source_manifest.json"},
+                       "source_manifest_sha256": sha(self.manifest_bytes), "manifest_file": "_INBOX/source_manifest.json",
+                       "source_revision_id": sha(self.source_bytes)},
             "story": {"source_file": "_INBOX/originals/source.txt",
                       "before_anchor": {"source_line": 1, "sha256": sha(b"First fictional line.\n")},
                       "after_anchor": {"source_line": 3, "sha256": sha(b"Last fictional line.\n")}},
@@ -64,6 +70,18 @@ class LegacySourcePathMapTests(unittest.TestCase):
         self.state_path = self.run / "run_state.json"
         self.state_path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
         self.state = state
+        for relative, content in {
+            "04_chapter_design/arc_01.md": "Fictional arc for preflight.\n",
+            "90_canon/canon.md": "Fictional canon A.\n",
+            "90_canon/character_bible.md": "Mira is fictional.\n",
+            "94_runtime/current_state.md": "Fictional state.\n",
+            "07_draft/manuscript_index.md": "Fictional manuscript index.\n",
+            "04_chapter_design/arc_01_episode_details.md": "Fictional episode details.\n",
+            "92_style_engine/character_voice_samples.md": "## Mira\nFictional sample.\n",
+        }.items():
+            target = self.project / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
         self._write_map()
 
     def tearDown(self):
@@ -133,10 +151,29 @@ class LegacySourcePathMapTests(unittest.TestCase):
             legacy_source_map=str(self.map_path), legacy_source_map_sha256=self.map_sha))
         self.assertEqual(result["status"], "V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK")
         self.assertEqual(result["provider_call"], "none")
+        plot_identity = result["prospective_plot_identity"]
+        self.assertEqual(plot_identity["stage"], "plot")
+        self.assertEqual(plot_identity["contract_sha256"], self.state["contract_sha256"])
+        for key in ("input_sha256", "input_hashes", "message_sha256", "builder_sha256",
+                    "workflow_sha256", "model", "api_url", "transport_sha256", "sha256"):
+            self.assertTrue(plot_identity[key], key)
         # The selected migration API keeps the exact historical freeze keys.
         self.assertEqual(self.state_path.read_bytes(), before_state)
         self.assertEqual((self.run / "artifacts/contract.json").read_bytes(), before_contract)
         self.assertEqual(self.map_path.read_bytes(), before_map)
+
+    def test_prospective_plot_identity_tracks_bound_input_and_builder_without_mutating_run(self):
+        args = SimpleNamespace(project_root=str(self.project), run_id="SYNTHETIC-LEGACY",
+            legacy_source_map=str(self.map_path), legacy_source_map_sha256=self.map_sha)
+        first = cnw_runner.legacy_source_preflight(args)["prospective_plot_identity"]
+        canon = self.project / "90_canon/canon.md"
+        canon.write_text("Fictional canon B, changed bound Plot input.\n", encoding="utf-8")
+        second = cnw_runner.legacy_source_preflight(args)["prospective_plot_identity"]
+        self.assertNotEqual(first["input_sha256"], second["input_sha256"])
+        with patch.object(cnw_runner, "execute_plot", changed_plot_builder):
+            third = cnw_runner.legacy_source_preflight(args)["prospective_plot_identity"]
+        self.assertNotEqual(second["builder_sha256"], third["builder_sha256"])
+        self.assertEqual(self.state_path.read_bytes(), json.dumps(self.state, sort_keys=True).encode("utf-8"))
 
     def test_map_sha_path_traversal_and_missing_key_fail_closed(self):
         with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_MAP_SHA_MISMATCH"):

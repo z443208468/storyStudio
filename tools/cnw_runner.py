@@ -2155,16 +2155,33 @@ def legacy_source_preflight(args) -> dict:
     if contract.get("unit", {}).get("policy_sha256", "").lower() != sha(policy.read_bytes()):
         raise ContractError("PRODUCTION_POLICY_IDENTITY_MISMATCH", "historical policy SHA differs")
     stages = state.get("stages", {})
-    if stages:
-        plot = stages.get("plot", {})
-        if plot.get("status") != "NOT_RUN" or plot.get("execution_identity") or plot.get("artifact") or plot.get("request_artifact"):
-            raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "preflight only admits an untouched Plot stage; completed or partial Plot evidence needs separate identity review")
-        if any(record.get("status") != "NOT_RUN" for name, record in stages.items() if name != "plot"):
-            raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "downstream historical stages are not empty")
+    if (not isinstance(stages, dict) or set(stages) != set(CNW_STAGES) or
+            state.get("provider_requests") or state.get("provider_attempts")):
+        raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "preflight requires a complete, empty 11-stage history with no provider evidence")
+    for name, record in stages.items():
+        if (not isinstance(record, dict) or record.get("status") != "NOT_RUN" or
+                any(record.get(field) for field in ("execution_identity", "artifact", "request_artifact",
+                    "provider_request_ids", "invalidated_attempts", "validation"))):
+            raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", f"{name} contains completed or partial stage evidence")
     identity = json.loads((project_root / "project_identity.json").read_text(encoding="utf-8"))
+    state_bytes = state_path.read_bytes()
+    run_contract_bytes = contract_artifact.read_bytes()
+    project_contract_bytes = project_contract.read_bytes()
+    project_identity_path = project_root / "project_identity.json"
+    identity_bytes = project_identity_path.read_bytes()
+    try:
+        from .cnw_recovery import stage_identity
+    except ImportError:
+        from cnw_recovery import stage_identity
+    prospective_plot = stage_identity(run_dir, "plot", project_root=project_root,
+                                      contract_override=mapped)
+    if (state_path.read_bytes() != state_bytes or contract_artifact.read_bytes() != run_contract_bytes or
+            project_contract.read_bytes() != project_contract_bytes or project_identity_path.read_bytes() != identity_bytes):
+        raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
     return {"status": "V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK",
             "run_id": args.run_id, "project_instance_id": identity["project_instance_id"],
-            "source_freeze": "VERIFIED", "provider_call": "none", "run_state_unchanged": True}
+            "source_freeze": "VERIFIED", "prospective_plot_identity": prospective_plot,
+            "provider_call": "none", "run_state_unchanged": True}
 
 
 def verify_live(args) -> dict:

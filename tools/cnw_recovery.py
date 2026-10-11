@@ -118,12 +118,13 @@ def verify_evidence(run_dir: Path, state: dict) -> None:
             raise runner.ContractError("STAGE_RECEIPT_MISSING", stage)
 
 
-def stage_identity(run_dir: Path, stage: str) -> dict:
+def stage_identity(run_dir: Path, stage: str, *, project_root: Path | None = None,
+                   contract_override: dict | None = None) -> dict:
     """Hash real role inputs and their builders, without calling a provider."""
     r, roles, review = _modules()
     state = r.load_state(run_dir)
-    contract = r._contract_for(run_dir)
-    project = r._run_dir_base(run_dir)
+    contract = contract_override if contract_override is not None else r._contract_for(run_dir)
+    project = Path(project_root).resolve(strict=True) if project_root is not None else r._run_dir_base(run_dir)
     def text(name):
         return r._read_stage_text(run_dir, state, name)
     inputs, builders = {}, []
@@ -203,7 +204,10 @@ def stage_identity(run_dir: Path, stage: str) -> dict:
                 builders += [review.build_lens_input, review.lens_messages, review.build_verifier_packet, review.verifier_messages]
             builders += [r._review_sources]
     value = {"version": 1, "stage": stage, "contract_sha256": state["contract_sha256"],
-        "input_sha256": _digest(inputs), "builder_sha256": _code(*builders),
+        "input_sha256": _digest(inputs),
+        "input_hashes": {name: _digest(item) for name, item in sorted(inputs.items())},
+        **({"message_sha256": _digest(inputs["messages"])} if "messages" in inputs else {}),
+        "builder_sha256": _code(*builders),
         "workflow_sha256": r.sha(r.WORKFLOW_PATH.read_bytes()), "model": r.MODEL,
         "api_url": r.API_URL, "transport_sha256": _code(r._cnw_live_call_in_slot)}
     return {**value, "sha256": _digest(value)}
