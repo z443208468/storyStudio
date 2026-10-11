@@ -186,6 +186,41 @@ class LegacySourcePathMapTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED"):
             cnw_runner.legacy_source_preflight(args)
 
+    def test_legacy_recovery_plan_preserves_incomplete_history_and_never_claims_eligibility(self):
+        state = json.loads(self.state_path.read_text(encoding="utf-8"))
+        state["status"] = "EXECUTION_INCOMPLETE"
+        state["next_stage"] = "plot"
+        state["stages"]["plot"].update(status="EXECUTION_INCOMPLETE",
+            execution_failures=[{"error_type": "SyntheticTransportError", "error_code": "UNKNOWN_NOT_ZERO"}])
+        state["provider_requests"] = [{"request_id": "SYNTHETIC-RECEIPT",
+            "stage": "plot", "status": "UNKNOWN_NOT_ZERO", "cost_cny": None}]
+        self.state_path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
+        self.state = state
+        self._write_map()
+        args = SimpleNamespace(project_root=str(self.project), run_id="SYNTHETIC-LEGACY",
+            legacy_source_map=str(self.map_path), legacy_source_map_sha256=self.map_sha)
+        before_state = self.state_path.read_bytes()
+        before_contract = (self.run / "artifacts/contract.json").read_bytes()
+        before_project_contract = self.contract_path.read_bytes()
+        result = cnw_runner.legacy_recovery_plan(args)
+        self.assertEqual(result["status"], "V5_RECOVERY_REVIEW_REQUIRED")
+        self.assertEqual(result["next_stage_candidate"], "plot")
+        self.assertEqual(result["stage_history"][0]["stage"], "plot")
+        self.assertEqual(result["stage_history"][0]["execution_failure_count"], 1)
+        self.assertEqual(result["provider_receipt_history"]["counts_by_status"], {"UNKNOWN_NOT_ZERO": 1})
+        self.assertEqual(result["provider_receipt_history"]["validation"], "PRESERVED_UNVERIFIED")
+        self.assertEqual(result["cost_ledger"], "NOT_READ_RECONCILIATION_REQUIRED")
+        self.assertEqual(result["resume_eligibility"], "NOT_ESTABLISHED")
+        self.assertFalse(result["resume_executed"])
+        self.assertEqual(result["provider_call"], "none")
+        self.assertTrue(result["run_state_unchanged"])
+        self.assertEqual(result["run_state_sha256_before"], result["run_state_sha256_after"])
+        self.assertEqual(self.state_path.read_bytes(), before_state)
+        self.assertEqual((self.run / "artifacts/contract.json").read_bytes(), before_contract)
+        self.assertEqual(self.contract_path.read_bytes(), before_project_contract)
+        with self.assertRaisesRegex(ContractError, "LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED"):
+            cnw_runner.legacy_source_preflight(args)
+
     def test_map_sha_path_traversal_and_missing_key_fail_closed(self):
         with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_MAP_SHA_MISMATCH"):
             validate_legacy_source_path_map(target_project_root=self.project, legacy_run_dir=self.run,

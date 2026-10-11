@@ -2243,8 +2243,13 @@ def verify_history(args) -> dict:
     return {"status": "HISTORICAL_EVIDENCE_FOUND", "run_id": args.run_id, "provider_call": "none", "provider_requests": len(state["provider_requests"])}
 
 
-def legacy_source_preflight(args) -> dict:
-    """Read-only source-map check for one explicitly selected legacy run."""
+def legacy_source_preflight(args, *, assess_recovery: bool = False) -> dict:
+    """Read-only source-map check for one explicitly selected legacy run.
+
+    Recovery assessment preserves and summarizes historical stage/receipt
+    evidence but never declares the run eligible to resume. The caller must
+    still reconcile its external cost ledger and obtain the required review.
+    """
     project_root = Path(args.project_root).resolve(strict=True)
     run_dir = run_path(args.run_id, project_root / "runs").resolve(strict=True)
     state_path = run_dir / "run_state.json"
@@ -2297,13 +2302,37 @@ def legacy_source_preflight(args) -> dict:
     if contract.get("unit", {}).get("policy_sha256", "").lower() != sha(policy.read_bytes()):
         raise ContractError("PRODUCTION_POLICY_IDENTITY_MISMATCH", "historical policy SHA differs")
     stages = state.get("stages", {})
-    if (not isinstance(stages, dict) or set(stages) != set(CNW_STAGES) or
-            state.get("provider_requests") or state.get("provider_attempts")):
-        raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "preflight requires a complete, empty 11-stage history with no provider evidence")
+    if not isinstance(stages, dict) or set(stages) != set(CNW_STAGES):
+        raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "legacy history must contain the pinned 11-stage set")
+    provider_requests = state.get("provider_requests", [])
+    provider_attempts = state.get("provider_attempts", [])
+    if (not isinstance(provider_requests, list) or not isinstance(provider_attempts, list)):
+        raise ContractError("LEGACY_RECEIPT_HISTORY_INVALID", "provider request and attempt histories must be lists")
+    if not assess_recovery and (provider_requests or provider_attempts):
+        raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", "resume preflight requires an empty provider history")
+    history_rows = []
     for name, record in stages.items():
-        if (not isinstance(record, dict) or record.get("status") != "NOT_RUN" or
-                any(record.get(field) for field in ("execution_identity", "artifact", "request_artifact",
-                    "provider_request_ids", "invalidated_attempts", "execution_failures", "validation"))):
+        if not isinstance(record, dict) or not isinstance(record.get("status"), str):
+            raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", f"{name} contains completed or partial stage evidence")
+        has_history = (record.get("status") != "NOT_RUN" or any(record.get(field) for field in
+            ("execution_identity", "artifact", "request_artifact", "provider_request_ids",
+             "invalidated_attempts", "execution_failures", "validation")))
+        if has_history:
+            failures = record.get("execution_failures", [])
+            if not isinstance(failures, list):
+                raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", f"{name} failure history is malformed")
+            history_rows.append({
+                "stage": name,
+                "status": record["status"],
+                "execution_failure_count": len(failures),
+                "execution_failures_sha256": sha(json.dumps(failures, ensure_ascii=False,
+                    sort_keys=True, separators=(",", ":")).encode("utf-8")),
+                "artifact_history_present": bool(record.get("artifact") or record.get("request_artifact") or
+                    record.get("invalidated_attempts")),
+                "provider_request_ids_count": len(record.get("provider_request_ids", []))
+                    if isinstance(record.get("provider_request_ids", []), list) else None,
+            })
+        if has_history and not assess_recovery:
             raise ContractError("LEGACY_STAGE_IDENTITY_REVIEW_REQUIRED", f"{name} contains completed or partial stage evidence")
     identity = json.loads((project_root / "project_identity.json").read_text(encoding="utf-8"))
     state_bytes = state_path.read_bytes()
@@ -2320,10 +2349,51 @@ def legacy_source_preflight(args) -> dict:
     if (state_path.read_bytes() != state_bytes or contract_artifact.read_bytes() != run_contract_bytes or
             project_contract.read_bytes() != project_contract_bytes or project_identity_path.read_bytes() != identity_bytes):
         raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
+    if assess_recovery:
+        next_stage = state.get("next_stage")
+        if (next_stage not in CNW_STAGES or
+                (stages[next_stage].get("status") not in {"EXECUTION_INCOMPLETE", "NOT_RUN", "READY_FOR_EXECUTION"}
+                 and not stages[next_stage].get("execution_failures"))):
+            next_stage = next((name for name in CNW_STAGES
+                if stages[name].get("status") in {"EXECUTION_INCOMPLETE", "NOT_RUN", "READY_FOR_EXECUTION"}
+                or stages[name].get("execution_failures")), None)
+        receipt_statuses = {}
+        for receipt in provider_requests + [attempt.get("prior_receipt") for attempt in provider_attempts
+                                             if isinstance(attempt, dict) and isinstance(attempt.get("prior_receipt"), dict)]:
+            status = receipt.get("status", "MISSING_STATUS") if isinstance(receipt, dict) else "MALFORMED"
+            receipt_statuses[status] = receipt_statuses.get(status, 0) + 1
+        receipt_digest = sha(json.dumps({"provider_requests": provider_requests,
+            "provider_attempts": provider_attempts}, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8"))
+        unchanged = (state_path.read_bytes() == state_bytes and
+            contract_artifact.read_bytes() == run_contract_bytes and
+            project_contract.read_bytes() == project_contract_bytes and
+            project_identity_path.read_bytes() == identity_bytes)
+        if not unchanged:
+            raise ContractError("LEGACY_RUN_MUTATED_DURING_READ", str(run_dir))
+        return {"status": "V5_RECOVERY_REVIEW_REQUIRED" if history_rows or provider_requests or provider_attempts
+                else "V5_RECOVERY_PREFLIGHT_ONLY",
+            "run_id": args.run_id, "project_instance_id": identity["project_instance_id"],
+            "source_freeze": "VERIFIED", "next_stage_candidate": next_stage,
+            "stage_history": history_rows,
+            "stage_history_sha256": sha(json.dumps(stages, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")),
+            "provider_receipt_history": {"counts_by_status": receipt_statuses,
+                "sha256": receipt_digest, "validation": "PRESERVED_UNVERIFIED"},
+            "cost_ledger": "NOT_READ_RECONCILIATION_REQUIRED",
+            "prospective_plot_identity": prospective_plot,
+            "provider_call": "none", "resume_executed": False,
+            "run_state_sha256_before": state_before, "run_state_sha256_after": sha(state_path.read_bytes()),
+            "run_state_unchanged": True, "resume_eligibility": "NOT_ESTABLISHED"}
     return {"status": "V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK",
             "run_id": args.run_id, "project_instance_id": identity["project_instance_id"],
             "source_freeze": "VERIFIED", "prospective_plot_identity": prospective_plot,
             "provider_call": "none", "run_state_unchanged": True}
+
+
+def legacy_recovery_plan(args) -> dict:
+    """Assess a selected v1 run's preserved execution history without resuming it."""
+    return legacy_source_preflight(args, assess_recovery=True)
 
 
 def recovery_plan(args) -> dict:
@@ -2558,6 +2628,13 @@ def make_parser() -> argparse.ArgumentParser:
     preflight.add_argument("--legacy-source-map", required=True)
     preflight.add_argument("--legacy-source-map-sha256", required=True)
     preflight.set_defaults(func=legacy_source_preflight)
+    legacy_recovery = sub.add_parser("legacy-recovery-plan",
+        help="assess an explicitly mapped v1 run read-only; never resumes it")
+    legacy_recovery.add_argument("--run-id", required=True)
+    legacy_recovery.add_argument("--project-root", required=True)
+    legacy_recovery.add_argument("--legacy-source-map", required=True)
+    legacy_recovery.add_argument("--legacy-source-map-sha256", required=True)
+    legacy_recovery.set_defaults(func=legacy_recovery_plan)
     for command, func in (("review", review_run), ("promote", promote_run), ("export", export_run), ("sprint", sprint_run)):
         item = sub.add_parser(command)
         item.add_argument("--run-id", required=True)
