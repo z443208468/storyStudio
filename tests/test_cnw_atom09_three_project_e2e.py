@@ -47,9 +47,11 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         self.runs: dict[str, dict] = {}
         self.run_context: dict[str, dict] = {}
         self.requests: list[dict] = []
+        self.transport_cache: dict[str, tuple[str, dict]] = {}
         self._counter = 0
         self._interrupt_once_for: str | None = None
         self._interrupted: set[str] = set()
+        self._recovery_observations: list[dict] = []
         self._guard_lock = threading.Lock()
 
     def _project(self, project_id: str, title: str, names: tuple[str, str], setting: str) -> Path:
@@ -139,14 +141,18 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
     def _transport(self, run_dir: Path, *, stage: str, role_id: str, messages: list[dict],
                    output_cap: int, extra: dict | None = None):
         state = cnw_runner.load_state(run_dir)
+        fingerprint = _sha(json.dumps([str(run_dir.resolve()), stage, role_id, messages, output_cap, extra],
+                                      ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        cached = self.transport_cache.get(fingerprint)
+        if cached:
+            cached_content, cached_receipt = cached
+            self.assertEqual(cnw_runner._receipt_content(run_dir, cached_receipt), cached_content)
+            return cached_content, cached_receipt
         project_root = run_dir.parent.parent
         contract = json.loads((project_root / state["contract_path"]).read_text(encoding="utf-8"))
         context = self.run_context[state["run_id"]]
         first, second = context["names"]
         setting = context["setting"]
-        if stage == self._interrupt_once_for and stage not in self._interrupted:
-            self._interrupted.add(stage)
-            raise RuntimeError("SYNTHETIC_ATOM09_TRANSPORT_INTERRUPTION")
         if stage in {"plot", "scene_cards", "writing_brief"}:
             content = self._sections(stage, first, second)
         elif stage == "prose":
@@ -212,10 +218,14 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             current = cnw_runner.load_state(run_dir)
             current.setdefault("provider_requests", []).append(receipt)
             cnw_runner.save_state(run_dir, current)
+        self.transport_cache[fingerprint] = (content, receipt)
         self.requests.append({"project_id": state["project_id"], "run_id": state["run_id"],
             "stage": stage, "role_id": role_id, "request_path": request_path,
             "request_sha256": receipt["request_sha256"], "input_sha256": receipt["input_sha256"],
             "messages": messages})
+        if stage == self._interrupt_once_for and stage not in self._interrupted:
+            self._interrupted.add(stage)
+            raise RuntimeError("SYNTHETIC_ATOM09_INTERRUPTION_AFTER_SIMULATED_RECEIPT")
         return content, receipt
 
     def _run_chain(self, root: Path, contract: dict, run_id: str, *, interrupt_scene_cards: bool = False) -> dict:
@@ -240,7 +250,7 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                     plot_before = _sha(plot_path.read_bytes())
                     reused = cnw_recovery.execute_checked(run_dir, "plot")
                     self.assertEqual(reused["status"], "STAGE_REUSED")
-                    with self.assertRaisesRegex(RuntimeError, "SYNTHETIC_ATOM09_TRANSPORT_INTERRUPTION"):
+                    with self.assertRaisesRegex(RuntimeError, "SYNTHETIC_ATOM09_INTERRUPTION_AFTER_SIMULATED_RECEIPT"):
                         cnw_recovery.execute_checked(run_dir, stage)
                     failed = cnw_runner.load_state(run_dir)
                     self.assertEqual(failed["stages"][stage]["status"], "EXECUTION_INCOMPLETE")
@@ -248,6 +258,23 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                     recovery = cnw_recovery.plan_recovery(run_dir, root)
                     self.assertEqual(recovery["status"], "RECOVERY_BLOCKED_EXECUTION_HISTORY")
                     self.assertTrue(recovery["state_mutated"] is False)
+                    pre_retry_request_count = len([row for row in self.requests
+                        if row["run_id"] == run_id and row["stage"] == stage])
+                    pre_retry_receipt_count = len(cnw_runner.load_state(run_dir)["provider_requests"])
+                    cached_retry = cnw_recovery.execute_checked(run_dir, stage)
+                    self.assertEqual(cached_retry["stage"], stage)
+                    self.assertEqual(len([row for row in self.requests
+                        if row["run_id"] == run_id and row["stage"] == stage]), pre_retry_request_count)
+                    resumed = cnw_runner.load_state(run_dir)
+                    self.assertEqual(resumed["stages"][stage]["status"], "STAGE_MATERIALIZED")
+                    self.assertEqual(len(resumed["provider_requests"]), pre_retry_receipt_count)
+                    self.assertEqual(_sha(plot_path.read_bytes()), plot_before)
+                    self._recovery_observations.append({"run_id": run_id, "stage": stage,
+                        "interruption": "AFTER_SIMULATED_RECEIPT_PERSISTED",
+                        "provider_receipt_reused": True,
+                        "provider_request_count_before_retry": pre_retry_receipt_count,
+                        "provider_request_count_after_retry": len(resumed["provider_requests"]),
+                        "predecessor_plot_sha256_preserved": _sha(plot_path.read_bytes())})
                 result = cnw_recovery.execute_checked(run_dir, stage)
                 current = cnw_runner.load_state(run_dir)
                 record = current["stages"][stage]
@@ -457,9 +484,11 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                 for result in (insert, adapt, orchard_run, ep1, ep2)],
             "mock_provider_receipts": [{key: value for key, value in request.items()
                 if key not in {"messages", "request_path"}} for request in self.requests],
+            "recovery_observations": self._recovery_observations,
             "outcomes": {"projects": 3, "runs": 5, "projects_with_distinct_instance_ids": True,
                 "all_11_stage_order": [list(cnw_runner.CNW_STAGES)], "provider_call": "none",
-                "simulated_receipts": True, "live_quality": "NOT_VALIDATED"}}
+                "simulated_receipts": True, "interruption_replayed_without_new_request": True,
+                "live_quality": "NOT_VALIDATED"}}
         evidence_path = os.environ.get("ATOM09_E2E_EVIDENCE_OUTPUT")
         if evidence_path:
             destination = Path(evidence_path)
