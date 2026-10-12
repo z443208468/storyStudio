@@ -187,6 +187,9 @@ def build_lens_input(lens_id: str, full_draft: str, sources: dict[str, str]) -> 
     if project_duty:
         selected["fifth_lens_id"] = sources.get("fifth_lens_id", "story_specific")
         selected["fifth_lens_responsibility"] = project_duty
+    task = sources.get(f"task_constraints:{lens_id}")
+    if task:
+        selected["task_constraints"] = task
     project_lens_id = sources.get("fifth_lens_id", "story_specific") if lens_id == "story_specific" else None
     packet = {
         "lens_id": lens_id,
@@ -194,7 +197,10 @@ def build_lens_input(lens_id: str, full_draft: str, sources: dict[str, str]) -> 
         "sources": selected,
         "author_lens_definition": LENS_GOALS[lens_id] + (
             f" 项目配置的第五 Lens 标识为「{project_lens_id}」，批准的专属职责：{project_duty}"
-            if project_duty else ""),
+            if project_duty else "") + (
+            " 本岗位还须核对 task_constraints 中可定位的本次写作要求；它们不是 Canon 晋升或执行许可。"
+            "保留人物已知/私有/未知、误信、时间范围及未决事实的区分，不得把任务假定升为确认事实。"
+            if task else ""),
         "execution_mode": "LIVE_REQUEST_READY",
     }
     feedback = sources.get(f"lens_feedback:{lens_id}")
@@ -202,6 +208,34 @@ def build_lens_input(lens_id: str, full_draft: str, sources: dict[str, str]) -> 
         packet["additional_review_instructions"] = feedback
     packet["input_sha256"] = digest(json.dumps(packet, ensure_ascii=False, sort_keys=True))
     return packet
+
+
+def verifier_sources(finding: dict, sources: dict[str, str], *, rereview: bool = False) -> dict[str, str]:
+    """Keep historical evidence; new tasks add only this Finding's scoped data."""
+    if rereview:
+        evidence = {name: value for name, value in sources.items()
+                    if name != "task_requirements" and not name.startswith("task_constraints:")}
+    else:
+        evidence = {name: sources[name] for name in
+                    ("scene_cards", "writing_brief", "character_bible", "timeline", "glossary")}
+        if "task_requirements" in sources:
+            for name in LENSES.get(finding.get("lens_id"), ()):
+                evidence[name] = sources[name]
+    task = sources.get(f"task_constraints:{finding.get('lens_id')}")
+    if task:
+        evidence["task_constraints"] = task
+        if finding.get("lens_id") == "story_specific":
+            for name in ("fifth_lens_id", "fifth_lens_responsibility"):
+                if name in sources:
+                    evidence[name] = sources[name]
+    return evidence
+
+
+def completeness_sources(sources: dict[str, str]) -> dict[str, str]:
+    selected = {name: sources[name] for name in ("scene_cards", "writing_brief", "project_specific_canon")}
+    if "task_requirements" in sources:
+        selected["task_requirements"] = sources["task_requirements"]
+    return selected
 
 
 def lens_messages(packet: dict) -> list[dict]:
@@ -261,6 +295,10 @@ def completeness_messages(packet: dict) -> list[dict]:
         '{"inspected_full_text_sha256":"<draft sha256>","candidate_findings":[{"finding_id":"C1","lens_id":"style|character|plot|canon|story_specific","category":"遗漏类别","issue":"缺口","evidence":"正文位置或引文","recommendation":"补入修订队列的动作","prompt_update":"对应 Lens 今后检查这类遗漏的具体指令"}]}。'
         "每个遗漏同时进入本章修订队列并更新对应 Lens 后续提示。prompt_update 只描述可复用的检查类别，不包含本章结论或其他 Lens 的意见。不得直接改写正文。"
     )
+    if "task_requirements" in packet["source_materials"]:
+        system += ("任务快照是有来源定位的写作约束，不是 Canon 晋升或执行权限。"
+                   "角色私有/未知/误信与 POV 和读者已知须分开；未决时间和试验固定假定不自动成为确认事实。"
+                   "发现遗漏或不兼容要求应报告其来源，不得自行补造或覆盖输入。")
     user = json.dumps({k: v for k, v in packet.items() if k != "input_sha256"}, ensure_ascii=False, sort_keys=True)
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 

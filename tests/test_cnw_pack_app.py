@@ -90,14 +90,32 @@ class PackApplicationTests(unittest.TestCase):
             Path(target).write_bytes(encoded({"execution": "FICTIONAL_OFFLINE_NO_PROVIDER", "first": result, "repeat": repeated,
                                              "source_repo_unchanged": True, "global_pointer_unchanged": True}))
 
-    def test_powershell_4700_reports_capacity_without_lowering_or_creating_runs(self):
+    def set_bounds(self, maximum):
         for label in ("A", "B", "C"):
             name = f"scenes/{label}/work_order.draft.json"
-            value = json.loads(self.fixture.files[name]); value.update(target_visible_chars=3100, min_visible_chars=2200, max_visible_chars=4700)
+            value = json.loads(self.fixture.files[name]); value.update(target_visible_chars=3100, min_visible_chars=2200, max_visible_chars=maximum)
             self.fixture.files[name] = encoded(value)
             name = f"scenes/{label}/project_seed/config/project.yml"
-            self.fixture.files[name] = self.fixture.files[name].replace(b": 90\n", b": 3100\n").replace(b": 60\n", b": 2200\n").replace(b": 120\n", b": 4700\n")
+            self.fixture.files[name] = self.fixture.files[name].replace(b": 90\n", b": 3100\n").replace(b": 60\n", b": 2200\n").replace(b": 120\n", f": {maximum}\n".encode())
         self.fixture.write_pack()
+
+    def test_powershell_4700_creates_bounded_contracts_without_creating_runs(self):
+        self.set_bounds(4700)
+        result = self.invoke("-SourceRepository", str(self.fixture.repo), "-Offline")
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["status"], "CONTRACTS_READY_FOR_PREFLIGHT")
+        for task in report["tasks"]:
+            self.assertEqual(task["status"], "CONTRACT_READY_FOR_PREFLIGHT")
+            contract = json.loads(Path(task["contract"]).read_text(encoding="utf-8"))
+            self.assertEqual(tuple(contract["unit"][k] for k in ("min_visible_chars", "target_visible_chars", "max_visible_chars")), (2200, 3100, 4700))
+            self.assertFalse(task["preflight"]["provider_call_authorized"])
+            self.assertFalse(any((Path(task["project_root"]) / "runs").iterdir()))
+        self.assertEqual(report["provider_call"], "none")
+        self.assertEqual(report["production_status"], "NOT_AUTHORIZED")
+
+    def test_powershell_unvalidated_capacity_is_preserved_without_creating_runs(self):
+        self.set_bounds(4701)
         result = self.invoke("-SourceRepository", str(self.fixture.repo), "-Offline")
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         report = json.loads(result.stdout)
@@ -105,7 +123,7 @@ class PackApplicationTests(unittest.TestCase):
         for task in report["tasks"]:
             self.assertEqual(task["status"], "CAPACITY_PENDING")
             self.assertEqual(task["blocking_code"], "UNIT_CAPACITY_UNVALIDATED")
-            self.assertEqual(json.loads(Path(task["draft"]).read_text(encoding="utf-8"))["max_visible_chars"], 4700)
+            self.assertEqual(json.loads(Path(task["draft"]).read_text(encoding="utf-8"))["max_visible_chars"], 4701)
             self.assertFalse(any((Path(task["project_root"]) / "runs").iterdir()))
         self.assertEqual(report["provider_call"], "none")
         self.assertEqual(report["production_status"], "NOT_AUTHORIZED")

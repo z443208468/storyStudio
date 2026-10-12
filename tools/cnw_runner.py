@@ -34,9 +34,9 @@ from decimal import Decimal, InvalidOperation, ROUND_CEILING
 import httpx
 
 try:
-    from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit
+    from .cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit, validate_work_unit_policy
 except ImportError:  # direct script execution from PowerShell
-    from cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit
+    from cnw_contract import ContractError, assert_output_within_root, check_required_fields, load_contract, validate_episode_budget, validate_scene_budget, validate_source_identity, validate_work_unit, validate_work_unit_policy
 
 ROOT = Path(__file__).resolve().parents[1]
 _TEST_FIXTURE_CONTEXT: ContextVar[bool] = ContextVar("cnw_runner_test_fixture_context", default=False)
@@ -747,6 +747,7 @@ def produce(args) -> dict:
     if unit_id != contract["unit"].get("id"):
         raise ContractError("WORK_ID_MISMATCH", unit_id)
     validate_work_unit(contract)
+    validate_work_unit_policy(contract)
     if args.mode == "live":
         _assert_support_components_available(contract)
     production_config = ROOT / "config/production.example.json"
@@ -1532,6 +1533,12 @@ def _review_sources(run_dir: Path, state: dict, contract: dict, project_root: Pa
             raise ContractError("FIFTH_LENS_CONTRACT_INVALID", "project-specific responsibility is missing or its frozen SHA256 differs")
         sources["fifth_lens_id"] = configured_id
         sources["fifth_lens_responsibility"] = responsibility
+    if contract.get("schema_version") == "cnw_work_unit_v2" and "input_pack" in contract:
+        try:
+            from .cnw_task_requirements import review_task_sources
+        except ImportError:
+            from cnw_task_requirements import review_task_sources
+        sources.update(review_task_sources(project_root, contract))
     for lens_id in LENS_IDS:
         feedback = project_root / "08_review/lens_feedback" / f"{lens_id}.json"
         if feedback.is_file():
@@ -1661,9 +1668,9 @@ def execute_three_verifiers(run_dir: Path) -> dict:
         _persist_stage(run_dir, "adversarial_verify", "artifacts/adversarial_verify.json", json.dumps(report, ensure_ascii=False, indent=2))
         return {"stage": "adversarial_verify", "status": "NO_FINDINGS_TO_VERIFY", "provider_call": "none"}
     try:
-        from .cnw_review import build_verifier_packet, verifier_messages
+        from .cnw_review import build_verifier_packet, verifier_messages, verifier_sources
     except ImportError:
-        from cnw_review import build_verifier_packet, verifier_messages
+        from cnw_review import build_verifier_packet, verifier_messages, verifier_sources
     sources = _review_sources(run_dir, state, contract, project_root)
     verdicts = {}
     receipt_ids = []
@@ -1672,7 +1679,7 @@ def execute_three_verifiers(run_dir: Path) -> dict:
         finding_id = finding.get("finding_id")
         if not finding_id:
             continue
-        evidence = {name: sources[name] for name in ("scene_cards", "writing_brief", "character_bible", "timeline", "glossary")}
+        evidence = verifier_sources(finding, sources)
         votes = {}
         results = _parallel_provider_calls(run_dir, [dict(stage="adversarial_verify", role_id=verifier_id,
             messages=verifier_messages(build_verifier_packet(finding, verifier_id, draft, evidence)), output_cap=1200,
@@ -1700,10 +1707,10 @@ def execute_completeness(run_dir: Path) -> dict:
     rejected = [f for f in verify.get("findings", []) if verify.get("verdicts", {}).get(f.get("finding_id"), {}).get("status") != "CONFIRMED"]
     sources = _review_sources(run_dir, state, contract, project_root)
     try:
-        from .cnw_review import build_completeness_input, completeness_messages
+        from .cnw_review import build_completeness_input, completeness_messages, completeness_sources
     except ImportError:
-        from cnw_review import build_completeness_input, completeness_messages
-    packet = build_completeness_input(draft, confirmed, rejected, {"scene_cards": sources["scene_cards"], "writing_brief": sources["writing_brief"], "project_specific_canon": sources["project_specific_canon"]})
+        from cnw_review import build_completeness_input, completeness_messages, completeness_sources
+    packet = build_completeness_input(draft, confirmed, rejected, completeness_sources(sources))
     # Capacity for the actual review set; no new literary duty or retry loop.
     output_cap = min(8000, 2500 + 256 * (len(confirmed) + len(rejected)))
     content, receipt = cnw_live_call(run_dir, stage="completeness_critic", role_id="completeness", messages=completeness_messages(packet), output_cap=output_cap)
@@ -1907,9 +1914,9 @@ def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
         raise ContractError("LIVE_REREVIEW_CALL_SET_INVALID", str(affected))
     sources = _review_sources(run_dir, state, contract, project_root)
     try:
-        from .cnw_review import build_lens_input, lens_messages, build_verifier_packet, verifier_messages
+        from .cnw_review import build_lens_input, lens_messages, build_verifier_packet, verifier_messages, verifier_sources
     except ImportError:
-        from cnw_review import build_lens_input, lens_messages, build_verifier_packet, verifier_messages
+        from cnw_review import build_lens_input, lens_messages, build_verifier_packet, verifier_messages, verifier_sources
     import difflib
     changed_hunks = "".join(difflib.unified_diff(v0.splitlines(keepends=True), v1.splitlines(keepends=True), fromfile="before", tofile="after", n=3))
     results = {}
@@ -1935,7 +1942,7 @@ def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
     for finding in findings:
         votes = []
         calls = [dict(stage="re_review", role_id=verifier_id,
-            messages=verifier_messages(build_verifier_packet(finding, verifier_id, v1, sources)), output_cap=1200,
+            messages=verifier_messages(build_verifier_packet(finding, verifier_id, v1, verifier_sources(finding, sources, rereview=True))), output_cap=1200,
             extra={"task_kind": "verifier", "verifier_id": verifier_id, "finding_id": finding["finding_id"], "revision_number": revision_number, "candidate_sha256": candidate_sha}) for verifier_id in VERIFIER_IDS]
         for verifier_id, (content, receipt) in zip(VERIFIER_IDS, _parallel_provider_calls(run_dir, calls)):
             parsed = _parse_json_content(content, "re_review:verify")

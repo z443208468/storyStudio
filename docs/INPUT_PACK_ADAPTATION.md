@@ -70,16 +70,39 @@ explicit authorized difference record rather than silently reusing this binding.
 
 Unmapped work-order fields are preserved in the original bytes and normalized
 draft. Their status is `PENDING_ROLE_CONSUMPTION_VALIDATION`; preservation does
-not establish downstream consumption. The four author reading lists remain
+not establish downstream consumption. New imports also freeze a versioned
+task-requirements projection with original JSON types, file SHAs and pointers.
+Every consumer rederives it from the immutable originals. Task data is writing
+input, not Canon promotion or production permission. Unknown extensions remain
+explicitly `UNPROVEN_EXTENSION`; merely passing them to Plot does not prove
+their effect on prose. The four author reading lists remain
 unchanged, including Prose's Brief plus selected voice restriction.
 
-The original `2200 / 3100 / 4700` bounds are preserved. At this repair stage,
-normal contract validation still returns `UNIT_CAPACITY_UNVALIDATED` for 4700.
-The app reports `CAPACITY_PENDING` and preserves each draft.
-Atom-06 must validate the capacity and actual consumers before this package can
-form a usable production contract. This is not package-to-story acceptance.
+Plot receives the verified task projection through production preparation.
+Cards and Brief receive the same Run's real predecessor artifacts; Prose does
+not directly read the projection, private knowledge or review rules. Relevant
+Lens requests receive separate task views in addition to their required author
+materials. Each Finding's three Verifiers receive its scoped task evidence;
+Re-review retains its original source materials and checks the new full draft.
+Completeness receives the task requirements to find omissions, which enter
+Refine and the affected Lens feedback through the existing problem queue.
+
+Repeated explicit numeric/boolean/identity gameplay declarations for the same
+task and time scope must agree. Conflicts retain both original locations and
+SHAs in the private job record and require a new input or authorized difference.
+Different prose wording, additional fields, unknown values and distinct explicit
+time scopes do not imply a contradiction and are not silently merged.
+
+The original `2200 / 3100 / 4700` bounds are preserved. The Atom-06 implementation
+adds a versioned 4700 capacity snapshot; old contracts continue to validate
+against their own immutable 4000 snapshot. Values above the supported bound
+still return `UNIT_CAPACITY_UNVALIDATED`, retaining the draft as `CAPACITY_PENDING`.
+Offline tests exercise continuation, complete rewrites, truncation rejection,
+full-length review, separate revisions, new-text re-review and byte-preserving
+exports. These are deterministic mock consumers, not evidence of live model
+capacity or a signed package-to-story result. Candidate review remains required.
 
 Remaining gates in existing R5 Atoms are field-to-role consumption,
-4700 length handling, legal production authorization, and complete package-shaped
+legal production authorization, and complete package-shaped
 eleven-stage review/revision/export verification. Live operation and private
 cutover remain subject to their existing gates.

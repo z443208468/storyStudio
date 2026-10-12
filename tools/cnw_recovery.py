@@ -224,18 +224,34 @@ def stage_identity(run_dir: Path, stage: str, *, project_root: Path | None = Non
             elif stage == "adversarial_verify":
                 inputs.update(lint2=text("lint_layer2"), review=text("multi_lens_review"),
                     evidence={name: sources[name] for name in ("scene_cards", "writing_brief", "character_bible", "timeline", "glossary")}, verifier_goals=review.VERIFIER_GOALS)
-                builders += [review.build_verifier_packet, review.verifier_messages]
+                if "task_requirements" in sources:
+                    findings = json.loads(inputs["review"]).get("findings", [])
+                    inputs["task_finding_evidence"] = {f["finding_id"]: review.verifier_sources(f, sources) for f in findings}
+                builders += [review.build_verifier_packet, review.verifier_messages, review.verifier_sources]
             elif stage == "completeness_critic":
-                inputs.update(verify=text("adversarial_verify"), sources={name: sources[name] for name in ("scene_cards", "writing_brief", "project_specific_canon")})
-                builders += [review.build_completeness_input, review.completeness_messages]
+                inputs.update(verify=text("adversarial_verify"), sources=review.completeness_sources(sources))
+                builders += [review.build_completeness_input, review.completeness_messages, review.completeness_sources]
             elif stage == "refine":
                 inputs.update(verify=text("adversarial_verify"), completeness=text("completeness_critic"), brief=text("writing_brief"))
                 builders += [r._confirmed_findings, r._critics_excerpt]
             elif stage == "re_review":
                 inputs.update(refine=text("refine"), sources=sources,
                     affected=state["stages"][stage].get("expected_role_ids") or state["stages"]["refine"].get("affected_lenses", list(r.LENS_IDS)), lens_goals=review.LENS_GOALS, verifier_goals=review.VERIFIER_GOALS)
-                builders += [review.build_lens_input, review.lens_messages, review.build_verifier_packet, review.verifier_messages]
+                builders += [review.build_lens_input, review.lens_messages, review.build_verifier_packet, review.verifier_messages, review.verifier_sources]
             builders += [r._review_sources]
+    if contract.get("schema_version") == "cnw_work_unit_v2" and "input_pack" in contract:
+        try:
+            from . import cnw_task_requirements as task
+        except ImportError:
+            import cnw_task_requirements as task
+        if task.read_bound_task_context(project, contract) is not None and stage in {
+                "plot", "multi_lens_review", "adversarial_verify", "completeness_critic", "re_review"}:
+            builders += [task.read_bound_task_context, task.verify_bound_task_context,
+                         task.frozen_task_sources, task.derive_task_context, task.validate_derivation,
+                         task.encode, task.decode, task._check_gameplay_declarations,
+                         task._require_same_declaration]
+            if stage != "plot":
+                builders += [task.review_task_sources, task.lens_task_view]
     value = {"version": 1, "stage": stage, "contract_sha256": state["contract_sha256"],
         "input_sha256": _digest(inputs),
         "input_hashes": {name: _digest(item) for name, item in sorted(inputs.items())},
@@ -428,16 +444,14 @@ def plan_recovery(run_dir: Path, project_root: Path) -> dict:
     r.check_required_fields(contract)
     r.validate_work_unit(contract)
     try:
-        from .cnw_contract import validate_v2_source_identity
+        from .cnw_contract import validate_v2_source_identity, validate_work_unit_policy
     except ImportError:
-        from cnw_contract import validate_v2_source_identity
+        from cnw_contract import validate_v2_source_identity, validate_work_unit_policy
     validate_v2_source_identity(contract, source_root=project)
     current_workflow_sha = r.sha(r.WORKFLOW_PATH.read_bytes())
     if state.get("workflow_template_sha256") != current_workflow_sha:
         raise r.ContractError("CNW_METHOD_IDENTITY_MISMATCH", "run workflow template differs from the pinned current source")
-    current_app_policy_sha = r.sha((r.ROOT / "config/policies/app_policy.v1.json").read_bytes())
-    if contract.get("unit", {}).get("policy_sha256", "").lower() != current_app_policy_sha:
-        raise r.ContractError("POLICY_IDENTITY_MISMATCH", "run contract differs from current generic application policy")
+    validate_work_unit_policy(contract)
     provider_policy = r.ROOT / "config/policies/provider_policy.deepseek_flash.v1.json"
     if state.get("provider_config_sha256") != r.sha(provider_policy.read_bytes()):
         raise r.ContractError("PROVIDER_POLICY_IDENTITY_MISMATCH", "run provider policy differs from current configuration")

@@ -27,7 +27,8 @@ SUPPORTED_LOCALE_MATRIX = {
     "zh-CN": {"language_name": "简体中文", "length_unit": "unicode_visible_code_points"},
     "en-US": {"language_name": "English (United States)", "length_unit": "unicode_visible_code_points"},
 }
-MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT = 4000
+VALIDATED_VISIBLE_CHARACTER_CAPACITIES = (4000, 4700)
+MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT = max(VALIDATED_VISIBLE_CHARACTER_CAPACITIES)
 SUPPORT_INTEGRATION_STATES = {"DISABLED", "ENABLED"}
 
 
@@ -475,6 +476,24 @@ def validate_work_unit(contract: dict[str, Any]) -> None:
 
 
 _MARKDOWN_CONTROL = re.compile(r"```|`|^\s{0,3}#{1,6}\s+|^\s*>\s?|^\s*[-*+]\s+|^\s*\d+[.)]\s+|(?<!\\)(?:\*\*|__|~~|\*|_)", re.MULTILINE)
+
+
+def validate_work_unit_policy(contract: dict[str, Any]) -> dict | None:
+    """Validate a V2 unit against its own registered immutable app policy.
+
+    Current installation changes must not reinterpret a historical contract.
+    V1 retains its separately pinned policy and recovery behavior.
+    """
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        return None
+    try:
+        try:
+            from .policy_snapshots import resolve_contract_app_policy, PolicySnapshotError
+        except ImportError:
+            from policy_snapshots import resolve_contract_app_policy, PolicySnapshotError
+        return resolve_contract_app_policy(contract)
+    except PolicySnapshotError as exc:
+        raise ContractError(exc.code, str(exc)) from exc
 
 
 def visible_char_metrics(text: str) -> dict[str, int | str]:

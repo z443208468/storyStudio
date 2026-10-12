@@ -199,6 +199,14 @@ def read_production_preparation(project_root: Path, contract: dict) -> dict:
     paths = [project_root / "94_runtime/current_state.md", project_root / "07_draft/manuscript_index.md", arc,
              arc.with_name(arc.stem + "_episode_details.md"),
              project_root / "92_style_engine/character_voice_samples.md", project_root / "90_canon/character_bible.md"]
+    if contract.get("schema_version") == "cnw_work_unit_v2" and "input_pack" in contract:
+        try:
+            from .cnw_task_requirements import read_bound_task_context
+        except ImportError:
+            from cnw_task_requirements import read_bound_task_context
+        task_context = read_bound_task_context(project_root, contract)
+        if task_context is not None:
+            paths.append(project_root / task_context[0])
     previous = story.get("previous_episode_ref")
     episode = re.fullmatch(r"(ep|ch)(\d+)", contract["unit"]["id"], re.I)
     if not previous and episode and int(episode.group(2)) > 1:
@@ -503,6 +511,12 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
         "assignment": creative_assignment(contract),
         "materials": materials,
     }
+    preparation_documents = (extra or {}).get("production_preparation", {}).get("documents", {})
+    if role == "plot" and any(name.endswith("/derived/task_requirements.v1.json") for name in preparation_documents):
+        system += ("\n[scoped_task_requirements]\n"
+                   "封存任务快照中的要求须进入本次情节设计和后续岗位交付；保留 False、0、null 与缺失的差别。"
+                   "快照和固定试验假定不是 Canon 晋升或执行许可。人物私有、未知或误信不等于 POV 或读者可知。"
+                   "未决时间、冲突或缺失不能自行补成既定事实；不要因自由文字措辞不同判冲突。\n")
     if extra:
         payload["support"] = extra
     user = json.dumps(payload, ensure_ascii=False, sort_keys=True)

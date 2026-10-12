@@ -232,8 +232,8 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
                         source_staging_root: str | Path | None = None) -> dict:
     """Prepare one new registered instance and V2 draft, preserving all inputs.
 
-    Contract creation and capacity validation remain in cnw_project. In
-    particular an unsupported 4700 bound is retained, never lowered here.
+    Contract creation and capacity validation remain in cnw_project.
+    Unsupported bounds are retained, never lowered by the input adapter.
     """
     pack = read_input_pack(pack_path)
     if scene_root not in pack["scenes"]:
@@ -323,12 +323,33 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
             # stay immutable and actual role/run dependencies freeze separately.
             initial_active_sha256[name] = _sha(raw)
             active.append(name)
+        try:
+            from . import cnw_task_requirements as task_requirements
+        except ImportError:
+            import cnw_task_requirements as task_requirements
+        task_sources = {"work_order": (f"{snapshot}/{draft_name}", files[draft_name]),
+                        "scene_packet": (f"{snapshot}/{seed_prefix}scene_packet.json", seed["scene_packet.json"])}
+        for key, name in (("temporal_envelope", "93_data/temporal_envelope.json"),
+                          ("gameplay_snapshot", "93_data/gameplay_snapshot.json")):
+            if name in seed:
+                task_sources[key] = (f"{snapshot}/{seed_prefix}{name}", seed[name])
+        task_context = task_requirements.derive_task_context(sources=task_sources, identity=identity,
+                                                            scene_root=scene_root, pack_sha256=pack["pack_sha256"])
+        task_raw = task_requirements.encode(task_context)
+        task_name = f"{snapshot}/derived/task_requirements.v1.json"
+        target = root / task_name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("xb") as out:
+            out.write(task_raw)
+        records[task_name] = _sha(task_raw)
         index = {"schema_version": "cnw_input_pack_binding_v1", "pack_sha256": pack["pack_sha256"],
                  "project_instance_id": identity["project_instance_id"], "scene_root": scene_root,
                  "original_project_id": order["project_id"], "project_id": identity["project_id"],
                  "files": records, "original_work_order": f"{snapshot}/{draft_name}",
                  "active_materials": sorted(active), "input_review_status": "UNTRUSTED_INPUT_DECLARATIONS",
                  "initial_active_sha256": initial_active_sha256,
+                 "task_context": {"schema_version": task_requirements.SCHEMA, "recipe_version": task_requirements.RECIPE,
+                                  "file": task_name, "sha256": _sha(task_raw)},
                  "adapter_choices": {"fifth_lens": {k: fifth_lens[k].strip() for k in ("id", "responsibility")},
                                      **({"fifth_lens_derivation": derivation} if derivation is not None else {}),
                                      "integrations": {"nk": "DISABLED", "critics": "DISABLED"}},
@@ -390,6 +411,12 @@ def validate_input_pack_binding(project_root: Path, binding: dict, *, contract: 
         if _sha(_safe_source_file(project_root, name).read_bytes()) != expected:
             raise ContractError("INPUT_PACK_MATERIAL_CHANGED", "frozen work order or seed material changed")
     choices = index.get("adapter_choices", {})
+    if index.get("task_context") is not None:
+        try:
+            from .cnw_task_requirements import verify_bound_task_context
+        except ImportError:
+            from cnw_task_requirements import verify_bound_task_context
+        verify_bound_task_context(project_root, index)
     derivation = choices.get("fifth_lens_derivation")
     if derivation is not None:
         prefix = f"_INBOX/input_packs/{index['pack_sha256']}/{index['scene_root']}/project_seed/"
@@ -407,7 +434,7 @@ def _original_order(project_root: Path, index: dict) -> dict:
 def validate_input_pack_draft(project_root: Path, draft: dict) -> None:
     index = validate_input_pack_binding(project_root, draft["input_pack"])
     original = _original_order(project_root, index)
-    if any(draft.get(key) != value for key, value in original.items()):
+    if any(key not in draft or _bytes(draft[key]) != _bytes(value) for key, value in original.items()):
         raise ContractError("INPUT_PACK_REQUIREMENT_MISMATCH", "normalized draft changed an original requirement without an authorization diff")
 
 

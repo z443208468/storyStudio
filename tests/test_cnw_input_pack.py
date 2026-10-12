@@ -320,21 +320,30 @@ class InputPackTests(unittest.TestCase):
                 existing = {"90_canon/canon.md": text + "\n\nClassification: CONFIRMED\nSource: " + ref}
                 self.assertEqual(workflow._confirmed_canon_sources(previous, existing), {})
 
-    def test_4700_preserved_and_normal_capacity_gate_remains(self):
-        for label in ("A", "B", "C"):
-            name = f"scenes/{label}/work_order.draft.json"
-            d = json.loads(self.files[name]); d.update(target_visible_chars=3100, min_visible_chars=2200, max_visible_chars=4700)
-            self.files[name] = encoded(d)
-            config_name = f"scenes/{label}/project_seed/config/project.yml"
-            self.files[config_name] = self.files[config_name].replace(b": 90\n", b": 3100\n").replace(b": 60\n", b": 2200\n").replace(b": 120\n", b": 4700\n")
-        self.write_pack()
-        root = self.project()
-        report = self.prepare(root)
-        draft = json.loads(Path(report["draft"]).read_text(encoding="utf-8"))
-        self.assertEqual((draft["min_visible_chars"], draft["target_visible_chars"], draft["max_visible_chars"]), (2200, 3100, 4700))
-        with self.assertRaisesRegex(ContractError, "UNIT_CAPACITY_UNVALIDATED"):
-            write_contract_draft(root, report["draft"])
-        self.assertFalse((root / "contracts/TRIAL-A.json").exists())
+    def test_preserved_capacity_bounds_and_rejection_beyond_validated_limit(self):
+        original = copy.deepcopy(self.files)
+        for maximum in (4700, 4701):
+            with self.subTest(maximum=maximum):
+                files = copy.deepcopy(original)
+                for label in ("A", "B", "C"):
+                    name = f"scenes/{label}/work_order.draft.json"
+                    d = json.loads(files[name]); d.update(target_visible_chars=3100, min_visible_chars=2200, max_visible_chars=maximum)
+                    files[name] = encoded(d)
+                    config_name = f"scenes/{label}/project_seed/config/project.yml"
+                    files[config_name] = files[config_name].replace(b": 90\n", b": 3100\n").replace(b": 60\n", b": 2200\n").replace(b": 120\n", f": {maximum}\n".encode())
+                self.write_pack(files)
+                root = self.project(f"CAPACITY-{maximum}")
+                report = self.prepare(root)
+                draft = json.loads(Path(report["draft"]).read_text(encoding="utf-8"))
+                self.assertEqual((draft["min_visible_chars"], draft["target_visible_chars"], draft["max_visible_chars"]), (2200, 3100, maximum))
+                if maximum == 4700:
+                    result = write_contract_draft(root, report["draft"])
+                    contract = json.loads(Path(result["contract"]).read_text(encoding="utf-8"))
+                    self.assertEqual(contract["unit"]["max_visible_chars"], 4700)
+                else:
+                    with self.assertRaisesRegex(ContractError, "UNIT_CAPACITY_UNVALIDATED"):
+                        write_contract_draft(root, report["draft"])
+                    self.assertFalse((root / "contracts/TRIAL-A.json").exists())
 
     def test_archive_and_source_failures_precede_project_writes(self):
         for case in ("traversal", "case", "hash", "undeclared", "blob", "config", "ambiguous", "existing"):

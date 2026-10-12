@@ -16,9 +16,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .cnw_contract import ContractError, _safe_source_file, assert_output_within_root, check_required_fields, resolve_json_pointer, validate_scene_budget, validate_source_identity, validate_v2_source_identity, validate_work_unit
+    from .cnw_contract import ContractError, _safe_source_file, assert_output_within_root, check_required_fields, resolve_json_pointer, validate_scene_budget, validate_source_identity, validate_v2_source_identity, validate_work_unit, validate_work_unit_policy
 except ImportError:  # direct script execution
-    from cnw_contract import ContractError, _safe_source_file, assert_output_within_root, check_required_fields, resolve_json_pointer, validate_scene_budget, validate_source_identity, validate_v2_source_identity, validate_work_unit
+    from cnw_contract import ContractError, _safe_source_file, assert_output_within_root, check_required_fields, resolve_json_pointer, validate_scene_budget, validate_source_identity, validate_v2_source_identity, validate_work_unit, validate_work_unit_policy
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{1,63}\Z")
@@ -651,6 +651,7 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
     check_required_fields(contract)
     validate_work_unit(contract)
     validate_v2_source_identity(contract, source_root=root)
+    validate_work_unit_policy(contract)
     return contract
 
 
@@ -758,10 +759,8 @@ def build_contract_preflight(project_root: str | Path, contract_path: str | Path
     check_required_fields(contract)
     validate_work_unit(contract)
     validate_v2_source_identity(contract, source_root=root)
-    app_policy = ROOT / "config/policies/app_policy.v1.json"
-    policy_sha256 = sha(app_policy.read_bytes())
-    if contract["unit"].get("policy_sha256", "").lower() != policy_sha256:
-        raise ContractError("POLICY_IDENTITY_MISMATCH", "contract policy differs from the current generic application policy")
+    bound_policy = validate_work_unit_policy(contract)
+    policy_sha256 = bound_policy["sha256"]
 
     try:
         from .cnw_runner import build_plot_request
@@ -785,8 +784,8 @@ def build_contract_preflight(project_root: str | Path, contract_path: str | Path
     if (selected_contract_path.read_bytes() != contract_bytes or
             identity_path.read_bytes() != identity_raw):
         raise ContractError("PREFLIGHT_INPUT_CHANGED_DURING_READ", "contract or project identity changed")
-    if sha(app_policy.read_bytes()) != policy_sha256:
-        raise ContractError("POLICY_IDENTITY_CHANGED_DURING_READ", str(app_policy))
+    if validate_work_unit_policy(contract)["bytes"] != bound_policy["bytes"]:
+        raise ContractError("POLICY_IDENTITY_CHANGED_DURING_READ", policy_sha256)
     if run_path.exists():
         raise ContractError("PREFLIGHT_RUN_ID_COLLISION", run_id)
     if intent == "INSERT_BETWEEN":

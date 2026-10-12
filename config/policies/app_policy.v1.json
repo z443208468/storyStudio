@@ -61,7 +61,7 @@
       "en-US",
       "zh-CN"
     ],
-    "maximum_validated_visible_characters_per_unit": 4000
+    "maximum_validated_visible_characters_per_unit": 4700
   },
   "safety": {
     "max_in_flight": 5,

@@ -477,6 +477,16 @@
     {
       "availability": "AVAILABLE",
       "kinds": [
+        "app_policy"
+      ],
+      "sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f",
+      "source_refs": [
+        "config/policies/app_policy.v1.json"
+      ]
+    },
+    {
+      "availability": "AVAILABLE",
+      "kinds": [
         "prompt"
       ],
       "sha256": "c2e6558b450f3c35f892648c146182fa7181529ef24a3bdceb8ec1cef1aad7f3",

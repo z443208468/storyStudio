@@ -240,6 +240,9 @@ def import_package(input_file: str | Path, *, data_home: str | Path,
             save()
     except Exception as exc:
         report.update(status="IMPORT_INCOMPLETE", blocking_code=getattr(exc, "code", "INPUT_PACK_PREPARATION_FAILED"), error_type=type(exc).__name__)
+        if getattr(exc, "task_conflict", None):
+            report["input_conflict"] = exc.task_conflict
+            report["action_required"] = "两处写作要求不一致，请选择新输入或明确批准差分；已有材料和进度已保留。"
         if report["tasks"]:
             report["tasks"][-1].update(status="FAILED", blocking_code=report["blocking_code"])
         save()

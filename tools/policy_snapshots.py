@@ -15,9 +15,9 @@ import tempfile
 from typing import Any
 
 try:
-    from .cnw_contract import MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT, SUPPORTED_LOCALE_MATRIX
+    from .cnw_contract import MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT, SUPPORTED_LOCALE_MATRIX, VALIDATED_VISIBLE_CHARACTER_CAPACITIES
 except ImportError:
-    from cnw_contract import MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT, SUPPORTED_LOCALE_MATRIX
+    from cnw_contract import MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT, SUPPORTED_LOCALE_MATRIX, VALIDATED_VISIBLE_CHARACTER_CAPACITIES
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_STORE = ROOT / "config" / "policy_snapshots"
@@ -180,7 +180,8 @@ def validate_policy_document(document: Any, *, expected_kind: str | None = None)
             raise PolicySnapshotError("LIVE_DEFAULT_MUST_BE_CLOSED", "new installation must require an explicit project, adapter, and authorization")
         compatibility = document.get("execution_compatibility", {})
         if (compatibility.get("tested_locales") != sorted(SUPPORTED_LOCALE_MATRIX) or
-                compatibility.get("maximum_validated_visible_characters_per_unit") != MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT):
+                type(compatibility.get("maximum_validated_visible_characters_per_unit")) is not int or
+                compatibility.get("maximum_validated_visible_characters_per_unit") not in VALIDATED_VISIBLE_CHARACTER_CAPACITIES):
             raise PolicySnapshotError("EXECUTION_COMPATIBILITY_UNVERIFIED", "locale/capacity claims must match the Atom-06 tested matrix")
         safety = document.get("safety", {})
         if (safety.get("max_in_flight") != 5 or safety.get("missing_usage") != "UNKNOWN_NOT_ZERO" or
@@ -409,6 +410,24 @@ class SnapshotStore:
 def resolve_policy_by_sha(digest: str, *, store: str | os.PathLike[str] = DEFAULT_STORE, expected_kind: str | None = None) -> dict[str, Any]:
     """Resolve and verify one policy by immutable content SHA; this never writes."""
     return SnapshotStore(store).resolve_policy_by_sha(digest, expected_kind=expected_kind)
+
+
+def resolve_contract_app_policy(contract: dict[str, Any], *, store: str | os.PathLike[str] = DEFAULT_STORE) -> dict[str, Any]:
+    """Read the registered policy bound by a contract, never the current pointer."""
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        raise PolicySnapshotError("POLICY_CONTRACT_VERSION_UNSUPPORTED", "this resolver requires a V2 work contract")
+    unit = contract.get("unit", {})
+    digest = unit.get("policy_sha256")
+    if not isinstance(digest, str):
+        raise PolicySnapshotError("POLICY_IDENTITY_MISSING", "contract must bind an immutable application policy")
+    resolved = resolve_policy_by_sha(digest.lower(), store=store, expected_kind="app_policy")
+    maximum = unit.get("max_visible_chars")
+    capacity = resolved["document"]["execution_compatibility"]["maximum_validated_visible_characters_per_unit"]
+    if type(maximum) is not int or maximum < 1:
+        raise PolicySnapshotError("SCENE_BUDGET_INVALID", "contract must have an explicit positive maximum")
+    if maximum > capacity:
+        raise PolicySnapshotError("UNIT_CAPACITY_UNVALIDATED", f"bound policy supports at most {capacity} visible characters", sha256=resolved["sha256"])
+    return resolved
 
 
 def compose_policy_bundle(
