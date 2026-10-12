@@ -161,6 +161,7 @@ class W10OptionalIntegrationTests(unittest.TestCase):
                 "packet_path": "artifacts/requests/plot.json", "request_id": "req-1",
                 "provider_request_id": "provider-1", "validation": {}}},
             "provider_requests": [{"request_id": "req-1", "provider_request_id": "provider-1",
+                "mode": "LIVE", "fixture_only": False,  # Fictional shape only; never a Live receipt.
                 "stage": "plot", "output_sha256": hashlib.sha256(b"synthetic prose").hexdigest(),
                 "input_sha256": "b" * 64, "stage_fingerprint": "f" * 64}]}
         packet_path = self.run / "artifacts/requests/plot.json"

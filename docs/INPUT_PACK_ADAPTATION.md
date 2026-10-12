@@ -106,3 +106,31 @@ Remaining gates in existing R5 Atoms are field-to-role consumption,
 legal production authorization, and complete package-shaped
 eleven-stage review/revision/export verification. Live operation and private
 cutover remain subject to their existing gates.
+
+## Application-owned Run preparation (Atom-07 candidate)
+
+The package entry can prepare offline Runs using internal task identities:
+
+```powershell
+.\tools\studio.ps1 project-pack -InputFile <ZIP> -DataHome <absolute DataHome> -PrepareRuns
+```
+
+For an isolated offline fixture, add `-SourceRepository <local pinned Git> -Offline`.
+The default entry still imports inputs/contracts only. Preparation calls the real
+`cnw_runner.produce(create_only=True, mode="offline")`, then the shared existing-Run
+preflight. It does not execute author/review stages, call a Provider or reserve fees.
+The app derives Run IDs and stores exact bindings; the user supplies no Run ID,
+contract JSON or SHA. A stored job can be rechecked with `-JobFile <job record>`.
+
+Each job freezes original task bindings and the ZIP. Rechecking validates registered
+instances, contract bytes and actual Run/source/policy identities. An existing Run
+is not recreated or overwritten; an interruption after Run creation can resume
+preparation by validating that Run. Job updates retain original result bytes in a
+private history directory. Capacity-pending tasks remain pending and create no Run.
+Old jobs without an original task-binding record are retained and return
+`INPUT_PACK_JOB_ORIGIN_UNAVAILABLE`; the application does not invent a past record.
+
+`RUNS_PREPARED_PENDING_AUTHORIZATION` means input/Run preparation only. Independent
+trusted review, separate real user Live/fee grants and complete package-to-story
+orchestration remain distinct gates. The current work must receive exact-candidate
+Controller review before this candidate is considered signed.

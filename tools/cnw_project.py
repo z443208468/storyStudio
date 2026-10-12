@@ -716,6 +716,12 @@ def build_contract_preflight(project_root: str | Path, contract_path: str | Path
     This is a read-only, pre-run identity check. It does not create a run, call
     a provider, or signify literary/Canon approval.
     """
+    return _compute_contract_preflight(project_root, contract_path, run_id=run_id, existing_run=False)
+
+
+def _compute_contract_preflight(project_root: str | Path, contract_path: str | Path, *,
+                                run_id: str, existing_run: bool) -> dict:
+    """Shared V2 binding calculation; neither caller grants production permission."""
     root = Path(project_root).resolve(strict=True)
     identity = _registered_project_identity(root)
     identity_path = root / "project_identity.json"
@@ -743,7 +749,7 @@ def build_contract_preflight(project_root: str | Path, contract_path: str | Path
     run_path = root / "runs" / run_id
     if run_path.is_symlink():
         raise ContractError("RUN_PATH_SYMLINK_REJECTED", run_id)
-    if run_path.exists():
+    if run_path.exists() and not existing_run:
         raise ContractError("PREFLIGHT_RUN_ID_COLLISION", run_id)
 
     contract_bytes = selected_contract_path.read_bytes()
@@ -786,7 +792,7 @@ def build_contract_preflight(project_root: str | Path, contract_path: str | Path
         raise ContractError("PREFLIGHT_INPUT_CHANGED_DURING_READ", "contract or project identity changed")
     if validate_work_unit_policy(contract)["bytes"] != bound_policy["bytes"]:
         raise ContractError("POLICY_IDENTITY_CHANGED_DURING_READ", policy_sha256)
-    if run_path.exists():
+    if run_path.exists() and not existing_run:
         raise ContractError("PREFLIGHT_RUN_ID_COLLISION", run_id)
     if intent == "INSERT_BETWEEN":
         selected_scope = {"before_anchor": story["before_anchor"], "after_anchor": story["after_anchor"]}
@@ -830,6 +836,73 @@ def build_contract_preflight(project_root: str | Path, contract_path: str | Path
     evidence["evidence_digest"] = sha(json.dumps(evidence, ensure_ascii=False, sort_keys=True,
                                                  separators=(",", ":")).encode("utf-8"))
     return evidence
+
+
+def build_run_contract_preflight(project_root: str | Path, contract_path: str | Path, *, run_id: str) -> dict:
+    """Read an existing V2 Run and its real frozen inputs without changing history.
+
+    This is a deterministic binding report, not Controller, Live, fee or resume
+    authorization. The pre-run API still rejects an occupied Run ID.
+    """
+    root = Path(project_root).resolve(strict=True)
+    planned = _compute_contract_preflight(root, contract_path, run_id=run_id, existing_run=True)
+    run_relative = f"runs/{planned['run_id']}"
+    state_path = _safe_source_file(root, run_relative + "/run_state.json")
+    snapshot_path = _safe_source_file(root, run_relative + "/artifacts/contract.json")
+    state_raw, snapshot_raw = state_path.read_bytes(), snapshot_path.read_bytes()
+    try:
+        state = json.loads(state_raw.decode("utf-8-sig"), object_pairs_hook=_reject_duplicate_json_keys)
+        snapshot = json.loads(snapshot_raw.decode("utf-8-sig"), object_pairs_hook=_reject_duplicate_json_keys)
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContractError("RUN_BINDINGS_INVALID", "Run state or contract snapshot is unreadable") from exc
+    if (not isinstance(state, dict) or not isinstance(snapshot, dict)
+            or sha(snapshot_raw) != planned["contract_sha256"]
+            or state.get("run_id") != planned["run_id"]
+            or state.get("project_id") != planned["project_id"]
+            or state.get("work_id") != planned["work_id"]
+            or state.get("contract_sha256") != planned["contract_sha256"]
+            or snapshot.get("project_instance_id") != planned["project_instance_id"]
+            or state.get("project_instance_id", planned["project_instance_id"]) != planned["project_instance_id"]
+            or state.get("unit_kind") != snapshot.get("unit", {}).get("kind")
+            or state.get("fixture_only") is not False
+            or state.get("mode") not in {"offline", "live"}):
+        raise ContractError("RUN_BINDINGS_MISMATCH", "Run, project instance and exact contract must agree")
+    selected = Path(contract_path)
+    selected = (selected if selected.is_absolute() else root / selected).resolve(strict=True)
+    if selected != _safe_source_file(root, state.get("contract_path", "")):
+        raise ContractError("RUN_BINDINGS_MISMATCH", "Run points to a different contract path")
+    if json.dumps(state.get("source_identity"), sort_keys=True, ensure_ascii=False) != json.dumps(snapshot.get("source"), sort_keys=True, ensure_ascii=False):
+        raise ContractError("RUN_BINDINGS_MISMATCH", "Run source identity differs from its exact snapshot")
+    try:
+        from .cnw_runner import WORKFLOW_PATH, validate_literary_source_freeze
+        from .policy_snapshots import resolve_policy_by_sha, PolicySnapshotError
+    except ImportError:
+        from cnw_runner import WORKFLOW_PATH, validate_literary_source_freeze
+        from policy_snapshots import resolve_policy_by_sha, PolicySnapshotError
+    workflow_raw = WORKFLOW_PATH.read_bytes()
+    workflow_sha = sha(workflow_raw)
+    if state.get("workflow_template_sha256") != workflow_sha:
+        raise ContractError("CNW_METHOD_IDENTITY_MISMATCH", "Run workflow differs from the fixed source")
+    try:
+        provider = resolve_policy_by_sha(state.get("provider_config_sha256", ""), expected_kind="provider_policy")
+    except PolicySnapshotError as exc:
+        raise ContractError(exc.code, "Run provider policy is not a registered immutable policy") from exc
+    validate_literary_source_freeze(state, root)
+    if (state_path.read_bytes() != state_raw or snapshot_path.read_bytes() != snapshot_raw
+            or sha(selected.read_bytes()) != planned["contract_sha256"]
+            or WORKFLOW_PATH.read_bytes() != workflow_raw
+            or _compute_contract_preflight(root, selected, run_id=planned["run_id"], existing_run=True) != planned):
+        raise ContractError("RUN_BINDINGS_CHANGED_DURING_READ", "Run or source bindings changed during validation")
+    bindings = {key: planned[key] for key in ("project_id", "project_instance_id", "run_id", "work_id",
+        "contract_sha256", "work_intent", "source_identity", "source_root_identity", "selected_scope_sha256",
+        "policy_version", "plot_request_sha256", "production_preparation_hashes")}
+    bindings.update(workflow_template_sha256=workflow_sha, provider_policy_sha256=provider["sha256"],
+                    literary_source_freeze=state["literary_source_hashes"])
+    digest = sha(json.dumps(bindings, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    return {"schema_version": "cnw_run_contract_preflight_v1", "status": "OFFLINE_BINDINGS_VALIDATED",
+            "bindings": bindings, "identity_sha256": digest, "observed_run_state_sha256": sha(state_raw),
+            "provider_call_authorized": False, "controller_attestation_status": "ATTESTATION_PENDING",
+            "live_authorization_status": "NOT_AUTHORIZED", "provider_call": "none", "state_mutated": False}
 
 
 def verify_contract_preflight(project_root: str | Path, contract_path: str | Path, *,

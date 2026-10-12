@@ -473,18 +473,40 @@ def _sanitize(value):
     return value
 
 
+def _require_generic_provider_authorization(run_dir: Path, *, stage: str) -> None:
+    """Keep new app production closed at both slot and actual request boundaries.
+
+    Offline bindings and trusted review are independent of user Live/fee grants.
+    No production grant adapter is deployed in this Atom. Historical V1 routing
+    remains unchanged; changing a V2 Run's mode cannot grant it legacy authority.
+    """
+    if stage == "project_revision_apply":
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "creative approval does not grant Provider or fee permission")
+    state = load_state(run_dir)
+    snapshot = run_dir / "artifacts/contract.json"
+    is_v2 = (state.get("literary_source_freeze_version") == "literary_source_freeze_v2"
+             or state.get("schema_version") == "cnw_generic_sprint_v2")
+    if snapshot.is_file():
+        try:
+            value = json.loads(snapshot.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ContractError("LIVE_CONTRACT_INVALID", "cannot establish request contract identity") from exc
+        if not isinstance(value, dict):
+            raise ContractError("LIVE_CONTRACT_INVALID", "request contract must be an object")
+        is_v2 = is_v2 or value.get("schema_version") == "cnw_work_unit_v2"
+    if is_v2:
+        if state.get("mode") == "offline":
+            raise ContractError("OFFLINE_PROVIDER_FORBIDDEN", "generic offline execution requires an isolated simulated transport")
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "generic production requires independent review plus separate user Live and fee grants; no production grant adapter is deployed")
+
+
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
     if stage == "project_revision_apply":
         # Workflow03 creative approval grants no Provider/fee permission.
         # Production project authorization is not integrated for this new path;
         # keep it closed before even acquiring/reserving a Provider slot.
         raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "Workflow03 author approval is not Provider authorization; this path is verified only with isolated simulated transport")
-    state = load_state(run_dir)
-    if state.get("mode") == "offline":
-        snapshot = run_dir / "artifacts/contract.json"
-        is_v2 = snapshot.is_file() and json.loads(snapshot.read_text(encoding="utf-8-sig")).get("schema_version") == "cnw_work_unit_v2"
-        if is_v2 or state.get("schema_version") == "cnw_generic_sprint_v2":
-            raise ContractError("OFFLINE_PROVIDER_FORBIDDEN", "generic offline execution requires an isolated simulated transport")
+    _require_generic_provider_authorization(run_dir, stage=stage)
     with _p2_guard().provider_slot():
         return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
 
@@ -503,6 +525,7 @@ def reactivate_receipt(run_dir: Path, receipt: dict) -> None:
 
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
+    _require_generic_provider_authorization(run_dir, stage=stage)
     if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "project_decompose", "project_extract_canon", "project_jet_diagnostic", "project_character_os", "project_revision_plan", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,

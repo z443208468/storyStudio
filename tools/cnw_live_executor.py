@@ -490,6 +490,8 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
             or matches[0].get("input_sha256") != packet.get("input_sha256")
             or matches[0].get("stage_fingerprint") != state["stages"][stage].get("fingerprint")):
         raise ContractError("CONTROLLER_PROVIDER_RECEIPT_BINDING_INVALID", stage)
+    if matches[0].get("mode") != "LIVE" or matches[0].get("fixture_only") is not False:
+        raise ContractError("LIVE_MOCK_PROVIDER_ACCEPTANCE_FORBIDDEN", stage)
     signed_payload = {"purpose": "W10_STAGE_OUTPUT_ACCEPTANCE", "decision": "ACCEPT",
         "bindings": offline_report["bindings"], "identity_sha256": offline_report["identity_sha256"],
         "run_id": run.name, "stage": stage, "role": packet.get("role"),
@@ -510,7 +512,6 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
         target = run / "artifacts/stages/draft-prose.md"
         if target.exists() or target.is_symlink():
             raise ContractError("LIVE_STAGE_ARTIFACT_COLLISION", target.name)
-        target.write_text(output, encoding="utf-8")
     else:
         target = run / f"artifacts/stages/{stage}.md"
         if target.exists() or target.is_symlink():

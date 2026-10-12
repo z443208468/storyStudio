@@ -113,9 +113,9 @@ def verify_run_preflight(run: Path, state: dict | None = None, *, preflight_path
             preflight_path, contract_path, run_dir=run, project_root=project_root)
         if (state.get("run_id") != run.name or state.get("mode") != "live"
                 or state.get("fixture_only") is not False
-                or preflight.get("provider_call_authorized") is not True):
-            raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "per-run W10 preflight does not authorize provider calls")
-        return state
+                or preflight.get("provider_call_authorized") is not False):
+            raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "per-run review is not a production grant")
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "independent review was verified; separate real user Live and fee grants are still required")
     raise ContractError("LIVE_STAGE_NOT_AUTHORIZED_OR_READY", "W10 run preflight")
 
 
@@ -341,7 +341,8 @@ def accept_validated_stage(run_dir: str | Path, *, stage: str, content: str,
                for dependency in stage_predecessors(stage, state["unit_kind"])):
             raise ContractError("STAGE_DEPENDENCY_NOT_ACCEPTED", stage)
         matching = [row for row in state.get("provider_requests", []) if row.get("stage") == stage]
-        if any(row.get("mode") == "MOCK_ONLY" or row.get("fixture_only") is True for row in matching):
+        if stage not in {"lint1", "lint2"} and any(
+                row.get("mode") != "LIVE" or row.get("fixture_only") is not False for row in matching):
             raise ContractError("LIVE_MOCK_PROVIDER_ACCEPTANCE_FORBIDDEN", stage)
         content_sha = sha(content.encode("utf-8"))
         local_stage = stage in {"lint1", "lint2"}

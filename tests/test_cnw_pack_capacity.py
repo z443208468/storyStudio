@@ -335,7 +335,10 @@ class CapacityProseTests(unittest.TestCase):
         response = SimpleNamespace(status_code=200, json=lambda: payload)
         # A direct consumer test of the real transport parser. Its accounting
         # substitute is a local, explicitly MOCK_ONLY list, not a real reserve.
+        # Authorization is a separate negative-tested boundary. This parser
+        # fixture explicitly substitutes it; it does not establish Live access.
         with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "SIMULATED-NONLIVE-TEST-KEY"}), \
+             patch.object(cnw_runner, "_require_generic_provider_authorization", return_value=None), \
              patch.object(cnw_runner, "_p2_guard", return_value=guard), \
              patch.object(cnw_runner.httpx, "post", return_value=response) as post, \
              patch.object(cnw_runner, "cnw_live_call", side_effect=cnw_runner._cnw_live_call_in_slot):

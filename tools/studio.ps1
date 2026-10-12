@@ -14,8 +14,10 @@ param(
     [string]$WorkId,
     [string]$ProjectId,
     [string]$InputFile,
+    [string]$JobFile,
     [string]$SourceRepository,
     [switch]$Offline,
+    [switch]$PrepareRuns,
     [ValidateSet('md','txt','json')][string]$Format,
     [string]$StepName,
     [string]$Candidate,
@@ -177,10 +179,14 @@ switch ($Command) {
         if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_IMPORT_FAILED:$LASTEXITCODE" }
     }
     'project-pack' {
-        if (-not $DataHome -or -not $InputFile) { throw 'PROJECT_PACK_REQUIRES_DATA_HOME_AND_INPUT_FILE' }
-        $PackArgs=@((Join-Path $Root 'tools/cnw_pack_app.py'),'--input',(Resolve-Path -LiteralPath $InputFile).Path,'--data-home',$DataHome)
+        if (-not $DataHome -or ((-not $InputFile) -and (-not $JobFile))) { throw 'PROJECT_PACK_REQUIRES_DATA_HOME_AND_INPUT_OR_JOB' }
+        if ($InputFile -and $JobFile) { throw 'PROJECT_PACK_INPUT_AND_JOB_ARE_EXCLUSIVE' }
+        $PackArgs=@((Join-Path $Root 'tools/cnw_pack_app.py'),'--data-home',$DataHome)
+        if ($JobFile) { $PackArgs += @('--job',(Resolve-Path -LiteralPath $JobFile).Path) }
+        else { $PackArgs += @('--input',(Resolve-Path -LiteralPath $InputFile).Path) }
         if ($SourceRepository) { $PackArgs += @('--source-repository',(Resolve-Path -LiteralPath $SourceRepository).Path) }
         if ($Offline) { $PackArgs += '--offline' }
+        if ($PrepareRuns) { $PackArgs += '--prepare-runs' }
         & $Python @PackArgs
         if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_PACK_FAILED:$LASTEXITCODE" }
     }

@@ -17,6 +17,7 @@ SOURCE_SCRIPT_SHA256 = "53c4f9c4f79aed2537928bf5c350d8c253c5783c7cc5d29536c9aa25
 PREFLIGHT_EVIDENCE_SHA256 = "cd0c159bed09a2cbb89cf0ba1f85bbd445d3a283232dc5fe4555242d4276b921"
 PREFLIGHT_PATH = ROOT / "workspace/cangqi/08_review/W10_contract_preflight.json"
 PER_RUN_PREFLIGHT_SCHEMA = "cnw_w10_per_run_preflight_v1"
+GENERIC_RUN_PREFLIGHT_SCHEMA = "cnw_run_contract_preflight_v1"
 
 
 def _read_json(path: Path, code: str) -> tuple[dict, bytes]:
@@ -33,13 +34,24 @@ def _read_json(path: Path, code: str) -> tuple[dict, bytes]:
 
 
 def _no_reparse(path: Path) -> bool:
-    return not any(part.is_symlink() for part in (path, *path.parents) if part.exists())
+    try:
+        from .project_paths import _assert_no_reparse, PathResolutionError
+    except ImportError:
+        from project_paths import _assert_no_reparse, PathResolutionError
+    try:
+        _assert_no_reparse(path.absolute(), code="W10_PATH_UNSAFE")
+    except (PathResolutionError, OSError):
+        return False
+    return True
 
 
 def _canonical_sha256(value: object) -> str:
-    raw = json.dumps(value, ensure_ascii=False, sort_keys=True,
-                     separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
+    return hashlib.sha256(_canonical_bytes(value)).hexdigest()
+
+
+def _canonical_bytes(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":"), allow_nan=False).encode("utf-8")
 
 
 class ControllerAttestationVerifier:
@@ -50,30 +62,12 @@ class ControllerAttestationVerifier:
 
 
 def _deployment_attestation_verifier():
-    """Load an optional verifier from the protected deployment environment."""
-    import importlib
+    """Production cannot select its trust provider through ordinary Python imports."""
     try:
-        provider = importlib.import_module("storystudio_deployment_trust.controller_attestations")
-    except ModuleNotFoundError as exc:
-        if exc.name == "storystudio_deployment_trust" or exc.name == "storystudio_deployment_trust.controller_attestations":
-            return None
-        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment verifier dependencies are unavailable") from exc
-    factory = getattr(provider, "get_controller_attestation_verifier", None)
-    if not callable(factory):
-        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment provider lacks verifier factory")
-    provider_file = getattr(provider, "__file__", None)
-    if not isinstance(provider_file, str):
-        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment verifier must be an installed module")
-    provider_candidate = Path(provider_file).absolute()
-    if not _no_reparse(provider_candidate):
-        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "trust provider path must not be a reparse point")
-    provider_path = provider_candidate.resolve(strict=True)
-    if provider_path.is_relative_to(ROOT.resolve()):
-        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "trust provider must be outside the Writer-controlled repository")
-    verifier = factory()
-    if verifier is None or not callable(getattr(verifier, "verify", None)):
-        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment provider returned no verifier")
-    return verifier
+        from .controller_trust_loader import load_deployment_verifier
+    except ImportError:
+        from controller_trust_loader import load_deployment_verifier
+    return load_deployment_verifier()
 
 
 def verify_controller_attestation_document(path: str | Path, *, expected_payload: dict,
@@ -95,25 +89,34 @@ def verify_controller_attestation_document(path: str | Path, *, expected_payload
             result[key] = value
         return result
     try:
-        document = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_keys)
+        document = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_keys,
+            parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite JSON number")))
     except (UnicodeError, json.JSONDecodeError, ValueError) as exc:
         raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", str(evidence)) from exc
     if (not isinstance(document, dict)
             or document.get("schema_version") != "cnw_signed_controller_attestation_v1"
-            or document.get("payload") != expected_payload
             or not isinstance(document.get("signer_id"), str)
             or not document["signer_id"].strip()
             or not isinstance(document.get("signature_base64"), str)):
+        raise ContractError("W10_CONTROLLER_ATTESTATION_BINDING_INVALID", str(evidence))
+    try:
+        message = _canonical_bytes(document.get("payload"))
+        expected_message = _canonical_bytes(expected_payload)
+    except (TypeError, ValueError) as exc:
+        raise ContractError("W10_CONTROLLER_ATTESTATION_BINDING_INVALID", str(evidence)) from exc
+    if message != expected_message:
         raise ContractError("W10_CONTROLLER_ATTESTATION_BINDING_INVALID", str(evidence))
     import base64
     try:
         signature = base64.b64decode(document["signature_base64"], validate=True)
     except (ValueError, TypeError) as exc:
         raise ContractError("W10_CONTROLLER_SIGNATURE_INVALID", str(evidence)) from exc
-    message = json.dumps(expected_payload, ensure_ascii=False, sort_keys=True,
-                         separators=(",", ":")).encode("utf-8")
     try:
         valid = trusted_verifier.verify(document["signer_id"], message, signature)
+    except ContractError as exc:
+        if exc.code == "W10_ATTESTATION_PENDING":
+            raise
+        raise ContractError("W10_CONTROLLER_SIGNATURE_INVALID", "deployment verifier rejected the attestation") from exc
     except Exception as exc:
         raise ContractError("W10_CONTROLLER_SIGNATURE_INVALID", "deployment verifier rejected the attestation") from exc
     if valid is not True:
@@ -152,6 +155,25 @@ def validate_per_run_bindings(
     value, evidence_raw = _read_json(evidence, "W10_PREFLIGHT_INVALID")
     if evidence_raw != evidence.read_bytes():
         raise ContractError("W10_PREFLIGHT_CHANGED_DURING_READ", str(evidence))
+
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_project import build_run_contract_preflight
+        except ImportError:
+            from cnw_project import build_run_contract_preflight
+        if (value.get("schema_version") != GENERIC_RUN_PREFLIGHT_SCHEMA
+                or value.get("provider_call_authorized") is not False
+                or project != run.parent.parent or run.parent.name != "runs"):
+            raise ContractError("W10_PER_RUN_PREFLIGHT_REVIEW_INVALID", "V2 requires its own offline Run binding record")
+        current = build_run_contract_preflight(project, contract_file, run_id=run.name)
+        if (_canonical_bytes(value.get("bindings")) != _canonical_bytes(current["bindings"])
+                or value.get("identity_sha256") != current["identity_sha256"]):
+            raise ContractError("W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH", "V2 project, Run and frozen consumers differ")
+        if (state_path.read_bytes() != state_raw or contract_file.read_bytes() != contract_raw
+                or run_contract_path.read_bytes() != run_contract_raw or evidence.read_bytes() != evidence_raw):
+            raise ContractError("W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ", run.name)
+        current["preflight_document_sha256"] = hashlib.sha256(evidence_raw).hexdigest()
+        return current, current["preflight_document_sha256"]
 
     contract_sha = hashlib.sha256(contract_raw).hexdigest()
     source = contract.get("source", {})
@@ -340,7 +362,8 @@ def verify_per_run_preflight_file(
     attestation_raw = attestation_file.read_bytes()
     if hashlib.sha256(attestation_raw).hexdigest() != expected_file_sha.lower():
         raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "signed receipt SHA256 mismatch")
-    expected_payload = {"purpose": "W10_PER_RUN_PREFLIGHT", "decision": "ACCEPT",
+    purpose = "CNW_V2_RUN_PREFLIGHT" if report["schema_version"] == GENERIC_RUN_PREFLIGHT_SCHEMA else "W10_PER_RUN_PREFLIGHT"
+    expected_payload = {"purpose": purpose, "decision": "ACCEPT",
         "bindings": report["bindings"], "identity_sha256": report["identity_sha256"],
         "provider_call_authorized": False}
     attestation, attestation_sha = verify_controller_attestation_document(
@@ -348,7 +371,7 @@ def verify_per_run_preflight_file(
     if (preflight_path.read_bytes() != preflight_raw
             or attestation_file.read_bytes() != attestation_raw):
         raise ContractError("W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ", str(preflight_path))
-    accepted = {"schema_version": PER_RUN_PREFLIGHT_SCHEMA, "status": "ATTESTED",
+    accepted = {"schema_version": value["schema_version"], "status": "ATTESTED",
         "provider_call_authorized": False, "controller_signer_id": attestation["signer_id"],
         "controller_attestation_sha256": attestation_sha,
         "identity_sha256": report["identity_sha256"], "bindings": report["bindings"]}
@@ -364,7 +387,7 @@ def verify_preflight_file(path: str | Path, contract_path: str | Path, *,
         document = json.loads(raw.decode("utf-8"))
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise ContractError("W10_PREFLIGHT_INVALID", "preflight evidence is unreadable") from exc
-    if isinstance(document, dict) and document.get("schema_version") == PER_RUN_PREFLIGHT_SCHEMA:
+    if isinstance(document, dict) and document.get("schema_version") in {PER_RUN_PREFLIGHT_SCHEMA, GENERIC_RUN_PREFLIGHT_SCHEMA}:
         if run_dir is None or project_root is None:
             raise ContractError("W10_PER_RUN_PREFLIGHT_CONTEXT_REQUIRED", "run and project roots are required")
         return verify_per_run_preflight_file(evidence, contract_path, run_dir, project_root)

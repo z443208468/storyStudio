@@ -12,18 +12,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .cnw_contract import ContractError
+    from .cnw_contract import ContractError, _safe_source_file
     from .cnw_input_pack import read_input_pack, prepare_scene_input, _json, _sha, _bytes, _source_bytes, _scene_anchor
-    from .cnw_project import write_contract_draft, build_contract_preflight
+    from .cnw_project import write_contract_draft, build_contract_preflight, build_run_contract_preflight
     from .project_paths import (_prepare_data_home, _ensure_private_directory, _data_home_identity,
-                                _assert_no_reparse, create_project, PathResolutionError, DATA_HOME_SCHEMA)
+                                _assert_no_reparse, create_project, resolve_project, PathResolutionError, DATA_HOME_SCHEMA)
     from .project_transactions import project_write_lock
 except ImportError:
-    from cnw_contract import ContractError
+    from cnw_contract import ContractError, _safe_source_file
     from cnw_input_pack import read_input_pack, prepare_scene_input, _json, _sha, _bytes, _source_bytes, _scene_anchor
-    from cnw_project import write_contract_draft, build_contract_preflight
+    from cnw_project import write_contract_draft, build_contract_preflight, build_run_contract_preflight
     from project_paths import (_prepare_data_home, _ensure_private_directory, _data_home_identity,
-                               _assert_no_reparse, create_project, PathResolutionError, DATA_HOME_SCHEMA)
+                               _assert_no_reparse, create_project, resolve_project, PathResolutionError, DATA_HOME_SCHEMA)
     from project_transactions import project_write_lock
 
 
@@ -229,7 +229,8 @@ def import_package(input_file: str | Path, *, data_home: str | Path,
                 row.update(status="CAPACITY_PENDING", blocking_code=exc.code)
             else:
                 row.update(contract=result["contract"], contract_sha256=result["contract_sha256"], status="CONTRACT_READY_FOR_PREFLIGHT")
-                preflight = build_contract_preflight(registered["project_root"], result["contract"], run_id=f"PACK-{pack['pack_sha256'][:12]}-{number:02d}")
+                row["planned_run_id"] = f"PACK-{pack['pack_sha256'][:12]}-{number:02d}"
+                preflight = build_contract_preflight(registered["project_root"], result["contract"], run_id=row["planned_run_id"])
                 record = job / f"{registered['project_instance_id']}.preflight.json"
                 with record.open("xb") as stream:
                     stream.write(_bytes(preflight))
@@ -248,18 +249,156 @@ def import_package(input_file: str | Path, *, data_home: str | Path,
         save()
         return report
     report["status"] = "INPUTS_PREPARED_WITH_CAPACITY_PENDING" if any(t["status"] == "CAPACITY_PENDING" for t in report["tasks"]) else "CONTRACTS_READY_FOR_PREFLIGHT"
+    origin = {"schema_version": "cnw_input_pack_job_origin_v1", "job_id": job_id,
+              "pack_sha256": report["pack_sha256"], "tasks": [_task_job_identity(row) for row in report["tasks"]]}
+    with (job / "origin.json").open("xb") as stream:
+        stream.write(_bytes(origin))
+    report["origin_sha256"] = _sha(_bytes(origin))
     save()
     return report
 
 
+def _task_job_identity(row: dict) -> dict:
+    return {key: row.get(key) for key in ("project_id", "project_instance_id", "project_root", "scene_root",
+            "unit_id", "contract", "contract_sha256", "planned_run_id", "requested_max_visible_chars")}
+
+
+def prepare_package_runs(job_record: str | Path, *, data_home: str | Path) -> dict:
+    """Prepare/recheck this job's offline Runs without executing any stage.
+
+    All contract paths, Run IDs and signed-review request data are internal.
+    Progress and original inputs survive interruption; existing Runs are only
+    checked, never overwritten or reset.
+    """
+    import tempfile
+    from types import SimpleNamespace
+    try:
+        from . import cnw_runner
+    except ImportError:
+        import cnw_runner
+    if not data_home or not Path(data_home).is_absolute():
+        raise ContractError("DATA_HOME_REQUIRED", "select an explicit registered DataHome")
+    _assert_no_reparse(Path(data_home), code="INPUT_PACK_JOB_UNSAFE")
+    home = Path(data_home).resolve(strict=True)
+    _data_home_identity(home, create=False)
+    supplied = Path(job_record).absolute()
+    _assert_no_reparse(supplied, code="INPUT_PACK_JOB_UNSAFE")
+    record_path = supplied.resolve(strict=True)
+    job = record_path.parent
+    if record_path.name != "result.json" or job.parent != home / "shared/input_pack_jobs":
+        raise ContractError("INPUT_PACK_JOB_UNSAFE", "select a job owned by this DataHome")
+    with project_write_lock(job):
+        _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
+        raw = record_path.read_bytes()
+        report = _json(raw)
+        if (not isinstance(report, dict) or report.get("schema_version") != "cnw_input_pack_job_v1" or report.get("job_id") != job.name
+                or report.get("status") not in {"CONTRACTS_READY_FOR_PREFLIGHT", "INPUTS_PREPARED_WITH_CAPACITY_PENDING", "RUNS_PREPARED_PENDING_AUTHORIZATION", "RUNS_PREPARED_WITH_CAPACITY_PENDING"}
+                or not isinstance(report.get("tasks"), list) or not report["tasks"]):
+            raise ContractError("INPUT_PACK_JOB_NOT_READY", "job inputs are incomplete or its identity differs")
+        archive = _safe_source_file(job, "input.zip").read_bytes()
+        if not (job / "origin.json").is_file():
+            raise ContractError("INPUT_PACK_JOB_ORIGIN_UNAVAILABLE", "older job is retained; automatic preparation requires its original task binding record")
+        origin_raw = _safe_source_file(job, "origin.json").read_bytes()
+        origin = _json(origin_raw)
+        if (_sha(archive) != report.get("pack_sha256") or _sha(origin_raw) != report.get("origin_sha256")
+                or _bytes(origin) != _bytes({"schema_version": "cnw_input_pack_job_origin_v1", "job_id": job.name,
+                             "pack_sha256": report["pack_sha256"], "tasks": [_task_job_identity(row) for row in report["tasks"]]})):
+            raise ContractError("INPUT_PACK_JOB_BINDINGS_CHANGED", "job no longer binds its original tasks and archive")
+        checked = []
+        for row in report["tasks"]:
+            if row.get("status") == "CAPACITY_PENDING":
+                continue
+            registered = resolve_project(row["project_root"], data_home=home)
+            root = Path(registered["project_root"])
+            contract_path = _safe_source_file(root, str(Path(row["contract"]).relative_to(root)))
+            contract_raw = contract_path.read_bytes()
+            contract = _json(contract_raw)
+            if (registered["project_instance_id"] != row["project_instance_id"]
+                    or registered["project_id"] != row["project_id"]
+                    or _sha(contract_raw) != row["contract_sha256"]
+                    or contract["unit"]["id"] != row["unit_id"]
+                    or contract.get("input_pack", {}).get("pack_sha256") != report["pack_sha256"]):
+                raise ContractError("INPUT_PACK_JOB_BINDINGS_CHANGED", "task instance, contract or source package changed")
+            checked.append((row, root, contract_path, contract))
+
+        def save_progress():
+            nonlocal raw
+            _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
+            if record_path.read_bytes() != raw:
+                raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed during preparation")
+            history = job / "history"
+            _assert_no_reparse(history, code="INPUT_PACK_JOB_UNSAFE")
+            history.mkdir(exist_ok=True)
+            old = history / (_sha(raw) + ".json")
+            _assert_no_reparse(old, code="INPUT_PACK_JOB_UNSAFE")
+            if old.exists():
+                if old.read_bytes() != raw:
+                    raise ContractError("INPUT_PACK_JOB_HISTORY_CHANGED", "prior job bytes changed")
+            else:
+                with old.open("xb") as stream:
+                    stream.write(raw)
+            new = _bytes(report)
+            with tempfile.NamedTemporaryFile(mode="wb", dir=job, delete=False, prefix=".result.") as stream:
+                stream.write(new); stream.flush(); os.fsync(stream.fileno())
+                pending = Path(stream.name)
+            _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
+            if record_path.read_bytes() != raw:
+                raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed before progress persistence; temporary bytes were retained")
+            os.replace(pending, record_path)
+            raw = new
+
+        for row, root, contract_path, contract in checked:
+            with project_write_lock(root):
+                run_id = row["planned_run_id"]
+                run = root / "runs" / run_id
+                _assert_no_reparse(run, code="INPUT_PACK_RUN_UNSAFE")
+                if not run.exists():
+                    build_contract_preflight(root, contract_path, run_id=run_id)
+                    cnw_runner.produce(SimpleNamespace(mode="offline", unit=contract["unit"]["kind"],
+                        work_id=contract["unit"]["id"], contract=str(contract_path), project_root=str(root),
+                        run_id=run_id, create_only=True))
+                bindings = build_run_contract_preflight(root, contract_path, run_id=run_id)
+                identity = bindings["identity_sha256"]
+                binding_path = job / f"{row['project_instance_id']}.{identity}.run-bindings.json"
+                _assert_no_reparse(binding_path, code="INPUT_PACK_JOB_UNSAFE")
+                if binding_path.exists():
+                    previous = _json(binding_path.read_bytes())
+                    if _bytes(previous["bindings"]) != _bytes(bindings["bindings"]):
+                        raise ContractError("INPUT_PACK_RUN_BINDINGS_CHANGED", "stored Run bindings differ")
+                else:
+                    with binding_path.open("xb") as stream:
+                        stream.write(_bytes(bindings))
+                row["run_preparation"] = {"status": "OFFLINE_BINDINGS_VALIDATED", "run_id": run_id,
+                    "run_path": str(run), "identity_sha256": identity, "record": str(binding_path),
+                    "record_sha256": _sha(binding_path.read_bytes()), "provider_call_authorized": False,
+                    "controller_attestation_status": "ATTESTATION_PENDING", "live_authorization_status": "NOT_AUTHORIZED"}
+                row["status"] = "RUN_PREPARED_PENDING_AUTHORIZATION"
+            save_progress()
+        capacity_pending = any(row.get("status") == "CAPACITY_PENDING" for row in report["tasks"])
+        report["status"] = ("RUNS_PREPARED_WITH_CAPACITY_PENDING" if checked else "INPUTS_PREPARED_WITH_CAPACITY_PENDING") if capacity_pending else "RUNS_PREPARED_PENDING_AUTHORIZATION"
+        report["production_status"] = "NOT_AUTHORIZED"
+        save_progress()
+        return report
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--input")
+    source.add_argument("--job")
     parser.add_argument("--data-home", required=True)
     parser.add_argument("--source-repository")
     parser.add_argument("--offline", action="store_true")
+    parser.add_argument("--prepare-runs", action="store_true")
     args = parser.parse_args()
-    result = import_package(args.input, data_home=args.data_home, local_source=args.source_repository, offline=args.offline)
+    if args.job:
+        if args.source_repository:
+            parser.error("a stored job does not fetch or reimport sources")
+        result = prepare_package_runs(args.job, data_home=args.data_home)
+    else:
+        result = import_package(args.input, data_home=args.data_home, local_source=args.source_repository, offline=args.offline)
+        if args.prepare_runs and result["status"] != "IMPORT_INCOMPLETE":
+            result = prepare_package_runs(result["job_record"], data_home=args.data_home)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 2 if result["status"] == "IMPORT_INCOMPLETE" else 0
 
