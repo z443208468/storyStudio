@@ -95,7 +95,7 @@ function Export-ReadingPackage {
 }
 switch ($Command) {
     'doctor' {
-        $EngineFiles=@('tools/cnw_runner.py','tools/cnw_roles.py','tools/cnw_contract.py','tools/project_paths.py','templates/config/workflow.template.yml')
+        $EngineFiles=@('tools/cnw_runner.py','tools/cnw_roles.py','tools/cnw_contract.py','tools/project_paths.py','config/policies/app_policy.v1.json','config/policies/project_policy.template.v1.json')
         $MissingEngineFiles=@($EngineFiles | Where-Object { -not (Test-Path -LiteralPath (Join-Path $Root $_) -PathType Leaf) })
         $CoreRuntime='RUNTIME_MISSING'
         if ($Python -and (Test-Path -LiteralPath $Python -PathType Leaf)) {

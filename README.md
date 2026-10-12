@@ -16,6 +16,8 @@ The CNW public method includes its eleven ordered stages, source-bound role inpu
 
 ## Current use and privacy
 
+For a reproducible clean checkout and offline verification environment, follow [the bootstrap guide](docs/BOOTSTRAP_VERIFICATION.md). It includes fixed upstream pins, declared dependencies, offline cache preparation, missing-cache behavior, and source-only versus prepared doctor checks. It does not authorize Live production or select project data.
+
 The generic app is under construction; consult the active plan for the current Atom and verified capabilities before using commands. This repository still contains legacy interfaces and historical engineering records. They are not a safe default for a new project. Do not place private drafts, credentials, provider traffic, or private runtime data in Git. The current genericization work does not call production APIs or generate story content.
 
 ## Project documentation

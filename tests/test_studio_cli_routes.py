@@ -59,7 +59,7 @@ class StudioCliRouteTests(unittest.TestCase):
         result = self._invoke("doctor", "-AppOnly")
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = __import__("json").loads(result.stdout)
-        self.assertIn(payload["status"], {"ENGINE_READY", "ENGINE_INCOMPLETE"})
+        self.assertEqual(payload["status"], "ENGINE_READY")
         self.assertEqual(payload["project"], "NOT_SELECTED")
         self.assertEqual(payload["provider_call"], "none")
         self.assertEqual(payload["generic_live_production"], "NOT_RUN")
