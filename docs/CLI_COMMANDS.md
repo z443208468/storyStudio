@@ -8,8 +8,8 @@ provider request; `setup` persists an explicitly selected DataHome.
 claim a complete workflow result; full command semantics and the 11-stage
 offline consumer chain are verified in Atom-09. `LEGACY_ONLY` routes are kept
 as explicit compatibility affordances and are not required in a clean clone.
-No command in this table performs a real provider call during the Atom-04
-entrypoint checks.
+The refactor's route checks and fictional model simulations perform no real
+Provider call. A tracked route or available Key does not authorize production.
 
 | COMMAND | REFERENCED_IMPL | IMPLEMENTATION_TRACKED? | PURE_GENERIC? | STATUS | CLEAN_CLONE_SMOKE_TEST |
 |---|---|---:|---:|---|---|
@@ -73,3 +73,38 @@ creates new independent instances. An unknown occupied DataHome/cache is refused
 bound and draft; it is not story readiness. Partial failure keeps its job record
 and all instances. Full field consumption and production authorization remain
 separate R5 gates.
+
+## Package-owned Run preparation
+
+Import and prepare all declared tasks:
+
+```powershell
+.\tools\studio.ps1 project-pack -InputFile '<writing-package.zip>' -DataHome '<absolute DataHome>' -PrepareRuns
+```
+
+For a fully local source, add `-SourceRepository '<local pinned Git repository>'
+-Offline`. The default without `-PrepareRuns` imports inputs and contracts only.
+Preparation calls `tools/cnw_pack_app.py:prepare_package_runs` and the actual
+`cnw_runner.produce(create_only=True, mode="offline")`; the app derives Run IDs
+and validates contract, instance, source, policy and existing-Run identities.
+It does not run the writing stages or call a Provider.
+
+The returned `job_record` identifies this job. Recheck it or resume interrupted
+Run preparation:
+
+```powershell
+.\tools\studio.ps1 project-pack -JobFile '<returned job record>' -DataHome '<same absolute DataHome>' -Offline
+```
+
+`-JobFile` performs Run preparation/revalidation itself; it does not require
+`-PrepareRuns`, reimport the ZIP, fetch sources or reset completed progress.
+`-InputFile` and `-JobFile` are mutually exclusive. A stored job rejects
+`-SourceRepository`. Repeating `-InputFile` creates a new job and independent
+instances; it is not a shortcut for resuming an existing job.
+
+`RUNS_PREPARED_PENDING_AUTHORIZATION` records actual offline Runs, with Provider
+permission false. Capacity-pending tasks remain pending and create no Run.
+Identity conflicts return a blocking code while retaining prior progress.
+Package-job automatic production/review/revision/export remains pending Atom-09.
+The eventual application flow must handle these internal identities and stages
+from the supplied package; low-level diagnostic commands do not complete that flow.
