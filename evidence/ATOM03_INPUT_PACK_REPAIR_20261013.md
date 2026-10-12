@@ -125,3 +125,64 @@ tree `535496ba3b8a331e12d0e5e161b15bf21a25393e`.
 `INPUT_PACK_TO_STORY_GATE=RETURN`; `GENERIC_LIVE_PRODUCTION=NOT_RUN`;
 `CUTOVER_BLOCKED=true`; `PRIVATE_MIGRATION=NOT_RUN`.
 Independent exact-candidate review and push authorization are still required.
+
+## Independent RETURN and same-Atom correction
+
+The first local candidate `4ec76a98d4c38b00a434792b0e5fe3f3ec858ab3`, tree
+`f99816e50da7a5aa108a96574cfd91ca467790d2`, received independent **RETURN / NO PUSH**.
+The Controller response is preserved in
+`evidence/ATOM03_CONTROLLER_RETURN_4ec76a9_20261013.md`. It is not rewritten as
+an earlier ACCEPT. The following corrections remain within this Atom-03 repair:
+
+1. Match the exact scene token, not a prefix followed by `\b`; recognize legal
+   tab-separated H2 boundaries. Prefix/duplicate/empty cases are rejected.
+2. `cnw_import_workflow._internal_inbox_metadata` excludes the complete
+   `_INBOX/input_packs/` namespace. Actual adapted-project inventory contains
+   only the genuine original. Archived binding/old PASS cannot confirm a story
+   assertion, including through retained Canon ancestry.
+3. Freeze archived inputs permanently; record initial active-copy checksums
+   separately. Actual official Workflow04 prompt export appends its log without
+   changing the Plot request or role identity. Canon changes still change the
+   actual Plot role identity. Arc changes and archived-input edits still reject.
+4. Compare every original work-order field in normalized drafts, then compare
+   mapped contract requirements, locale/config, exact source blob/sections and
+   adapter choices with the selected archive. Unauthorized POV, capacity, entry,
+   knowledge, language and anchor edits reject before contract output. Ordinary
+   surrounding-text trimming follows the existing builder; original bytes stay
+   archived unchanged.
+
+Final affected retest `atom03_controller_returns_retest_v3` ran all eleven new
+input-pack tests plus the two existing actual Workflow01/02 registry/retained
+source tests: exit **0**, **13 passed, 16 subtests passed**, 45.27 seconds.
+The earlier three-project eleven-stage and legacy regressions remain applicable
+outside these localized input/classification changes; no executor, role prompt,
+stage identity or recovery gate implementation changed.
+
+| Latest record | SHA256 |
+|---|---|
+| `atom03_controller_returns_retest_v3.raw.txt` | `ebb1864f1fbe3cff46e70e9ebfd713e266633a1f0e30da1c09607e2263e13fe4` |
+| `atom03_controller_returns_retest_v3.check.json` | `e4f81e22e9adc7010f0013bab67ff78a82d7b54df5521edeef9a009056ef15bc` |
+| `atom03_controller_returns_retest_v3.pack_requests.json` | `269ec1c22c8b7adf1fcbfb59ce69ab6da70958a19a8dbf898c32d93102134a87` |
+| `python311_controller_returns_final.raw.txt` | `c282c808e22bb5034a8a33b8af53f0682aea1b4eee91b75a4d7993cee2512251` |
+
+The final eleven package tests also ran on Python 3.11.15: exit **0**, **11 tests
+OK**, 33.221 seconds, including direct CLI and Workflow01 negatives.
+
+`tools/cnw_import_workflow.py` final worktree SHA256 is
+`1a3fdb11bec6e75710fe3404a10050ba90d885490500179ce1810e703bbeb72c`.
+The wrapper's four-file SHA table does not include this fifth production file;
+its unchanged one-line namespace correction is separately identified here.
+
+Both unsuccessful new-guard retests remain in the sidecar: v1 exit 1 (8 failed,
+7 passed, 14 subtests) exposed the builder's established surrounding-text trim
+and an invalid negative response with no recognized source; v2 exit 1 (1 failed,
+12 passed, 16 subtests) used the wrong newly written Canon oracle. The existing
+V2 preparation freeze does not include sourced-work Canon; Canon is a real Plot
+message dependency checked by `stage_identity` and recovery. The new test now
+checks that actual identity, without changing production gates. The independent
+Controller read this code and accepted this oracle correction as appropriate;
+it did not sign a future candidate. These tests claim actual role-identity
+change, not an unperformed demonstration of old Plot artifact invalidation.
+
+Protected originals were rechecked after the corrections and retain the SHA
+values above. Full package-to-story, 4700 capacity and Live remain unaccepted.

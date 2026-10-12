@@ -150,12 +150,12 @@ def _scene_anchor(raw: bytes, name: str) -> dict:
         titles = [line.decode("utf-8-sig").strip() for line in lines]
     except UnicodeError as exc:
         raise ContractError("IMPORT_ENCODING_INVALID", "source scene must be UTF-8") from exc
-    pattern = re.compile(r"^##\s+" + re.escape(name) + r"(?:\b|｜|\s|$)")
+    pattern = re.compile(r"^##\s+" + re.escape(name) + r"(?:[|｜\s]|$)")
     found = [i for i, title in enumerate(titles) if pattern.search(title)]
     if len(found) != 1:
         raise ContractError("SOURCE_ANCHOR_AMBIGUOUS", "named source scene is absent or repeated")
     start = found[0]
-    end = next((i for i in range(start + 1, len(lines)) if titles[i].startswith("## ")), len(lines))
+    end = next((i for i in range(start + 1, len(lines)) if re.match(r"^##\s+", titles[i])), len(lines))
     while end > start + 1 and not titles[end - 1]:
         end -= 1
     if end == start + 1:
@@ -261,7 +261,7 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
             with target.open("xb") as out:
                 out.write(raw)
             records[f"{snapshot}/{name}"] = _sha(raw)
-        active = []
+        active, initial_active_sha256 = [], {}
         for name, raw in seed.items():
             if not _active_seed(name):
                 continue
@@ -269,13 +269,19 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open("xb") as out:
                 out.write(raw)
-            records[name] = _sha(raw)
+            # Active project files remain editable by official workflows.
+            # Their initial transfer is recorded; the archived input bytes
+            # stay immutable and actual role/run dependencies freeze separately.
+            initial_active_sha256[name] = _sha(raw)
             active.append(name)
         index = {"schema_version": "cnw_input_pack_binding_v1", "pack_sha256": pack["pack_sha256"],
                  "project_instance_id": identity["project_instance_id"], "scene_root": scene_root,
                  "original_project_id": order["project_id"], "project_id": identity["project_id"],
                  "files": records, "original_work_order": f"{snapshot}/{draft_name}",
                  "active_materials": sorted(active), "input_review_status": "UNTRUSTED_INPUT_DECLARATIONS",
+                 "initial_active_sha256": initial_active_sha256,
+                 "adapter_choices": {"fifth_lens": {k: fifth_lens[k].strip() for k in ("id", "responsibility")},
+                                     "integrations": {"nk": "DISABLED", "critics": "DISABLED"}},
                  "field_consumption_status": "PENDING_ROLE_CONSUMPTION_VALIDATION"}
         index_name = f"{snapshot}/binding.json"
         (root / index_name).write_bytes(_bytes(index))
@@ -309,7 +315,7 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
             "inactive_seed_files": sorted(set(seed) - set(active))}
 
 
-def validate_input_pack_binding(project_root: Path, binding: dict) -> None:
+def validate_input_pack_binding(project_root: Path, binding: dict, *, contract: dict | None = None) -> dict:
     if not isinstance(binding, dict) or binding.get("schema_version") != "cnw_input_pack_binding_v1":
         raise ContractError("INPUT_PACK_BINDING_INVALID", "unsupported binding schema")
     pack_sha = binding.get("pack_sha256")
@@ -333,3 +339,48 @@ def validate_input_pack_binding(project_root: Path, binding: dict) -> None:
             raise ContractError("INPUT_PACK_BINDING_INVALID", "material records require paths and byte hashes")
         if _sha(_safe_source_file(project_root, name).read_bytes()) != expected:
             raise ContractError("INPUT_PACK_MATERIAL_CHANGED", "frozen work order or seed material changed")
+    if contract is not None:
+        _validate_mapped_requirements(project_root, index, contract)
+    return index
+
+
+def _original_order(project_root: Path, index: dict) -> dict:
+    return _json(_safe_source_file(project_root, index["original_work_order"]).read_bytes())
+
+
+def validate_input_pack_draft(project_root: Path, draft: dict) -> None:
+    index = validate_input_pack_binding(project_root, draft["input_pack"])
+    original = _original_order(project_root, index)
+    if any(draft.get(key) != value for key, value in original.items()):
+        raise ContractError("INPUT_PACK_REQUIREMENT_MISMATCH", "normalized draft changed an original requirement without an authorization diff")
+
+
+def _validate_mapped_requirements(root: Path, index: dict, contract: dict) -> None:
+    original = _original_order(root, index)
+    unit, story = contract.get("unit", {}), contract.get("story", {})
+    def require(actual, expected):
+        if actual != expected:
+            raise ContractError("INPUT_PACK_REQUIREMENT_MISMATCH", "contract no longer represents the selected input task")
+    require(contract.get("work_intent"), "INSERT_BETWEEN")
+    for key, field in (("id", "unit_id"), ("kind", "kind"), ("planning_mode", "planning_mode"), ("pov", "pov"),
+                       ("target_visible_chars", "target_visible_chars"), ("min_visible_chars", "min_visible_chars"),
+                       ("max_visible_chars", "max_visible_chars")):
+        expected = original.get(field)
+        require(unit.get(key), expected.strip() if key == "pov" and isinstance(expected, str) else expected)
+    for key in ("arc_ref", "entry_state", "exit_state", "role_in_story", "reader_reward", "required_beats",
+                "characters_in_scene", "character_knowledge_boundary_ref", "voice_sample_refs", "forbidden_future_revelations"):
+        expected = original.get(key)
+        require(story.get(key), expected.strip() if isinstance(expected, str) else expected)
+    prefix = f"_INBOX/input_packs/{index['pack_sha256']}/{index['scene_root']}/project_seed/"
+    locale = _locale(_safe_source_file(root, prefix + "config/project.yml").read_bytes(), original)
+    require(unit.get("language_locale"), locale)
+    require(unit.get("language"), locale)
+    require(story.get("chapter_context"), _safe_source_file(root, prefix + original["source_context_file"]).read_bytes().decode("utf-8-sig").strip())
+    require(story.get("arc_sha256"), _sha(_safe_source_file(root, prefix + original["arc_ref"]).read_bytes()))
+    for key in ("id", "responsibility"):
+        require(contract.get("review", {}).get("fifth_lens", {}).get(key), index["adapter_choices"]["fifth_lens"][key])
+    require(contract.get("integrations"), index["adapter_choices"]["integrations"])
+    source = _safe_source_file(root, story.get("source_file", "")).read_bytes()
+    require(hashlib.sha1(b"blob " + str(len(source)).encode("ascii") + b"\0" + source).hexdigest(), original["original_authority"]["blob_sha1"])
+    for kind in ("before", "after"):
+        require(story.get(kind + "_anchor"), _scene_anchor(source, original["original_authority"][kind + "_scene"]))

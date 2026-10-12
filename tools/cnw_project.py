@@ -455,6 +455,12 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
         raise ContractError("CONTRACT_DRAFT_INVALID", "work-unit draft root must be an object")
     root = Path(project_root).resolve(strict=True)
     identity = registered_identity or _registered_project_identity(root)
+    if "input_pack" in draft:
+        try:
+            from .cnw_input_pack import validate_input_pack_draft
+        except ImportError:
+            from cnw_input_pack import validate_input_pack_draft
+        validate_input_pack_draft(root, draft)
     instance_id = identity["project_instance_id"]
     unit_id = draft.get("unit_id")
     if not isinstance(unit_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{1,95}", unit_id):

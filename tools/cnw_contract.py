@@ -217,7 +217,7 @@ def validate_v2_source_identity(contract: dict[str, Any], *, source_root: str | 
             from .cnw_input_pack import validate_input_pack_binding
         except ImportError:
             from cnw_input_pack import validate_input_pack_binding
-        validate_input_pack_binding(root, contract["input_pack"])
+        validate_input_pack_binding(root, contract["input_pack"], contract=contract)
     story = contract["story"]
     if intent != "ORIGINAL_EPISODE" and ("arc_ref" in story or "arc_sha256" in story):
         arc_ref, arc_sha = story.get("arc_ref"), story.get("arc_sha256")

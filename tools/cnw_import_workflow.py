@@ -38,7 +38,7 @@ FACT_SOURCE_KINDS = {"original", "confirmed_canon"}
 
 def _internal_inbox_metadata(name: str) -> bool:
     """Source registries and frozen identity snapshots are not manuscripts."""
-    return name in {"_INBOX/source_manifest.json", "_INBOX/source_index.json"} or name.startswith("_INBOX/revisions/")
+    return name in {"_INBOX/source_manifest.json", "_INBOX/source_index.json"} or name.startswith(("_INBOX/revisions/", "_INBOX/input_packs/"))
 
 
 def _confirmed_canon_sources(previous: dict, existing: dict[str, str]) -> dict[str, dict]:

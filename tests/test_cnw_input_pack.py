@@ -11,12 +11,14 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from tools.cnw_contract import ContractError, validate_v2_source_identity
 from tools.cnw_input_pack import METHOD_PIN, _scene_anchor, prepare_scene_input, read_input_pack
-from tools.cnw_project import write_contract_draft
-from tools.cnw_runner import build_plot_request
+from tools.cnw_project import write_contract_draft, support_workflow_prompt
+from tools.cnw_runner import build_plot_request, produce, load_state, validate_literary_source_freeze
+from tools.cnw_recovery import stage_identity
 from tools.project_paths import create_project, setup_data_home
 
 
@@ -66,6 +68,7 @@ class InputPackTests(unittest.TestCase):
             self.files[scene + "/work_order.draft.json"] = encoded(order)
             config = f"project_id: OLD-{label}\nlanguage: en-US\nwork_unit: TRIAL-{label}\nunit_kind: scene\nplanning_mode: author_plot\npov: Mira\ntarget_visible_chars: 90\nmin_visible_chars: 60\nmax_visible_chars: 120\nmethod_pin: {METHOD_PIN}\nsource_pin: {self.commit}\n"
             seed = {
+                "00_meta/ai_work_log.md": b"Initial input preparation, no generated prose.\n",
                 "config/project.yml": config.encode(), "scene_packet.json": encoded({"standalone_trial": True, "available_time": f"TIME-{label}"}),
                 "workpack.json": encoded({"schema": "cnw_story_prep_v1", "project_id": f"OLD-{label}", "upstream_commit": METHOD_PIN}),
                 "04_chapter_design/arc_01.md": b"UNSELECTED-ARC-CANARY\n",
@@ -162,6 +165,11 @@ class InputPackTests(unittest.TestCase):
             _scene_anchor(b"## SAME\nA\n## SAME\nB\n", "SAME")
         with self.assertRaisesRegex(ContractError, "SOURCE_ANCHOR_EMPTY"):
             _scene_anchor(b"## EMPTY\n\n## NEXT\nB\n", "EMPTY")
+        with self.assertRaisesRegex(ContractError, "SOURCE_ANCHOR_AMBIGUOUS"):
+            _scene_anchor(b"## SLOT-1-extra\nDifferent scene.\n", "SLOT-1")
+        exact = _scene_anchor(b"## SLOT-1\nA\n##\tSLOT-1-extra\nB\n", "SLOT-1")
+        self.assertEqual((exact["source_line"], exact["source_line_end"]), (1, 2))
+        self.assertEqual(exact["sha256"], sha(b"## SLOT-1\nA\n"))
 
     def test_adapted_draft_uses_existing_direct_contract_cli(self):
         root = self.project()
@@ -204,7 +212,7 @@ class InputPackTests(unittest.TestCase):
         arc = root / "04_chapter_design/arc_02.md"
         original_arc = arc.read_bytes()
         arc.write_bytes(b"Tampered arc")
-        with self.assertRaisesRegex(ContractError, "INPUT_PACK_MATERIAL_CHANGED"):
+        with self.assertRaisesRegex(ContractError, "PROJECT_CONTEXT_IDENTITY_MISMATCH"):
             build_plot_request(root, contract)
         arc.write_bytes(original_arc)
         index = json.loads((root / contract["input_pack"]["index_file"]).read_text(encoding="utf-8"))
@@ -222,8 +230,95 @@ class InputPackTests(unittest.TestCase):
         before = contract["story"]["before_anchor"]
         before["source_line_end"] = contract["story"]["after_anchor"]["source_line"]
         before["sha256"] = sha(b"".join(lines[before["source_line"]-1:before["source_line_end"]]))
-        with self.assertRaisesRegex(ContractError, "SOURCE_ANCHOR_INVALID"):
+        with self.assertRaisesRegex(ContractError, "INPUT_PACK_REQUIREMENT_MISMATCH"):
             validate_v2_source_identity(contract, source_root=root)
+        # Generic V2 source validation also rejects the overlap independently
+        # of the additional legacy-package requirement binding.
+        unbound = copy.deepcopy(contract)
+        unbound.pop("input_pack")
+        with self.assertRaisesRegex(ContractError, "SOURCE_ANCHOR_INVALID"):
+            validate_v2_source_identity(unbound, source_root=root)
+
+    def test_normalized_and_final_requirements_cannot_drift_from_the_package(self):
+        root = self.project()
+        report = self.prepare(root)
+        draft_file = Path(report["draft"])
+        original = json.loads(draft_file.read_text(encoding="utf-8"))
+        for field, changed in (("pov", "SomeoneElse"), ("max_visible_chars", 121), ("entry_state", "Different entry"),
+                               ("knowledge_snapshot", {"Mira": {"known": ["PRIVATE-SECRET"]}}),
+                               ("language_locale", "zh-CN"), ("before_line", 2)):
+            with self.subTest(field=field):
+                altered = copy.deepcopy(original); altered[field] = changed
+                draft_file.write_bytes(encoded(altered))
+                with self.assertRaisesRegex(ContractError, "INPUT_PACK_REQUIREMENT_MISMATCH"):
+                    write_contract_draft(root, draft_file)
+                self.assertFalse((root / "contracts/TRIAL-A.json").exists())
+        draft_file.write_bytes(encoded(original))
+        result = write_contract_draft(root, draft_file)
+        contract = json.loads(Path(result["contract"]).read_text(encoding="utf-8"))
+        altered = copy.deepcopy(contract)
+        altered["unit"]["pov"] = "SomeoneElse"
+        with self.assertRaisesRegex(ContractError, "INPUT_PACK_REQUIREMENT_MISMATCH"):
+            build_plot_request(root, altered)
+
+    def test_official_log_append_is_allowed_and_canon_role_identity_still_changes(self):
+        root = self.project()
+        report = self.prepare(root)
+        result = write_contract_draft(root, report["draft"])
+        contract = json.loads(Path(result["contract"]).read_text(encoding="utf-8"))
+        before = build_plot_request(root, contract)
+        log_before = (root / "00_meta/ai_work_log.md").read_bytes()
+        exported = support_workflow_prompt(root, "04")
+        self.assertEqual(exported["provider_call"], "none")
+        self.assertNotEqual(log_before, (root / "00_meta/ai_work_log.md").read_bytes())
+        validate_v2_source_identity(contract, source_root=root)
+        self.assertEqual(before, build_plot_request(root, contract))
+        created = produce(SimpleNamespace(mode="offline", unit="scene", run_id="PACK-DEPENDENCY",
+            work_id=contract["unit"]["id"], contract=result["contract"], project_root=str(root), create_only=True))
+        state = load_state(Path(created["path"]))
+        validate_literary_source_freeze(state, root)
+        plot_before = stage_identity(Path(created["path"]), "plot", project_root=root)
+        support_workflow_prompt(root, "04")
+        self.assertEqual(plot_before, stage_identity(Path(created["path"]), "plot", project_root=root))
+        (root / "90_canon/canon.md").write_bytes(b"Changed story fact, requires fresh identity.\n")
+        # Canon is an actual Plot role dependency. Existing V2 preparation
+        # freeze covers preparation inputs; recovery additionally checks the
+        # real role-message identity before reusing any completed role.
+        self.assertNotEqual(plot_before, stage_identity(Path(created["path"]), "plot", project_root=root))
+
+    def test_archived_inputs_and_old_pass_cannot_be_reimported_as_confirmed_facts(self):
+        from tools import cnw_import_workflow as workflow
+        for kind in ("binding", "old_review"):
+            with self.subTest(kind=kind):
+                root = self.project(kind)
+                report = self.prepare(root)
+                draft = json.loads(Path(report["draft"]).read_text(encoding="utf-8"))
+                inventory = workflow._inventory(root)
+                self.assertEqual(len(inventory), 1)
+                self.assertTrue(all(name.startswith("_INBOX/originals/") for name in inventory))
+                index_file = draft["input_pack"]["index_file"]
+                prefix = index_file.removesuffix("binding.json")
+                ref = index_file if kind == "binding" else prefix + "scenes/A/project_seed/reviews/scene.json"
+                canon_before = (root / "90_canon/canon.md").read_bytes()
+                def transport(run, *, messages, **kwargs):
+                    payload = json.loads(messages[1]["content"])
+                    self.assertEqual(set(payload["original_sources"]), set(inventory))
+                    documents = {name: [] if name.startswith("90_canon/") else
+                                 [{"status": "INFERRED", "text": "A synthetic organization note.", "source_refs": list(inventory)}]
+                                 for name in workflow.DOCUMENTS}
+                    documents["90_canon/canon.md"] = [{"status": "CONFIRMED", "text": "ARCHIVE_ONLY_INVENTED_FACT",
+                                                       "source_refs": [ref, "author:templates/CLAUDE.md"]}]
+                    return json.dumps({"documents": documents, "source_notes": {n: "Actual original." for n in inventory},
+                                       "conflicts": [], "next_action": "Review sources."}), {"execution_mode": "MOCK_ONLY"}
+                with patch.object(workflow, "cnw_live_call", side_effect=transport):
+                    with self.assertRaisesRegex(ContractError, "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED"):
+                        workflow.run_import(root)
+                self.assertEqual(canon_before, (root / "90_canon/canon.md").read_bytes())
+                text = "ARCHIVE_ONLY_INVENTED_FACT"
+                previous = {"claims": {"OLD": {"status": "CONFIRMED", "document": "90_canon/canon.md",
+                    "text": text, "sources": {ref: sha((root / ref).read_bytes())}, "source_kinds": {ref: "original"}}}}
+                existing = {"90_canon/canon.md": text + "\n\nClassification: CONFIRMED\nSource: " + ref}
+                self.assertEqual(workflow._confirmed_canon_sources(previous, existing), {})
 
     def test_4700_preserved_and_normal_capacity_gate_remains(self):
         for label in ("A", "B", "C"):
