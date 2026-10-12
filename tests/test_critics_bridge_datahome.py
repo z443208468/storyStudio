@@ -73,7 +73,7 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
                 return 0
 
             with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "synthetic-offline-test-key"}), \
-                 patch.object(p2_cost_guard, "LEDGER", ledger), \
+                 patch.object(p2_06_critics_run.p2_cost_guard, "LEDGER", ledger), \
                  patch.object(p2_06_critics_run.critics_bridge, "main", side_effect=create_bridge_run):
                 result = p2_06_critics_run.main(["--action", "plan-critique", "--input", str(source),
                     "--run-dir", str(target), "--ledger-run-id", "SYNTHETIC-PARENT"])
@@ -81,6 +81,7 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
             self.assertEqual(result, 0)
             self.assertTrue(target.is_dir())
             self.assertTrue((target / "provider-calls.json").is_file())
+            self.assertEqual(json.loads(ledger.read_text(encoding="utf-8")), {"requests": []})
             self.assertFalse((Path(p2_06_critics_run.ROOT) / "runs" / target.name).exists())
 
 

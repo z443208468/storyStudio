@@ -25,6 +25,7 @@ class AdapterTests(unittest.TestCase):
     def setUp(self):
         workspace = ROOT / "workspace"
         workspace.mkdir(exist_ok=True)
+        (ROOT / "runs").mkdir(exist_ok=True)  # owned fixture parent, also in a clean clone
         self.temp = tempfile.TemporaryDirectory(prefix=".cnw-adapter-fixtures-", dir=workspace)
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name).resolve()

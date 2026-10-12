@@ -1,1 +1,5 @@
+# Reproducible source/config byte identities across Windows and Unix checkouts.
+* text=auto eol=lf
 config/policy_snapshots/objects/sha256/*.blob binary
+# This historical active configuration is frozen with its original CRLF bytes.
+config/production.example.json -text whitespace=cr-at-eol
