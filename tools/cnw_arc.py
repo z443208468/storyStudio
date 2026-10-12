@@ -28,13 +28,16 @@ def planned_arc_range(root: Path, arc_ref: str) -> dict:
     return {"status": "ARC_RANGE_RESOLVED", "arc_ref": arc_ref, "arc_id": path.stem, "episodes": ids}
 
 
-def arc_context(root: Path, arc_ref: str, *, last_episode=None, prior_gate="PASS") -> dict:
+def arc_context(root: Path, arc_ref: str, *, last_episode=None, prior_gate="PASS", candidate_drafts=None) -> dict:
     if prior_gate != "PASS":
         return {"status": "ARC_REVIEW_BLOCKED_BY_PRIOR_GATE", "prior_gate": prior_gate}
     context = planned_arc_range(root, arc_ref)
     if context["status"] != "ARC_RANGE_RESOLVED":
         return context
     ids = context["episodes"]
+    candidates = candidate_drafts or {}
+    if not isinstance(candidates, dict) or set(candidates) - set(ids):
+        raise ContractError("ARC_CANDIDATE_IDENTITY_INVALID", "candidate episodes must belong to the selected Arc")
     path = assert_output_within_root(root, arc_ref)
     if last_episode is not None and last_episode not in ids:
         raise ContractError("ARC_EPISODE_OUTSIDE_RANGE", last_episode)
@@ -42,6 +45,20 @@ def arc_context(root: Path, arc_ref: str, *, last_episode=None, prior_gate="PASS
         return {"status": "ARC_NOT_AT_END", "arc_ref": arc_ref, "last_episode": last_episode, "planned_end": ids[-1]}
     paths, missing = [], []
     for episode in ids:
+        if episode in candidates:
+            row = candidates[episode]
+            if not isinstance(row, dict) or not isinstance(row.get("path"), str) or not isinstance(row.get("sha256"), str):
+                raise ContractError("ARC_CANDIDATE_IDENTITY_INVALID", episode)
+            candidate = assert_output_within_root(root, row["path"])
+            parts = candidate.relative_to(root).parts
+            if (len(parts) != 4 or parts[0] != "sprints" or parts[2] != "candidates"
+                    or parts[3] != f"{episode}.md"):
+                raise ContractError("ARC_CANDIDATE_IDENTITY_INVALID", "select a named Sprint manuscript candidate")
+            import hashlib
+            if not candidate.is_file() or hashlib.sha256(candidate.read_bytes()).hexdigest() != row["sha256"]:
+                raise ContractError("ARC_CANDIDATE_HASH_MISMATCH", episode)
+            paths.append(candidate.relative_to(root).as_posix())
+            continue
         choices = [f"07_draft/episodes/{episode}.md", f"07_draft/{episode}.md"]
         actual = [name for name in choices if assert_output_within_root(root, name).is_file()]
         if len(actual) > 1:
@@ -59,16 +76,17 @@ def arc_context(root: Path, arc_ref: str, *, last_episode=None, prior_gate="PASS
         "details": details.relative_to(root).as_posix(), "episodes": ids, "draft_paths": paths}
 
 
-def review_arc(project_root, arc_ref, *, last_episode=None, prior_gate="PASS", handoff=True):
+def review_arc(project_root, arc_ref, *, last_episode=None, prior_gate="PASS", handoff=True, candidate_drafts=None):
     try:
         from .cnw_maintenance import run_maintenance
     except ImportError:
         from cnw_maintenance import run_maintenance
     root = Path(project_root).resolve(strict=True)
-    context = arc_context(root, arc_ref, last_episode=last_episode, prior_gate=prior_gate)
+    context = arc_context(root, arc_ref, last_episode=last_episode, prior_gate=prior_gate,
+                          candidate_drafts=candidate_drafts)
     if context["status"] != "ARC_READY_FOR_REVIEW":
         return {**context, "provider_call": "none", "next_arc_started": False}
-    result = run_maintenance(root, "arc_review", target=arc_ref)
+    result = run_maintenance(root, "arc_review", target=arc_ref, candidate_drafts=candidate_drafts)
     if handoff:
         result["handoff"] = run_maintenance(root, "handoff", pipeline=True)
     return {**result, "next_arc_started": False, "user_creative_accepted": False}

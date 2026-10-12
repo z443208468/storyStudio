@@ -20,7 +20,8 @@ from unittest.mock import patch
 
 from tools import cnw_export, cnw_recovery, cnw_runner
 from tools.cnw_contract import ContractError
-from tools.cnw_project import import_source, init_registered_project, standard_operation, write_contract_draft
+from tools.cnw_project import (canon_audit, handoff, import_source, init_registered_project,
+                              semantic_import, standard_operation, write_contract_draft)
 from tools.project_paths import create_project, setup_data_home
 
 
@@ -50,9 +51,80 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         self.transport_cache: dict[str, tuple[str, dict]] = {}
         self._counter = 0
         self._interrupt_once_for: str | None = None
+        self._interrupt_run_id: str | None = None
         self._interrupted: set[str] = set()
         self._recovery_observations: list[dict] = []
         self._guard_lock = threading.Lock()
+        self.addCleanup(patch.stopall)
+        patch.dict(os.environ, {"DEEPSEEK_API_KEY": ""}).start()
+
+        def denied(*args, **kwargs):
+            raise RuntimeError("ATOM09_NETWORK_OR_PROCESS_BLOCKED")
+
+        real_popen = subprocess.Popen
+        def guarded_popen(args, *pargs, **kwargs):
+            command = args[0] if isinstance(args, (tuple, list)) and args else args
+            if Path(str(command)).name.lower() in {"whoami", "whoami.exe", "icacls", "icacls.exe"}:
+                return real_popen(args, *pargs, **kwargs)
+            return denied()
+
+        patch.object(socket.socket, "connect", denied).start()
+        patch.object(socket.socket, "connect_ex", denied).start()
+        patch.object(socket, "create_connection", denied).start()
+        patch.object(subprocess, "Popen", guarded_popen).start()
+        patch.object(os, "system", denied).start()
+
+    def _workflow_response(self, run_dir: Path, messages: list[dict], content: str,
+                           *, stage: str, role_id: str) -> tuple[str, dict]:
+        """Simulate only a model reply; consumers persist their own real results."""
+        with self._guard_lock:
+            self._counter += 1
+            request_id = f"SIM-WORKFLOW-{self._counter:05d}"
+        request_raw = json.dumps({"messages": messages}, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        response_raw = json.dumps({"choices": [{"message": {"content": content}}]},
+                                  ensure_ascii=False, sort_keys=True).encode("utf-8")
+        files = {}
+        for kind, raw in (("request", request_raw), ("raw", response_raw)):
+            relative = f"artifacts/provider/{request_id}.{kind}.json"
+            path = run_dir / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+            files[kind] = relative
+        receipt = {"request_id": request_id, "provider_request_id": request_id,
+            "stage": stage, "role_id": role_id, "status": "SUCCEEDED", "mode": "MOCK_ONLY",
+            "simulation_status": "SIMULATED", "fixture_only": True,
+            "request_path": files["request"], "request_sha256": _sha(request_raw),
+            "input_sha256": _sha(json.dumps(messages, ensure_ascii=False, sort_keys=True,
+                                              separators=(",", ":")).encode("utf-8")),
+            "raw_response_path": files["raw"], "raw_response_sha256": _sha(response_raw),
+            "output_sha256": _sha(content.encode("utf-8"))}
+        with cnw_runner.locked_run(run_dir):
+            state = cnw_runner.load_state(run_dir)
+            state.setdefault("provider_requests", []).append(receipt)
+            cnw_runner.save_state(run_dir, state)
+        self.requests.append({"stage": stage, "role_id": role_id, "messages": messages,
+            "run_id": state["run_id"], "project_id": state.get("project_id"),
+            "receipt": receipt, "request_utf8": request_raw.decode("utf-8"),
+            "response_utf8": response_raw.decode("utf-8")})
+        return content, receipt
+
+    def _public_evidence(self, name: str, root: Path, outcomes: dict) -> None:
+        destination = os.environ.get("ATOM09_PUBLIC_EVIDENCE_OUTPUT")
+        if not destination:
+            return
+        path = Path(destination)
+        evidence = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {
+            "execution": "SIMULATED_OFFLINE_ONLY", "checks": {}}
+        files = []
+        for file in sorted(root.rglob("*")):
+            if file.is_file() and file.suffix in {".md", ".json"}:
+                raw = file.read_bytes()
+                files.append({"path": file.relative_to(root).as_posix(), "sha256": _sha(raw),
+                              "artifact_utf8": raw.decode("utf-8")})
+        evidence["checks"][name] = {"project_root": str(root), "outcomes": outcomes,
+                                     "actual_files": files}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     def _project(self, project_id: str, title: str, names: tuple[str, str], setting: str) -> Path:
         registered = create_project(project_id=project_id, display_name=title, data_home=self.data_home)
@@ -118,21 +190,21 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         write_contract_draft(root, path)
         return json.loads((root / "contracts" / f"{unit_id}.json").read_text(encoding="utf-8"))
 
-    def _sections(self, stage: str, first: str, second: str) -> str:
+    def _sections(self, stage: str, first: str, second: str, setting: str) -> str:
         from tools.cnw_roles import ROLE_REQUIRED_SECTIONS
         role_section = {"scene_cards": "cards", "writing_brief": "brief"}.get(stage, stage)
         blocks = []
         for heading in ROLE_REQUIRED_SECTIONS[role_section]:
             if heading == "## Key Scenes":
-                body = f"- S1 {first} asks {second} for a practical repair near the project setting."
+                body = f"- S1 {first} asks {second} for a practical repair near {setting}."
             elif heading == "## Required Story Beats":
                 body = f"- B01 {first} asks, accepts one practical offer, and chooses a next step."
             elif heading == "## Scene-by-Scene Instructions":
-                body = "One scene; 100–320 visible characters; preserve B01 and the project's Canon."
+                body = f"One scene at {setting}; 100–320 visible characters; preserve B01 and the project's Canon."
             elif heading == "## Voice References":
-                body = f"{first}: ask directly. {second}: answer briefly and practically."
+                body = f"- {first}: ask directly.\n- {second}: answer briefly and practically."
             else:
-                body = "Synthetic project-specific constraints; preserve the assigned point of view."
+                body = f"Synthetic project-specific constraints at {setting}; preserve the assigned point of view."
             if stage == "scene_cards" and "B01" not in body:
                 body = f"B01 — {first} makes the assigned choice visible.\n{body}"
             blocks.append(f"{heading}\n{body}")
@@ -154,8 +226,26 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         first, second = context["names"]
         setting = context["setting"]
         if stage in {"plot", "scene_cards", "writing_brief"}:
-            content = self._sections(stage, first, second)
+            payload = json.loads(messages[1]["content"])
+            if stage in {"scene_cards", "writing_brief"}:
+                self.assertIn(setting, payload["materials"]["06_plot/<work_id>_plot.md"])
+            if stage == "writing_brief":
+                self.assertIn(setting, payload["materials"]["05_scene_cards/<work_id>_scene_cards.md"])
+            content = self._sections(stage, first, second, setting)
+            if stage == "plot":
+                preparation = payload["support"]["production_preparation"]["documents"]
+                selected = preparation.get("selected_source_excerpt")
+                if selected:
+                    content += "\n\n## Selected source constraint\n" + selected
+            else:
+                upstream = payload["materials"]["06_plot/<work_id>_plot.md"]
+                if "## Selected source constraint\n" in upstream:
+                    content += "\n\n## Selected source constraint\n" + upstream.split("## Selected source constraint\n", 1)[1]
         elif stage == "prose":
+            payload = json.loads(messages[1]["content"])
+            self.assertIn(setting, payload["writing_brief"])
+            self.assertIn(first, payload["voice_samples"])
+            self.assertIn(second, payload["voice_samples"])
             content = (f"{first} found the small problem near {setting}. ‘Could you help me with this?’ "
                        f"{first} asked. {second} offered a practical tool, and they solved it together. "
                        f"Then {first} claimed {second} was a sibling, though Canon says they are neighbors.")
@@ -223,7 +313,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             "stage": stage, "role_id": role_id, "request_path": request_path,
             "request_sha256": receipt["request_sha256"], "input_sha256": receipt["input_sha256"],
             "messages": messages})
-        if stage == self._interrupt_once_for and stage not in self._interrupted:
+        if (stage == self._interrupt_once_for and stage not in self._interrupted
+                and self._interrupt_run_id in {None, state["run_id"]}):
             self._interrupted.add(stage)
             raise RuntimeError("SYNTHETIC_ATOM09_INTERRUPTION_AFTER_SIMULATED_RECEIPT")
         return content, receipt
@@ -285,7 +376,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                 self.assertEqual(current["run_id"], run_id)
                 self.assertEqual(current["contract_sha256"], start_state["contract_sha256"])
                 stage_rows.append({"stage": stage, "result": result, "path": record["artifact"]["path"],
-                    "sha256": _sha(raw), "execution_identity_sha256": record["execution_identity"]["sha256"],
+                    "sha256": _sha(raw), "artifact_utf8": raw.decode("utf-8"),
+                    "execution_identity_sha256": record["execution_identity"]["sha256"],
                     "input_identity": record.get("execution_input_identity", {})})
         state = cnw_runner.load_state(run_dir)
         self.assertEqual(list(state["stages"]), list(cnw_runner.CNW_STAGES))
@@ -346,12 +438,19 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         self.assertEqual(exported["status"], "EXPORT_READY")
         deliverables = Path(exported["deliverables"])
         exports = [{"path": item.relative_to(deliverables).as_posix(), "sha256": _sha(item.read_bytes()),
-                    "size": item.stat().st_size} for item in sorted(deliverables.rglob("*")) if item.is_file()]
+                    "size": item.stat().st_size, "artifact_utf8": item.read_bytes().decode("utf-8")}
+                   for item in sorted(deliverables.rglob("*")) if item.is_file()]
         self.assertTrue(exports)
         self.runs[run_id] = {"project_id": state["project_id"], "contract_sha256": state["contract_sha256"],
                              "run_dir": str(run_dir)}
         return {"root": root, "run_dir": run_dir, "state": state, "contract": contract,
             "stages": stage_rows, "export": exported, "exports": exports,
+            "contract_utf8": (run_dir / "artifacts/contract.json").read_bytes().decode("utf-8"),
+            "run_state_utf8": (run_dir / "run_state.json").read_bytes().decode("utf-8"),
+            "provider_files": [{"path": relative, "sha256": _sha((run_dir / relative).read_bytes()),
+                "artifact_utf8": (run_dir / relative).read_bytes().decode("utf-8")}
+                for relative in sorted({receipt[key] for receipt in state["provider_requests"]
+                    for key in ("request_path", "raw_response_path")})],
             "plot_messages": next(row["messages"] for row in self.requests
                 if row["run_id"] == run_id and row["stage"] == "plot"),
             "initial_prose_sha256": _sha(initial.encode("utf-8")), "refined_sha256": _sha(refined.encode("utf-8"))}
@@ -408,6 +507,24 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             self.assertNotIn("C_ONLY_CANARY", json.dumps(insert["plot_messages"], ensure_ascii=False))
             self.assertNotIn("A_ONLY_CANARY", json.dumps(adapt["plot_messages"], ensure_ascii=False))
             self.assertNotIn("C_ONLY_CANARY", json.dumps(adapt["plot_messages"], ensure_ascii=False))
+            insert_payload = json.loads(insert["plot_messages"][1]["content"])
+            insert_sources = insert_payload["support"]["production_preparation"]
+            insert_excerpt = json.loads(insert_sources["documents"]["selected_source_excerpt"])
+            self.assertEqual(insert_excerpt, {"before_anchor": "Before: Mira tests the public door.\n",
+                "after_anchor": "After: The harbor bell rings from the market.\n"})
+            self.assertEqual(insert_sources["source_hashes"]["selected_source_excerpt"],
+                _sha(insert_sources["documents"]["selected_source_excerpt"].encode("utf-8")))
+            adapt_payload = json.loads(adapt["plot_messages"][1]["content"])
+            adapt_sources = adapt_payload["support"]["production_preparation"]
+            self.assertEqual(adapt_sources["documents"]["selected_source_excerpt"],
+                "Selected: Mira asks the keeper to tighten the loose hinge.\n")
+            self.assertEqual(adapt_sources["source_hashes"]["selected_source_excerpt"],
+                harbor_adapt["story"]["source_selection"]["selected_sha256"])
+            brief_request = next(row for row in self.requests if row["run_id"] == "HARBOR-ADAPT-RUN"
+                                 and row["stage"] == "writing_brief")
+            brief_materials = json.loads(brief_request["messages"][1]["content"])["materials"]
+            self.assertIn("Selected: Mira asks the keeper to tighten the loose hinge.",
+                          brief_materials["06_plot/<work_id>_plot.md"])
             self.assertIn(harbor_b["source_revision_id"], harbor_insert["source"]["source_revision_id"])
             self.assertEqual(harbor_a["source_revision_id"], _sha(b"A_ONLY_CANARY: Mira keeps a private tide chart.\n"))
 
@@ -480,7 +597,9 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                 "contract_sha256": result["state"]["contract_sha256"],
                 "source_revision_id": result["contract"].get("source", {}).get("source_revision_id"),
                 "work_intent": result["contract"]["work_intent"],
-                "stages": result["stages"], "export": result["exports"]}
+                "stages": result["stages"], "export": result["exports"],
+                "contract_utf8": result["contract_utf8"], "run_state_utf8": result["run_state_utf8"],
+                "provider_files": result["provider_files"]}
                 for result in (insert, adapt, orchard_run, ep1, ep2)],
             "mock_provider_receipts": [{key: value for key, value in request.items()
                 if key not in {"messages", "request_path"}} for request in self.requests],
@@ -591,6 +710,332 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             destination = Path(evidence_path)
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def test_workflow01_then02_retain_originals_and_classify_conflicting_update(self):
+        from tools import cnw_import_workflow as workflow
+        root = self._project("TEST_IMPORT_CHAIN", "Synthetic Source Updates", ("Mira", "Keeper"), "harbor")
+        original = b"Mira owns a brass key. Keeper has a red lamp. They are neighbors.\n"
+        first_import = self._source_import(root, "source-v1.md", original)
+        manifest = json.loads((root / first_import["source_manifest"]).read_text(encoding="utf-8"))
+        old_source = next(row["stored_path"] for row in manifest["sources"]
+                          if row["source_revision_id"] == first_import["source_revision_id"])
+        observed = []
+
+        def initial_transport(run, *, stage, role_id, messages, **kwargs):
+            self.assertEqual(stage, "project_import")
+            payload = json.loads(messages[1]["content"])
+            self.assertEqual(payload["original_sources"][old_source]["text"], original.decode("utf-8"))
+            rows = {name: [{"status": "INFERRED", "text": "A practical choice tests neighborly trust.",
+                            "source_refs": [old_source]}] for name in workflow.DOCUMENTS}
+            rows["90_canon/canon.md"] = [{"status": "CONFIRMED", "text": "Mira owns a brass key.",
+                                           "source_refs": [old_source]}]
+            rows["90_canon/character_bible.md"] = [{"status": "CONFIRMED", "text": "Mira and Keeper are neighbors.",
+                                                     "source_refs": [old_source]}]
+            value = {"documents": rows, "source_notes": {name: "Source bytes or provenance metadata."
+                    for name in payload["original_sources"]}, "conflicts": [],
+                    "next_action": "Review the source-backed project inputs."}
+            observed.append(payload)
+            return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
+
+        with patch.object(workflow, "cnw_live_call", side_effect=initial_transport):
+            initial_result = semantic_import(root)
+        original_canon = (root / "90_canon/canon.md").read_bytes()
+        initial_state = json.loads((root / workflow.STATE).read_text(encoding="utf-8"))
+        second_import = self._source_import(root, "source-v2.md",
+            b"Mira owns a silver key. Keeper now has a blue lamp.\n")
+        next_manifest = json.loads((root / second_import["source_manifest"]).read_text(encoding="utf-8"))
+        new_source = next(row["stored_path"] for row in next_manifest["sources"]
+                          if row["source_revision_id"] == second_import["source_revision_id"])
+
+        def update_transport(run, *, stage, role_id, messages, **kwargs):
+            self.assertEqual(stage, "project_update")
+            payload = json.loads(messages[1]["content"])
+            self.assertIn(new_source, payload["original_sources"])
+            self.assertNotIn(old_source, payload["original_sources"])
+            self.assertIn("Mira owns a brass key.", payload["existing_documents"]["90_canon/canon.md"])
+            value = {"documents": {
+                "90_canon/canon.md": [
+                    {"status": "CONFIRMED", "text": "Keeper now has a blue lamp.", "source_refs": [new_source]},
+                    {"status": "CONFIRMED", "text": "Mira owns a silver key.", "source_refs": [new_source]}],
+                "03_project_design/update_observations.md": [
+                    {"status": "INFERRED", "text": "The changed lamp may affect a later practical choice.", "source_refs": [new_source]},
+                    {"status": "TODO_CONFIRM", "text": "Ask which key description should be authoritative.", "source_refs": [new_source]}]},
+                "source_notes": {name: "New source version or provenance metadata."
+                                 for name in payload["original_sources"]},
+                "conflicts": [{"old_file": "90_canon/canon.md", "old_quote": "Mira owns a brass key.",
+                    "new_file": "90_canon/canon.md", "new_entry": 1,
+                    "reason": "The new source gives a different key material; retain both for author decision."}],
+                "next_action": "Ask the author to resolve the key descriptions."}
+            observed.append(payload)
+            return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
+
+        with patch.object(workflow, "cnw_live_call", side_effect=update_transport):
+            update_result = semantic_import(root, incremental=True)
+        current_canon = (root / "90_canon/canon.md").read_bytes()
+        self.assertTrue(current_canon.startswith(original_canon))
+        self.assertIn(b"Keeper now has a blue lamp.", current_canon)
+        self.assertNotIn(b"Mira owns a silver key.", current_canon)
+        questions = (root / "90_canon/unresolved_questions.md").read_text(encoding="utf-8")
+        self.assertIn("Mira owns a silver key.", questions)
+        self.assertIn("TODO_CONFIRM", questions)
+        current_state = json.loads((root / workflow.STATE).read_text(encoding="utf-8"))
+        for ident, claim in initial_state["claims"].items():
+            self.assertEqual(current_state["claims"][ident], claim)
+        self.assertEqual((root / old_source).read_bytes(), original)
+        self.assertEqual(_sha((root / old_source).read_bytes()), first_import["source_revision_id"])
+        self.assertIn("INFERRED", (root / "03_project_design/update_observations.md").read_text(encoding="utf-8"))
+        self.assertEqual(len(observed), 2)
+        self._public_evidence("workflow01_then02", root, {"initial_result": initial_result,
+            "update_result": update_result, "old_source_sha256": _sha(original),
+            "old_canon_prefix_retained": True, "retained_claims": list(initial_state["claims"]),
+            "conflict_withheld_from_canon": True, "real_provider_calls": 0})
+
+    def test_canon_audit_handoff_then_revision_plan_consume_actual_outputs(self):
+        from tools import cnw_maintenance as maintenance
+        root = self._project("TEST_AUDIT_HANDOFF", "Synthetic Audit Handoff", ("Sana", "Keeper"), "coast")
+        contract = self._contract(root, "AUDIT-EP001", "ORIGINAL_EPISODE", names=("Sana", "Keeper"),
+                                  setting="coast", kind="episode", first_episode=True)
+        chain = self._run_chain(root, contract, "AUDIT-EP001-RUN")
+        unapproved_prose = cnw_runner._read_stage_text(chain["run_dir"], chain["state"], "prose")
+        draft = _write(root, "07_draft/episodes/ep001.md", unapproved_prose)
+        _write(root, "07_draft/manuscript_index.md", "ep001 is an unapproved simulated candidate, not published.")
+        canon_before = (root / "90_canon/canon.md").read_bytes()
+        requests = []
+
+        def maintenance_transport(run, *, stage, role_id, messages, **kwargs):
+            payload = json.loads(messages[1]["content"])
+            sources = payload["project_sources"]
+            requests.append({"stage": stage, "sources": sources})
+            if stage == "project_audit":
+                self.assertEqual(sources["07_draft/episodes/ep001.md"]["sha256"], _sha(draft.read_bytes()))
+                self.assertIn("was a sibling", sources["07_draft/episodes/ep001.md"]["text"])
+                value = {"report_markdown": "# Canon Audit\nHARD CONFLICT: ep001 invents a sibling relationship; Canon says neighbors. Ask the author; do not change Canon.",
+                    "action_items": ["Resolve the candidate sibling claim against the source-backed neighbor relationship."]}
+            elif stage == "project_handoff":
+                audit = root / "08_review/continuity_audit.md"
+                self.assertEqual(sources["08_review/continuity_audit.md"]["sha256"], _sha(audit.read_bytes()))
+                self.assertIn("HARD CONFLICT", sources["08_review/continuity_audit.md"]["text"])
+                value = {"brief_markdown": "\n\n".join("## " + section +
+                    "\nThe unapproved ep001 candidate conflicts with Canon; review the actual audit and preserve the neighbor relationship."
+                    for section in (*maintenance.HANDOFF_SECTIONS, "Pipeline Context Pack"))}
+            elif stage == "project_revision_plan":
+                brief = root / "93_exports/handoff_brief.md"
+                self.assertEqual(sources["93_exports/handoff_brief.md"]["sha256"], _sha(brief.read_bytes()))
+                self.assertIn("unapproved ep001", sources["93_exports/handoff_brief.md"]["text"])
+                value = {"documents": {"09_revision/revision_plan.md": "# Revision Plan\n## P0\nNone.\n## P1\nResolve the ep001 relationship conflict using the audit and handoff; keep Canon unchanged.\n## P2\nNone.\n## P3\nNone.\n"},
+                    "report_markdown": "# Workflow 03\nConsumed the actual audit, handoff, candidate, and Canon.",
+                    "assumptions": [], "unresolved_questions": ["The author has not approved a revision."],
+                    "next_action": "Author reviews the plan; no manuscript or Canon change is approved."}
+            else:
+                raise AssertionError(stage)
+            return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
+
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=maintenance_transport):
+            audit_result = canon_audit(root)
+            handoff_result = handoff(root, pipeline=True)
+            plan_result = standard_operation(root, "revision_plan", sources=("93_exports/handoff_brief.md",))
+        self.assertEqual((root / "90_canon/canon.md").read_bytes(), canon_before)
+        self.assertEqual(draft.read_text(encoding="utf-8"), unapproved_prose)
+        self.assertEqual([row["stage"] for row in requests],
+                         ["project_audit", "project_handoff", "project_revision_plan"])
+        self.assertFalse(plan_result["revision_approved"])
+        self.assertTrue((root / "09_revision/revision_plan.md").stat().st_size)
+        self._public_evidence("canon_audit_handoff_revision_plan", root, {"audit": audit_result,
+            "handoff": handoff_result, "revision_plan": plan_result, "canon_sha256_preserved": _sha(canon_before),
+            "draft_sha256_preserved": _sha(draft.read_bytes()), "real_provider_calls": 0})
+
+    def test_five_original_episodes_run_real_sprint_with_resume_batch_gate_arc_and_handoff(self):
+        from tools import cnw_sprint_live as sprint
+        from tools import cnw_maintenance as maintenance
+        root = self._project("TEST_FIVE_ORIGINAL", "Synthetic Five-Episode Sprint", ("Sana", "Keeper"), "coast")
+        _write(root, "04_chapter_design/arc_01.md", "# Arc 01\n## Range\nep001 – ep005\n## Purpose\nFive practical requests across a fictional coast.\n")
+        _write(root, "00_meta/manuscript_review_rubric.md", "Review concrete choices, neighborly continuity and the next request. Canon conflicts require revision.")
+        _write(root, "00_meta/episode_production_manual.md", "Use the fixed eleven CNW stages; candidates require user review before promotion.")
+        self._contract(root, "ep001", "ORIGINAL_EPISODE", names=("Sana", "Keeper"),
+                       setting="coast pier 1", kind="episode", first_episode=True)
+        seed = json.loads((root / "contracts/ep001.draft.json").read_text(encoding="utf-8"))
+        episodes = []
+        sprint_id = "FIVE-ORIGINAL"
+        for index in range(1, 6):
+            ident = f"ep{index:03d}"
+            draft = dict(seed, unit_id=ident, first_episode=index == 1,
+                         chapter_context=f"A distinct practical choice at coast pier {index}.")
+            draft_path = _write(root, f"contracts/{ident}.draft.json", json.dumps(draft))
+            row = {"episode_id": ident, "contract_draft": draft_path.relative_to(root).as_posix()}
+            if index > 1:
+                row["previous_episode_id"] = f"ep{index-1:03d}"
+            episodes.append(row)
+            self.run_context[f"{sprint_id}-ep{index:02d}"] = dict(self.projects["TEST_FIVE_ORIGINAL"],
+                                                                  setting=f"coast pier {index}")
+        plan_path = _write(root, "sprint_plan.json", json.dumps({"episodes": episodes}))
+        canon_before = (root / "90_canon/canon.md").read_bytes()
+        response_cache = {}
+        gate_case = "pass"
+
+        def transport(run, *, stage, role_id, messages, output_cap, extra=None):
+            if stage in cnw_runner.CNW_STAGES:
+                if run.name.startswith("SHORT-SPRINT-") and stage == "prose":
+                    return self._workflow_response(run, messages, "Short.", stage=stage, role_id=role_id)
+                if run.name == f"{sprint_id}-ep05" and stage in {"prose", "multi_lens_review", "completeness_critic"}:
+                    if stage == "prose":
+                        self.assertIn("coast pier 5", json.loads(messages[1]["content"])["writing_brief"])
+                        value = "Sana found the small problem at coast pier 5. She asked Keeper for a practical tool. The two neighbors solved it together, and Sana asked where to return the tool."
+                    elif stage == "multi_lens_review":
+                        value = json.dumps({"lens_id": role_id, "findings": []})
+                    else:
+                        value = '{"candidate_findings":[]}'
+                    return self._workflow_response(run, messages, value, stage=stage, role_id=role_id)
+                return self._transport(run, stage=stage, role_id=role_id, messages=messages,
+                                       output_cap=output_cap, extra=extra)
+            key = _sha(json.dumps([str(run), stage, role_id, messages, extra, gate_case], sort_keys=True).encode())
+            if key in response_cache:
+                content, receipt = response_cache[key]
+                self.assertEqual(cnw_runner._receipt_content(run, receipt), content)
+                return content, receipt
+            if role_id == "batch_review":
+                payload = json.loads(messages[1]["content"])
+                self.assertEqual([row["episode_id"] for row in payload["episodes"]], [row["episode_id"] for row in episodes])
+                self.assertEqual(payload["criteria"], {"size": 5, "min_score": 75, "max_p0_findings": 0, "max_p1_findings": 2})
+                for row in payload["episodes"]:
+                    self.assertEqual(row["sha256"], _sha(row["prose"].encode()))
+                first = payload["episodes"][0]
+                severity = "P0" if gate_case == "p0" else "P1"
+                count = 3 if gate_case == "p1_count" else 1
+                value = {"episode_scores": [{"episode_id": row["episode_id"], "score": 74 if gate_case == "score" else 80}
+                                            for row in episodes],
+                    "lens_scores": [{"lens_id": lens, "score": 80} for lens in cnw_runner.LENS_IDS],
+                    "findings": [{"finding_id": f"BATCH-{number}", "severity": severity,
+                        "episode_id": "ep001", "evidence": first["prose"][:45],
+                        "issue": "Recheck the continuity of a practical request.", "recommendation": "Review the next request."}
+                        for number in range(count)], "arc_advance_ready": True,
+                    "completeness_notes": "No missing cross-chapter outcome.", "carry_forward": ["Review the practical request."],
+                    "project_rubric_status": "revise" if gate_case == "canon" else "pass",
+                    "stop_reasons": ["A project Canon conflict requires an author decision."] if gate_case == "canon" else []}
+            elif role_id in cnw_runner.VERIFIER_IDS:
+                value = {"verifier_id": role_id, "votes": [{"finding_id": extra["finding_id"],
+                    "verdict": "refuted" if role_id == "continuity_plausibility" else "not_refuted"}]}
+            elif role_id == "batch_completeness":
+                value = {"candidate_findings": []}
+            elif role_id == "project_arc_review":
+                sources = json.loads(messages[1]["content"])["project_sources"]
+                candidate_paths = [name for name in sources if "/candidates/ep" in name]
+                self.assertEqual(len(candidate_paths), 5)
+                for name in candidate_paths:
+                    self.assertEqual(sources[name]["sha256"], _sha((root / name).read_bytes()))
+                value = {"status": "pass", "review_markdown": "\n\n".join("## " + section +
+                    "\nThe five actual candidates keep the protected neighbor relationship and contain distinct practical choices."
+                    for section in maintenance.ARC_SECTIONS) + "\nStatus: pass\n"}
+            elif role_id == "handoff":
+                payload = json.loads(messages[1]["content"])
+                self.assertIn("Review the practical request.", payload["batch_review"]["carry_forward"])
+                value = "\n\n".join("## " + section + "\nReview the practical request; all drafts are candidates and no next Sprint is started."
+                    for section in ("Project pitch", "Creative goal", "Protected core", "Draft state", "Canon warnings",
+                                    "Open questions", "Next best action", "File index", "Pipeline-Ready Context Pack"))
+            else:
+                raise AssertionError(f"unexpected Sprint model call {stage}/{role_id}")
+            content = value if isinstance(value, str) else json.dumps(value)
+            response_cache[key] = self._workflow_response(run, messages, content, stage=stage, role_id=role_id)
+            return response_cache[key]
+
+        self._interrupt_once_for = "scene_cards"
+        self._interrupt_run_id = f"{sprint_id}-ep03"
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=transport):
+            paused = sprint.run_generic_sprint(root, sprint_id, plan_path)
+            self.assertEqual(paused["status"], "EXECUTION_INCOMPLETE")
+            self.assertEqual(paused["completed_episodes"], 2, paused)
+            self.assertFalse((root / "runs" / f"{sprint_id}-ep04").exists())
+            earlier = {ident: (root / f"sprints/{sprint_id}/candidates/{ident}.md").read_bytes()
+                       for ident in ("ep001", "ep002")}
+            prior_requests = {run_id: len(cnw_runner.load_state(root / "runs" / run_id)["provider_requests"])
+                              for run_id in (f"{sprint_id}-ep01", f"{sprint_id}-ep02")}
+            completed = sprint.run_generic_sprint(root, sprint_id, plan_path)
+            self.assertEqual(completed["status"], "PASS")
+            self.assertEqual(completed["arc_review"]["status"], "ARC_REVIEW_RECORDED")
+            self.assertEqual(completed["provider_call"], "SIMULATED_ONLY")
+            self.assertFalse(completed["manuscript_promoted"])
+            request_count = len(self.requests)
+            repeated = sprint.run_generic_sprint(root, sprint_id, plan_path)
+            self.assertTrue(repeated["reused"])
+            self.assertEqual(repeated["provider_call"], "none")
+            self.assertEqual(len(self.requests), request_count)
+            saved_batch = root / f"sprints/{sprint_id}/batch_review.md"
+            batch_before = saved_batch.read_bytes()
+            saved_batch.write_bytes(batch_before + b"tampered")
+            with self.assertRaisesRegex(ContractError, "SPRINT_SNAPSHOT_CHANGED"):
+                sprint.run_generic_sprint(root, sprint_id, plan_path)
+            self.assertEqual(len(self.requests), request_count)
+            saved_batch.write_bytes(batch_before)
+            for ident, raw in earlier.items():
+                self.assertEqual((root / f"sprints/{sprint_id}/candidates/{ident}.md").read_bytes(), raw)
+            for run_id, count in prior_requests.items():
+                self.assertEqual(len(cnw_runner.load_state(root / "runs" / run_id)["provider_requests"]), count)
+
+            out = root / "sprints" / sprint_id
+            candidates = [json.loads((out / f"candidate_metadata/{row['episode_id']}.json").read_text(encoding="utf-8"))
+                          for row in episodes]
+            contracts = [(out / f"contracts/{row['episode_id']}.json",
+                          json.loads((out / f"contracts/{row['episode_id']}.json").read_text(encoding="utf-8")))
+                         for row in episodes]
+            for index, (path, contract) in enumerate(contracts, 1):
+                self.assertNotIn("source_file", contract["story"])
+                run = root / "runs" / f"{sprint_id}-ep{index:02d}"
+                state = cnw_runner.load_state(run)
+                self.assertEqual(sum(row["status"] == "STAGE_MATERIALIZED" for row in state["stages"].values()), 11)
+                self.assertTrue(candidates[index-1]["exports"])
+                if index > 1:
+                    previous = candidates[index-2]
+                    self.assertEqual(contract["story"]["previous_episode_sha256"], previous["sha256"])
+                    plot = next(row for row in self.requests if row.get("run_id") == f"{sprint_id}-ep{index:02d}"
+                                and row["stage"] == "plot")
+                    self.assertIn(previous["prose"], json.dumps(plot["messages"], ensure_ascii=False))
+                    lens = next(row for row in self.requests if row.get("run_id") == f"{sprint_id}-ep{index:02d}"
+                                and row["stage"] == "multi_lens_review" and row["role_id"] == "story_specific")
+                    self.assertIn("concrete next request", json.dumps(lens["messages"], ensure_ascii=False))
+                with self.assertRaises(ContractError):
+                    cnw_runner.verify_live(SimpleNamespace(run_id=run.name, project_root=str(root)))
+            gate_results = {}
+            for gate_case in ("score", "p0", "p1_count", "canon"):
+                gate_out = root / "sprints" / f"GATE-{gate_case}"
+                gate_out.mkdir(parents=True)
+                old_handoff = (root / "93_exports/handoff_brief.md").read_bytes()
+                cnw_runner.save_state(gate_out, {"run_id": gate_out.name, "mode": "offline", "provider_requests": [],
+                    "max_in_flight": 5, "handoff_previous_sha256": _sha(old_handoff)})
+                for candidate in candidates:
+                    sprint._write_once(gate_out, f"candidates/{candidate['episode_id']}.md", candidate["prose"])
+                rejected = sprint._review_candidates(root, gate_out, contracts, sprint._criteria(),
+                    sprint._context(root), candidates, publish=False)
+                self.assertEqual(rejected["status"], "REVISION_REQUIRED")
+                self.assertFalse(rejected["next_sprint_started"])
+                gate_results[gate_case] = rejected
+            self.run_context["SHORT-SPRINT-ep01"] = dict(self.projects["TEST_FIVE_ORIGINAL"], setting="coast pier 1")
+            short = sprint.run_generic_sprint(root, "SHORT-SPRINT", plan_path)
+            self.assertEqual(short["status"], "EXECUTION_INCOMPLETE")
+            self.assertEqual(short["failed_stage"], "prose")
+            self.assertEqual(short["failure_code"], "PROSE_UNDERPRODUCED")
+            self.assertFalse((root / "runs/SHORT-SPRINT-ep02").exists())
+            gate_results["underproduced_episode_pauses_before_next_run"] = short
+            from tools.cnw_arc import arc_context
+            with self.assertRaisesRegex(ContractError, "ARC_CANDIDATE_IDENTITY_INVALID"):
+                arc_context(root, "04_chapter_design/arc_01.md", candidate_drafts={"ep001": {
+                    "path": "90_canon/canon.md", "sha256": _sha(canon_before)}})
+            with self.assertRaisesRegex(ContractError, "ARC_CANDIDATE_HASH_MISMATCH"):
+                arc_context(root, "04_chapter_design/arc_01.md", candidate_drafts={"ep001": {
+                    "path": f"sprints/{sprint_id}/candidates/ep001.md", "sha256": "0" * 64}})
+        self.assertEqual((root / "90_canon/canon.md").read_bytes(), canon_before)
+        self.assertFalse(any((root / f"07_draft/episodes/{row['episode_id']}.md").exists() for row in episodes))
+        self._public_evidence("five_original_sprint", root, {"paused": paused, "completed": completed,
+            "negative_batch_gates": gate_results, "canon_sha256_preserved": _sha(canon_before),
+            "real_provider_calls": 0, "manuscripts_promoted": False})
+
+    def test_offline_transport_refuses_before_provider_or_ledger_access(self):
+        run = self.root / "offline-run"
+        run.mkdir()
+        cnw_runner.save_state(run, {"run_id": run.name, "mode": "offline", "provider_requests": []})
+        _write(run, "artifacts/contract.json", '{"schema_version":"cnw_work_unit_v2"}')
+        with patch.object(cnw_runner, "_p2_guard", side_effect=AssertionError("ledger accessed")) as guard:
+            with self.assertRaisesRegex(ContractError, "OFFLINE_PROVIDER_FORBIDDEN"):
+                cnw_runner.cnw_live_call(run, stage="plot", role_id="plot_agent", messages=[], output_cap=100)
+        guard.assert_not_called()
 
 
 if __name__ == "__main__":

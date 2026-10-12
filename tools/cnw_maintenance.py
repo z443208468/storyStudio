@@ -65,7 +65,7 @@ def _inventory(root, options):
             from .cnw_arc import arc_context
         except ImportError:
             from cnw_arc import arc_context
-        arc = arc_context(root, options["target"])
+        arc = arc_context(root, options["target"], candidate_drafts=options.get("candidate_drafts"))
         if arc["status"] != "ARC_READY_FOR_REVIEW":
             raise ContractError("ARC_NOT_READY", arc["status"])
         folders = ("01_theme", "02_logline", "03_project_design", "90_canon", "08_review")
@@ -99,9 +99,11 @@ def _inventory(root, options):
     for name in sorted(names):
         data = assert_output_within_root(root, name).read_bytes()
         text = data.decode("utf-8-sig")
+        candidate_paths = {row["path"] for row in options.get("candidate_drafts", {}).values()}
         inventory[name] = {"sha256": runner.sha(data), "text": text,
             "line_count": len(text.splitlines()),
-            "kind": _draft_kind(name) if name.startswith("07_draft/") else "project_context"}
+            "kind": "draft_prose" if name in candidate_paths else
+                    _draft_kind(name) if name.startswith("07_draft/") else "project_context"}
     return inventory
 
 
@@ -231,7 +233,8 @@ def _apply(root, run, journal):
     (run / "COMMITTED").write_text("Public maintenance transaction committed.\n", encoding="utf-8")
 
 
-def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False, sources=()):
+def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False,
+                    sources=(), candidate_drafts=None):
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
         try:
@@ -249,6 +252,10 @@ def run_maintenance(project_root, operation, *, scope="full", chapters=(), targe
         raise ContractError("AUDIT_TARGET_REQUIRED", "name the subsystem")
     options = {"operation": operation, "scope": scope, "chapters": sorted(set(chapters)),
                "target": target, "pipeline": bool(pipeline)}
+    if candidate_drafts is not None:
+        if operation != "arc_review":
+            raise ContractError("ARC_CANDIDATE_IDENTITY_INVALID", "candidate selection is only available to Arc review")
+        options["candidate_drafts"] = candidate_drafts
     if operation in operations.OPERATIONS:
         options["sources"] = operations.normalize_sources(root, operation, sources)
     try:

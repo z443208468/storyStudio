@@ -474,6 +474,12 @@ def _sanitize(value):
 
 
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
+    state = load_state(run_dir)
+    if state.get("mode") == "offline":
+        snapshot = run_dir / "artifacts/contract.json"
+        is_v2 = snapshot.is_file() and json.loads(snapshot.read_text(encoding="utf-8-sig")).get("schema_version") == "cnw_work_unit_v2"
+        if is_v2 or state.get("schema_version") == "cnw_generic_sprint_v2":
+            raise ContractError("OFFLINE_PROVIDER_FORBIDDEN", "generic offline execution requires an isolated simulated transport")
     with _p2_guard().provider_slot():
         return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
 
@@ -2239,6 +2245,12 @@ def sprint_run(args) -> dict:
     plan = getattr(args, "sprint_plan", None)
     if not plan:
         raise ContractError("SPRINT_QUEUE_REQUIRED", "supply --sprint-plan with five episode contracts")
+    if getattr(args, "mode", "fixture") == "offline":
+        try:
+            from .cnw_sprint_live import run_generic_sprint
+        except ImportError:
+            from cnw_sprint_live import run_generic_sprint
+        return run_generic_sprint(Path(getattr(args, "project_root", None) or ROOT), args.run_id, Path(plan), mode="offline")
     if getattr(args, "mode", "fixture") == "live":
         try:
             from .cnw_sprint_live import run_live_sprint
@@ -2710,7 +2722,7 @@ def make_parser() -> argparse.ArgumentParser:
             item.add_argument("--review-evidence")
         if command == "sprint":
             item.add_argument("--sprint-plan")
-            item.add_argument("--mode", choices=("fixture", "live"), default="fixture")
+            item.add_argument("--mode", choices=("fixture", "offline", "live"), default="fixture")
         item.set_defaults(func=func)
     return parser
 

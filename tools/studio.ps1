@@ -300,6 +300,7 @@ switch ($Command) {
         if (-not $SprintId -or -not $SprintPlan) { throw 'SPRINT_REQUIRES_SPRINT_ID_AND_FIXTURE_PLAN' }
         $PlanPath=(Resolve-Path -LiteralPath $SprintPlan).Path
         if ($Mode -eq 'live') { Invoke-CnwRunner @('sprint','--run-id',$SprintId,'--sprint-plan',$PlanPath,'--mode','live'); break }
+        if ($Mode -eq 'offline') { Invoke-CnwRunner @('sprint','--run-id',$SprintId,'--sprint-plan',$PlanPath,'--mode','offline'); break }
         $SprintScript=Join-Path $Root 'tools/cnw_sprint.py'
         & $Python $SprintScript --project-root $ProjectRootPath --sprint-id $SprintId --plan $PlanPath
         if ($LASTEXITCODE -ne 0) { throw "CNW_SPRINT_FAILED:$LASTEXITCODE" }

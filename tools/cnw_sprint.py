@@ -113,9 +113,15 @@ def main(argv=None) -> int:
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--sprint-id", required=True)
     parser.add_argument("--plan", required=True)
-    parser.add_argument("--mode", choices=("fixture", "live"), default="fixture")
+    parser.add_argument("--mode", choices=("fixture", "offline", "live"), default="fixture")
     args = parser.parse_args(argv)
-    if args.mode == "live":
+    if args.mode == "offline":
+        try:
+            from .cnw_sprint_live import run_generic_sprint
+        except ImportError:
+            from cnw_sprint_live import run_generic_sprint
+        result = run_generic_sprint(args.project_root, args.sprint_id, args.plan, mode="offline")
+    elif args.mode == "live":
         try:
             from .cnw_sprint_live import run_live_sprint
         except ImportError:
