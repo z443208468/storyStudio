@@ -40,11 +40,11 @@ entrypoint checks.
 | sprint | `tools/cnw_runner.py:sprint` → `tools/cnw_sprint.py` / `tools/cnw_sprint_live.py` | YES | YES | SUPPORTED | `test_live_sprint_accepts_registered_root_before_plan_validation` |
 | prepare | `tools/studio.ps1:Assert-Prepared` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | verify | `tools/studio.ps1` (legacy offline patch check; live delegates to run-bound `verify-live`) | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| prepare-live | `tools/cnw_live_executor.py` | NO (protected local WIP) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| live-call | `tools/cnw_live_executor.py` | NO (protected local WIP) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| accept-role | `tools/cnw_live_executor.py` | NO (protected local WIP) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| w10-nk-live | `tools/cnw_w10_nk_live.ps1` | NO (protected local WIP) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| w10-critics-live | `tools/cnw_w10_critics.py` | NO (protected local WIP) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
+| prepare-live | `tools/cnw_live_executor.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
+| live-call | `tools/cnw_live_executor.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
+| accept-role | `tools/cnw_live_executor.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
+| w10-nk-live | `tools/cnw_w10_nk_live.ps1` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
+| w10-critics-live | `tools/cnw_w10_critics.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | nk-start | pinned NK build under `runtime/patched/NK` | NO (local runtime build) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | nk-stop | pinned NK build under `runtime/patched/NK` | NO (local runtime build) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | scene | `tools/studio.ps1` (selected-project, explicit WorkId checkpoint reader) | YES | NO | LEGACY_ONLY | `test_legacy_scene_requires_and_reads_explicit_project` |

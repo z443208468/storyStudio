@@ -123,3 +123,44 @@ inherited only for untouched execution code, not for a new package-to-story clai
 `CUTOVER_BLOCKED=true`; `PRIVATE_MIGRATION=NOT_RUN`.
 The new independent 6.1 Sol Controller's initial direction report is not an
 exact-candidate verdict or push authorization. Those are still required.
+
+## Exact source-only clone check
+
+The local code candidate `15a933f710704d7587ebe6f739d6099ee906e4e3`, tree
+`aefb48902e948d68b188d145ae2d432d3579beb9`, was cloned into the separate
+`cold_entry_15a933f` directory in the same sidecar. Only the fixed CNW submodule's
+Git objects were copied from the local source cache and checked out at the
+official pin, then the repository's `capture_cnw_reference.py` prepared the
+reference. No private data, runtime, virtual environment, NK/CritiCS build or
+fee ledger was copied. Existing machine Python 3.13 pytest dependencies were
+explicit prerequisites, not an alleged fresh dependency installation.
+
+The three scoped test files listed above ran in this exact clone: exit 0,
+**31 passed, 16 subtests passed**, 78.34 seconds. The real PowerShell route used
+the available Python fallback since the clone contained no pinned runtime.
+All recorded code/test/config/prompt file bytes were unchanged, and final Git
+status was empty. The cloned `studio.ps1` has checkout SHA256
+`6cd9d81976e2a4054ea3e8cf5d90fe20ef3d096e0af4dcf4af14a3b0b52511ca`;
+Git line-ending normalization accounts for its difference from the earlier
+working-tree SHA. Both forms actually passed the entry checks.
+
+| Clone record | SHA256 |
+|---|---|
+| `cold_entry_15a933f_scoped_suite.raw.txt` | `ee6b6f3942fde062c46d859701a2c3fe7792de8c264e320891dc1700356d4611` |
+| `cold_entry_15a933f.check.json` | `80a887f070839dcd7a12ca048dad2862798caf9da807673c2beb626fc4d0bc67` |
+| `cold_entry_15a933f.app.json` | `bab9dd03c78a63c8a36b4cbdf4ce8c687e8bf2dc190eb5d641d2ada00301a88c` |
+| `cold_entry_15a933f.source_sha256.json` | `4c0082e3243a435f5edbe9930757ccbfcfe7ae8a89b3464b073bb68fc3961db9` |
+
+The subsequent evidence/command-table correction changes no executable or test:
+the five legacy W10 command rows now correctly say their existing implementations
+are Git tracked. They remain `LEGACY_ONLY`, not accepted generic production.
+This does not change the historical verdicts or call any legacy command.
+
+Before forming the local code candidate, the existing read-only protected-hash
+checker again found the shared ledger SHA
+`c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b`
+and real TS state SHA
+`3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d`
+unchanged. The frozen pre-R5 directory remained clean at its specified C/T.
+Original report: `StoryStudio_R5_Atom09_Repair_20261012_67e7a76/
+atom04_before_local_candidate_61.protected_hashes.json` outside Git.
