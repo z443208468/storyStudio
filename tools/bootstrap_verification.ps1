@@ -19,6 +19,10 @@ $BootstrapPins = [ordered]@{
 }
 foreach ($BootstrapComponent in $BootstrapPins.Keys) {
     $BootstrapSource = Join-Path $BootstrapRoot "third_party/$BootstrapComponent"
+    $BootstrapGitlink = & git -C $BootstrapRoot rev-parse "HEAD:third_party/$BootstrapComponent"
+    if ($LASTEXITCODE -ne 0 -or $BootstrapGitlink.Trim() -ne $BootstrapPins[$BootstrapComponent]) {
+        throw "BOOTSTRAP_FIXED_GITLINK_MISSING_OR_MISMATCH:$BootstrapComponent"
+    }
     $BootstrapCommit = & git -C $BootstrapSource rev-parse HEAD
     if ($LASTEXITCODE -ne 0 -or $BootstrapCommit.Trim() -ne $BootstrapPins[$BootstrapComponent]) {
         throw "BOOTSTRAP_FIXED_SOURCE_MISSING_OR_MISMATCH:$BootstrapComponent"

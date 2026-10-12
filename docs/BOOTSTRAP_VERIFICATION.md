@@ -24,14 +24,18 @@ git submodule status
 | `third_party/CritiCS` | `fbf66cbc913012c6f80af1687e27f0ce350475e3` |
 | `third_party/narrative-keyframing` | `b857f34b7d371ae82c30e00eb021884c14d08ae9` |
 
-**完全离线路径**：使用包含候选 main 与上述 commit 对象的本地 Git 缓存/审查源码 bundle。主库 `git clone --no-local --no-recurse-submodules <main-git-cache> <new-empty-directory>` 后，对每个子模块执行以下两条命令，以表中的目录/commit 替换占位符：
+**完全离线路径**：使用包含候选 main 与上述 commit 对象的本地 Git 缓存/审查源码 bundle。主库 `git clone --no-local --no-recurse-submodules <main-git-cache> <new-empty-directory>` 后，为每个子模块指定含有对应固定 commit 的本地 Git 缓存，再由 Git 按父仓库 gitlink 正式初始化：
 
 ```powershell
-git clone --no-local --no-checkout <component-git-cache> <third_party/component>
-git -C <third_party/component> switch --detach <exact-fixed-commit>
+git submodule init
+git config submodule.third_party/claude-novel-workflow.url <claude-novel-workflow-git-cache>
+git config submodule.third_party/CritiCS.url <CritiCS-git-cache>
+git config submodule.third_party/narrative-keyframing.url <narrative-keyframing-git-cache>
+git -c protocol.file.allow=always submodule update --init --checkout
+git submodule status
 ```
 
-仅复制 Git 源码对象。不得复制原工程 `runtime`、`workspace`、`runs`、`.env`、Provider raw、小说数据或真实费用账本。
+将 `<...-git-cache>` 替换为本机包含对应提交对象的仓库路径。初始化结果必须显示三个固定 SHA 且没有 `-` 或 `+` 前缀。仅复制 Git 源码对象。不得复制原工程 `runtime`、`workspace`、`runs`、`.env`、Provider raw、小说数据或真实费用账本。
 
 ## 2. 先记录纯源码状态，再 bootstrap
 
