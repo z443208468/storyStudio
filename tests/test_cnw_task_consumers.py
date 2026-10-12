@@ -29,7 +29,8 @@ class TaskConsumerTests(unittest.TestCase):
             creative_freedom="Choose how to offer help.", standalone_trial=True,
             knowledge_snapshot={"Mira": {"known": ["PUBLIC-MESSAGE"], "private": ["PRIVATE-KNOWLEDGE-CANARY"],
                                          "unknown": ["HIDDEN-OUTCOME"]}},
-            gameplay_snapshot={"grain": 0, "can_attack": False, "not_canonical_history": True})
+            gameplay_snapshot={"scope": "same-task", "valid_at": "BEFORE-MEETING",
+                               "grain": 0, "can_attack": False, "not_canonical_history": True})
         self.fixture.files["scenes/A/work_order.draft.json"] = fixtures.encoded(order)
         packet = {"standalone_trial": True, "new_plot_pre_designed": False,
             "available_time": "BEFORE-MEETING", "current_location": "courtyard", "pov": "Mira",
@@ -72,8 +73,12 @@ class TaskConsumerTests(unittest.TestCase):
                 self.assertEqual(context, self.context)
                 self.assertEqual(preparation["source_hashes"][self.context_name], fixtures.sha(task.encode(context)))
                 state = context["data"]["gameplay_snapshot"]
+                current_time = context["data"]["scene_packet"].get("available_time")
+                order_state = context["data"]["work_order"]["gameplay_snapshot"]
+                if state.get("valid_at") != current_time and order_state.get("valid_at") == current_time:
+                    state = order_state  # Mock model consumes the explicit task time, not JSON order.
                 constraint = (f"TASK-REQUIREMENT grain={state['grain']}; can_attack={state['can_attack']}; "
-                    f"scope={context['data']['work_order']['scope_of_new_plot']}; focus=Mira; "
+                    f"valid_at={state.get('valid_at')}; scope={context['data']['work_order']['scope_of_new_plot']}; focus=Mira; "
                     "reader knows PUBLIC-MESSAGE only; fixed next event FIXED-MEETING; "
                     "time is TODO_CONFIRM, not an established fact; choose a reversible practical gesture.")
             else:
@@ -356,6 +361,35 @@ class TaskConsumerTests(unittest.TestCase):
         self.assertEqual(self.fixture.pack.read_bytes(), package_before)
         self.assertFalse((root / "contracts/TRIAL-A.json").exists())
         self.assertFalse((root / "runs").exists())
+
+    def test_actual_import_keeps_distinct_valid_at_snapshots_and_real_consumers(self):
+        order_name = "scenes/A/work_order.draft.json"
+        order = json.loads(self.fixture.files[order_name])
+        order["gameplay_snapshot"].update(scope="same-task", valid_at="BEFORE-MEETING", grain=2)
+        self.fixture.files[order_name] = fixtures.encoded(order)
+        game_name = "scenes/A/project_seed/93_data/gameplay_snapshot.json"
+        game = {**order["gameplay_snapshot"], "valid_at": "AFTER-MEETING", "grain": 1}
+        self.fixture.files[game_name] = fixtures.encoded(game)
+        self.fixture.write_pack()
+        self.root = self.fixture.project("TASK-DIFFERENT-TIMES")
+        self.prepared = self.fixture.prepare(self.root)
+        self.contract_path = Path(write_contract_draft(self.root, self.prepared["draft"])["contract"])
+        self.contract = json.loads(self.contract_path.read_text(encoding="utf-8"))
+        self.context_name, self.context = task.read_bound_task_context(self.root, self.contract)
+        run = self.new_run("TASK-DIFFERENT-TIMES-RUN")
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=self.transport):
+            for stage in ("plot", "scene_cards", "writing_brief"):
+                cnw_recovery.execute_checked(run, stage)
+        self.assertEqual(self.context["data"]["work_order"]["gameplay_snapshot"]["valid_at"], "BEFORE-MEETING")
+        self.assertEqual(self.context["data"]["gameplay_snapshot"]["valid_at"], "AFTER-MEETING")
+        packet = json.loads(next(row for row in self.calls if row["stage"] == "plot")["messages"][1]["content"])
+        actual = json.loads(packet["support"]["production_preparation"]["documents"][self.context_name])
+        self.assertEqual(actual["data"]["work_order"]["gameplay_snapshot"]["grain"], 2)
+        self.assertEqual(actual["data"]["gameplay_snapshot"]["grain"], 1)
+        for stage in ("plot", "scene_cards", "writing_brief"):
+            output = cnw_runner._read_stage_text(run, cnw_runner.load_state(run), stage)
+            self.assertIn("grain=2; can_attack=False; valid_at=BEFORE-MEETING", output)
+        self.record("valid_at_distinct_times", run)
 
     def test_old_binding_without_recipe_keeps_its_preparation_and_review_semantics(self):
         index_path = self.root / self.contract["input_pack"]["index_file"]

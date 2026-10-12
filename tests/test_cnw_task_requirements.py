@@ -128,6 +128,31 @@ class TaskDerivationTests(unittest.TestCase):
         self.game["time_scope"] = "current"
         self.derive()  # Separate explicit temporal scopes are not contradictions.
 
+    def test_real_valid_at_format_preserves_distinct_times_and_rejects_same_time_conflict(self):
+        self.order["gameplay_snapshot"] = {"scope": "same-task", "valid_at": "BEFORE", "grain": 2, "can_attack": False}
+        self.game = {"scope": "same-task", "valid_at": "AFTER", "grain": 1, "can_attack": True}
+        value = self.derive()
+        self.assertEqual(value["data"]["work_order"]["gameplay_snapshot"]["grain"], 2)
+        self.assertEqual(value["data"]["gameplay_snapshot"]["grain"], 1)
+        self.assertEqual(value["data"]["gameplay_snapshot"]["valid_at"], "AFTER")
+        self.game["valid_at"] = "BEFORE"
+        for key in ("grain", "can_attack"):
+            self.game.update(grain=2, can_attack=False)
+            self.game[key] = 1 if key == "grain" else True
+            sources = self.sources()
+            with self.subTest(key=key), self.assertRaises(task.TaskRequirementConflict) as caught:
+                self.derive(sources)
+            locations = caught.exception.task_conflict["conflicts"][0]["sources"]
+            self.assertEqual(locations[0]["sha256"], task.sha(sources["work_order"][1]))
+            self.assertEqual(locations[1]["sha256"], task.sha(sources["gameplay_snapshot"][1]))
+        self.game.update(grain=1, can_attack=True)
+        self.game["valid_at"] = None
+        value = self.derive()
+        self.assertIsNone(value["data"]["gameplay_snapshot"]["valid_at"])
+        self.game.pop("valid_at")
+        value = self.derive()
+        self.assertNotIn("valid_at", value["data"]["gameplay_snapshot"])
+
 
 if __name__ == "__main__":
     unittest.main()

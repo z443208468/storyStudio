@@ -97,9 +97,12 @@ def _check_gameplay_declarations(order: dict, documents: dict, sources: dict) ->
         return
     # Both were explicitly supplied as this task's snapshots. Different
     # explicit temporal scopes are separate assertions, never merged here.
-    for scope in ("scope", "time_scope", "as_of"):
-        if scope in left and scope in right and encode(left[scope]) != encode(right[scope]):
-            return
+    for scope in ("scope", "time_scope", "as_of", "valid_at"):
+        if scope in left or scope in right:
+            if scope not in left or scope not in right or left[scope] in (None, "") or right[scope] in (None, ""):
+                return  # Unknown time/scope is retained, not guessed equal or different.
+            if encode(left[scope]) != encode(right[scope]):
+                return
     def compare(a, b, pointer=""):
         for key in sorted(set(a) & set(b)):
             av, bv = a[key], b[key]

@@ -133,3 +133,39 @@ T `535496ba3b8a331e12d0e5e161b15bf21a25393e` remains clean.
 `GENERIC_LIVE_PRODUCTION=NOT_RUN`, `CUTOVER_BLOCKED=true`.
 Candidate C/T, Controller original verdict, push and remote readback must be
 recorded as separate actual events. This document grants no push authorization.
+
+## Controller RETURN and bounded temporal repair
+
+The independent Controller returned exact C `6f04e7b9fcb2a52ed924edee665c175b770e7e6e`
+/ T `ec64c3f953dbf2e7dc7750603afad6f0489fbb02`; its verbatim message is
+`ATOM06_CONTROLLER_RETURN_6f04e7b_20261013.md`. Its actual finding was the real
+package's `valid_at` temporal marker missing from duplicate-snapshot comparison.
+Distinct explicit times could be falsely rejected as contradictory values.
+That RETURN is not rewritten by later green tests or repairs.
+
+The bounded repair recognizes `valid_at` alongside the existing explicit scope
+markers. Distinct times retain both snapshots; null, empty or missing scope/time
+markers are retained without inferring temporal equality or inequality. Same
+explicit time numeric/boolean conflicts still preserve dual SHA/pointer evidence
+and reject. Added fixtures cover distinct `valid_at`, equal-time numeric/boolean
+conflicts, null/missing markers and real import/Plot consumption of both values.
+
+The first candidate's source-only cold clone subsequently passed the same 140
+tests/57 subtests, exit 0, with tracked bytes unchanged and a clean tree; raw SHA
+`6e08f0dde9d6c838f76eb68a34cc3424cf6f5ef51a2611a87af1602b202d5156`.
+This confirms its recorded tests, not the missing temporal behavior or a
+Controller ACCEPT. The repaired appended candidate requires separate review.
+
+`valid_at_return_retest`: five affected modules, exit 0, 51 passed/30 subtests,
+raw SHA `7f34ca98b750fb4e88f214aaa4d7b91590975f0fb0cee4ada6365cfaa50435f3`.
+`valid_at_consumers_final`: exit 0, 17 passed/12 subtests, raw SHA
+`50bdc45c05d7553204969fe007b4db411dc97fbbd7308068daa5c925f8e1c57d`.
+The final fixture mock selects the task's explicitly declared current time,
+rather than JSON order, and asserts both original snapshots remain in actual
+Plot input while Plot/Cards/Brief transfer the corresponding current value.
+This is a model-boundary consumer example, not a new production selection rule
+or a live model judgment.
+
+`python311_valid_at_consumers`: exit 0, all 17 cases passed on Python 3.11.15;
+raw SHA `ff13f91693a3e25385bc1d9ab16869b040fe269e23c4d17c9b055fc776e6ea54`.
+Its source identities match the final temporal repair and consumer fixture.
