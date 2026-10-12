@@ -11,7 +11,7 @@ import uuid
 
 import httpx
 
-from tools import cnw_live_provider, cnw_w10_policy, p2_cost_guard
+from tools import cnw_live_executor, cnw_live_provider, cnw_w10_policy, p2_cost_guard
 from tools.project_paths import create_project, setup_data_home
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -186,6 +186,48 @@ class LiveProviderTransportTests(unittest.TestCase):
         self.assertEqual(self.ledger.read_bytes(), ledger_before)
         self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))[
             "w10_contract_preflight"]["provider_call_authorized"], False)
+
+    def test_preflight_only_validates_legacy_binding_without_provider_or_cost_activity(self):
+        ledger_before = self.ledger.read_bytes()
+        state_before = (self.run / "run_state.json").read_bytes()
+        with patch.object(cnw_live_provider, "complete", side_effect=AssertionError("provider must not run")):
+            result = cnw_live_executor.verify_preflight_only(self.run)
+        self.assertEqual(result["status"], "W10_PREFLIGHT_VALIDATED")
+        self.assertEqual(result["provider_call"], "none")
+        self.assertEqual(result["run_id"], self.run_id)
+        self.assertEqual(self.ledger.read_bytes(), ledger_before)
+        self.assertEqual((self.run / "run_state.json").read_bytes(), state_before)
+
+    def test_preflight_only_cli_returns_no_provider_call(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        output = StringIO()
+        with redirect_stdout(output):
+            exit_code = cnw_live_executor.main(["--run-dir", str(self.run), "--verify-preflight-only"])
+        self.assertEqual(exit_code, 0)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["status"], "W10_PREFLIGHT_VALIDATED")
+        self.assertEqual(payload["provider_call"], "none")
+
+    def test_preflight_only_rejects_disabled_authorization_without_cost_activity(self):
+        state_path = self.run / "run_state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["w10_contract_preflight"]["provider_call_authorized"] = False
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        ledger_before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(Exception, "LIVE_STAGE_NOT_AUTHORIZED_OR_READY"):
+            cnw_live_executor.verify_preflight_only(self.run)
+        self.assertEqual(self.ledger.read_bytes(), ledger_before)
+
+    def test_nk_live_wires_preflight_before_key_and_cost_reservation(self):
+        script = (ROOT / "tools/cnw_w10_nk_live.ps1").read_text(encoding="utf-8")
+        verify_pos = script.index("--verify-preflight-only")
+        key_pos = script.index("if (-not $env:DEEPSEEK_API_KEY -and $KeyPath)")
+        reserve_pos = script.index("p2_cost_guard.py') reserve")
+        self.assertLess(verify_pos, key_pos)
+        self.assertLess(verify_pos, reserve_pos)
+        studio = (ROOT / "tools/studio.ps1").read_text(encoding="utf-8")
+        self.assertIn("if ($W10Preflight) { $NkArgs += @('-W10Preflight'", studio)
 
     def test_safe_run_accepts_only_registered_projects_under_explicit_data_home(self):
         import tempfile

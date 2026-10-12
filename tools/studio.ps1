@@ -263,6 +263,7 @@ switch ($Command) {
         $NkScript = Join-Path $Root 'tools/cnw_w10_nk_live.ps1'
         $NkArgs = @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$NkScript,'-RunId',$RunId,'-ProjectRoot',$ProjectRootPath,'-PayloadPath',$InputFile)
         if ($KeyPath) { $NkArgs += @('-KeyPath',$KeyPath) }
+        if ($W10Preflight) { $NkArgs += @('-W10Preflight',(Resolve-Path -LiteralPath $W10Preflight).Path) }
         & $Pwsh @NkArgs
         if ($LASTEXITCODE -ne 0) { throw "W10_NK_LIVE_FAILED:$LASTEXITCODE" }
     }

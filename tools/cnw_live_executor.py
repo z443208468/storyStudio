@@ -11,13 +11,13 @@ import sys
 try:
     from .cnw_contract import ContractError, load_contract
     from .cnw_generate import validate_generated_scene
-    from .cnw_live_provider import accept_validated_stage, complete, safe_run
+    from .cnw_live_provider import accept_validated_stage, complete, safe_run, verify_run_preflight
     from .cnw_roles import validate_role_output
     from .cnw_runner import load_state, safe_run_input, validate_literary_source_freeze
 except ImportError:
     from cnw_contract import ContractError, load_contract
     from cnw_generate import validate_generated_scene
-    from cnw_live_provider import accept_validated_stage, complete, safe_run
+    from cnw_live_provider import accept_validated_stage, complete, safe_run, verify_run_preflight
     from cnw_roles import validate_role_output
     from cnw_runner import load_state, safe_run_input, validate_literary_source_freeze
 
@@ -31,6 +31,15 @@ except ImportError:
 
 def digest(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
+
+
+def verify_preflight_only(run_dir: str | Path, *, preflight_path: str | Path | None = None) -> dict:
+    """Validate W10 run authorization without preparing or sending a provider request."""
+    run = safe_run(run_dir)
+    state = load_state(run)
+    verified_state = verify_run_preflight(run, state, preflight_path=preflight_path)
+    return {"status": "W10_PREFLIGHT_VALIDATED", "run_id": run.name,
+            "contract_sha256": verified_state.get("contract_sha256"), "provider_call": "none"}
 
 
 ROLE_STAGE = {"plot": "plot", "cards": "cards", "brief": "brief", "prose": "draft"}
@@ -621,6 +630,7 @@ def main(argv=None) -> int:
     parser.add_argument("--project-root")
     parser.add_argument("--inputs-json")
     parser.add_argument("--preflight")
+    parser.add_argument("--verify-preflight-only", action="store_true")
     parser.add_argument("--run-dir", required=True)
     parser.add_argument("--stage", choices=("plot", "cards", "brief", "draft", "lint1", "lint2", "lens5", "verifier3", "completeness", "refine", "re-review"))
     parser.add_argument("--packet")
@@ -630,7 +640,9 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if args.preflight:
         os.environ["STORYSTUDIO_W10_PREFLIGHT_PATH"] = str(Path(args.preflight).resolve(strict=True))
-    if args.bind_nk_receipt:
+    if args.verify_preflight_only:
+        result = verify_preflight_only(args.run_dir, preflight_path=args.preflight)
+    elif args.bind_nk_receipt:
         result = bind_nk_receipt(args.run_dir, args.bind_nk_receipt)
     elif args.record_nk_budget_failure:
         result = record_nk_budget_failure(args.run_dir, args.record_nk_budget_failure)
