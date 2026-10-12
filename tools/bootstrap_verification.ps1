@@ -18,10 +18,17 @@ $BootstrapPins = [ordered]@{
     'narrative-keyframing' = 'b857f34b7d371ae82c30e00eb021884c14d08ae9'
 }
 foreach ($BootstrapComponent in $BootstrapPins.Keys) {
-    $BootstrapSource = Join-Path $BootstrapRoot "third_party/$BootstrapComponent"
-    $BootstrapGitlink = & git -C $BootstrapRoot rev-parse "HEAD:third_party/$BootstrapComponent"
+    $BootstrapRelativePath = "third_party/$BootstrapComponent"
+    $BootstrapSource = Join-Path $BootstrapRoot $BootstrapRelativePath
+    $BootstrapGitlink = & git -C $BootstrapRoot rev-parse "HEAD:$BootstrapRelativePath"
     if ($LASTEXITCODE -ne 0 -or $BootstrapGitlink.Trim() -ne $BootstrapPins[$BootstrapComponent]) {
         throw "BOOTSTRAP_FIXED_GITLINK_MISSING_OR_MISMATCH:$BootstrapComponent"
+    }
+    $BootstrapSubmoduleStatus = @(& git -C $BootstrapRoot submodule status -- $BootstrapRelativePath)
+    if ($LASTEXITCODE -ne 0 -or $BootstrapSubmoduleStatus.Count -ne 1 -or
+        $BootstrapSubmoduleStatus[0] -notmatch '^\s([0-9a-f]{40})\s' -or
+        $Matches[1] -ne $BootstrapPins[$BootstrapComponent]) {
+        throw "BOOTSTRAP_SUBMODULE_UNINITIALIZED_OR_MISMATCH:$BootstrapComponent"
     }
     $BootstrapCommit = & git -C $BootstrapSource rev-parse HEAD
     if ($LASTEXITCODE -ne 0 -or $BootstrapCommit.Trim() -ne $BootstrapPins[$BootstrapComponent]) {

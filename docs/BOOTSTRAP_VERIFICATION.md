@@ -31,7 +31,7 @@ git submodule init
 git config submodule.third_party/claude-novel-workflow.url <claude-novel-workflow-git-cache>
 git config submodule.third_party/CritiCS.url <CritiCS-git-cache>
 git config submodule.third_party/narrative-keyframing.url <narrative-keyframing-git-cache>
-git -c protocol.file.allow=always submodule update --init --checkout
+git -c protocol.file.allow=always submodule update --init --checkout --no-fetch -- third_party/claude-novel-workflow third_party/CritiCS third_party/narrative-keyframing
 git submodule status
 ```
 
