@@ -488,6 +488,15 @@ class LegacySourcePathMapTests(unittest.TestCase):
             verifier=TestOnlyVerifier())
         self.assertEqual(accepted["status"], "ATTESTED")
         self.assertIs(accepted["provider_call_authorized"], False)
+        # A valid test-only signature for Run A / Project A cannot be replayed
+        # against the corresponding binding for another Run or project.
+        for key in ("run_id", "project_id"):
+            replay = json.loads(json.dumps(stage_payload))
+            replay["bindings"][key] = "OTHER-" + key.upper()
+            with self.subTest(replay_binding=key), self.assertRaisesRegex(
+                    ContractError, "W10_CONTROLLER_ATTESTATION_BINDING_INVALID"):
+                cnw_w10_policy.verify_controller_attestation_document(
+                    attestation_path, expected_payload=replay, verifier=TestOnlyVerifier())
         forged["controller_attestation_path"] = str(attestation_path)
         forged["controller_attestation_sha256"] = sha(attestation_path.read_bytes())
 
