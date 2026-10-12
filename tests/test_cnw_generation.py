@@ -9,27 +9,22 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tools import cnw_generate
-from tools.cnw_contract import ContractError, count_visible_chars, load_contract
+from tools.cnw_contract import ContractError, count_visible_chars
 from tools.cnw_generate import assemble_segment_outputs, build_prose_request, build_segment_request, plan_output_segments, validate_generated_scene, load_capacity_reference
 from tools.cnw_revision import (build_revision_plan, build_revision_record, build_rereview_packets, plan_persisted_continuation,
     promote_revision, validate_episode_assembly, validate_revision)
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT_PATH = ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contract.json"
+from synthetic_cnw_fixtures import synthetic_work_unit
 _capacity_text = "中" * 335
 _capacity_response = {"id": "provider-capacity-1", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": _capacity_text}}], "usage": {"prompt_tokens": 300, "completion_tokens": 259}}
 CAPACITY = {"receipt": {"status": "SUCCEEDED", "request_id": "capacity-1", "provider_request_id": "provider-capacity-1", "model": "deepseek-flash", "finish_reason": "stop", "scene_chars": 335, "input_tokens": 300, "output_tokens": 259}, "provider_response": _capacity_response, "ledger_row": {"status": "SETTLED", "request_id": "capacity-1", "provider_request_id": "provider-capacity-1", "returned_model": "deepseek-flash", "finish_reason": "stop", "usage": {"input_tokens": 300, "output_tokens": 259}}, "raw_response_sha256": hashlib.sha256(json.dumps(_capacity_response).encode()).hexdigest()}
 
 
 def tiny_contract(minimum=120, target=160, maximum=220):
-    value = copy.deepcopy(load_contract(CONTRACT_PATH))
-    value["unit"].update(min_visible_chars=minimum, target_visible_chars=target, max_visible_chars=maximum)
-    value["story"]["required_beats"] = [
-        {"beat_id": "B01", "budget_visible_chars": target // 2},
-        {"beat_id": "B02", "budget_visible_chars": target - target // 2},
-    ]
-    return value
+    return synthetic_work_unit(minimum=minimum, target=target, maximum=maximum,
+                               characters=("她", "他", "邻居", "朋友"))
 
 
 def review_evidence_fixture(findings=None,*,candidate_sha="b"*64,contract_sha="c"*64,source_sha="a"*64,fixture=True):
@@ -260,8 +255,11 @@ class CnwGenerationTests(unittest.TestCase):
         self.assertEqual(result["failure_codes"], ["TRUNCATED_OR_UNFINISHED"])
 
     def test_real_receipt_supports_frozen_1500_character_target(self):
-        contract = load_contract(CONTRACT_PATH)
-        actual = load_capacity_reference(ROOT / "runs/p2-06-draft-20261010")
+        contract = synthetic_work_unit(characters=("她", "他", "邻居", "朋友"))
+        capacity_repo = self.base / "repo-capacity-reference"
+        capacity_run = self._write_capacity_fixture(capacity_repo)
+        with patch.object(cnw_generate, "ROOT", capacity_repo):
+            actual = load_capacity_reference(capacity_run)
         plan = plan_output_segments(contract, actual, provider_output_cap=2048, budget_output_cap=2048)
         self.assertFalse(plan["segmented"])
         self.assertEqual(plan["segments"][0]["target_visible_chars"], 1500)
@@ -372,7 +370,7 @@ class CnwGenerationTests(unittest.TestCase):
         external.write_text("private", encoding="utf-8")
         self._write_accepted_run(project, "B01 B02", "voice samples")
         argv = ["--run-id", "R1", "--voice-samples", str(external),
-                "--capacity-run", str(ROOT / "runs/p2-06-draft-20261010"), "--budget-output-cap", "2048",
+                "--capacity-run", str(self._write_capacity_fixture(self.base / "repo-capacity-rejected")), "--budget-output-cap", "2048",
                 "--project-root", str(project), "--output", "runs/requests/prose.json"]
         with patch.object(cnw_generate, "ROOT", repo), self.assertRaisesRegex(ContractError, "PROJECT_INPUT_OUTSIDE_PRIVATE_PROJECT"):
             cnw_generate.main(argv)
@@ -413,10 +411,11 @@ class CnwGenerationTests(unittest.TestCase):
         self.assertIn("capacity_receipt_id", saved["capacity_plan"])
         self.assertEqual(saved["provider_call"], "not_performed_by_W06_offline_builder")
 
-    def test_historical_469_byte_revision_is_not_mistaken_for_full_scene(self):
-        old = (ROOT / "deliverables/EP001/02_修订稿.md").read_text(encoding="utf-8-sig")
-        self.assertEqual(count_visible_chars(old), 153)
-        self.assertLess(count_visible_chars(old), 1200)
+    def test_short_synthetic_candidate_is_not_mistaken_for_full_scene(self):
+        short_candidate = "她推开门。"
+        self.assertEqual(count_visible_chars(short_candidate), 5)
+        result = self.validate(short_candidate, {"B01": "她推开门。"})
+        self.assertIn("RETURN_UNDERPRODUCED", result["failure_codes"])
 
 
 if __name__ == "__main__":

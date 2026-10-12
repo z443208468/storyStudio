@@ -1,6 +1,7 @@
 """Controlled offline execution of ordinary stages; no production API calls."""
 import copy
 from functools import wraps
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -10,26 +11,42 @@ from unittest.mock import patch
 
 from tools import cnw_runner as r, cnw_roles as roles, cnw_recovery as recovery
 from tools.cnw_contract import ContractError
+from synthetic_cnw_fixtures import synthetic_work_unit
 
 
 class RecoveryTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix=".cnw-recovery-", dir=r.ROOT / "workspace")
+        self.temp = tempfile.TemporaryDirectory(prefix="cnw-recovery-")
         self.addCleanup(self.temp.cleanup)
-        self.project = Path(self.temp.name)
+        self.temp_root = Path(self.temp.name).resolve()
+        self.repo_root = (self.temp_root / "repo").resolve()
+        self.project = (self.repo_root / "workspace" / "SYNTHETIC_RECOVERY").resolve()
+        self.project.mkdir(parents=True)
+        self.root_patcher = patch.object(r, "ROOT", self.repo_root)
+        self.root_patcher.start()
+        self.addCleanup(self.root_patcher.stop)
         self.run = self.project / "runs/MOCK-RECOVERY"
         self.run.mkdir(parents=True)
-        base = json.loads((r.ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contract.json").read_text(encoding="utf-8"))
-        base["project_id"] = "FICT_RECOVERY_OFFLINE"
-        base["unit"].update(id="ep001", kind="scene", pov="甲", min_visible_chars=30, target_visible_chars=60, max_visible_chars=200)
-        base["story"].update(source_file="source.md", first_episode=True, arc_ref="04_chapter_design/arc_01.md",
-            before_anchor={"source_line": 1}, after_anchor={"source_line": 2}, characters_in_scene=["甲"],
-            required_beats=[{"beat_id": "B01", "budget_visible_chars": 60, "goal": "借伞"}],
+        base = synthetic_work_unit(project_id="SYNTHETIC_RECOVERY", unit_id="ep001",
+            characters=("甲", "乙"), minimum=30, target=60, maximum=200)
+        base["unit"].update(kind="scene", pov="甲", policy_sha256="synthetic-policy")
+        base["integrations"] = {"nk": "DISABLED", "critics": "DISABLED"}
+        base["story"].update(source_file="source.md", arc_ref="04_chapter_design/arc_01.md",
+            before_anchor={"scene": "synthetic", "source_line": 1},
+            after_anchor={"scene": "synthetic", "source_line": 2}, characters_in_scene=["甲"],
+            required_beats=[{"beat_id": "B01", "budget_visible_chars": 60, "goal": "Ask for help."}],
             role_in_story="MOCK daily event", reader_reward="MOCK character", entry_state="MOCK entry", exit_state="MOCK exit")
-        base["source"] = {"identity_type": "imported_project", "source_root": ".", "manifest_file": "manifest.json"}
+        source_bytes = "甲看见雨。\n乙借出伞。\n".encode("utf-8")
+        source_sha = hashlib.sha256(source_bytes).hexdigest()
+        manifest_bytes = json.dumps({"import_id": source_sha, "sources": [{"stored_path": "source.md",
+            "sha256": source_sha}]}, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        base["source"] = {"identity_type": "imported_project", "version": "SYNTHETIC-IMPORTED-v1",
+            "source_root": ".", "manifest_file": "manifest.json", "import_id": source_sha,
+            "source_file_sha256": source_sha,
+            "source_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest()}
         self.contract = base
         documents = {
-            "source.md": "甲看见雨。\n乙借出伞。\n", "manifest.json": "{}",
+            "source.md": source_bytes.decode("utf-8"), "manifest.json": manifest_bytes.decode("utf-8"),
             "contracts/unit.json": json.dumps(base, ensure_ascii=False),
             "runs/MOCK-RECOVERY/artifacts/contract.json": json.dumps(base, ensure_ascii=False),
             "04_chapter_design/arc_01.md": "MOCK fixed arc",
@@ -60,14 +77,32 @@ class RecoveryTests(unittest.TestCase):
         self.fail_after_transport = False
         @wraps(r._nk_pov)
         def nk(run, state, contract):
+            from tools.cnw_nk_adapter import build_nk_payload
+            cards_path = run / state["stages"]["scene_cards"]["artifact"]["path"]
+            payload = build_nk_payload(contract, cards_path.read_text(encoding="utf-8"), r._role_meta("cards", contract))
+            request_path = run / "artifacts/provider/MOCK-NK.request.json"
+            request_path.parent.mkdir(parents=True, exist_ok=True)
+            request_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            raw_path = run / "artifacts/provider/MOCK-NK.raw.json"
+            raw_path.write_text(json.dumps({"choices": [{"message": {"content": "MOCK reflection"}}]}, ensure_ascii=False), encoding="utf-8")
             path = run / "artifacts/support/nk-reflection.md"
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("MOCK reflection", encoding="utf-8")
             fresh = r.load_state(run)
             fresh["support_hooks"]["nk_pov"] = {"status": "MATERIALIZED", "artifact": {"path": str(path.relative_to(run)).replace('\\', '/'), "sha256": r.sha(path.read_bytes())}}
+            fresh["support_hooks"]["nk_pov"]["request_id"] = "MOCK-NK"
+            fresh["provider_requests"].append({"status": "SUCCEEDED", "stage": "support_hook", "role_id": "nk_pov",
+                "request_id": "MOCK-NK", "provider_request_id": None, "mode": "MOCK_ONLY", "fixture_only": True,
+                "request_format": "native_nk_payload", "request_path": request_path.relative_to(run).as_posix(),
+                "request_sha256": r.sha(request_path.read_bytes()), "input_sha256": r.sha(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")),
+                "raw_response_path": raw_path.relative_to(run).as_posix(), "raw_response_sha256": r.sha(raw_path.read_bytes()),
+                "output_sha256": r.sha(b"MOCK reflection")})
             r.save_state(run, fresh)
-            return {"path": "artifacts/support/nk-reflection.md", "mapping": {}}
+            return {"status": "MOCK_ONLY", "path": "artifacts/support/nk-reflection.md", "mapping": {"provider_request_id": None}}
         self.addCleanup(patch.stopall)
+        # The focused recovery suite supplies deterministic NK/CritiCS adapters;
+        # runtime discovery is verified independently and must not depend on ignored builds.
+        patch.object(r, "_assert_support_components_available", return_value=None).start()
         patch.object(r, "_nk_pov", nk).start()
         patch.object(r, "_critics_hook", return_value={"status": "MOCK_ONLY"}).start()
         patch.object(r, "cnw_live_call", side_effect=self.provider).start()
@@ -93,7 +128,18 @@ class RecoveryTests(unittest.TestCase):
         self.sent.append((stage, role_id, copy.deepcopy(messages)))
         if stage in {"plot", "scene_cards", "writing_brief"}:
             role = {"scene_cards": "cards", "writing_brief": "brief"}.get(stage, stage)
-            content = "\n".join(heading + "\nB01 MOCK action" for heading in roles.ROLE_REQUIRED_SECTIONS[role])
+            blocks = []
+            for heading in roles.ROLE_REQUIRED_SECTIONS[role]:
+                if stage == "plot" and heading == "## Key Scenes":
+                    body = "1. 甲 asks 乙 for help with the rain."
+                elif stage == "plot" and heading == "## Required Story Beats":
+                    body = "1. B01 甲 asks and accepts one practical offer."
+                elif stage == "scene_cards" and heading == "### Required beats":
+                    body = "- B01 甲 asks a clear question and accepts 乙's practical help."
+                else:
+                    body = "B01 MOCK action"
+                blocks.append(f"{heading}\n{body}")
+            content = "\n\n".join(blocks)
             if stage == "writing_brief":
                 content += "\n## Voice References\n- 甲\n" + self.brief_variant
         elif stage == "prose":

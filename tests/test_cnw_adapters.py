@@ -4,15 +4,17 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.cnw_contract import ContractError, load_contract, check_required_fields, validate_work_unit
 from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt, read_native_result, native_templates, native_conversation_template, native_prompt_dependencies_match
 from tools.cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
+from tools import cnw_roles as roles
 from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation, role_metadata, plot_structure
+from synthetic_cnw_fixtures import write_imported_v1_project
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT_PATH = ROOT / "workspace/cangqi/contracts/CQ-J19-INSERT-01.work_unit_contract.json"
 
 
 def sha(data: bytes) -> str:
@@ -20,6 +22,26 @@ def sha(data: bytes) -> str:
 
 
 class AdapterTests(unittest.TestCase):
+    def setUp(self):
+        workspace = ROOT / "workspace"
+        workspace.mkdir(exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(prefix=".cnw-adapter-fixtures-", dir=workspace)
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name).resolve()
+        self.repo_root = ROOT
+        self.project = self.base
+        self.contract_path, self.contract = write_imported_v1_project(self.project)
+        manifest_raw = roles.REFERENCE_MANIFEST.read_bytes()
+        self.contract["review"]["cnw_reference_manifest_sha256"] = sha(manifest_raw)
+        policy_raw = (self.repo_root / "config/cnw_production_policy.json").read_bytes()
+        self.contract["unit"]["policy_sha256"] = sha(policy_raw)
+        self.contract_path.write_text(json.dumps(self.contract, ensure_ascii=False), encoding="utf-8")
+        for relative, content in (("90_canon/canon.md", "Synthetic confirmed Canon."),
+                                  ("06_plot/source_anchors.md", "Synthetic before and after anchors.")):
+            path = self.project / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+
     def test_native_empty_conversation_framing_preserves_exact_dependencies(self):
         expected = ["MOCK imagery input", "MOCK voice input", "MOCK selected prior outputs"]
         template = native_conversation_template()
@@ -57,7 +79,7 @@ class AdapterTests(unittest.TestCase):
                 read_native_result(run.name, action="plan-revise", input_path=source, critique_path=critique_path)
 
     def test_author_plot_design_needs_no_prefilled_beats_or_scenes(self):
-        contract = load_contract(CONTRACT_PATH)
+        contract = load_contract(self.contract_path)
         contract["unit"].update(planning_mode="author_plot", kind="episode")
         contract["story"].pop("required_beats")
         check_required_fields(contract)
@@ -115,31 +137,30 @@ class AdapterTests(unittest.TestCase):
                 read_production_preparation(root, {"unit": {"id": "ep007", "kind": "episode"}, "story": {}})
 
     def test_live_role_packet_requires_live_mode_and_frozen_contract(self):
-        contract = load_contract(CONTRACT_PATH)
-        packet = build_role_packet("plot", CONTRACT_PATH, {
-            "canon_scope": ROOT / "workspace/cangqi/90_canon/canon.md",
-            "source_anchors": ROOT / "workspace/cangqi/06_plot/ep001_source_anchors.md",
+        packet = build_role_packet("plot", self.contract_path, {
+            "canon_scope": self.project / "90_canon/canon.md",
+            "source_anchors": self.project / "06_plot/source_anchors.md",
         }, mode="live")
         self.assertEqual(packet["execution_mode"], "LIVE_REQUEST_READY")
-        self.assertEqual(packet["contract_sha256"], sha(CONTRACT_PATH.read_bytes()))
+        self.assertEqual(packet["contract_sha256"], sha(self.contract_path.read_bytes()))
         with self.assertRaisesRegex(ContractError, "ROLE_MODE_INVALID"):
-            build_role_packet("plot", CONTRACT_PATH, {
-                "canon_scope": ROOT / "workspace/cangqi/90_canon/canon.md",
-                "source_anchors": ROOT / "workspace/cangqi/06_plot/ep001_source_anchors.md",
+            build_role_packet("plot", self.contract_path, {
+                "canon_scope": self.project / "90_canon/canon.md",
+                "source_anchors": self.project / "06_plot/source_anchors.md",
             }, mode="pretend-live")
 
     def test_nk_receives_ordered_events_and_reflection_enters_brief(self):
-        contract = load_contract(CONTRACT_PATH)
+        contract = load_contract(self.contract_path)
         cards = (
-            "# Scene Cards — CQ-J19-INSERT-01\n\n## Scene 1\n\n### Required beats\n"
-            "- 明穗开口又停住\n- 君天离试着开口\n- 柳浅望向窗外\n- 林思柔低头\n"
+            "# Scene Cards — SYNTHETIC-INSERT-01\n\n## Scene 1\n\n### Required beats\n"
+            "- 甲 asks clearly\n- 乙 answers\n- 丙 observes\n- 丁 chooses a next step\n"
         )
         payload = build_nk_payload(contract, cards)
         self.assertEqual(len(payload["eventSequence"]), 4)
-        self.assertIn("明穗开口又停住", payload["eventSequence"][0]["description"])
+        self.assertIn("甲 asks clearly", payload["eventSequence"][0]["description"])
         self.assertEqual(len(payload["perspectives"]), 1)
         task = payload["perspectives"][0]
-        self.assertEqual(task["narrator"], "君天离")
+        self.assertEqual(task["narrator"], "甲")
         self.assertEqual(len(task["characterSnapshots"]), 4)
         self.assertTrue(task["eventObjective"])
         result, mapping = map_reflection_to_brief("# Brief", {"perspectives": [{"reflection": "我只能写亲眼所见。"}]}, {"status": "FIXTURE_ONLY"})
@@ -162,8 +183,8 @@ class AdapterTests(unittest.TestCase):
             map_reflection_to_brief("# Brief", response, live_receipt)
 
     def test_prose_packet_is_limited_to_brief_and_voice_samples(self):
-        contract = load_contract(CONTRACT_PATH)
-        workdir = ROOT / "workspace/cangqi/.w04-test-packet"
+        contract = load_contract(self.contract_path)
+        workdir = self.project / "role-packet"
         workdir.mkdir(parents=True, exist_ok=True)
         try:
             paths = {}
@@ -182,7 +203,7 @@ class AdapterTests(unittest.TestCase):
             self.assertNotIn("character_knowledge_boundary_ref", json.dumps(view, ensure_ascii=False))
             self.assertNotIn("Private unrelated sample", view["inputs"]["voice_samples"])
             with self.assertRaisesRegex(ContractError, "ROLE_INPUT_SCOPE_VIOLATION"):
-                build_role_packet("plot", CONTRACT_PATH, {"canon_scope": paths["canon"], "source_anchors": paths["anchors"], "future_route": paths["canon"]})
+                build_role_packet("plot", self.contract_path, {"canon_scope": paths["canon"], "source_anchors": paths["anchors"], "future_route": paths["canon"]})
         finally:
             for path in workdir.glob("*"):
                 path.unlink()
@@ -196,7 +217,7 @@ class AdapterTests(unittest.TestCase):
             role_receipt("plot", {"work_id": "W"}, "plot", status="CONTROLLER_ACCEPTED")
 
     def test_plot_card_brief_cannot_drop_beat_ids_or_budget(self):
-        contract = load_contract(CONTRACT_PATH)
+        contract = load_contract(self.contract_path)
         with self.assertRaisesRegex(ContractError, "ROLE_UNKNOWN"):
             validate_role_output("typo", contract, "nonempty output")
         valid = "\n".join([
@@ -209,9 +230,9 @@ class AdapterTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "ROLE_TEMPLATE_SECTION_MISSING"):
             validate_role_output("brief", contract, valid.replace("## Active Canon", "## Missing"))
         with self.assertRaisesRegex(ContractError, "ROLE_BEAT_ID_DROPPED"):
-            validate_role_output("brief", contract, valid.replace("B03", "MISSING"))
+            validate_role_output("brief", contract, valid.replace("B02", "MISSING"))
         with self.assertRaisesRegex(ContractError, "ROLE_BEAT_BUDGET_MISMATCH"):
-            validate_role_output("brief", contract, valid.replace("CNW_BEAT B03 budget_visible_chars=500", "CNW_BEAT B03 budget_visible_chars=501"))
+            validate_role_output("brief", contract, valid.replace("CNW_BEAT B02 budget_visible_chars=750", "CNW_BEAT B02 budget_visible_chars=751"))
 
     def test_role_prompt_sources_match_captured_cnw_manifest_blobs(self):
         manifest = json.loads((ROOT / "runtime/reference/cnw_97ad71fe5e5e/CNW_LOCAL_REFERENCE_MANIFEST.json").read_text(encoding="utf-8"))
@@ -228,11 +249,9 @@ class AdapterTests(unittest.TestCase):
             self.assertEqual(actual_blobs, {upstream[source_path] for source_path in source_paths}, prompt_name)
 
     def test_critics_hook_routes_through_existing_cost_guarded_runner(self):
-        command = build_plan_critique_command(
-            "python.exe",
-            "workspace/cangqi/06_plot/ep001_plot.v1.md",
-            "w04-fixture-plot-critique",
-        )
+        plot_input = self.project / "plot.md"
+        plot_input.write_text("Synthetic plot input.", encoding="utf-8")
+        command = build_plan_critique_command("python.exe", str(plot_input), "synthetic-plot-critique")
         self.assertEqual(Path(command[1]), ROOT / "tools/p2_06_critics_run.py")
         self.assertIn("--action", command)
         self.assertIn("plan-critique", command)
@@ -240,10 +259,11 @@ class AdapterTests(unittest.TestCase):
         self.assertNotIn("critics_bridge.py", command[1])
 
     def test_critics_receipt_binds_source_output_and_pinned_build(self):
-        source = ROOT / "workspace/cangqi/06_plot/ep001_plot.v1.md"
+        source = self.base / "synthetic-plot.md"
+        source.write_text("Synthetic plot input.", encoding="utf-8")
         build_id = json.loads((ROOT / "patches/critics/PATCH_INDEX.json").read_text(encoding="utf-8"))["runtime_build_id"]
-        run = ROOT / "runs/.w04-test-critics-receipt"
-        run.mkdir(exist_ok=False)
+        run = self.base / "runs/.synthetic-critics-receipt"
+        run.mkdir(parents=True, exist_ok=False)
         output = run / "critique.json"
         try:
             output.write_text('{"fixture":true}\n', encoding="utf-8")
