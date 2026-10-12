@@ -9,11 +9,27 @@ StoryStudio 的 Workflow 01/02 执行器显式加载该版本的操作提示词�
 
 ```powershell
 .\tools\studio.ps1 setup -DataHome "<selected-private-data-home>"
+```
+
+选择且只运行以下一种新项目创建方式：
+
+```powershell
+# 空白项目，不导入来源
 .\tools\studio.ps1 project-init -ProjectId "<project-id>" -DataHome "<selected-private-data-home>"
+
+# 或：创建项目、初始化模板并封存第一份来源
 .\tools\studio.ps1 project-import -ProjectId "<project-id>" -DataHome "<selected-private-data-home>" -InputFile "<source-file>"
 ```
 
-`project-import` 保存原稿字节、不可变来源修订和待确认候选；它本身不运行完整语义 Workflow 01，也不调用 Provider。使用命令输出中的 `project_root` 作为后续明确项目上下文。
+这两个命令都会创建新的项目实例；不要对同一新项目连续执行。需要将原稿加入已经存在的项目时，使用：
+
+```powershell
+.\tools\studio.ps1 import-source -ProjectRoot "<registered-project-root>" -InputFile "<source-file>"
+```
+
+`project-import` 与 `import-source` 保存原稿字节、不可变来源修订和待确认候选；它们本身不运行完整语义 Workflow 01，也不调用 Provider。使用命令输出中的 `project_root` 作为后续明确项目上下文。
+
+## 语义 Workflow 01 与 Workflow 02
 
 完整 Workflow 01 由 `initial-import` 执行。它读取项目 `_INBOX`，调用配置的语义组织流程，并使用当前共享 Provider/费用守卫：
 
@@ -23,19 +39,19 @@ python tools/cnw_project.py initial-import --project-root "<registered-project-r
 
 这是可能产生费用的真实 Provider 操作。R5 通用化施工期间不得执行；只有单独取得 Live/费用授权并满足项目预检后才可调用。没有这项授权时，保留 `SOURCE_IMPORTED` 与 `TODO_CONFIRM` 状态，不能把原稿封存结果称作语义导入完成。
 
-完成 Workflow 01 后，增量更新可以通过注册项目入口追加一个来源版本并运行 Workflow 02：
+完成 Workflow 01 后，`project-incremental` 会向现有项目追加来源并运行 Workflow 02：
 
 ```powershell
 .\tools\studio.ps1 project-incremental -ProjectRoot "<registered-project-root>" -InputFile "<new-source-file>"
 ```
 
-它要求已有 `00_meta/import_state.json`，只处理新来源或字节已变化的来源。增量来源与语义结论应分别保留来源身份、SHA、状态及冲突，不得自动把冲突提升为 `CONFIRMED`。
+该操作要求已有 `00_meta/import_state.json`，并调用 Provider 与共享费用守卫，可能产生费用；它同样需要单独的 Live/费用授权，R5 通用化施工期间不得执行。若只需封存新增来源而暂不做语义处理，使用 `import-source`。增量来源与语义结论应分别保留来源身份、SHA、状态及冲突，不得自动把冲突提升为 `CONFIRMED`。
 
 ## 旧项目根兼容入口
 
-`initial-import --project-root ...` 与 `update-inbox --project-root ...` 仍兼容已有私有项目根。它们需要显式根路径，不得默认回退到旧项目目录。新注册项目的原稿封存应使用 `project-import`；语义 Workflow 01/02 与原始来源导入是不同操作。
+`initial-import --project-root ...` 与 `update-inbox --project-root ...` 仍兼容已有私有项目根。它们需要显式根路径，不得默认回退到旧项目目录。新注册项目的原稿封存应使用上述注册入口；语义 Workflow 01/02 与原始来源导入是不同操作。
 
-`source-import` 仅封存/登记一个来源版本，不执行语义 Workflow 01/02。原始文件、语义输出、运行回执和费用账本都留在项目私有数据目录，不进入 Git。
+原始文件、语义输出、运行回执和费用账本都留在项目私有数据目录，不进入 Git。
 
 ## 失败与恢复
 
