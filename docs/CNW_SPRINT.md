@@ -1,4 +1,4 @@
-# CNW five-unit Sprint
+# CNW five-episode Sprint
 
 The public reference is `MintoTsukino/claude-novel-workflow` at
 `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`. StoryStudio preserves its five-unit

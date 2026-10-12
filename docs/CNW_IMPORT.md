@@ -1,58 +1,44 @@
 # CNW 初始导入与增量更新
 
-使用固定作者版本 `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e` 的 Workflow 01/02。
-API 请求显式加载完整官方 `templates/CLAUDE.md`，并读取项目根指令扩展；不会假定 API 自动读取本地文件。
-新项目初始化保存官方指令为 `CLAUDE.md` / `AGENTS.md`，已有项目指令保留。
-以下命令从仓库根目录运行；项目位于私有 `workspace`，原稿、归纳内容、API 回执和事务记录不进入 Git。
+固定公开方法来源：`MintoTsukino/claude-novel-workflow@97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`。
+StoryStudio 的 Workflow 01/02 执行器显式加载该版本的操作提示词；本地文件不会因 API 调用而自动加载。
 
-## 初始导入
+## 通用注册项目路径
 
-先用 `cnw_project.py init` 建立项目，再将 UTF-8 Markdown、文本或 JSON 材料放进项目 `_INBOX`。
-也可用现有 `import-source` 命令保存不可覆盖的原始副本与索引。原始暂存不代表语义导入完成。
+新项目必须在显式选择的私有 DataHome 中注册。以下命令只说明命令结构，不会为你选择目录或授予 Provider/费用权限：
 
 ```powershell
-python tools/cnw_project.py initial-import --project-root D:\CangqiStudio\StoryStudio\workspace\my_project
+.\tools\studio.ps1 setup -DataHome "<selected-private-data-home>"
+.\tools\studio.ps1 project-init -ProjectId "<project-id>" -DataHome "<selected-private-data-home>"
+.\tools\studio.ps1 project-import -ProjectId "<project-id>" -DataHome "<selected-private-data-home>" -InputFile "<source-file>"
 ```
 
-该命令实际调用已配置的 DeepSeek Flash，沿用现有全局预算账本及环境变量 `DEEPSEEK_API_KEY`。
-完整原文作为输入，由模型按作者七个内部步骤整理资料。原稿中的直接陈述、推断和疑问分别记录为
-`CONFIRMED`、`INFERRED`、`TODO_CONFIRM`；Canon 中仅放来源支持的直接陈述。
+`project-import` 保存原稿字节、不可变来源修订和待确认候选；它本身不运行完整语义 Workflow 01，也不调用 Provider。使用命令输出中的 `project_root` 作为后续明确项目上下文。
 
-输出包含作者要求的项目索引、来源日志、主题、Logline、项目设计、Arc 索引、Canon、人物资料和交接摘要，
-以及工作日志、待确认问题、带来源哈希的分类记录。缺少事实时记录疑问，不补造事实。
-来源直接陈述并不自动解决相互矛盾的材料。
-`CONFIRMED` 允许忠实归纳，不要求逐字等于引文。每个整理段落保留分类、源文件引用和哈希。
-组织后的 Markdown 内容会写入对应资料；没有先逐句转录成 claims 的前置门。
-固定 Canon、Arc、人物模板规定各类资料职责，组织步骤读取全文并跨文件核对信息。
-来源身份检查不证明语义正确；真实诊断记录主体、条件、时序和来源支持问题，用于定位方法实现差异。
-原稿来源与官方操作说明来源分别记录。模板中的操作政策可以绑定固定官方文件，不能用模板例子补造故事事实。
-完整请求和来源身份写入私有运行证据。
-
-## 增量更新
-
-在 `_INBOX` 添加或修改材料后运行：
+完整 Workflow 01 由 `initial-import` 执行。它读取项目 `_INBOX`，调用配置的语义组织流程，并使用当前共享 Provider/费用守卫：
 
 ```powershell
-python tools/cnw_project.py update-inbox --project-root D:\CangqiStudio\StoryStudio\workspace\my_project
+python tools/cnw_project.py initial-import --project-root "<registered-project-root>"
 ```
 
-仅处理新增或哈希变化的材料；读取既有 Canon 与设计文档作为比对依据。
-既有内容保留，新增结论以带日期记录追加。矛盾同时引用旧、新说法，写入
-`90_canon/unresolved_questions.md`，不替作者选定一个版本。
-既有组织 pass 判断实际语义矛盾，绑定双方证据并记录原因；不同文字、不同时间事件和条件分支
-不自动当成矛盾。该判断仍需要真实材料验收。
+这是可能产生费用的真实 Provider 操作。R5 通用化施工期间不得执行；只有单独取得 Live/费用授权并满足项目预检后才可调用。没有这项授权时，保留 `SOURCE_IMPORTED` 与 `TODO_CONFIRM` 状态，不能把原稿封存结果称作语义导入完成。
 
-`incremental-update --workspace-root ... --project-id ... --input ...` 会先暂存指定文件，再执行同一增量流程。
-无新增或变化时不会调用模型。
+完成 Workflow 01 后，增量更新可以通过注册项目入口追加一个来源版本并运行 Workflow 02：
+
+```powershell
+.\tools\studio.ps1 project-incremental -ProjectRoot "<registered-project-root>" -InputFile "<new-source-file>"
+```
+
+它要求已有 `00_meta/import_state.json`，只处理新来源或字节已变化的来源。增量来源与语义结论应分别保留来源身份、SHA、状态及冲突，不得自动把冲突提升为 `CONFIRMED`。
+
+## 旧项目根兼容入口
+
+`initial-import --project-root ...` 与 `update-inbox --project-root ...` 仍兼容已有私有项目根。它们需要显式根路径，不得默认回退到旧项目目录。新注册项目的原稿封存应使用 `project-import`；语义 Workflow 01/02 与原始来源导入是不同操作。
+
+`source-import` 仅封存/登记一个来源版本，不执行语义 Workflow 01/02。原始文件、语义输出、运行回执和费用账本都留在项目私有数据目录，不进入 Git。
 
 ## 失败与恢复
 
-原始材料不会被归纳过程改写。每次保存选中材料的字节快照；模型响应与费用回执沿用生产调用留证。
-写入采用前后内容校验和事务记录。中断后重跑同一命令可继续写入，不重新执行已完成的归纳调用。
-如果来源或目标文档已被外部修改，命令会报告冲突并保留现场。
+导入流程使用来源快照和事务记录；原始材料不被归纳流程改写。中断恢复必须匹配已冻结的输入与前态；外部修改或冲突时保留现场并返回错误，不能覆盖旧结果。
 
-当前工程测试使用明确的模拟响应。它们覆盖入口、来源绑定、冲突保留、追加与恢复，不能证明真实小说材料的归纳质量。
-已有真实 Workflow 01 诊断的 RETURN 记录保留：逐字引文门、行动者误读、逐句转录协议及截断均保留；
-没有手改成通过结果。现已回到官方七 pass 的直接资料组织方式，详见
-`evidence/CNW_REAL_WORKFLOW_DIAGNOSTICS.md`。命令完成状态不代表独立功能 ACCEPT。
-当前任务验收以公开方法是否复现为目标；样本错误用于定位实现差异，不额外要求故事输出零错误。
+自动化测试使用明确标记的模拟响应。它们能验证请求构造、消费者、冲突保留与恢复路径，不能证明真实材料的语义归纳质量或 Live Provider 可用性。Workflow 01/02 的通用注册项目消费效果仍须由 R5 对应 Atom 的离线全链和独立 Controller 验收。
