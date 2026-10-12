@@ -20,7 +20,7 @@ from unittest.mock import patch
 
 from tools import cnw_export, cnw_recovery, cnw_runner
 from tools.cnw_contract import ContractError
-from tools.cnw_project import import_source, init_registered_project, write_contract_draft
+from tools.cnw_project import import_source, init_registered_project, standard_operation, write_contract_draft
 from tools.project_paths import create_project, setup_data_home
 
 
@@ -491,6 +491,103 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                 "live_quality": "NOT_VALIDATED"}}
         evidence_path = os.environ.get("ATOM09_E2E_EVIDENCE_OUTPUT")
         if evidence_path:
+            destination = Path(evidence_path)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def test_workflow03_consumes_real_episode_and_review_without_promoting(self):
+        root = self._project("TEST_REVISION", "Synthetic Revision Project", ("Sana", "Keeper"), "coast")
+        contract = self._contract(root, "REVISION-EP001", "ORIGINAL_EPISODE",
+            names=("Sana", "Keeper"), setting="coast", kind="episode", first_episode=True)
+        chain = self._run_chain(root, contract, "REVISION-EP001-RUN")
+        final_prose = cnw_runner._read_stage_text(chain["run_dir"], chain["state"], "refine")
+        draft_path = _write(root, "07_draft/episodes/EP001.md", final_prose)
+        rereview = cnw_runner._read_stage_text(chain["run_dir"], chain["state"], "re_review")
+        _write(root, "08_review/cnw_ep001_re_review.json", rereview)
+        _write(root, "08_review/beta_feedback.md",
+            "# Ordinary beta feedback\nPlease make Sana's next request observable. A reader suggested changing the project's protected premise; that suggestion needs author review.\n")
+        canon_path = root / "90_canon/canon.md"
+        canon_before = canon_path.read_bytes()
+        draft_before = draft_path.read_bytes()
+        request_rows = []
+
+        def simulated_maintenance_transport(run, *, stage, role_id, messages, output_cap, **_kwargs):
+            self.assertEqual(stage, "project_revision_plan")
+            self.assertEqual(role_id, "project_revision_plan")
+            payload = json.loads(messages[1]["content"])
+            project_sources = payload["project_sources"]
+            self.assertIn("08_review/beta_feedback.md", project_sources)
+            self.assertIn("08_review/cnw_ep001_re_review.json", project_sources)
+            self.assertIn("07_draft/episodes/EP001.md", project_sources)
+            self.assertEqual(project_sources["07_draft/episodes/EP001.md"]["sha256"], _sha(draft_before))
+            self.assertIn("Please make Sana's next request observable", project_sources["08_review/beta_feedback.md"]["text"])
+            self.assertIn("P0 REQUIRES AUTHOR DECISION", messages[0]["content"])
+            value = {"documents": {"09_revision/revision_plan.md": (
+                    "# Revision Plan\n\n## P0\nREQUIRES AUTHOR DECISION: consider the protected-premise suggestion; do not apply without user approval.\n\n"
+                    "## P1\nNone identified from supplied evidence.\n\n"
+                    "## P2\nEP001: make Sana's next request observable, based on ordinary beta_feedback.md; keep project Canon unchanged.\n\n"
+                    "## P3\nNone identified from supplied evidence.\n")},
+                "report_markdown": "# Workflow 03 simulated offline plan\nRead the actual ordinary beta feedback, CNW re-review, draft, and project Canon.",
+                "assumptions": [], "unresolved_questions": ["The protected-premise suggestion requires author decision."],
+                "next_action": "User reviews the plan; no revision or promotion is authorized."}
+            content = json.dumps(value, ensure_ascii=False)
+            request_path = run / "artifacts" / "workflow03.request.json"
+            raw_path = run / "artifacts" / "workflow03.raw.json"
+            request_path.parent.mkdir(parents=True, exist_ok=True)
+            request_raw = json.dumps({"messages": messages, "output_cap": output_cap}, ensure_ascii=False,
+                                     sort_keys=True).encode("utf-8")
+            raw_raw = json.dumps({"choices": [{"message": {"content": content}}]},
+                                 ensure_ascii=False, sort_keys=True).encode("utf-8")
+            request_path.write_bytes(request_raw)
+            raw_path.write_bytes(raw_raw)
+            receipt = {"request_id": "SIM-WORKFLOW03-REQUEST", "provider_request_id": "SIM-WORKFLOW03-RECEIPT",
+                "status": "SUCCEEDED", "mode": "MOCK_ONLY", "simulation_status": "SIMULATED",
+                "request_path": request_path.relative_to(run).as_posix(), "request_sha256": _sha(request_raw),
+                "input_sha256": _sha(json.dumps(messages, ensure_ascii=False, sort_keys=True,
+                    separators=(",", ":")).encode("utf-8")),
+                "raw_response_path": raw_path.relative_to(run).as_posix(), "raw_response_sha256": _sha(raw_raw),
+                "output_sha256": _sha(content.encode("utf-8"))}
+            state = cnw_runner.load_state(run)
+            state.setdefault("provider_requests", []).append(receipt)
+            cnw_runner.save_state(run, state)
+            request_rows.append({"run_dir": str(run), "request_sha256": receipt["request_sha256"],
+                "input_sha256": receipt["input_sha256"], "raw_response_sha256": receipt["raw_response_sha256"],
+                "output_sha256": receipt["output_sha256"], "mode": receipt["mode"],
+                "simulation_status": receipt["simulation_status"],
+                "source_sha256": {name: row["sha256"] for name, row in project_sources.items()}})
+            return content, receipt
+
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=simulated_maintenance_transport):
+            result = standard_operation(root, "revision_plan")
+        plan_path = root / "09_revision/revision_plan.md"
+        self.assertEqual(result["status"], "STANDARD_OPERATION_RECORDED")
+        self.assertFalse(result["revision_approved"])
+        self.assertFalse(result["user_creative_accepted"])
+        self.assertTrue(plan_path.is_file())
+        plan_bytes = plan_path.read_bytes()
+        self.assertIn(b"P0", plan_bytes)
+        self.assertIn(b"P3", plan_bytes)
+        self.assertNotIn(b"\\n", plan_bytes)
+        self.assertIn("no revision or promotion", result["next_action"])
+        self.assertEqual(draft_path.read_bytes(), draft_before)
+        self.assertEqual(canon_path.read_bytes(), canon_before)
+        self.assertTrue(request_rows and request_rows[0]["mode"] == "MOCK_ONLY")
+        self.assertEqual(request_rows[0]["simulation_status"], "SIMULATED")
+        self.assertEqual(_sha(plan_bytes), _sha(plan_path.read_bytes()))
+        evidence_path = os.environ.get("ATOM09_WF03_EVIDENCE_OUTPUT")
+        if evidence_path:
+            evidence = {"schema_version": "atom09_workflow03_offline_evidence_v1",
+                "execution": "SIMULATED_OFFLINE_ONLY", "project_id": "TEST_REVISION",
+                "run_id": chain["state"]["run_id"], "contract_sha256": chain["state"]["contract_sha256"],
+                "request": request_rows[0],
+                "revision_plan": {"path": "09_revision/revision_plan.md", "sha256": _sha(plan_bytes),
+                    "size": len(plan_bytes)},
+                "protected_inputs": {"draft_sha256_before": _sha(draft_before),
+                    "draft_sha256_after": _sha(draft_path.read_bytes()), "canon_sha256_before": _sha(canon_before),
+                    "canon_sha256_after": _sha(canon_path.read_bytes())},
+                "decision_boundary": {"revision_approved": result["revision_approved"],
+                    "user_creative_accepted": result["user_creative_accepted"],
+                    "provider_call": "SIMULATED_ONLY"}}
             destination = Path(evidence_path)
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
