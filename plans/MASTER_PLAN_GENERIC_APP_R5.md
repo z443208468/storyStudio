@@ -795,6 +795,19 @@ otherwise: accept_valid_preflight_only
 
 独立只读 **工程 Controller 子智能体**验收本次代码/合同/source/router 行为；CNW 中的“五 Lens + 每 Finding 三 Verifier + Completeness + Refine + Re-review”是实际作品创作流水线，不能拿工程 Controller 一条 ACCEPT 替代。这是两套不同职责：工程审核可以驳回绕过 CNW 的实现，但不能代替每个文学 Finding 的三路模型反证，也不能代替作者批准 Canon/出版正文。新增 `preflight` 只管**生成前**合法性；不得要求未来模型回执，不得预填 `REVIEWED_CANDIDATE` 或 `USER_CREATIVE_ACCEPTED`。实际不满足合同/来源/权限的 run 应在费用 reserve 之前被拒绝。
 
+### 07.2b ATOM-07 离线身份、可信签收与 Live 权限分层（项目所有者 2026-10-12 补充）
+
+本条为 R5 的有限验收分层修订，不更改 CNW 方法、危险数据门或 Atom 顺序：
+
+1. **确定性离线身份层**：只读核验当前 project/instance、Run、合同字节、source 与 manifest/revision、Policy、Workflow、历史 run_state 快照、旧项目受限外部映射以及 TOCTOU 稳定性。核验结果可为 `OFFLINE_BINDINGS_VALIDATED`，并记录计算出的身份字段与 SHA。该结果只说明身份与来源可确定，不是 Controller 签收，不是恢复资格，也不能授权 Provider。
+2. **独立工程 Controller 层**：独立只读 Controller 对精确候选 C/T、离线身份报告、真实 W10 调用链和恢复计划审查后，可给出限定的 `ATOM07_OFFLINE_ENGINE_ACCEPT`。不得因为缺少 API Key、真实付费 Provider 回执或 Live 签名私钥而否定已完成的离线工程核验；也不得把该限定结果写成 ATOM-07 Live 完成。
+3. **W10 生产可信签收层**：运行前的 Controller 原始签收必须来自 Writer 不可控制的受信任验证端，并签名绑定 `project_instance_id/project_id/work_id/run_id/contract_sha256/work_intent/source_id+revision/manifest_revision/source_root/selected_span/policy/workflow`。普通 JSON 的 `ACCEPTED`、自报 reviewer/ref 或可重算摘要不是可信签收。签名验证器应通过部署提供的独立信任接口取得信任根；缺少该接口或有效信任根时返回 `ATTESTATION_PENDING`。离线身份报告可以先于签收产生，不能被 Provider 消费为授权。阶段产物的 `accept_controller_role_output()` 必须使用相同的独立签收边界，并额外绑定实际 Run、stage、request/provider receipt 和输出 SHA。
+4. **单独 Live/费用授权层**：Provider 请求另需真实用户授予的 Live 权限、有效 Provider Key、费用政策/额度与适用于该请求的可信签收。离线身份核验或 Controller 工程 ACCEPT 均不能满足这些条件；禁止通过把 `provider_call_authorized=false` 改成 `true` 打通请求。本阶段不调用真实 Provider、不 reserve 费用、不恢复 TS。
+
+唯一已验证的 TS 如其合同/来源/运行身份与调用链获得完整只读核验，并由独立工程 Controller 接受，可记录 `ATOM07_OFFLINE_ENGINE_ACCEPT`，并按本补充范围申请继续 ATOM-08 中不涉及旧私有数据删除、搬移或切换的安全工程工作，以及 ATOM-09 完全隔离、断网、虚构项目的模拟验收。除非可信生产签收与单独 Live/费用授权另外通过，必须记录 `TS_LIVE_AUTHORIZATION_STATUS=NOT_AUTHORIZED`、`TS_RECOVERY_ELIGIBILITY=NOT_ESTABLISHED`。此路径不接受历史数据迁移、真实恢复或新生产默认启用；`CUTOVER_BLOCKED=true` 继续有效，直至原危险切换门取得 `CUTOVER_READ_ONLY_ACCEPT`。
+
+保留 C3 的 `NO_PUSH_AUTHORIZATION` 和用户后来直接要求推送的审计事实。该用户指令允许当时实际的推送行为，但不能倒写为旧 Controller ACCEPT，也不能替代本补充条款要求的候选 Controller verdict。
+
 ### 07.3 中断恢复
 
 - 既有 `EXECUTION_INCOMPLETE` run 的 contract/source/收据/费用原样保留；**不新建同一 TS run，不执行 TS**。原 TS 运行状态的合同、旧 `source:` 键、policy SHA、历史 `execution_failures` 必须通过迁移映射验证可读性，不准重置状态。

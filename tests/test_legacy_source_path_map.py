@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import base64
 import json
 import shutil
 import subprocess
@@ -442,9 +443,77 @@ class LegacySourcePathMapTests(unittest.TestCase):
         for asserted_status in ("ACCEPTED", "UNREVIEWED"):
             preflight["status"] = asserted_status
             preflight_path.write_text(json.dumps(preflight, sort_keys=True), encoding="utf-8")
-            with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_ATTESTATION_UNVERIFIED"):
+            offline, _preflight_sha = cnw_w10_policy.validate_per_run_bindings(
+                preflight_path, external_contract, external_run, external_root)
+            self.assertEqual(offline["status"], "OFFLINE_BINDINGS_VALIDATED")
+            self.assertEqual(offline["bindings"]["identity_kind"], "LEGACY_EXTERNAL_V1")
+            with self.assertRaisesRegex(ContractError, "W10_ATTESTATION_PENDING"):
                 cnw_w10_policy.verify_preflight_file(
                     preflight_path, external_contract, run_dir=external_run, project_root=external_root)
+
+        # Status labels and old self-asserted controller fields do not change the
+        # deterministic identity result or create production trust.
+        forged = json.loads(preflight_path.read_text(encoding="utf-8"))
+        forged["status"] = "ACCEPTED"
+        forged["controller_acceptance_ref"] = "FORGED-ACCEPT"
+        forged["reviewer_identity"] = "self-claimed-reviewer"
+        preflight_path.write_text(json.dumps(forged, sort_keys=True), encoding="utf-8")
+        report, _ = cnw_w10_policy.validate_per_run_bindings(
+            preflight_path, external_contract, external_run, external_root)
+        self.assertEqual(report["status"], "OFFLINE_BINDINGS_VALIDATED")
+        with self.assertRaisesRegex(ContractError, "W10_ATTESTATION_PENDING"):
+            cnw_w10_policy.verify_preflight_file(
+                preflight_path, external_contract, run_dir=external_run, project_root=external_root)
+
+        # A deterministic fake verifier exercises the signed binding protocol
+        # only in this synthetic test. Production loads trust from deployment.
+        stage_payload = {"purpose": "W10_PER_RUN_PREFLIGHT", "decision": "ACCEPT",
+            "bindings": report["bindings"], "identity_sha256": report["identity_sha256"],
+            "provider_call_authorized": False}
+        attestation_path = self.temp / "synthetic-signed-controller.json"
+        attestation_path.write_text(json.dumps({
+            "schema_version": "cnw_signed_controller_attestation_v1",
+            "payload": stage_payload, "signer_id": "TEST_ONLY_MOCK_SIGNER",
+            "signature_base64": base64.b64encode(b"MOCK_ONLY").decode("ascii")},
+            sort_keys=True), encoding="utf-8")
+        forged["controller_attestation_path"] = str(attestation_path)
+        forged["controller_attestation_sha256"] = sha(attestation_path.read_bytes())
+        preflight_path.write_text(json.dumps(forged, sort_keys=True), encoding="utf-8")
+        class TestOnlyVerifier:
+            def verify(self, signer_id, message, signature):
+                return (signer_id == "TEST_ONLY_MOCK_SIGNER" and signature == b"MOCK_ONLY"
+                    and json.loads(message.decode("utf-8")) == stage_payload)
+        accepted, _ = cnw_w10_policy.verify_per_run_preflight_file(
+            preflight_path, external_contract, external_run, external_root,
+            verifier=TestOnlyVerifier())
+        self.assertEqual(accepted["status"], "ATTESTED")
+        self.assertIs(accepted["provider_call_authorized"], False)
+        forged["controller_attestation_path"] = str(attestation_path)
+        forged["controller_attestation_sha256"] = sha(attestation_path.read_bytes())
+
+        # The identity proof rejects a changed Run, contract, source map, policy,
+        # workflow, and mapped project identity independently of any verdict.
+        for key, bad_value in (("project_id", "OTHER-PROJECT"), ("run_id", "OTHER-RUN"),
+                               ("work_id", "OTHER-WORK"), ("contract_sha256", "0" * 64),
+                               ("source_file_sha256", "5" * 64),
+                               ("source_manifest_sha256", "1" * 64),
+                               ("source_id", "OTHER-SOURCE"),
+                               ("source_revision_id", "6" * 64),
+                               ("source_manifest_revision_sha256", "7" * 64),
+                               ("source_root_identity", "8" * 64),
+                               ("selected_span_or_anchor_sha", "9" * 64),
+                               ("policy_sha256", "2" * 64),
+                               ("workflow_template_sha256", "3" * 64),
+                               ("legacy_identity_map_sha256", "4" * 64),
+                               ("original_run_state_sha256", "a" * 64),
+                               ("project_instance_id", "OTHER-INSTANCE")):
+            altered = dict(forged)
+            altered[key] = bad_value
+            preflight_path.write_text(json.dumps(altered, sort_keys=True), encoding="utf-8")
+            with self.subTest(binding=key), self.assertRaises(ContractError):
+                cnw_w10_policy.validate_per_run_bindings(
+                    preflight_path, external_contract, external_run, external_root)
+        preflight_path.write_text(json.dumps(forged, sort_keys=True), encoding="utf-8")
         external_state.write_bytes(state_raw)
 
         other_root = self.temp / "same-files-different-legacy-root"

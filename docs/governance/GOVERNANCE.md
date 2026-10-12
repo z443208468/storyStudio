@@ -2,7 +2,7 @@
 
 ## 1. 当前权威与状态
 
-唯一活动计划为 [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](../../plans/MASTER_PLAN_GENERIC_APP_R5.md)，原始文件 SHA256 为 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`。当前目标是支持彼此隔离的多类写作项目，同时严格保留原开源 CNW 工作流及其职责。计划逐 Atom 推进；实现状态只由实际候选、验证、独立 Controller verdict 与远端回读证明。P2/P3/P3.1、J19/Cangqi 计划、实现与签收均为历史事实，不能作为本目标的活动范围或完成证据；历史原字节不得删除。
+唯一活动计划为 [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](../../plans/MASTER_PLAN_GENERIC_APP_R5.md)：原批准源文件 SHA256 为 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`，加入项目所有者补充条款后的当前文件 SHA256 为 `AE5A1959EEAB75AD6A8F41460C38BF9678284C1D51A8D63B25CE37F7CB4F5183`。当前目标是支持彼此隔离的多类写作项目，同时严格保留原开源 CNW 工作流及其职责。计划逐 Atom 推进；实现状态只由实际候选、验证、独立 Controller verdict 与远端回读证明。P2/P3/P3.1、J19/Cangqi 计划、实现与签收均为历史事实，不能作为本目标的活动范围或完成证据；历史原字节不得删除。
 
 ## 2. Writer 与独立只读 Controller
 

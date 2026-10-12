@@ -42,29 +42,317 @@ def _canonical_sha256(value: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def verify_per_run_preflight_file(
+class ControllerAttestationVerifier:
+    """Deployment-owned verifier; trust roots and signing private keys stay outside Writer control."""
+
+    def verify(self, signer_id: str, message: bytes, signature: bytes) -> bool:
+        raise NotImplementedError
+
+
+def _deployment_attestation_verifier():
+    """Load an optional verifier from the protected deployment environment."""
+    import importlib
+    try:
+        provider = importlib.import_module("storystudio_deployment_trust.controller_attestations")
+    except ModuleNotFoundError as exc:
+        if exc.name == "storystudio_deployment_trust" or exc.name == "storystudio_deployment_trust.controller_attestations":
+            return None
+        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment verifier dependencies are unavailable") from exc
+    factory = getattr(provider, "get_controller_attestation_verifier", None)
+    if not callable(factory):
+        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment provider lacks verifier factory")
+    provider_file = getattr(provider, "__file__", None)
+    if not isinstance(provider_file, str):
+        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment verifier must be an installed module")
+    provider_candidate = Path(provider_file).absolute()
+    if not _no_reparse(provider_candidate):
+        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "trust provider path must not be a reparse point")
+    provider_path = provider_candidate.resolve(strict=True)
+    if provider_path.is_relative_to(ROOT.resolve()):
+        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "trust provider must be outside the Writer-controlled repository")
+    verifier = factory()
+    if verifier is None or not callable(getattr(verifier, "verify", None)):
+        raise ContractError("W10_ATTESTATION_VERIFIER_UNAVAILABLE", "deployment provider returned no verifier")
+    return verifier
+
+
+def verify_controller_attestation_document(path: str | Path, *, expected_payload: dict,
+                                           verifier=None) -> tuple[dict, str]:
+    """Verify a detached signed verdict using deployment-owned trust, never JSON self-claims."""
+    trusted_verifier = verifier if verifier is not None else _deployment_attestation_verifier()
+    if trusted_verifier is None:
+        raise ContractError("W10_ATTESTATION_PENDING", "no independent deployment trust verifier is configured")
+    evidence = Path(path).absolute()
+    if not _no_reparse(evidence) or not evidence.is_file():
+        raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", str(evidence))
+    evidence = evidence.resolve(strict=True)
+    raw = evidence.read_bytes()
+    def reject_duplicate_keys(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON key")
+            result[key] = value
+        return result
+    try:
+        document = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_keys)
+    except (UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", str(evidence)) from exc
+    if (not isinstance(document, dict)
+            or document.get("schema_version") != "cnw_signed_controller_attestation_v1"
+            or document.get("payload") != expected_payload
+            or not isinstance(document.get("signer_id"), str)
+            or not document["signer_id"].strip()
+            or not isinstance(document.get("signature_base64"), str)):
+        raise ContractError("W10_CONTROLLER_ATTESTATION_BINDING_INVALID", str(evidence))
+    import base64
+    try:
+        signature = base64.b64decode(document["signature_base64"], validate=True)
+    except (ValueError, TypeError) as exc:
+        raise ContractError("W10_CONTROLLER_SIGNATURE_INVALID", str(evidence)) from exc
+    message = json.dumps(expected_payload, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    try:
+        valid = trusted_verifier.verify(document["signer_id"], message, signature)
+    except Exception as exc:
+        raise ContractError("W10_CONTROLLER_SIGNATURE_INVALID", "deployment verifier rejected the attestation") from exc
+    if valid is not True:
+        raise ContractError("W10_CONTROLLER_SIGNATURE_INVALID", "signature or signer trust is invalid")
+    if evidence.read_bytes() != raw:
+        raise ContractError("W10_CONTROLLER_EVIDENCE_CHANGED_DURING_READ", str(evidence))
+    return document, hashlib.sha256(raw).hexdigest()
+
+
+def validate_per_run_bindings(
     path: str | Path,
     contract_path: str | Path,
     run_dir: str | Path,
     project_root: str | Path,
 ) -> tuple[dict, str]:
-    """Reject self-asserted per-run verdicts until a trusted attestation exists."""
+    """Validate project and Run bindings without accepting a Controller verdict."""
     evidence = Path(path).absolute()
+    contract_file = Path(contract_path).absolute()
+    run = Path(run_dir).resolve(strict=True)
+    project = Path(project_root).resolve(strict=True)
     if not _no_reparse(evidence) or not evidence.is_file():
         raise ContractError("W10_PER_RUN_PREFLIGHT_PATH_UNSAFE", str(evidence))
     evidence = evidence.resolve(strict=True)
-    raw = evidence.read_bytes()
+    if not (evidence.is_relative_to(project) or not evidence.is_relative_to(ROOT.resolve())):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_PATH_UNSAFE", "evidence must be in the selected project or external private storage")
+    state_path = run / "run_state.json"
+    run_contract_path = run / "artifacts" / "contract.json"
+    if (not _no_reparse(state_path) or not _no_reparse(contract_file)
+            or not _no_reparse(run_contract_path)):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_PATH_UNSAFE", str(run))
+    state, state_raw = _read_json(state_path, "LIVE_RUN_STATE_INVALID")
+    contract, contract_raw = _read_json(contract_file, "LIVE_CONTRACT_INVALID")
+    _run_contract, run_contract_raw = _read_json(run_contract_path, "LIVE_CONTRACT_INVALID")
+    if contract_raw != run_contract_raw:
+        raise ContractError("W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH", "project and Run contract snapshots differ")
+    value, evidence_raw = _read_json(evidence, "W10_PREFLIGHT_INVALID")
+    if evidence_raw != evidence.read_bytes():
+        raise ContractError("W10_PREFLIGHT_CHANGED_DURING_READ", str(evidence))
+
+    contract_sha = hashlib.sha256(contract_raw).hexdigest()
+    source = contract.get("source", {})
+    unit = contract.get("unit", {})
     try:
-        value = json.loads(raw.decode("utf-8"))
-    except (UnicodeError, json.JSONDecodeError) as exc:
-        raise ContractError("W10_PREFLIGHT_INVALID", str(evidence)) from exc
-    if not isinstance(value, dict) or value.get("schema_version") != PER_RUN_PREFLIGHT_SCHEMA:
-        raise ContractError("W10_PREFLIGHT_INVALID", "per-run review schema is invalid")
-    if value.get("status") == "ACCEPTED":
-        detail = "self-asserted ACCEPTED is unverified; the record must be treated as UNREVIEWED"
+        from .cnw_runner import WORKFLOW_PATH
+    except ImportError:
+        from cnw_runner import WORKFLOW_PATH
+    policy_path = ROOT / "config/cnw_production_policy.json"
+    if (policy_path.is_symlink() or not policy_path.is_file()
+            or WORKFLOW_PATH.is_symlink() or not WORKFLOW_PATH.is_file()):
+        raise ContractError("W10_POLICY_OR_WORKFLOW_UNAVAILABLE", "production policy or pinned workflow is unavailable")
+    policy_raw = policy_path.read_bytes()
+    workflow_raw = WORKFLOW_PATH.read_bytes()
+    actual_policy_sha = hashlib.sha256(policy_raw).hexdigest()
+    actual_workflow_sha = hashlib.sha256(workflow_raw).hexdigest()
+    source_sha = (source.get("script_sha256") or source.get("source_file_sha256") or
+                  source.get("source_revision_id") or source.get("import_id"))
+    manifest_sha = (source.get("source_manifest_sha256") or
+                    source.get("local_private_source_manifest_sha256"))
+    workflow_sha = state.get("workflow_template_sha256")
+    if unit.get("policy_sha256") != actual_policy_sha:
+        raise ContractError("PRODUCTION_POLICY_IDENTITY_MISMATCH", "contract policy SHA differs from the installed policy")
+    if workflow_sha != actual_workflow_sha:
+        raise ContractError("CNW_METHOD_IDENTITY_MISMATCH", "Run workflow SHA differs from the pinned workflow")
+    expected_identity = {
+        "project_id": contract.get("project_id"),
+        "run_id": state.get("run_id"),
+        "work_id": unit.get("id"),
+        "contract_sha256": contract_sha,
+        "source_file_sha256": source_sha,
+        "source_manifest_sha256": manifest_sha,
+        "policy_sha256": unit.get("policy_sha256"),
+        "workflow_template_sha256": workflow_sha,
+    }
+    recorded_identity = {key: value.get(key) for key in expected_identity}
+    if (run.name != state.get("run_id") or project != run.parent.parent.resolve(strict=True)
+            or state.get("project_id") not in {None, expected_identity["project_id"]}
+            or state.get("contract_sha256") != contract_sha
+            or any(expected is None or recorded_identity[key] != expected
+                   for key, expected in expected_identity.items())):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH", "project, run, contract, source, policy, or workflow differs")
+    if (value.get("schema_version") != PER_RUN_PREFLIGHT_SCHEMA
+            or value.get("scope") != "W10_SINGLE_SCENE"
+            or value.get("provider_call_authorized") is not False):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_REVIEW_INVALID",
+                            "offline identity input must be scoped and must not authorize Provider calls")
+
+    bound_files: list[tuple[Path, bytes]] = []
+
+    def external_bound_file(path_key: str, sha_key: str, error_code: str) -> tuple[Path, bytes]:
+        supplied = value.get(path_key)
+        expected_sha = value.get(sha_key)
+        if (not isinstance(supplied, str) or not supplied or not Path(supplied).is_absolute()
+                or not isinstance(expected_sha, str)):
+            raise ContractError(error_code, "path and SHA256 are required")
+        bound = Path(supplied).absolute()
+        if not _no_reparse(bound) or not bound.is_file():
+            raise ContractError(error_code, str(bound))
+        bound = bound.resolve(strict=True)
+        raw = bound.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != expected_sha.lower():
+            raise ContractError(error_code, "SHA256 mismatch")
+        bound_files.append((bound, raw))
+        return bound, raw
+
+    identity_path = project / "project_identity.json"
+    identity_raw = None
+    legacy_map_doc = None
+    legacy_map_sha = None
+    if identity_path.is_file():
+        identity, identity_raw = _read_json(identity_path, "PROJECT_IDENTITY_INVALID")
+        identity_sha = hashlib.sha256(identity_raw).hexdigest()
+        if (value.get("identity_kind") != "NATIVE"
+                or value.get("project_instance_id") != identity.get("project_instance_id")
+                or value.get("project_identity_sha256") != identity_sha
+                or identity.get("project_id") != expected_identity["project_id"]):
+            raise ContractError("W10_PER_RUN_PREFLIGHT_IDENTITY_MISMATCH", "native project identity differs")
     else:
-        detail = "per-run review remains UNREVIEWED until a trusted Controller attestation is available"
-    raise ContractError("W10_CONTROLLER_ATTESTATION_UNVERIFIED", detail)
+        map_path, _map_raw = external_bound_file(
+            "legacy_identity_map_path", "legacy_identity_map_sha256", "W10_LEGACY_IDENTITY_MAP_INVALID")
+        original_state_path, original_state_raw = external_bound_file(
+            "original_run_state_path", "original_run_state_sha256", "W10_ORIGINAL_RUN_STATE_INVALID")
+        if value.get("identity_kind") != "LEGACY_EXTERNAL_V1":
+            raise ContractError("W10_PER_RUN_PREFLIGHT_IDENTITY_MISMATCH", "a missing native identity requires an external legacy map")
+        try:
+            from .legacy_source_path_map import validate_legacy_source_path_map
+        except ImportError:
+            from legacy_source_path_map import validate_legacy_source_path_map
+        map_doc, _current_state, mapped_contract = validate_legacy_source_path_map(
+            target_project_root=project, legacy_run_dir=run, manifest_path=map_path,
+            expected_manifest_sha256=value["legacy_identity_map_sha256"],
+            original_run_state_path=original_state_path)
+        legacy_map_doc = map_doc
+        legacy_map_sha = value["legacy_identity_map_sha256"].lower()
+        target = map_doc.get("target_project", {})
+        source_run = map_doc.get("source_run", {})
+        if (target.get("project_id") != expected_identity["project_id"]
+                or target.get("project_instance_id") != value.get("project_instance_id")
+                or source_run.get("run_state_sha256") != hashlib.sha256(original_state_raw).hexdigest()
+                or (mapped_contract.get("source", {}).get("source_manifest_sha256") or
+                    mapped_contract.get("source", {}).get("local_private_source_manifest_sha256")) != manifest_sha):
+            raise ContractError("W10_PER_RUN_PREFLIGHT_IDENTITY_MISMATCH", "legacy map does not bind the approved run and source")
+
+    story = contract.get("story", {})
+    work_intent = contract.get("work_intent")
+    if not isinstance(work_intent, str) or not work_intent:
+        work_intent = ("LEGACY_V1_INSERT_BETWEEN" if
+            isinstance(story.get("before_anchor"), dict) and isinstance(story.get("after_anchor"), dict)
+            else "LEGACY_V1")
+    source_id = source.get("source_id") or source.get("import_id")
+    source_revision_id = (source.get("source_revision_id") or source.get("source_file_sha256")
+                          or source.get("script_sha256"))
+    source_manifest_revision_sha = (source.get("source_manifest_revision_sha256") or manifest_sha)
+    selection = story.get("source_selection")
+    if work_intent == "ADAPT_SOURCE" and isinstance(selection, dict):
+        selected_identity = selection
+    elif work_intent in {"INSERT_BETWEEN", "LEGACY_V1_INSERT_BETWEEN"}:
+        selected_identity = {key: story.get(key) for key in ("before_anchor", "after_anchor")}
+    elif work_intent == "ORIGINAL_EPISODE":
+        selected_identity = {key: story.get(key) for key in
+            ("arc_ref", "canon_ref", "previous_episode_identity", "chapter_context") if key in story}
+    else:
+        selected_identity = None
+    selected_span_or_anchor_sha = _canonical_sha256(selected_identity) if selected_identity else None
+    if identity_raw is not None:
+        source_root_identity = hashlib.sha256(identity_raw).hexdigest()
+    else:
+        target = legacy_map_doc.get("target_project", {}) if legacy_map_doc else {}
+        source_root_identity = _canonical_sha256({"legacy_identity_map_sha256": legacy_map_sha,
+            "legacy_project_root": target.get("legacy_project_root"),
+            "project_id": target.get("project_id"),
+            "project_instance_id": target.get("project_instance_id")})
+    controller_bindings = {**expected_identity, "identity_kind": value.get("identity_kind"),
+        "project_instance_id": value.get("project_instance_id"),
+        "work_intent": work_intent,
+        "source_id": source_id,
+        "source_revision_id": source_revision_id,
+        "source_manifest_revision_sha256": source_manifest_revision_sha,
+        "source_root_identity": source_root_identity,
+        "selected_span_or_anchor_sha": selected_span_or_anchor_sha}
+    if value.get("identity_kind") == "LEGACY_EXTERNAL_V1":
+        controller_bindings.update({"legacy_identity_map_sha256": value.get("legacy_identity_map_sha256"),
+            "original_run_state_sha256": value.get("original_run_state_sha256")})
+    if any(value.get(key) != expected for key, expected in controller_bindings.items()):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH", "preflight does not bind the complete project/source review identity")
+    identity_sha256 = _canonical_sha256(controller_bindings)
+
+    if (state_path.read_bytes() != state_raw or contract_file.read_bytes() != contract_raw
+            or run_contract_path.read_bytes() != run_contract_raw
+            or evidence.read_bytes() != evidence_raw
+            or policy_path.read_bytes() != policy_raw or WORKFLOW_PATH.read_bytes() != workflow_raw
+            or (identity_raw is not None and identity_path.read_bytes() != identity_raw)
+            or any(bound.read_bytes() != raw for bound, raw in bound_files)):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ", run.name)
+    report = {"schema_version": "cnw_w10_offline_bindings_v1",
+        "status": "OFFLINE_BINDINGS_VALIDATED", "bindings": controller_bindings,
+        "identity_sha256": identity_sha256,
+        "preflight_document_sha256": hashlib.sha256(evidence_raw).hexdigest()}
+    return report, hashlib.sha256(evidence_raw).hexdigest()
+
+
+def verify_per_run_preflight_file(
+    path: str | Path,
+    contract_path: str | Path,
+    run_dir: str | Path,
+    project_root: str | Path,
+    *, verifier=None,
+) -> tuple[dict, str]:
+    """Require trusted review after deterministic offline identity validation."""
+    report, _preflight_sha = validate_per_run_bindings(
+        path, contract_path, run_dir, project_root)
+    preflight_path = Path(path).resolve(strict=True)
+    value, preflight_raw = _read_json(preflight_path, "W10_PREFLIGHT_INVALID")
+    if hashlib.sha256(preflight_raw).hexdigest() != report["preflight_document_sha256"]:
+        raise ContractError("W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ", str(preflight_path))
+    attestation_path = value.get("controller_attestation_path") or value.get("controller_evidence_path")
+    if not isinstance(attestation_path, str) or not attestation_path:
+        raise ContractError("W10_ATTESTATION_PENDING", "no signed independent Controller receipt is recorded")
+    attestation_file = Path(attestation_path).absolute()
+    expected_file_sha = value.get("controller_attestation_sha256") or value.get("controller_evidence_sha256")
+    if (not isinstance(expected_file_sha, str) or not _no_reparse(attestation_file)
+            or not attestation_file.is_file()):
+        raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "signed receipt path or hash is missing")
+    attestation_file = attestation_file.resolve(strict=True)
+    attestation_raw = attestation_file.read_bytes()
+    if hashlib.sha256(attestation_raw).hexdigest() != expected_file_sha.lower():
+        raise ContractError("W10_CONTROLLER_EVIDENCE_INVALID", "signed receipt SHA256 mismatch")
+    expected_payload = {"purpose": "W10_PER_RUN_PREFLIGHT", "decision": "ACCEPT",
+        "bindings": report["bindings"], "identity_sha256": report["identity_sha256"],
+        "provider_call_authorized": False}
+    attestation, attestation_sha = verify_controller_attestation_document(
+        attestation_file, expected_payload=expected_payload, verifier=verifier)
+    if (preflight_path.read_bytes() != preflight_raw
+            or attestation_file.read_bytes() != attestation_raw):
+        raise ContractError("W10_PER_RUN_PREFLIGHT_CHANGED_DURING_READ", str(preflight_path))
+    accepted = {"schema_version": PER_RUN_PREFLIGHT_SCHEMA, "status": "ATTESTED",
+        "provider_call_authorized": False, "controller_signer_id": attestation["signer_id"],
+        "controller_attestation_sha256": attestation_sha,
+        "identity_sha256": report["identity_sha256"], "bindings": report["bindings"]}
+    return accepted, attestation_sha
 
 
 def verify_preflight_file(path: str | Path, contract_path: str | Path, *,

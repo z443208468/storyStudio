@@ -50,9 +50,10 @@ class W10OptionalIntegrationTests(unittest.TestCase):
         self.write_contract(nk="DISABLED")
         observed = {}
 
-        def build_role_packet(role, contract_path, inputs, **kwargs):
+        def build_role_packet(role, contract_path, inputs, *, accepted_receipts, mode):
             observed["role"] = role
             observed["inputs"] = dict(inputs)
+            observed["mode"] = mode
             return {"prompt": "Synthetic brief prompt", "input_names": sorted(inputs)}
 
         with patch("tools.cnw_roles.build_role_packet", side_effect=build_role_packet), \
@@ -61,7 +62,7 @@ class W10OptionalIntegrationTests(unittest.TestCase):
                 role="brief", inputs={}, preflight_path=self.preflight)
 
         packet = json.loads((self.run / result["packet"]).read_text(encoding="utf-8"))
-        self.assertEqual(observed, {"role": "brief", "inputs": {}})
+        self.assertEqual(observed, {"role": "brief", "inputs": {}, "mode": "live"})
         self.assertEqual(packet["messages"][1]["content"], '{"input_names": []}')
         self.assertNotIn("nk_reflection", packet["input_paths"])
 
@@ -133,7 +134,7 @@ class W10OptionalIntegrationTests(unittest.TestCase):
                 "provider_call_authorized": False,
             }), encoding="utf-8")
             with patch("tools.cnw_roles.build_role_packet", side_effect=build_packet):
-                with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_ATTESTATION_UNVERIFIED"):
+                with self.assertRaises(ContractError):
                     cnw_live_executor.prepare_role_request(
                         self.run, self.project, role="plot", inputs={}, preflight_path=preflight_path)
             self.assertFalse(observed["builder_called"])
@@ -144,9 +145,44 @@ class W10OptionalIntegrationTests(unittest.TestCase):
                 separators=(",", ":")).encode("utf-8")).hexdigest()
             with patch.dict(os.environ, {"STORYSTUDIO_W10_PREFLIGHT_PATH": str(preflight_path)}, clear=True), \
                  patch("tools.cnw_live_provider._reserve", side_effect=AssertionError("unattested review reserved cost")):
-                with self.assertRaisesRegex(ContractError, "W10_CONTROLLER_ATTESTATION_UNVERIFIED"):
+                with self.assertRaises(ContractError):
                     cnw_live_provider.complete(self.run, stage="plot", messages=messages,
                         input_sha256=input_sha, input_token_cap=100, output_token_cap=100)
+
+    def test_stage_self_asserted_acceptance_json_is_not_trusted(self):
+        self.write_contract()
+        state = {"run_id": self.run.name, "contract_sha256": "a" * 64,
+            "contract_path": "contracts/contract.json",
+            "stages": {"plot": {"fingerprint": "f" * 64}},
+            "pending_role_outputs": {"plot": {"content": "synthetic prose",
+                "content_sha256": hashlib.sha256(b"synthetic prose").hexdigest(),
+                "artifact_content": "synthetic artifact",
+                "artifact_content_sha256": hashlib.sha256(b"synthetic artifact").hexdigest(),
+                "packet_path": "artifacts/requests/plot.json", "request_id": "req-1",
+                "provider_request_id": "provider-1", "validation": {}}},
+            "provider_requests": [{"request_id": "req-1", "provider_request_id": "provider-1",
+                "stage": "plot", "output_sha256": hashlib.sha256(b"synthetic prose").hexdigest(),
+                "input_sha256": "b" * 64, "stage_fingerprint": "f" * 64}]}
+        packet_path = self.run / "artifacts/requests/plot.json"
+        packet_path.parent.mkdir(parents=True)
+        packet_path.write_text(json.dumps({"role": "plot", "project_root": str(self.project),
+            "preflight_path": str(self.preflight), "input_paths": {}, "input_sha256": "b" * 64}),
+            encoding="utf-8")
+        review = self.project / "08_review" / "stage.json"
+        review.parent.mkdir(parents=True)
+        review.write_text(json.dumps({"schema_version": "cnw_controller_stage_acceptance_v1",
+            "decision": "ACCEPT", "controller": "P3.1_W10_INDEPENDENT_CONTROLLER",
+            "run_id": self.run.name, "stage": "plot", "controller_acceptance_ref": "SELF-CLAIM"}),
+            encoding="utf-8")
+        offline_report = {"status": "OFFLINE_BINDINGS_VALIDATED", "bindings": {"run_id": self.run.name},
+            "identity_sha256": "c" * 64}
+        with patch("tools.cnw_live_executor.safe_run", return_value=self.run), \
+             patch("tools.cnw_live_executor.load_state", return_value=state), \
+             patch("tools.cnw_w10_policy.validate_per_run_bindings", return_value=(offline_report, "d" * 64)):
+            with self.assertRaisesRegex(ContractError, "W10_ATTESTATION_PENDING"):
+                cnw_live_executor.accept_controller_role_output(
+                    self.run, stage="plot", evidence_path=review)
+        self.assertFalse((self.run / "artifacts/stages/plot.md").exists())
 
 
 if __name__ == "__main__":

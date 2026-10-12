@@ -127,7 +127,7 @@ def prepare_role_request(run_dir: str | Path, project_root: str | Path, *, role:
     preflight, preflight_sha = verify_preflight_file(
         preflight_path, contract_path, run_dir=run, project_root=project)
     role_packet = build_role_packet(role, contract_path, inputs,
-        accepted_receipts=state.get("role_receipts", []), mode="live", w10_preflight=preflight)
+        accepted_receipts=state.get("role_receipts", []), mode="live")
     user_packet = {key: value for key, value in role_packet.items() if key != "prompt"}
     messages = [{"role": "system", "content": role_packet["prompt"]},
                 {"role": "user", "content": json.dumps(user_packet, ensure_ascii=False, sort_keys=True)}]
@@ -456,18 +456,6 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
     evidence_file = supplied_evidence.resolve(strict=True)
     if not evidence_file.is_relative_to(project_root / "08_review"):
         raise ContractError("CONTROLLER_EVIDENCE_PATH_INVALID", str(evidence_file))
-    evidence = json.loads(evidence_file.read_text(encoding="utf-8"))
-    controller_ref = evidence.get("controller_acceptance_ref")
-    if (evidence.get("schema_version") != "cnw_controller_stage_acceptance_v1"
-            or evidence.get("decision") != "ACCEPT"
-            or evidence.get("controller") != "P3.1_W10_INDEPENDENT_CONTROLLER"
-            or evidence.get("run_id") != run.name or evidence.get("stage") != stage
-            or evidence.get("contract_sha256") != state.get("contract_sha256")
-            or evidence.get("request_id") != pending.get("request_id")
-            or evidence.get("provider_request_id") != pending.get("provider_request_id")
-            or evidence.get("output_sha256") != pending.get("content_sha256")
-            or not isinstance(controller_ref, str) or not controller_ref.strip()):
-        raise ContractError("CONTROLLER_EVIDENCE_BINDING_INVALID", stage)
     if (digest(pending.get("content", "").encode("utf-8")) != pending.get("content_sha256")
             or digest(pending.get("artifact_content", "").encode("utf-8")) != pending.get("artifact_content_sha256")):
         raise ContractError("CONTROLLER_PENDING_OUTPUT_HASH_MISMATCH", stage)
@@ -478,10 +466,36 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
         from .cnw_roles import build_role_packet, role_receipt
     except ImportError:
         from cnw_roles import build_role_packet, role_receipt
-    w10_preflight = json.loads(Path(packet["preflight_path"]).read_text(encoding="utf-8"))
     contract_path = Path(packet["project_root"]) / state["contract_path"]
+    try:
+        from .cnw_w10_policy import validate_per_run_bindings, verify_controller_attestation_document
+    except ImportError:
+        from cnw_w10_policy import validate_per_run_bindings, verify_controller_attestation_document
+    offline_report, _ = validate_per_run_bindings(
+        packet["preflight_path"], contract_path, run, project_root)
+    matches = [row for row in state.get("provider_requests", [])
+               if row.get("request_id") == pending.get("request_id")]
+    if (len(matches) != 1 or matches[0].get("provider_request_id") != pending.get("provider_request_id")
+            or matches[0].get("stage") != stage
+            or matches[0].get("output_sha256") != pending.get("content_sha256")
+            or matches[0].get("input_sha256") != packet.get("input_sha256")
+            or matches[0].get("stage_fingerprint") != state["stages"][stage].get("fingerprint")):
+        raise ContractError("CONTROLLER_PROVIDER_RECEIPT_BINDING_INVALID", stage)
+    signed_payload = {"purpose": "W10_STAGE_OUTPUT_ACCEPTANCE", "decision": "ACCEPT",
+        "bindings": offline_report["bindings"], "identity_sha256": offline_report["identity_sha256"],
+        "run_id": run.name, "stage": stage, "role": packet.get("role"),
+        "contract_sha256": state.get("contract_sha256"),
+        "stage_fingerprint": state["stages"][stage].get("fingerprint"),
+        "request_id": pending.get("request_id"),
+        "provider_request_id": pending.get("provider_request_id"),
+        "input_sha256": matches[0].get("input_sha256"),
+        "provider_output_sha256": pending.get("content_sha256"),
+        "artifact_output_sha256": pending.get("artifact_content_sha256")}
+    attestation, evidence_sha = verify_controller_attestation_document(
+        evidence_file, expected_payload=signed_payload)
+    controller_ref = f"SIGNED:{attestation['signer_id']}:{evidence_sha}"
     role_packet = build_role_packet(role, contract_path, packet["input_paths"],
-        accepted_receipts=state.get("role_receipts", []), mode="live", w10_preflight=w10_preflight)
+        accepted_receipts=state.get("role_receipts", []), mode="live")
     output = pending["artifact_content"]
     if stage == "draft":
         target = run / "artifacts/stages/draft-prose.md"
@@ -492,13 +506,6 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
         target = run / f"artifacts/stages/{stage}.md"
         if target.exists() or target.is_symlink():
             raise ContractError("LIVE_STAGE_ARTIFACT_COLLISION", target.name)
-    matches = [row for row in state.get("provider_requests", [])
-               if row.get("request_id") == pending.get("request_id")]
-    if (len(matches) != 1 or matches[0].get("provider_request_id") != pending.get("provider_request_id")
-            or matches[0].get("stage") != stage
-            or matches[0].get("output_sha256") != pending.get("content_sha256")
-            or matches[0].get("stage_fingerprint") != state["stages"][stage].get("fingerprint")):
-        raise ContractError("CONTROLLER_PROVIDER_RECEIPT_BINDING_INVALID", stage)
     accepted = accept_validated_stage(run, stage=stage, content=pending["content"],
         validation=pending["validation"])
     target.write_text(output, encoding="utf-8")
@@ -506,11 +513,11 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
         provider_request_ids=[pending["provider_request_id"]], controller_accept_ref=controller_ref)
     receipt["provider_request_id"] = pending["provider_request_id"]
     try:
-        from .cnw_runner import locked_run, load_state, save_state, now as runner_now
+        from .cnw_runner import locked_run, load_state as load_current_state, save_state, now as runner_now
     except ImportError:
-        from cnw_runner import locked_run, load_state, save_state, now as runner_now
+        from cnw_runner import locked_run, load_state as load_current_state, save_state, now as runner_now
     with locked_run(run):
-        current = load_state(run)
+        current = load_current_state(run)
         if current.get("pending_role_outputs", {}).get(stage, {}).get("content_sha256") != pending["content_sha256"]:
             raise ContractError("CONTROLLER_PENDING_OUTPUT_CHANGED", stage)
         current.setdefault("role_receipts", []).append(receipt)
@@ -519,7 +526,7 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
         current["stages"][stage]["provider_output_sha256"] = pending["content_sha256"]
         current["stages"][stage]["controller_evidence"] = {
             "path": evidence_file.relative_to(project_root).as_posix(),
-            "sha256": digest(evidence_file.read_bytes())}
+            "sha256": evidence_sha}
         current["stages"][stage]["role_output_path"] = target.relative_to(run).as_posix()
         current["stages"][stage]["role_output_sha256"] = digest(target.read_bytes())
         current["updated_at"] = runner_now()
