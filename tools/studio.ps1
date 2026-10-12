@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0,Mandatory=$true)]
-    [ValidateSet('doctor','setup','prepare','import-source','source-list','project-init','project-import','project-contract','project-incremental','canon-audit','handoff','arc-review','standard-operation','support-workflow','verify','scene','legacy-scene','resume','refresh-references','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
+    [ValidateSet('doctor','setup','prepare','import-source','source-list','project-init','project-import','project-pack','project-contract','project-incremental','canon-audit','handoff','arc-review','standard-operation','support-workflow','verify','scene','legacy-scene','resume','refresh-references','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint','nk-start','nk-stop')]
     [string]$Command,
     [ValidateSet('offline','live')][string]$Mode,
     [ValidateSet('plot','scene_cards','writing_brief','prose','lint_layer1','lint_layer2','multi_lens_review','adversarial_verify','completeness_critic','refine','re_review','cards','brief','pov','draft','lint1','lint2','lens5','verifier3','completeness','re-review','revise')][string]$Stage,
@@ -14,6 +14,8 @@ param(
     [string]$WorkId,
     [string]$ProjectId,
     [string]$InputFile,
+    [string]$SourceRepository,
+    [switch]$Offline,
     [ValidateSet('md','txt','json')][string]$Format,
     [string]$StepName,
     [string]$Candidate,
@@ -173,6 +175,14 @@ switch ($Command) {
         if ($Format) { $ImportArgs += @('--format',$Format) }
         & $Python @ImportArgs
         if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_IMPORT_FAILED:$LASTEXITCODE" }
+    }
+    'project-pack' {
+        if (-not $DataHome -or -not $InputFile) { throw 'PROJECT_PACK_REQUIRES_DATA_HOME_AND_INPUT_FILE' }
+        $PackArgs=@((Join-Path $Root 'tools/cnw_pack_app.py'),'--input',(Resolve-Path -LiteralPath $InputFile).Path,'--data-home',$DataHome)
+        if ($SourceRepository) { $PackArgs += @('--source-repository',(Resolve-Path -LiteralPath $SourceRepository).Path) }
+        if ($Offline) { $PackArgs += '--offline' }
+        & $Python @PackArgs
+        if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_PACK_FAILED:$LASTEXITCODE" }
     }
     'project-contract' {
         if (-not $ProjectRoot -or -not $InputFile) { throw 'PROJECT_CONTRACT_REQUIRES_PROJECT_ROOT_AND_PRIVATE_DRAFT_JSON' }

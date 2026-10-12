@@ -1,17 +1,39 @@
-# Legacy scene input adaptation (R5 Atom-03 repair)
+# Legacy scene input adaptation (R5 Atom-03/04 repairs)
 
 `tools.cnw_input_pack.prepare_scene_input` adapts the declared V5 scene-pack
 format into a private registered project and a V2 draft. The package describes
 the materials and writing requirements; the pinned CNW engine owns the workflow.
-This API is the input/contract layer. A studio CLI package route is still pending
-Atom-04 repair.
+This API is the input/contract layer. `studio.ps1 project-pack` provides its
+formal package entry and processes all declared tasks in separate instances.
 
-The adapter verifies `PACK_MANIFEST.json` against every archive file, reads
-`workpack_index.json`, and selects an explicitly named scene. It obtains the
-source through an explicitly selected local Git repository at the work order's
-exact commit/path/blob. No checkout, download, embedded installer, or package
-instruction is executed. The selected source is registered through the existing
-immutable source-manifest/index implementation.
+```powershell
+.\tools\studio.ps1 project-pack -InputFile <ZIP> -DataHome <absolute-path>
+```
+
+Use `-SourceRepository <local-Git-repository> -Offline` for a local source.
+Without a local repository the app uses a private DataHome cache for the exact
+declared GitHub commit. `-Offline` forbids network fallback, including implicit
+Git partial-clone fetches. Source repositories are never checked out or modified.
+Temporary source staging is also under the selected DataHome.
+
+The app derives the fifth Lens from explicit project policy or the seed's
+Story-specific Lens row in `00_meta/OUTPUT_REQUIREMENTS.md`, preserving the
+source SHA, locator, original text and result in the immutable input binding.
+Duplicate/conflicting duties reject. It returns a private job record, drafts,
+contract hashes and deterministic offline identity results. These results grant
+no Provider authorization. Repeating import creates new instances and jobs;
+partial failures preserve all prior progress. Unknown occupied roots/caches
+are refused, and the global setup pointer is not changed.
+
+The underlying adapter verifies `PACK_MANIFEST.json` against every archive file,
+reads `workpack_index.json`, and handles one declared scene per call. It only
+reads the exact work-order commit/path/blob from the repository passed by its
+caller. The formal `project-pack` entry prepares that repository: either the
+explicit read-only local source or the DataHome cache populated from the
+declared GitHub source. The adapter itself performs no network transfer. No
+checkout, embedded installer, or package instruction is executed. The selected
+source is registered through the existing immutable source-manifest/index
+implementation.
 
 Use a new instance created by `project_paths.create_project` under an explicitly
 chosen DataHome. Pass that instance's root, the package path, declared scene root,
@@ -53,10 +75,11 @@ unchanged, including Prose's Brief plus selected voice restriction.
 
 The original `2200 / 3100 / 4700` bounds are preserved. At this repair stage,
 normal contract validation still returns `UNIT_CAPACITY_UNVALIDATED` for 4700.
+The app reports `CAPACITY_PENDING` and preserves each draft.
 Atom-06 must validate the capacity and actual consumers before this package can
 form a usable production contract. This is not package-to-story acceptance.
 
-Remaining gates in existing R5 Atoms are the CLI entry, field-to-role consumption,
+Remaining gates in existing R5 Atoms are field-to-role consumption,
 4700 length handling, legal production authorization, and complete package-shaped
 eleven-stage review/revision/export verification. Live operation and private
 cutover remain subject to their existing gates.

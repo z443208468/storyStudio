@@ -17,6 +17,7 @@ entrypoint checks.
 | setup | `tools/cnw_project.py:setup` → `tools/project_paths.py:setup_data_home` | YES | YES | SUPPORTED | `test_registered_project_commands_use_temp_data_home` |
 | project-init | `tools/cnw_project.py:registered-init` | YES | YES | SUPPORTED | `test_registered_project_commands_use_temp_data_home` |
 | project-import | `tools/cnw_project.py:registered-import` | YES | YES | SUPPORTED | `test_registered_project_commands_use_temp_data_home` |
+| project-pack | `tools/cnw_pack_app.py:import_package` | YES | YES | SUPPORTED | `test_powershell_package_entry_creates_all_isolated_tasks` |
 | import-source | `tools/cnw_project.py:source-import` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
 | source-list | `tools/cnw_project.py:source-list` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
 | project-contract | `tools/cnw_project.py:draft-contract` | YES | YES | SUPPORTED | `test_project_commands_require_explicit_root` |
@@ -60,3 +61,15 @@ also receive an explicit `-DataHomePointer` for isolated, testable setup state.
 candidate entered external review. Promotion evidence must preserve that
 `expected_current_sha` (or explicit `null` for a new output); a concurrent
 publish returns `PUBLISH_CONFLICT` and leaves the candidate unpromoted.
+
+`project-pack -InputFile <ZIP> -DataHome <absolute-path>` reads all declared tasks,
+uses a new registered instance for each, derives the explicit fifth Lens duties,
+and builds V2 drafts/contracts. It can obtain exact pinned public GitHub source
+objects in the selected DataHome's private cache. Use `-SourceRepository <path>
+-Offline` for a strictly local source; `-Offline` never fetches missing objects.
+It does not persist a setup pointer or start a Provider. Repeating the command
+creates new independent instances. An unknown occupied DataHome/cache is refused.
+`CAPACITY_PENDING / UNIT_CAPACITY_UNVALIDATED` preserves the original requested
+bound and draft; it is not story readiness. Partial failure keeps its job record
+and all instances. Full field consumption and production authorization remain
+separate R5 gates.

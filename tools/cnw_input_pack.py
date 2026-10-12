@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import re
 import stat
 import subprocess
@@ -16,12 +17,12 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 try:
-    from .cnw_contract import ContractError, _safe_source_file
+    from .cnw_contract import ContractError, _safe_source_file, resolve_json_pointer
     from .cnw_project import (_registered_project_identity, _reject_duplicate_json_keys,
                               _initialize_project_root, _import_source_unlocked)
     from .project_transactions import project_write_lock
 except ImportError:  # existing direct-script contract CLI
-    from cnw_contract import ContractError, _safe_source_file
+    from cnw_contract import ContractError, _safe_source_file, resolve_json_pointer
     from cnw_project import (_registered_project_identity, _reject_duplicate_json_keys,
                             _initialize_project_root, _import_source_unlocked)
     from project_transactions import project_write_lock
@@ -132,8 +133,17 @@ def _source_bytes(repository: str | Path, authority: dict) -> bytes:
         raise ContractError("INPUT_PACK_AUTHORITY_INVALID", "authority requires exact commit, blob and path")
     _safe_name(path)
     repo = Path(repository).resolve(strict=True)
-    result = subprocess.run(["git", "--no-pager", "-C", str(repo), "show", f"{commit}:{path}"],
-                            capture_output=True, timeout=30)
+    # Read-only object access must not silently fetch promised objects from a
+    # partial clone. Source acquisition belongs to the explicit app cache path.
+    env = dict(os.environ, GIT_NO_LAZY_FETCH="1", GIT_TERMINAL_PROMPT="0")
+    kind = subprocess.run(["git", "--no-pager", "-c", "protocol.allow=never", "-C", str(repo), "cat-file", "-t", commit],
+                          env=env, capture_output=True, timeout=30)
+    if kind.returncode:
+        raise ContractError("PINNED_SOURCE_UNAVAILABLE", "declared commit object is absent in the selected repository")
+    if kind.stdout.strip() != b"commit":
+        raise ContractError("INPUT_PACK_AUTHORITY_INVALID", "declared source commit is not a commit object")
+    result = subprocess.run(["git", "--no-pager", "-c", "protocol.allow=never", "-C", str(repo), "show", f"{commit}:{path}"],
+                            env=env, capture_output=True, timeout=30)
     if result.returncode:
         raise ContractError("PINNED_SOURCE_UNAVAILABLE", "declared source object is absent in the selected repository")
     raw = result.stdout
@@ -194,8 +204,32 @@ def _active_seed(relative: str) -> bool:
     return (parts[0] in ACTIVE_DIRS or relative == "07_draft/manuscript_index.md") and Path(relative).suffix.lower() in {".md", ".txt", ".json", ".yml", ".yaml"}
 
 
+def _validate_lens_derivation(raw: bytes, derivation: dict, responsibility: str) -> None:
+    try:
+        if _sha(raw) != derivation.get("source_sha256") or derivation.get("derived_responsibility") != responsibility:
+            raise ValueError("source identity differs")
+        locator = derivation["locator"]
+        if "json_pointer" in locator:
+            if locator["json_pointer"] != "/review/fifth_lens/responsibility":
+                raise ValueError("not the project fifth Lens field")
+            value = resolve_json_pointer(_json(raw), locator["json_pointer"])
+            if not isinstance(value, str) or value != derivation["original_text"] or value.strip() != responsibility:
+                raise ValueError("selected JSON responsibility differs")
+        else:
+            line = locator["line"]
+            lines = raw.decode("utf-8-sig").splitlines()
+            if type(line) is not int or not 1 <= line <= len(lines) or lines[line-1] != derivation["original_text"]:
+                raise ValueError("selected duty row differs")
+            cells = [v.strip() for v in lines[line-1].strip().strip("|").split("|")]
+            if len(cells) != 3 or cells[0].casefold() not in {"story-specific lens", "story_specific lens", "第五 lens"} or cells[2] != responsibility:
+                raise ValueError("not an explicit story-specific duty")
+    except (KeyError, TypeError, ValueError, UnicodeError, ContractError) as exc:
+        raise ContractError("INPUT_PACK_LENS_DERIVATION_INVALID", "derived fifth Lens does not match its actual seed locator") from exc
+
+
 def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root: str | Path,
-                        source_repo: str | Path, fifth_lens: dict) -> dict:
+                        source_repo: str | Path, fifth_lens: dict,
+                        source_staging_root: str | Path | None = None) -> dict:
     """Prepare one new registered instance and V2 draft, preserving all inputs.
 
     Contract creation and capacity validation remain in cnw_project. In
@@ -245,6 +279,21 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
         raise ContractError("SOURCE_ANCHOR_INVALID", "source scenes must be ordered and non-overlapping")
     root = Path(project_root).resolve(strict=True)
     identity = _registered_project_identity(root)
+    staging = None
+    if source_staging_root is not None:
+        try:
+            from .project_paths import _ensure_private_directory
+        except ImportError:
+            from project_paths import _ensure_private_directory
+        staging = _ensure_private_directory(Path(source_staging_root), root=root.parent.parent,
+                                            code="INPUT_PACK_STAGING_UNSAFE")
+    derivation = fifth_lens.get("derivation")
+    if derivation is not None:
+        if (not isinstance(derivation, dict) or derivation.get("source_file") not in seed or
+                _sha(seed[derivation["source_file"]]) != derivation.get("source_sha256") or
+                derivation.get("derived_responsibility") != fifth_lens["responsibility"].strip()):
+            raise ContractError("INPUT_PACK_LENS_DERIVATION_INVALID", "fifth Lens must retain its actual seed source identity")
+        _validate_lens_derivation(seed[derivation["source_file"]], derivation, fifth_lens["responsibility"].strip())
     def require_empty():
         if any(p.name not in {"project_identity.json", ".story-studio-project-write.lock"} for p in root.iterdir()):
             raise ContractError("INPUT_PACK_TARGET_NOT_EMPTY", "seed import requires a fresh registered instance")
@@ -281,6 +330,7 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
                  "active_materials": sorted(active), "input_review_status": "UNTRUSTED_INPUT_DECLARATIONS",
                  "initial_active_sha256": initial_active_sha256,
                  "adapter_choices": {"fifth_lens": {k: fifth_lens[k].strip() for k in ("id", "responsibility")},
+                                     **({"fifth_lens_derivation": derivation} if derivation is not None else {}),
                                      "integrations": {"nk": "DISABLED", "critics": "DISABLED"}},
                  "field_consumption_status": "PENDING_ROLE_CONSUMPTION_VALIDATION"}
         index_name = f"{snapshot}/binding.json"
@@ -288,7 +338,7 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
         # Use the existing implementations inside this same transaction;
         # their public wrappers would reacquire the non-reentrant project lock.
         _initialize_project_root(root, identity["project_id"], new_project=True)
-        with tempfile.TemporaryDirectory(prefix="storystudio-pack-source-") as temp:
+        with tempfile.TemporaryDirectory(prefix="storystudio-pack-source-", dir=staging) as temp:
             source_file = Path(temp) / PurePosixPath(order["original_authority"]["source_file"]).name
             source_file.write_bytes(source)
             imported = _import_source_unlocked(input_file=source_file, project_root=root)
@@ -339,6 +389,12 @@ def validate_input_pack_binding(project_root: Path, binding: dict, *, contract: 
             raise ContractError("INPUT_PACK_BINDING_INVALID", "material records require paths and byte hashes")
         if _sha(_safe_source_file(project_root, name).read_bytes()) != expected:
             raise ContractError("INPUT_PACK_MATERIAL_CHANGED", "frozen work order or seed material changed")
+    choices = index.get("adapter_choices", {})
+    derivation = choices.get("fifth_lens_derivation")
+    if derivation is not None:
+        prefix = f"_INBOX/input_packs/{index['pack_sha256']}/{index['scene_root']}/project_seed/"
+        raw = _safe_source_file(project_root, prefix + derivation["source_file"]).read_bytes()
+        _validate_lens_derivation(raw, derivation, choices["fifth_lens"]["responsibility"])
     if contract is not None:
         _validate_mapped_requirements(project_root, index, contract)
     return index
