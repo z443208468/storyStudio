@@ -523,6 +523,62 @@ class LegacySourcePathMapTests(unittest.TestCase):
                 cnw_w10_policy.validate_per_run_bindings(
                     preflight_path, external_contract, external_run, external_root)
         preflight_path.write_text(json.dumps(forged, sort_keys=True), encoding="utf-8")
+
+        # Reject changes to bound bytes themselves, not only altered claims in
+        # the unsigned preflight input.
+        source_target = external_root / "_INBOX/legacy-snapshots/source.txt"
+        source_target_raw = source_target.read_bytes()
+        source_target.write_bytes(source_target_raw + b"tampered")
+        with self.assertRaisesRegex(ContractError, "LEGACY_SOURCE_SNAPSHOT_MISSING"):
+            cnw_w10_policy.validate_per_run_bindings(
+                preflight_path, external_contract, external_run, external_root)
+        source_target.write_bytes(source_target_raw)
+
+        map_raw = map_path.read_bytes()
+        map_path.write_bytes(map_raw + b" ")
+        with self.assertRaisesRegex(ContractError, "W10_LEGACY_IDENTITY_MAP_INVALID"):
+            cnw_w10_policy.validate_per_run_bindings(
+                preflight_path, external_contract, external_run, external_root)
+        map_path.write_bytes(map_raw)
+
+        contract_path = external_run / "artifacts/contract.json"
+        contract_bytes = contract_path.read_bytes()
+        contract_path.write_bytes(contract_bytes + b" ")
+        with self.assertRaisesRegex(ContractError, "W10_PER_RUN_PREFLIGHT_BINDING_MISMATCH"):
+            cnw_w10_policy.validate_per_run_bindings(
+                preflight_path, contract_path, external_run, external_root)
+        contract_path.write_bytes(contract_bytes)
+
+        # Use temporary Policy and Workflow copies so these negatives never
+        # mutate repository production files.
+        verifier_root = self.temp / "deployment-identity"
+        verifier_policy = verifier_root / "config/cnw_production_policy.json"
+        verifier_policy.parent.mkdir(parents=True)
+        installed_policy = (Path(__file__).resolve().parents[1] /
+                            "config/cnw_production_policy.json").read_bytes()
+        verifier_policy.write_bytes(installed_policy)
+        verifier_workflow = verifier_root / "workflow.template.yml"
+        verifier_workflow.write_bytes(cnw_runner.WORKFLOW_PATH.read_bytes())
+        with patch("tools.cnw_w10_policy.ROOT", verifier_root), \
+             patch("tools.cnw_runner.WORKFLOW_PATH", verifier_workflow):
+            report, _ = cnw_w10_policy.validate_per_run_bindings(
+                preflight_path, external_contract, external_run, external_root)
+            self.assertEqual(report["status"], "OFFLINE_BINDINGS_VALIDATED")
+
+            verifier_policy_raw = verifier_policy.read_bytes()
+            verifier_policy.write_bytes(verifier_policy_raw + b"\n")
+            with self.assertRaisesRegex(ContractError, "PRODUCTION_POLICY_IDENTITY_MISMATCH"):
+                cnw_w10_policy.validate_per_run_bindings(
+                    preflight_path, external_contract, external_run, external_root)
+            verifier_policy.write_bytes(verifier_policy_raw)
+
+            verifier_workflow_raw = verifier_workflow.read_bytes()
+            verifier_workflow.write_bytes(verifier_workflow_raw + b"\n")
+            with self.assertRaisesRegex(ContractError, "CNW_METHOD_IDENTITY_MISMATCH"):
+                cnw_w10_policy.validate_per_run_bindings(
+                    preflight_path, external_contract, external_run, external_root)
+            verifier_workflow.write_bytes(verifier_workflow_raw)
+
         external_state.write_bytes(state_raw)
 
         other_root = self.temp / "same-files-different-legacy-root"
