@@ -98,6 +98,10 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                                               separators=(",", ":")).encode("utf-8")),
             "raw_response_path": files["raw"], "raw_response_sha256": _sha(response_raw),
             "output_sha256": _sha(content.encode("utf-8"))}
+        operation_binding = cnw_runner._operation_simulation_request_binding(run_dir,
+            stage=stage, role_id=role_id, messages=messages)
+        if operation_binding is not None:
+            receipt.update(operation_binding)
         with cnw_runner.locked_run(run_dir):
             state = cnw_runner.load_state(run_dir)
             state.setdefault("provider_requests", []).append(receipt)
@@ -661,11 +665,14 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             raw_path.write_bytes(raw_raw)
             receipt = {"request_id": "SIM-WORKFLOW03-REQUEST", "provider_request_id": "SIM-WORKFLOW03-RECEIPT",
                 "status": "SUCCEEDED", "mode": "MOCK_ONLY", "simulation_status": "SIMULATED",
+                "fixture_only": True,
                 "request_path": request_path.relative_to(run).as_posix(), "request_sha256": _sha(request_raw),
                 "input_sha256": _sha(json.dumps(messages, ensure_ascii=False, sort_keys=True,
                     separators=(",", ":")).encode("utf-8")),
                 "raw_response_path": raw_path.relative_to(run).as_posix(), "raw_response_sha256": _sha(raw_raw),
                 "output_sha256": _sha(content.encode("utf-8"))}
+            receipt.update(cnw_runner._operation_simulation_request_binding(run,
+                stage=stage, role_id=role_id, messages=messages))
             state = cnw_runner.load_state(run)
             state.setdefault("provider_requests", []).append(receipt)
             cnw_runner.save_state(run, state)
@@ -676,7 +683,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                 "source_sha256": {name: row["sha256"] for name, row in project_sources.items()}})
             return content, receipt
 
-        with patch.object(cnw_runner, "cnw_live_call", side_effect=simulated_maintenance_transport):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=simulated_maintenance_transport):
             result = standard_operation(root, "revision_plan")
         plan_path = root / "09_revision/revision_plan.md"
         self.assertEqual(result["status"], "STANDARD_OPERATION_RECORDED")
@@ -756,13 +764,15 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             if str(path).endswith(".maintenance-tmp") and Path(target) == root / destination:
                 raise OSError("SIMULATED_WORKFLOW03_PUBLICATION_INTERRUPTION")
             return replace(path, target)
-        with patch.object(cnw_runner, "cnw_live_call", side_effect=approved_transport), patch.object(Path, "replace", interrupted_replace):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=approved_transport), patch.object(Path, "replace", interrupted_replace):
             with self.assertRaisesRegex(OSError, "SIMULATED_WORKFLOW03_PUBLICATION_INTERRUPTION"):
                 standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
         self.assertTrue((root / "00_meta/maintenance_pending.json").is_file())
         self.assertFalse((root / destination).exists())
         self.assertEqual(draft_path.read_bytes(), draft_before)
-        with patch.object(cnw_runner, "cnw_live_call", side_effect=AssertionError("completed model receipt must be reused")):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=lambda *args, **kwargs: self.fail("completed model receipt must be reused")):
             applied = standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
             repeat = standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
         self.assertTrue(applied["recovered"])
@@ -845,7 +855,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                         "unresolved_questions": [], "next_action": "Attempt automatic promotion."}
                     calls.append(messages)
                     return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
-                with patch.object(cnw_runner, "cnw_live_call", side_effect=malicious_transport):
+                with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                        projects=[root], transport=malicious_transport):
                     with self.assertRaises(ContractError) as caught:
                         standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
                 expected = "REVISION_APPROVED_DESTINATIONS_REQUIRED" if fault.startswith("write_") else "MAINTENANCE_SOURCE_CHANGED"
@@ -907,7 +918,9 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                         if len(reads) == 2:
                             current.write_bytes(before + b"\nEXTERNAL_EDIT_AFTER_APPROVAL\n")
                     return read_bytes(current)
-                with patch.object(Path, "read_bytes", new=concurrent_reader), \
+                with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                        projects=[root], transport=lambda *args, **kwargs: self.fail("unapproved snapshot must not reach transport")), \
+                        patch.object(Path, "read_bytes", new=concurrent_reader), \
                         patch.object(cnw_runner, "cnw_live_call", side_effect=AssertionError("unapproved snapshot must not reach transport")):
                     with self.assertRaises(ContractError) as caught:
                         standard_operation(root, "revision_apply", sources=(original,), revision_approval=approval_file)
@@ -947,7 +960,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             observed.append(payload)
             return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
 
-        with patch.object(workflow, "cnw_live_call", side_effect=initial_transport):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=initial_transport):
             initial_result = semantic_import(root)
         original_canon = (root / "90_canon/canon.md").read_bytes()
         initial_state = json.loads((root / workflow.STATE).read_text(encoding="utf-8"))
@@ -980,7 +994,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             observed.append(payload)
             return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
 
-        with patch.object(workflow, "cnw_live_call", side_effect=update_transport):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=update_transport):
             update_result = semantic_import(root, incremental=True)
         current_canon = (root / "90_canon/canon.md").read_bytes()
         self.assertTrue(current_canon.startswith(original_canon))
@@ -1025,7 +1040,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
         registry_before = {p.relative_to(root).as_posix(): p.read_bytes()
                            for p in (root / "_INBOX/revisions").rglob("*") if p.is_file()}
-        with patch.object(workflow, "cnw_live_call", side_effect=metadata_as_fact_transport):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=metadata_as_fact_transport):
             with self.assertRaises(ContractError) as caught:
                 semantic_import(root)
         self.assertEqual(caught.exception.code, "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED")
@@ -1091,7 +1107,8 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
                 raise AssertionError(stage)
             return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
 
-        with patch.object(cnw_runner, "cnw_live_call", side_effect=maintenance_transport):
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=maintenance_transport):
             audit_result = canon_audit(root)
             handoff_result = handoff(root, pipeline=True)
             plan_result = standard_operation(root, "revision_plan", sources=("93_exports/handoff_brief.md",))
@@ -1200,7 +1217,13 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
 
         self._interrupt_once_for = "scene_cards"
         self._interrupt_run_id = f"{sprint_id}-ep03"
-        with patch.object(cnw_runner, "cnw_live_call", side_effect=transport):
+        actual_model_boundary = cnw_runner.cnw_live_call
+        def split_transport(run, **kwargs):
+            if cnw_runner._operation_owner(run, cnw_runner.load_state(run)) is not None:
+                return actual_model_boundary(run, **kwargs)
+            return transport(run, **kwargs)
+        with cnw_runner._isolated_operation_transport(self.temp, data_home=self.data_home,
+                projects=[root], transport=transport), patch.object(cnw_runner, "cnw_live_call", new=split_transport):
             paused = sprint.run_generic_sprint(root, sprint_id, plan_path)
             self.assertEqual(paused["status"], "EXECUTION_INCOMPLETE")
             self.assertEqual(paused["completed_episodes"], 2, paused)

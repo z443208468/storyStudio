@@ -40,6 +40,9 @@ except ImportError:  # direct script execution from PowerShell
 
 ROOT = Path(__file__).resolve().parents[1]
 _TEST_FIXTURE_CONTEXT: ContextVar[bool] = ContextVar("cnw_runner_test_fixture_context", default=False)
+_OPERATION_SIMULATION: ContextVar[object | None] = ContextVar("cnw_operation_simulation", default=None)
+_OPERATION_SIMULATION_REQUEST: ContextVar[dict | None] = ContextVar("cnw_operation_simulation_request", default=None)
+_OPERATION_EXTRA_UNSPECIFIED = object()
 
 
 @contextmanager
@@ -473,16 +476,215 @@ def _sanitize(value):
     return value
 
 
-def _require_generic_provider_authorization(run_dir: Path, *, stage: str) -> None:
+def _operation_project_registration(project_root: Path) -> dict | None:
+    """Validate an explicit operation owner; never fall back after a registry error."""
+    try:
+        from .project_paths import _assert_no_reparse, resolve_project
+    except ImportError:
+        from project_paths import _assert_no_reparse, resolve_project
+    candidate = Path(project_root).absolute()
+    _assert_no_reparse(candidate, code="OPERATION_PROJECT_PATH_UNSAFE")
+    root = candidate.resolve(strict=True)
+    if root.is_relative_to((ROOT / "workspace").resolve()):
+        return None  # Retained explicit V1 workspace route; no new authorization.
+    try:
+        registration = resolve_project(root, data_home=root.parent.parent)
+    except Exception as exc:
+        raise ContractError("OPERATION_PROJECT_REGISTRATION_INVALID", "operation owner is not an active registered instance") from exc
+    return registration
+
+
+def _operation_owner(run_dir: Path, state: dict) -> Path | None:
+    try:
+        from .project_paths import _assert_no_reparse
+    except ImportError:
+        from project_paths import _assert_no_reparse
+    supplied = Path(run_dir).absolute()
+    _assert_no_reparse(supplied, code="OPERATION_PROJECT_PATH_UNSAFE")
+    supplied = supplied.resolve(strict=True)
+    if supplied.parent.name in {"imports", "maintenance"} and supplied.parent.parent.name == "94_runtime":
+        if state.get("run_id") != supplied.name:
+            raise ContractError("OPERATION_RUN_IDENTITY_INVALID", "operation state differs from its actual Run directory")
+        return supplied.parents[2]
+    if state.get("schema_version") in {"cnw_import_run_v1", "cnw_maintenance_run_v1"}:
+        raise ContractError("OPERATION_RUN_PATH_INVALID", "operation state lacks its actual project-owned runtime path")
+    return None
+
+
+class _OperationSimulationSession:
+    """Private model boundary bound to an owned temporary fixture, never Live."""
+    def __init__(self, owner, data_home, projects, transport):
+        if not isinstance(owner, tempfile.TemporaryDirectory) or not owner._finalizer.alive:
+            raise ContractError("OPERATION_SIMULATION_FIXTURE_REQUIRED", "an active owned TemporaryDirectory is required")
+        try:
+            from .project_paths import _assert_no_reparse, _data_home_identity
+        except ImportError:
+            from project_paths import _assert_no_reparse, _data_home_identity
+        self.owner, self.transport = owner, transport
+        self.fixture_root = Path(owner.name).absolute()
+        _assert_no_reparse(self.fixture_root, code="OPERATION_SIMULATION_FIXTURE_UNSAFE")
+        self.fixture_root = self.fixture_root.resolve(strict=True)
+        self.data_home = Path(data_home).absolute()
+        _assert_no_reparse(self.data_home, code="OPERATION_SIMULATION_FIXTURE_UNSAFE")
+        self.data_home = self.data_home.resolve(strict=True)
+        if not callable(transport) or not self.data_home.is_relative_to(self.fixture_root):
+            raise ContractError("OPERATION_SIMULATION_FIXTURE_REQUIRED", "transport and DataHome must belong to this fixture")
+        self.data_home_id = _data_home_identity(self.data_home, create=False)
+        self.projects = {}
+        for candidate in projects:
+            registration = _operation_project_registration(Path(candidate))
+            if registration is None:
+                raise ContractError("OPERATION_SIMULATION_FIXTURE_REQUIRED", "legacy projects cannot acquire fixture transport permission")
+            root = Path(registration["project_root"])
+            if root.parent.parent != self.data_home:
+                raise ContractError("OPERATION_SIMULATION_SCOPE_MISMATCH", "fixture projects must belong to its exact DataHome")
+            self.projects[str(root)] = registration
+        if not self.projects:
+            raise ContractError("OPERATION_SIMULATION_FIXTURE_REQUIRED", "bind at least one registered fixture instance")
+
+    def validate(self, registration):
+        try:
+            from .project_paths import _assert_no_reparse, _data_home_identity
+        except ImportError:
+            from project_paths import _assert_no_reparse, _data_home_identity
+        _assert_no_reparse(Path(self.owner.name).absolute(), code="OPERATION_SIMULATION_FIXTURE_UNSAFE")
+        if (not self.owner._finalizer.alive or Path(self.owner.name).resolve(strict=True) != self.fixture_root
+                or _data_home_identity(self.data_home, create=False) != self.data_home_id
+                or self.projects.get(registration["project_root"]) != registration):
+            raise ContractError("OPERATION_SIMULATION_SCOPE_MISMATCH", "fixture lifetime, DataHome or registered instance changed")
+        return registration
+
+
+@contextmanager
+def _isolated_operation_transport(owner, *, data_home, projects, transport):
+    """Test-only final model transport. No CLI/env/contract switch enables it."""
+    if _OPERATION_SIMULATION.get() is not None:
+        raise ContractError("OPERATION_SIMULATION_NESTED", "nested simulation sessions are rejected")
+    session = _OperationSimulationSession(owner, data_home, projects, transport)
+    token = _OPERATION_SIMULATION.set(session)
+    try:
+        yield
+    finally:
+        _OPERATION_SIMULATION.reset(token)
+
+
+def _require_project_operation_authorization(project_root: Path, *, allow_simulated=True) -> dict | None:
+    registration = _operation_project_registration(project_root)
+    session = _OPERATION_SIMULATION.get()
+    if registration is None:
+        if session is not None:
+            raise ContractError("OPERATION_SIMULATION_SCOPE_MISMATCH", "fixture session cannot reach a legacy project")
+        return None
+    if allow_simulated and session is not None:
+        return session.validate(registration)
+    raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "registered project operations have no production Live/fee grant adapter")
+
+
+def _operation_simulation_request_binding(run_dir: Path, *, stage, role_id, messages) -> dict | None:
+    """Model test adapters obtain the actual invocation binding, not a self-claim."""
+    expected = _OPERATION_SIMULATION_REQUEST.get()
+    if expected is None:
+        return None
+    digest = sha(json.dumps(messages, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode())
+    if (expected["run_path"] != str(run_dir.resolve(strict=True)) or expected["stage"] != stage
+            or expected["role_id"] != role_id or expected["input_sha256"] != digest):
+        raise ContractError("OPERATION_SIMULATION_REQUEST_MISMATCH", "adapter requested a different invocation binding")
+    return dict(expected)
+
+
+def _verify_operation_simulated_receipt(run_dir: Path, receipt: dict, *, messages=None,
+                                        stage=None, role_id=None, output_cap=None,
+                                        extra=_OPERATION_EXTRA_UNSPECIFIED) -> str:
+    state = load_state(run_dir)
+    root = _operation_owner(run_dir, state)
+    if root is None:
+        raise ContractError("OPERATION_RUN_PATH_INVALID", "simulation receipt is not an operation Run")
+    registration = _require_project_operation_authorization(root)
+    if registration is None:
+        raise ContractError("OPERATION_SIMULATION_SCOPE_MISMATCH", "simulation receipt belongs to a legacy project")
+    if (not isinstance(receipt, dict) or receipt.get("mode") != "MOCK_ONLY"
+            or receipt.get("simulation_status") != "SIMULATED" or receipt.get("fixture_only") is not True
+            or receipt.get("status") != "SUCCEEDED"):
+        raise ContractError("OPERATION_SIMULATION_RECEIPT_INVALID", "only explicitly marked simulated receipts may be consumed")
+    recorded = [row for row in state.get("provider_requests", [])
+                if row.get("request_id") == receipt.get("request_id")]
+    if (not isinstance(receipt.get("request_id"), str) or not receipt["request_id"]
+            or len(recorded) != 1
+            or json.dumps(recorded[0], ensure_ascii=False, sort_keys=True, allow_nan=False)
+                != json.dumps(receipt, ensure_ascii=False, sort_keys=True, allow_nan=False)):
+        raise ContractError("OPERATION_SIMULATION_RECEIPT_NOT_REGISTERED", "receipt must uniquely match its actual Run record")
+    actual = _receipt_content(run_dir, receipt)
+    request = json.loads(assert_output_within_root(run_dir, receipt["request_path"]).read_text(encoding="utf-8"))
+    request_messages = request["messages"]
+    if messages is not None and json.dumps(request_messages, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"), allow_nan=False) != json.dumps(messages, ensure_ascii=False,
+            sort_keys=True, separators=(",", ":"), allow_nan=False):
+        raise ContractError("OPERATION_SIMULATION_REQUEST_MISMATCH", "stored request differs from actual model input")
+    bound_stage = receipt.get("stage") if stage is None else stage
+    bound_role = receipt.get("role_id") if role_id is None else role_id
+    cap = receipt.get("output_cap") if output_cap is None else output_cap
+    bound_extra = receipt.get("request_extra") if extra is _OPERATION_EXTRA_UNSPECIFIED else extra
+    expected = {**registration, "run_id": run_dir.name, "run_path": str(run_dir.resolve(strict=True)),
+        "stage": bound_stage, "role_id": bound_role,
+        "input_sha256": sha(json.dumps(request_messages, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()),
+        "output_cap": cap, "request_extra": bound_extra}
+    expected.pop("status")
+    fingerprint = sha(json.dumps(expected, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode())
+    if (type(cap) is not int or cap <= 0
+            or json.dumps({key: receipt.get(key) for key in expected}, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":"), allow_nan=False) != json.dumps(expected, ensure_ascii=False,
+                sort_keys=True, separators=(",", ":"), allow_nan=False)
+            or receipt.get("request_fingerprint") != fingerprint
+            or receipt.get("output_sha256") != sha(actual.encode())):
+        raise ContractError("OPERATION_SIMULATION_RECEIPT_BINDING_INVALID", "project, Run, role, request or output identity differs")
+    return actual
+
+
+def _operation_simulation_call(run_dir, *, stage, role_id, messages, output_cap, extra=None):
+    session = _OPERATION_SIMULATION.get()
+    if session is None or _OPERATION_SIMULATION_REQUEST.get() is not None:
+        raise ContractError("OPERATION_SIMULATION_REQUEST_INVALID", "simulation transport is absent or reentrant")
+    registration = _require_project_operation_authorization(_operation_owner(run_dir, load_state(run_dir)))
+    expected = {**registration, "run_id": run_dir.name, "run_path": str(run_dir.resolve(strict=True)),
+                "stage": stage, "role_id": role_id,
+                "input_sha256": sha(json.dumps(messages, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()),
+                "output_cap": output_cap, "request_extra": extra}
+    expected.pop("status")
+    expected["request_fingerprint"] = sha(json.dumps(expected, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"), allow_nan=False).encode())
+    token = _OPERATION_SIMULATION_REQUEST.set(expected)
+    try:
+        content, receipt = session.transport(run_dir, stage=stage, role_id=role_id,
+            messages=messages, output_cap=output_cap, extra=extra)
+        verified = _verify_operation_simulated_receipt(run_dir, receipt, messages=messages,
+            stage=stage, role_id=role_id, output_cap=output_cap, extra=extra)
+        if content != verified:
+            raise ContractError("OPERATION_SIMULATION_OUTPUT_CHANGED", "transport result differs from its actual raw response")
+        return content, receipt
+    finally:
+        _OPERATION_SIMULATION_REQUEST.reset(token)
+
+
+def _operation_transport_identity():
+    import inspect
+    return sha("\n".join(inspect.getsource(value) for value in _OPERATION_TRANSPORT_CODE).encode())
+
+
+def _require_generic_provider_authorization(run_dir: Path, *, stage: str, allow_operation_simulation=False) -> dict | None:
     """Keep new app production closed at both slot and actual request boundaries.
 
     Offline bindings and trusted review are independent of user Live/fee grants.
     No production grant adapter is deployed in this Atom. Historical V1 routing
     remains unchanged; changing a V2 Run's mode cannot grant it legacy authority.
     """
-    if stage == "project_revision_apply":
+    if stage == "project_revision_apply" and not allow_operation_simulation:
         raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "creative approval does not grant Provider or fee permission")
     state = load_state(run_dir)
+    operation_owner = _operation_owner(run_dir, state)
+    if operation_owner is not None:
+        return _require_project_operation_authorization(operation_owner, allow_simulated=allow_operation_simulation)
+    if stage == "project_revision_apply":
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "creative approval does not grant Provider or fee permission")
     snapshot = run_dir / "artifacts/contract.json"
     is_v2 = (state.get("literary_source_freeze_version") == "literary_source_freeze_v2"
              or state.get("schema_version") == "cnw_generic_sprint_v2")
@@ -501,12 +703,15 @@ def _require_generic_provider_authorization(run_dir: Path, *, stage: str) -> Non
 
 
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    if stage == "project_revision_apply":
+    if stage == "project_revision_apply" and _OPERATION_SIMULATION.get() is None:
         # Workflow03 creative approval grants no Provider/fee permission.
         # Production project authorization is not integrated for this new path;
         # keep it closed before even acquiring/reserving a Provider slot.
         raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "Workflow03 author approval is not Provider authorization; this path is verified only with isolated simulated transport")
-    _require_generic_provider_authorization(run_dir, stage=stage)
+    operation_binding = _require_generic_provider_authorization(run_dir, stage=stage, allow_operation_simulation=True)
+    if operation_binding is not None:
+        return _operation_simulation_call(run_dir, stage=stage, role_id=role_id, messages=messages,
+                                          output_cap=output_cap, extra=extra)
     with _p2_guard().provider_slot():
         return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
 
@@ -525,7 +730,7 @@ def reactivate_receipt(run_dir: Path, receipt: dict) -> None:
 
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    _require_generic_provider_authorization(run_dir, stage=stage)
+    _require_generic_provider_authorization(run_dir, stage=stage, allow_operation_simulation=False)
     if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "project_decompose", "project_extract_canon", "project_jet_diagnostic", "project_character_os", "project_revision_plan", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
@@ -607,6 +812,13 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
         current["updated_at"] = now()
         save_state(run_dir, current)
     return content, receipt
+
+
+_OPERATION_TRANSPORT_CODE = (_operation_project_registration, _operation_owner,
+    _OperationSimulationSession, _isolated_operation_transport, _require_project_operation_authorization,
+    _operation_simulation_request_binding, _verify_operation_simulated_receipt,
+    _operation_simulation_call, _require_generic_provider_authorization,
+    cnw_live_call, _operation_transport_identity)
 
 
 def _receipt_content(run_dir: Path, receipt: dict) -> str:

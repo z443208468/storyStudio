@@ -34,6 +34,7 @@ ARC_SECTIONS = ("Conclusion", "Arc Role", "Start and End States", "Whole Arc Che
 def _adapter_identity(operation):
     return runner.sha(json.dumps({"messages_builder": inspect.getsource(_messages),
         "source_selector": inspect.getsource(_inventory), "transport": inspect.getsource(runner._cnw_live_call_in_slot),
+        "operation_transport": runner._operation_transport_identity(),
         "standard_adapter": operations.identity() if operation in operations.OPERATIONS else None,
         "model": runner.MODEL, "url": runner.API_URL, "output_cap": OUTPUT_CAPS[operation]}, sort_keys=True).encode())
 
@@ -43,6 +44,11 @@ def _verify_receipt(run, journal):
                     if row.get("request_id") == journal["request_id"] and row.get("status") == "SUCCEEDED"), None)
     if not receipt or not receipt.get("request_path"):
         raise ContractError("MAINTENANCE_RECEIPT_MISSING", run.name)
+    registration = runner._require_project_operation_authorization(run.parents[2])
+    if registration is not None:
+        operation = journal["options"]["operation"]
+        runner._verify_operation_simulated_receipt(run, receipt, stage="project_" + operation,
+            role_id="project_" + operation, output_cap=OUTPUT_CAPS[operation], extra=None)
     runner._receipt_content(run, receipt)
 
 
@@ -235,6 +241,7 @@ def _apply(root, run, journal):
 
 def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False,
                     sources=(), candidate_drafts=None, revision_approval=None):
+    runner._operation_project_registration(Path(project_root))
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
         try:
@@ -271,6 +278,7 @@ def run_maintenance(project_root, operation, *, scope="full", chapters=(), targe
 
 
 def _run(root, options):
+    runner._require_project_operation_authorization(root)
     pending = assert_output_within_root(root, PENDING)
     latest_path = assert_output_within_root(root, f"00_meta/maintenance_{options['operation']}_state.json")
     if pending.exists():

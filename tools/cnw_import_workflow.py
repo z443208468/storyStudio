@@ -145,6 +145,7 @@ def _apply(root: Path, run_dir: Path, journal: dict) -> None:
 
 
 def run_import(project_root: str | Path, *, incremental: bool = False) -> dict:
+    runner._operation_project_registration(Path(project_root))
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((ROOT / "workspace").resolve()):
         try:
@@ -166,15 +167,21 @@ def _reconsume_bookkeeping_response(run, stage, messages):
     for row in runner.cached_receipts(runner.load_state(run)):
         if row.get("status") != "SUCCEEDED" or row.get("stage") != stage or row.get("role_id") != "project_organization" or not row.get("request_path"):
             continue
+        registration = runner._require_project_operation_authorization(run.parents[2])
+        if registration is not None:
+            runner._verify_operation_simulated_receipt(run, row, stage=stage, role_id="project_organization", output_cap=IMPORT_OUTPUT_CAP, extra=None)
         content = runner._receipt_content(run, row)
         old_body = json.loads(assert_output_within_root(run, row["request_path"]).read_text(encoding="utf-8"))
         old_messages = old_body.get("messages", [])
-        if len(old_messages) != 2 or old_messages[0] != messages[0] or old_body.get("model") != runner.MODEL or old_body.get("max_tokens") != IMPORT_OUTPUT_CAP:
+        if len(old_messages) != 2 or old_messages[0] != messages[0]:
             continue
-        expected = sha(json.dumps({"stage": stage, "role_id": "project_organization", "messages": old_messages,
-            "output_cap": IMPORT_OUTPUT_CAP, "model": runner.MODEL, "url": runner.API_URL, "extra": None}, ensure_ascii=False, sort_keys=True).encode())
-        if row.get("request_fingerprint") != expected:
-            continue
+        if registration is None:
+            if old_body.get("model") != runner.MODEL or old_body.get("max_tokens") != IMPORT_OUTPUT_CAP:
+                continue
+            expected = sha(json.dumps({"stage": stage, "role_id": "project_organization", "messages": old_messages,
+                "output_cap": IMPORT_OUTPUT_CAP, "model": runner.MODEL, "url": runner.API_URL, "extra": None}, ensure_ascii=False, sort_keys=True).encode())
+            if row.get("request_fingerprint") != expected:
+                continue
         old = json.loads(old_messages[1]["content"])
         old_allowed, new_allowed = set(old.get("allowed_existing_documents", [])), set(current.get("allowed_existing_documents", []))
         if old_allowed == new_allowed or not old_allowed.issubset(new_allowed) or not (new_allowed - old_allowed).issubset({"00_meta/source_log.md", "00_meta/ai_work_log.md"}):
@@ -189,13 +196,27 @@ def _reconsume_bookkeeping_response(run, stage, messages):
     return None
 
 
+def _verify_cached_operation(root, run, journal):
+    if runner._require_project_operation_authorization(root) is None:
+        return
+    if journal.get("operation_transport_sha256") != runner._operation_transport_identity():
+        raise ContractError("IMPORT_OPERATION_ADAPTER_CHANGED", "cached operation requires an explicitly compatible simulation boundary")
+    rows = [row for row in runner.cached_receipts(runner.load_state(run))
+            if row.get("request_id") == journal.get("operation_request_id")]
+    if len(rows) != 1 or journal.get("operation_stage") not in {"project_import", "project_update"}:
+        raise ContractError("IMPORT_SIMULATION_CACHE_BINDING_INVALID", "cached import does not identify its actual model receipt")
+    runner._verify_operation_simulated_receipt(run, rows[0], stage=journal["operation_stage"], role_id="project_organization", output_cap=IMPORT_OUTPUT_CAP, extra=None)
+
+
 def _run_import(root: Path, *, incremental: bool) -> dict:
+    runner._require_project_operation_authorization(root)
     pending = assert_output_within_root(root, PENDING)
     pending.parent.mkdir(parents=True, exist_ok=True)
     if pending.exists():
         pointer = _json(pending.read_text(encoding="utf-8"))
         journal_path = assert_output_within_root(root, pointer["journal"])
         journal = _json(journal_path.read_text(encoding="utf-8"))
+        _verify_cached_operation(root, journal_path.parent, journal)
         if {k: v["sha256"] for k, v in _inventory(root).items()} != journal["source_hashes"]:
             raise ContractError("IMPORT_SOURCE_CHANGED", "cannot recover against changed sources")
         _apply(root, journal_path.parent, journal)
@@ -228,6 +249,7 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     journal_path = run_dir / "transaction.json"
     if journal_path.exists():
         journal = _json(journal_path.read_text(encoding="utf-8"))
+        _verify_cached_operation(root, run_dir, journal)
         pending.write_text(json.dumps({"journal": journal_path.relative_to(root).as_posix()}), encoding="utf-8")
         _apply(root, run_dir, journal)
         pending.unlink()
@@ -291,7 +313,7 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     _record_classification(run_dir, "import_request", {"messages": messages, "sources": {
         name: {key: value for key, value in row.items() if key != "text"} for name, row in source_bindings.items()}})
     reused_response = _reconsume_bookkeeping_response(run_dir, stage, messages)
-    content, _ = reused_response or cnw_live_call(run_dir, stage=stage, role_id="project_organization", messages=messages, output_cap=IMPORT_OUTPUT_CAP)
+    content, model_receipt = reused_response or cnw_live_call(run_dir, stage=stage, role_id="project_organization", messages=messages, output_cap=IMPORT_OUTPUT_CAP)
     organized = _json(content)
     documents, conflicts, source_notes = (organized.get(key) for key in ("documents", "conflicts", "source_notes"))
     if (not isinstance(documents, dict) or not isinstance(conflicts, list) or not isinstance(source_notes, dict)
@@ -411,6 +433,9 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     if reused_response:
         result.update(provider_call="reconsumed_existing_response", original_provider_request_id=reused_response[1]["provider_request_id"])
     journal = {"writes": writes, "result": result, "source_hashes": {k: v["sha256"] for k, v in inventory.items()}}
+    if runner._require_project_operation_authorization(root) is not None:
+        journal.update(operation_request_id=model_receipt["request_id"], operation_stage=stage,
+                       operation_transport_sha256=runner._operation_transport_identity())
     journal_path.write_text(json.dumps(journal, ensure_ascii=False, indent=2), encoding="utf-8")
     pending.write_text(json.dumps({"journal": journal_path.relative_to(root).as_posix()}), encoding="utf-8")
     _apply(root, run_dir, journal)

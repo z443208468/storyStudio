@@ -259,6 +259,8 @@ def stage_identity(run_dir: Path, stage: str, *, project_root: Path | None = Non
         "builder_sha256": _code(*builders),
         "workflow_sha256": r.sha(r.WORKFLOW_PATH.read_bytes()), "model": r.MODEL,
         "api_url": r.API_URL, "transport_sha256": _code(r._cnw_live_call_in_slot)}
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        value["authorization_boundary_sha256"] = r._operation_transport_identity()
     return {**value, "sha256": _digest(value)}
 
 
