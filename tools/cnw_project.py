@@ -526,13 +526,14 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
             if selected.get("format") not in {"md", "txt"}:
                 raise ContractError("SOURCE_TYPE_UNSUPPORTED", "INSERT_BETWEEN requires an ordered text source")
             before_line, after_line = draft.get("before_line"), draft.get("after_line")
+            before_end = draft.get("before_line_end", before_line)
+            after_end = draft.get("after_line_end", after_line)
             lines = source_file.read_bytes().splitlines(keepends=True)
-            if (not isinstance(before_line, int) or isinstance(before_line, bool) or
-                    not isinstance(after_line, int) or isinstance(after_line, bool) or
-                    before_line < 1 or after_line <= before_line or after_line > len(lines)):
+            if (any(type(value) is not int for value in (before_line, before_end, after_line, after_end)) or
+                    not (1 <= before_line <= before_end < after_line <= after_end <= len(lines))):
                 raise ContractError("SOURCE_ANCHOR_INVALID", "both real ordered source line anchors are required")
-            story_source_fields["before_anchor"] = {"scene": "SOURCE", "source_line": before_line, "source_line_end": before_line, "sha256": sha(lines[before_line - 1])}
-            story_source_fields["after_anchor"] = {"scene": "SOURCE", "source_line": after_line, "source_line_end": after_line, "sha256": sha(lines[after_line - 1])}
+            story_source_fields["before_anchor"] = {"scene": _required_text(draft.get("before_scene", "SOURCE"), "story.before_anchor.scene"), "source_line": before_line, "source_line_end": before_end, "sha256": sha(b"".join(lines[before_line - 1:before_end]))}
+            story_source_fields["after_anchor"] = {"scene": _required_text(draft.get("after_scene", "SOURCE"), "story.after_anchor.scene"), "source_line": after_line, "source_line_end": after_end, "sha256": sha(b"".join(lines[after_line - 1:after_end]))}
         else:
             selection = {"source_id": draft["source_id"], "source_revision_id": draft["source_revision_id"]}
             if selected.get("format") == "json":
@@ -563,6 +564,17 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
             else:
                 raise ContractError("SOURCE_TYPE_UNSUPPORTED", str(selected.get("format")))
             story_source_fields["source_selection"] = selection
+
+    # Source-based work can select an Arc just as original work can. Retain
+    # its exact identity instead of discarding it and using a fallback Arc.
+    if intent != "ORIGINAL_EPISODE" and "arc_ref" in draft:
+        arc_ref = _required_text(draft["arc_ref"], "story.arc_ref")
+        try:
+            from .cnw_roles import resolve_arc
+        except ImportError:
+            from cnw_roles import resolve_arc
+        arc_path = resolve_arc(root, unit_id, arc_ref)
+        story_source_fields.update(arc_ref=arc_ref, arc_sha256=sha(arc_path.read_bytes()))
 
     beats = draft.get("required_beats", [])
     if not isinstance(beats, list):
@@ -626,6 +638,10 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
         scene_targets = draft.get("scene_targets") or [{"id": f"{unit_id}-S01", "target_visible_chars": target}]
         contract["unit"]["chapter_target_visible_chars"] = target
         contract["unit"]["scenes"] = scene_targets
+    if "input_pack" in draft:
+        # This is an immutable input record, not a role-reading override or
+        # an approval receipt. Consumers still use the author reading lists.
+        contract["input_pack"] = json.loads(json.dumps(draft["input_pack"]))
     check_required_fields(contract)
     validate_work_unit(contract)
     validate_v2_source_identity(contract, source_root=root)

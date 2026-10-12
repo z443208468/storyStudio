@@ -212,6 +212,19 @@ def validate_v2_source_identity(contract: dict[str, Any], *, source_root: str | 
             instance_id != contract.get("project_instance_id") or
             identity.get("project_id") != contract.get("project_id")):
         raise ContractError("PROJECT_INSTANCE_IDENTITY_MISMATCH", "contract identity differs from the registered project")
+    if "input_pack" in contract:
+        try:
+            from .cnw_input_pack import validate_input_pack_binding
+        except ImportError:
+            from cnw_input_pack import validate_input_pack_binding
+        validate_input_pack_binding(root, contract["input_pack"])
+    story = contract["story"]
+    if intent != "ORIGINAL_EPISODE" and ("arc_ref" in story or "arc_sha256" in story):
+        arc_ref, arc_sha = story.get("arc_ref"), story.get("arc_sha256")
+        if not isinstance(arc_ref, str) or not isinstance(arc_sha, str):
+            raise ContractError("PROJECT_CONTEXT_IDENTITY_MISMATCH", "explicit Arc requires its frozen SHA256")
+        if _sha256(_safe_source_file(root, arc_ref).read_bytes()) != arc_sha:
+            raise ContractError("PROJECT_CONTEXT_IDENTITY_MISMATCH", "selected Arc bytes differ from the work contract")
     if intent == "ORIGINAL_EPISODE":
         story = contract["story"]
         if origin != "ORIGINAL_PROJECT" or any(key in story for key in ("source_file", "before_anchor", "after_anchor")):
@@ -307,7 +320,7 @@ def validate_v2_source_identity(contract: dict[str, Any], *, source_root: str | 
     if intent == "INSERT_BETWEEN":
         _validate_story_anchors(contract, root, raw_path)
         before, after = contract["story"]["before_anchor"], contract["story"]["after_anchor"]
-        if before.get("source_line_end", before["source_line"]) >= after.get("source_line_end", after["source_line"]):
+        if before.get("source_line_end", before["source_line"]) >= after["source_line"]:
             raise ContractError("SOURCE_ANCHOR_INVALID", "before anchor must precede after anchor")
     else:
         selection = contract["story"].get("source_selection")
