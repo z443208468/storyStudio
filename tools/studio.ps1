@@ -33,7 +33,8 @@ param(
     [string]$Reason,
     [string]$ArcRef,
     [string]$LastEpisode,
-    [ValidateSet('decompose','extract_canon','jet_diagnostic','character_os','revision_plan')][string]$Operation,
+    [ValidateSet('decompose','extract_canon','jet_diagnostic','character_os','revision_plan','revision_apply')][string]$Operation,
+    [string]$RevisionApproval,
     [string[]]$SourceFile,
     [string]$OperationTarget,
     [switch]$Pipeline,
@@ -318,6 +319,7 @@ switch ($Command) {
         $StandardArguments = @('standard-operation','--project-root',$ProjectRootPath,'--operation',$Operation)
         foreach ($StandardSource in $SourceFile) { $StandardArguments += @('--source',$StandardSource) }
         if ($OperationTarget) { $StandardArguments += @('--target',$OperationTarget) }
+        if ($RevisionApproval) { $StandardArguments += @('--revision-approval',$RevisionApproval) }
         & $Python (Join-Path $Root 'tools/cnw_project.py') @StandardArguments
         if ($LASTEXITCODE -ne 0) { throw "CNW_STANDARD_OPERATION_FAILED:$LASTEXITCODE" }
     }

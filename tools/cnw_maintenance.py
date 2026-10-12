@@ -234,7 +234,7 @@ def _apply(root, run, journal):
 
 
 def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False,
-                    sources=(), candidate_drafts=None):
+                    sources=(), candidate_drafts=None, revision_approval=None):
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
         try:
@@ -263,6 +263,10 @@ def run_maintenance(project_root, operation, *, scope="full", chapters=(), targe
     except ImportError:
         from project_transactions import project_write_lock
     with project_write_lock(root):
+        if operation == "revision_apply":
+            options["revision_approval"] = operations.revision_approval(root, options["sources"], revision_approval)
+        elif revision_approval is not None:
+            raise ContractError("REVISION_USER_APPROVAL_INVALID", "approval selection is only for revision_apply")
         return _run(root, options)
 
 
@@ -281,6 +285,7 @@ def _run(root, options):
         result = {**journal["result"], "provider_call": "reused", "recovered": True}
     else:
         inventory = _inventory(root, options)
+        operations.validate_revision_snapshot(inventory, options)
         references, method_hash = _method(root, options["operation"])
         adapter_identity = _adapter_identity(options["operation"])
         current_hashes = _hashes(inventory)

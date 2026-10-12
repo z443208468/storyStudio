@@ -693,6 +693,101 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         self.assertTrue(request_rows and request_rows[0]["mode"] == "MOCK_ONLY")
         self.assertEqual(request_rows[0]["simulation_status"], "SIMULATED")
         self.assertEqual(_sha(plan_bytes), _sha(plan_path.read_bytes()))
+        # The ordinary Workflow03 approved branch is distinct from CNW Refine:
+        # user-selected plan items -> real maintenance request -> separate copy.
+        original = "07_draft/episodes/EP001.md"
+        item = "EP001: make Sana's next request observable, based on ordinary beta_feedback.md; keep project Canon unchanged."
+        decision = {"schema_version": "cnw_workflow03_user_approval_v1",
+            "author_decision": "APPROVE_SELECTED_ITEMS",
+            "project_instance_id": self.projects["TEST_REVISION"]["project_instance_id"],
+            "plan_sha256": _sha(plan_bytes), "draft_sha256": {original: _sha(draft_before)},
+            "approved_items": [{"chapter": original, "plan_excerpt": item}],
+            "protected_sha256": {p.relative_to(root).as_posix(): _sha(p.read_bytes())
+                for folder in ("01_theme", "02_logline", "90_canon") for p in (root / folder).rglob("*")
+                if p.is_file() and p.suffix.lower() in {".md", ".txt", ".json"}}}
+        decision_file = "00_meta/author_decisions/workflow03.json"
+        _write(root, decision_file, json.dumps(decision, ensure_ascii=False, sort_keys=True))
+        rejects = []
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=AssertionError("unapproved revision must not request a model")):
+            with self.assertRaises(ContractError) as caught:
+                standard_operation(root, "revision_apply", sources=(original,))
+            self.assertEqual(caught.exception.code, "REVISION_USER_APPROVAL_REQUIRED")
+            rejects.append(caught.exception.code)
+            cases = [dict(decision, project_instance_id="different-project"),
+                dict(decision, plan_sha256="0" * 64),
+                dict(decision, draft_sha256={original: "0" * 64}),
+                dict(decision, protected_sha256={}),
+                dict(decision, author_decision="NOT_APPROVED"),
+                dict(decision, approved_items=[{"chapter": original, "plan_excerpt": "An invented plan item is not approved."}]),
+                dict(decision, approved_items=decision["approved_items"] * 2),
+                dict(decision, approved_items=[{"chapter": original, "plan_excerpt":
+                    "REQUIRES AUTHOR DECISION: consider the protected-premise suggestion; do not apply without user approval."}])]
+            for index, invalid in enumerate(cases):
+                invalid_file = f"00_meta/author_decisions/invalid-{index}.json"
+                _write(root, invalid_file, json.dumps(invalid))
+                with self.assertRaises(ContractError) as caught:
+                    standard_operation(root, "revision_apply", sources=(original,), revision_approval=invalid_file)
+                rejects.append(caught.exception.code)
+        approval_sha = _sha((root / decision_file).read_bytes())
+        destination = f"09_revision/approved/{approval_sha}/episodes/EP001.md"
+        revised = final_prose + "\nSana pointed to the empty crate. 'Can you carry this with me tomorrow?'\n"
+        apply_requests = []
+
+        def approved_transport(run, *, stage, role_id, messages, output_cap, **kwargs):
+            self.assertEqual(stage, "project_revision_apply")
+            payload = json.loads(messages[1]["content"])
+            bound = payload["selection"]["revision_approval"]
+            self.assertEqual(bound["decision"], decision)
+            self.assertEqual(bound["revision_destinations"], {original: destination})
+            self.assertEqual(payload["project_sources"][original]["sha256"], _sha(draft_before))
+            self.assertEqual(payload["project_sources"]["09_revision/revision_plan.md"]["sha256"], _sha(plan_bytes))
+            self.assertEqual(payload["project_sources"][decision_file]["sha256"], approval_sha)
+            self.assertIn("ONLY the listed approved", messages[0]["content"])
+            self.assertIn("When the user approves specific items", messages[0]["content"])
+            value = {"documents": {destination: revised}, "report_markdown": "# Workflow03 revision\nApplied only the approved P2 next-request item; kept the protected-premise P0 unimplemented.",
+                "assumptions": [], "unresolved_questions": ["Protected-premise P0 still requires a separate author decision."],
+                "next_action": "Author compares the separate revised copy; promotion has not been requested."}
+            apply_requests.append(messages)
+            return self._workflow_response(run, messages, json.dumps(value, ensure_ascii=False), stage=stage, role_id=role_id)
+
+        # Interrupt an actual filesystem publication, not the execution function.
+        replace = Path.replace
+        def interrupted_replace(path, target):
+            if str(path).endswith(".maintenance-tmp") and Path(target) == root / destination:
+                raise OSError("SIMULATED_WORKFLOW03_PUBLICATION_INTERRUPTION")
+            return replace(path, target)
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=approved_transport), patch.object(Path, "replace", interrupted_replace):
+            with self.assertRaisesRegex(OSError, "SIMULATED_WORKFLOW03_PUBLICATION_INTERRUPTION"):
+                standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
+        self.assertTrue((root / "00_meta/maintenance_pending.json").is_file())
+        self.assertFalse((root / destination).exists())
+        self.assertEqual(draft_path.read_bytes(), draft_before)
+        with patch.object(cnw_runner, "cnw_live_call", side_effect=AssertionError("completed model receipt must be reused")):
+            applied = standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
+            repeat = standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
+        self.assertTrue(applied["recovered"])
+        self.assertEqual(repeat["provider_call"], "reused")
+        self.assertEqual(len(apply_requests), 1)
+        self.assertTrue(applied["revision_approved"])
+        self.assertFalse(applied["promoted"])
+        self.assertFalse(applied["canon_modified"])
+        self.assertFalse(applied["user_creative_accepted"])
+        self.assertEqual((root / destination).read_bytes(), revised.encode("utf-8"))
+        self.assertEqual(draft_path.read_bytes(), draft_before)
+        self.assertEqual(canon_path.read_bytes(), canon_before)
+        record = json.loads((root / applied["revision_record"]).read_text(encoding="utf-8"))
+        self.assertEqual(record["chapters"][0]["original_sha256"], _sha(draft_before))
+        self.assertEqual(record["chapters"][0]["revision_sha256"], _sha(revised.encode("utf-8")))
+        self.assertEqual(record["chapters"][0]["approved_items"], [item])
+        self.assertIn("Can you carry this", record["chapters"][0]["diff"])
+        log = (root / "00_meta/ai_work_log.md").read_text(encoding="utf-8")
+        self.assertEqual(log.count("Workflow revision_apply;"), 1)
+        self.assertIn(destination, log)
+        self._public_evidence("workflow03_user_approved_revision_and_recovery", root,
+            {"unapproved": result, "approved": applied, "replay": repeat, "rejected_approvals": rejects,
+             "approval_sha256": approval_sha, "record": record,
+             "draft_original_sha256": _sha(draft_before), "canon_original_sha256": _sha(canon_before),
+             "actual_apply_requests": apply_requests, "model_transport": "MOCK_ONLY / SIMULATED"})
         evidence_path = os.environ.get("ATOM09_WF03_EVIDENCE_OUTPUT")
         if evidence_path:
             evidence = {"schema_version": "atom09_workflow03_offline_evidence_v1",
@@ -711,6 +806,120 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
+    def test_workflow03_rejects_model_write_escalation_and_changed_approval_inputs(self):
+        outcomes = []
+        for index, fault in enumerate(("write_original", "write_canon", "write_other_copy", "draft", "plan", "protected_json", "approval")):
+            with self.subTest(fault=fault):
+                root = self._project(f"REVISION-GUARD-{index}", "Synthetic revision guards", ("Mira", "Keeper"), "harbor")
+                original = "07_draft/episodes/EP001.md"
+                _write(root, original, "Mira asked her neighbor to carry the crate.\n")
+                _write(root, "90_canon/locked.json", json.dumps({"locked_fact": "The neighbors are not relatives."}))
+                item = "EP001: clarify the next concrete request while preserving the neighborly relationship."
+                _write(root, "09_revision/revision_plan.md", "# Revision Plan\n## P2\n" + item + "\n")
+                decision_file = "00_meta/author_decisions/revision.json"
+                decision = {"schema_version": "cnw_workflow03_user_approval_v1", "author_decision": "APPROVE_SELECTED_ITEMS",
+                    "project_instance_id": self.projects[f"REVISION-GUARD-{index}"]["project_instance_id"],
+                    "plan_sha256": _sha((root / "09_revision/revision_plan.md").read_bytes()),
+                    "draft_sha256": {original: _sha((root / original).read_bytes())},
+                    "approved_items": [{"chapter": original, "plan_excerpt": item}],
+                    "protected_sha256": {p.relative_to(root).as_posix(): _sha(p.read_bytes())
+                        for folder in ("01_theme", "02_logline", "90_canon") for p in (root / folder).rglob("*")
+                        if p.is_file() and p.suffix.lower() in {".md", ".txt", ".json"}}}
+                _write(root, decision_file, json.dumps(decision, sort_keys=True))
+                protected = {name: (root / name).read_bytes() for name in (
+                    original, "09_revision/revision_plan.md", "90_canon/canon.md", "90_canon/locked.json", decision_file)}
+                changed = {"draft": original, "plan": "09_revision/revision_plan.md",
+                    "protected_json": "90_canon/locked.json", "approval": decision_file}.get(fault)
+                calls = []
+                def malicious_transport(run, *, stage, role_id, messages, output_cap, **kwargs):
+                    payload = json.loads(messages[1]["content"])
+                    self.assertIn("90_canon/locked.json", payload["project_sources"])
+                    destination = payload["selection"]["revision_approval"]["revision_destinations"][original]
+                    if fault in {"write_original", "write_canon", "write_other_copy"}:
+                        destination = {"write_original": original, "write_canon": "90_canon/canon.md",
+                            "write_other_copy": "09_revision/approved/wrong/EP002.md"}[fault]
+                    else:
+                        (root / changed).write_bytes(protected[changed] + b"\nTOCTOU-CHANGE\n")
+                    value = {"documents": {destination: "A changed candidate."}, "report_markdown": "MOCK invalid attempt",
+                        "revision_approved": True, "provider_authorized": True, "assumptions": [],
+                        "unresolved_questions": [], "next_action": "Attempt automatic promotion."}
+                    calls.append(messages)
+                    return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
+                with patch.object(cnw_runner, "cnw_live_call", side_effect=malicious_transport):
+                    with self.assertRaises(ContractError) as caught:
+                        standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
+                expected = "REVISION_APPROVED_DESTINATIONS_REQUIRED" if fault.startswith("write_") else "MAINTENANCE_SOURCE_CHANGED"
+                self.assertEqual(caught.exception.code, expected)
+                self.assertEqual(len(calls), 1)
+                self.assertFalse((root / "00_meta/maintenance_pending.json").exists())
+                self.assertFalse((root / "08_review/revision_apply_report.md").exists())
+                self.assertFalse(list((root / "09_revision/approved").rglob("*.md")))
+                for name, raw in protected.items():
+                    if fault not in {"write_original", "write_canon", "write_other_copy"} and name == changed:
+                        (root / name).write_bytes(raw)  # restore only deliberately changed fictional input
+                    self.assertEqual((root / name).read_bytes(), raw)
+                outcomes.append({"fault": fault, "rejection": caught.exception.code, "actual_requests": calls})
+                self._public_evidence(f"workflow03_guard_{fault}", root, outcomes[-1])
+        # Run the real transport entrance with a present fictional key: author
+        # approval alone must not reach the fee guard, slot or network boundary.
+        def fee_access_forbidden(*args, **kwargs):
+            raise AssertionError("no fee guard access")
+        def provider_access_forbidden(*args, **kwargs):
+            raise AssertionError("no Provider invocation")
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "SIMULATED_NOT_A_REAL_KEY"}), \
+                patch.object(cnw_runner, "_p2_guard", new=fee_access_forbidden), \
+                patch.object(cnw_runner, "_cnw_live_call_in_slot", new=provider_access_forbidden):
+            with self.assertRaises(ContractError) as caught:
+                standard_operation(root, "revision_apply", sources=(original,), revision_approval=decision_file)
+        self.assertEqual(caught.exception.code, "LIVE_AUTHORIZATION_REQUIRED")
+        self._public_evidence("workflow03_native_live_denied_before_fees", root,
+            {"rejection": caught.exception.code, "fee_guard_calls": 0, "provider_calls": 0})
+
+    def test_workflow03_approval_to_request_snapshot_race_is_rejected_without_provider(self):
+        for index, selected in enumerate(("07_draft/episodes/EP001.md", "09_revision/revision_plan.md",
+                "90_canon/locked.json", "00_meta/author_decisions/revision.json", "project_identity.json")):
+            with self.subTest(changed_between_validation_and_snapshot=selected):
+                root = self._project(f"REVISION-RACE-{index}", "Synthetic approval race", ("Mira", "Keeper"), "harbor")
+                original = "07_draft/episodes/EP001.md"
+                item = "EP001: clarify the concrete next request, keeping every Canon fact unchanged."
+                _write(root, original, "Mira asked her neighbor to carry a crate tomorrow.\n")
+                _write(root, "90_canon/locked.json", '{"relationship":"neighbors"}')
+                _write(root, "09_revision/revision_plan.md", "# Revision Plan\n## P2\n" + item + "\n")
+                approval_file = "00_meta/author_decisions/revision.json"
+                decision = {"schema_version": "cnw_workflow03_user_approval_v1", "author_decision": "APPROVE_SELECTED_ITEMS",
+                    "project_instance_id": self.projects[f"REVISION-RACE-{index}"]["project_instance_id"],
+                    "plan_sha256": _sha((root / "09_revision/revision_plan.md").read_bytes()),
+                    "draft_sha256": {original: _sha((root / original).read_bytes())},
+                    "approved_items": [{"chapter": original, "plan_excerpt": item}],
+                    "protected_sha256": {p.relative_to(root).as_posix(): _sha(p.read_bytes())
+                        for folder in ("01_theme", "02_logline", "90_canon") for p in (root / folder).rglob("*")
+                        if p.is_file() and p.suffix.lower() in {".md", ".txt", ".json"}}}
+                _write(root, approval_file, json.dumps(decision, sort_keys=True))
+                path = root / selected
+                before = path.read_bytes()
+                read_bytes = Path.read_bytes
+                reads = []
+                def concurrent_reader(current):
+                    if current == path:
+                        reads.append(str(current))
+                        # The first read validates approval. The second is the
+                        # actual request inventory read after that validation.
+                        if len(reads) == 2:
+                            current.write_bytes(before + b"\nEXTERNAL_EDIT_AFTER_APPROVAL\n")
+                    return read_bytes(current)
+                with patch.object(Path, "read_bytes", new=concurrent_reader), \
+                        patch.object(cnw_runner, "cnw_live_call", side_effect=AssertionError("unapproved snapshot must not reach transport")):
+                    with self.assertRaises(ContractError) as caught:
+                        standard_operation(root, "revision_apply", sources=(original,), revision_approval=approval_file)
+                self.assertEqual(caught.exception.code, "REVISION_APPROVAL_SNAPSHOT_MISMATCH")
+                self.assertEqual(len(reads), 2)
+                self.assertFalse((root / "94_runtime/maintenance").exists())
+                self.assertFalse((root / "09_revision/approved").exists())
+                path.write_bytes(before)  # only the deliberate fictional edit
+                self._public_evidence(f"workflow03_approval_snapshot_race_{index}", root,
+                    {"changed_path": selected, "rejection": caught.exception.code, "provider_calls": 0,
+                     "request_snapshot_file_reads": len(reads), "approved_original_sha256": _sha(before)})
+
     def test_workflow01_then02_retain_originals_and_classify_conflicting_update(self):
         from tools import cnw_import_workflow as workflow
         root = self._project("TEST_IMPORT_CHAIN", "Synthetic Source Updates", ("Mira", "Keeper"), "harbor")
@@ -724,6 +933,7 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         def initial_transport(run, *, stage, role_id, messages, **kwargs):
             self.assertEqual(stage, "project_import")
             payload = json.loads(messages[1]["content"])
+            self.assertEqual(set(payload["original_sources"]), {old_source})
             self.assertEqual(payload["original_sources"][old_source]["text"], original.decode("utf-8"))
             rows = {name: [{"status": "INFERRED", "text": "A practical choice tests neighborly trust.",
                             "source_refs": [old_source]}] for name in workflow.DOCUMENTS}
@@ -750,6 +960,7 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
         def update_transport(run, *, stage, role_id, messages, **kwargs):
             self.assertEqual(stage, "project_update")
             payload = json.loads(messages[1]["content"])
+            self.assertEqual(set(payload["original_sources"]), {new_source})
             self.assertIn(new_source, payload["original_sources"])
             self.assertNotIn(old_source, payload["original_sources"])
             self.assertIn("Mira owns a brass key.", payload["existing_documents"]["90_canon/canon.md"])
@@ -789,6 +1000,56 @@ class ThreeProjectOfflineE2E(unittest.TestCase):
             "update_result": update_result, "old_source_sha256": _sha(original),
             "old_canon_prefix_retained": True, "retained_claims": list(initial_state["claims"]),
             "conflict_withheld_from_canon": True, "real_provider_calls": 0})
+
+    def test_workflow01_internal_registry_cannot_become_a_confirmed_story_source(self):
+        from tools import cnw_import_workflow as workflow
+        root = self._project("REGISTRY-GUARD", "Synthetic source authority", ("Mira", "Keeper"), "harbor")
+        imported = self._source_import(root, "actual-source.md", b"Mira and Keeper are neighbors.\n")
+        canon_before = (root / "90_canon/canon.md").read_bytes()
+        sent = []
+        def metadata_as_fact_transport(run, *, stage, role_id, messages, **kwargs):
+            payload = json.loads(messages[1]["content"])
+            sources = payload["original_sources"]
+            self.assertTrue(sources)
+            self.assertFalse(any(name.startswith("_INBOX/revisions/") for name in sources))
+            self.assertFalse(any(name in {"_INBOX/source_manifest.json", "_INBOX/source_index.json"} for name in sources))
+            actual = next(iter(sources))
+            rows = {name: [{"status": "INFERRED", "text": "A practical neighborly choice.", "source_refs": [actual]}]
+                    for name in workflow.DOCUMENTS}
+            rows["90_canon/canon.md"] = [{"status": "CONFIRMED", "text": "REGISTRY_ONLY_INVENTED_FACT",
+                "source_refs": [imported["source_index"], "author:templates/CLAUDE.md"]}]
+            rows["90_canon/character_bible.md"] = [{"status": "CONFIRMED", "text": "Mira and Keeper are neighbors.", "source_refs": [actual]}]
+            value = {"source_notes": {name: "Actual supplied original." for name in sources}, "documents": rows,
+                "conflicts": [], "next_action": "Review source-backed Canon."}
+            sent.append(messages)
+            return self._workflow_response(run, messages, json.dumps(value), stage=stage, role_id=role_id)
+        registry_before = {p.relative_to(root).as_posix(): p.read_bytes()
+                           for p in (root / "_INBOX/revisions").rglob("*") if p.is_file()}
+        with patch.object(workflow, "cnw_live_call", side_effect=metadata_as_fact_transport):
+            with self.assertRaises(ContractError) as caught:
+                semantic_import(root)
+        self.assertEqual(caught.exception.code, "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED")
+        self.assertEqual((root / "90_canon/canon.md").read_bytes(), canon_before)
+        for name, raw in registry_before.items():
+            self.assertEqual((root / name).read_bytes(), raw)
+        # Retained historical claims tied only to an internal registry are not
+        # re-exported as authoritative Canon evidence; old files remain intact.
+        fake = {"claims": {"OLD-METADATA": {"status": "CONFIRMED", "document": "90_canon/canon.md",
+            "text": "REGISTRY_ONLY_INVENTED_FACT", "sources": {imported["source_index"]: "old-hash"},
+            "source_kinds": {imported["source_index"]: "original"}}}}
+        self.assertEqual(workflow._confirmed_canon_sources(fake, {"90_canon/canon.md":
+            "REGISTRY_ONLY_INVENTED_FACT\n\nClassification: CONFIRMED\nSource: old metadata"}), {})
+        alias = "confirmed_canon:90_canon/canon.md:OLD-METADATA"
+        fake["claims"]["REPEATED-METADATA"] = {"status": "CONFIRMED", "document": "90_canon/canon.md",
+            "text": "A repeated derived metadata fact.", "sources": {alias: _sha(b"REGISTRY_ONLY_INVENTED_FACT")},
+            "source_kinds": {alias: "confirmed_canon"}}
+        self.assertEqual(workflow._confirmed_canon_sources(fake, {"90_canon/canon.md":
+            "REGISTRY_ONLY_INVENTED_FACT\n\nClassification: CONFIRMED\nSource: old metadata\n\n"
+            "A repeated derived metadata fact.\n\nClassification: CONFIRMED\nSource: " + alias}), {})
+        self._public_evidence("workflow01_registry_authority_rejected", root,
+            {"rejection": caught.exception.code, "request": sent[0], "canon_sha256_preserved": _sha(canon_before),
+             "registry_sha256_preserved": {name: _sha(raw) for name, raw in registry_before.items()},
+             "old_metadata_claim_not_retrusted": True})
 
     def test_canon_audit_handoff_then_revision_plan_consume_actual_outputs(self):
         from tools import cnw_maintenance as maintenance

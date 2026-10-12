@@ -14,8 +14,23 @@ pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot workspace
 | `jet_diagnostic` | 原稿、Arc/主题及项目已选 JET；诊断写 `91_jet_engine/diagnostics/` 和 `08_review/`。不替项目选 OS，不套示例故事 |
 | `character_os` | 人物原文、行为/关系/时间范围；`03_project_design/characters/`，voice-only 用人物声线文件。观察与动机推断分开，不新增经历或晋升 Canon |
 | `revision_plan` | 所有实际 MD/TXT/JSON review、有关正文、Canon 和核心；官方 `09_revision/revision_plan.md`。P0–P3、源章节/场、问题、修法、Canon 影响。核心改变标 `REQUIRES AUTHOR DECISION` |
+| `revision_apply` | 用户明确选择的批准文件、计划及章稿的字节 SHA、保护资料与项目实例；只按已批准项修订，另存 `09_revision/approved/<批准文件SHA>/`，保存 diff、批准快照及工作日志。原稿、Canon 不改，不自动晋升 |
 
-四种提取/诊断须指定实际源；可重复 `--source`（Python）或用 `-SourceFile` 数组（PowerShell）。`OperationTarget` 是范围说明，不替代来源事实。普通 Revision Plan 接受 beta/audit，没有五 Lens 回执不构成拒绝理由，也不伪造经过三反证的 Finding。生产修订 receipt adapter 和批准后修订/晋升入口保持各自职责。
+四种提取/诊断及批准后修订须指定实际源；可重复 `--source`（Python）或用 `-SourceFile` 数组（PowerShell）。`OperationTarget` 是范围说明，不替代来源事实。普通 Revision Plan 接受 beta/audit，没有五 Lens 回执不构成拒绝理由，也不伪造经过三反证的 Finding。
+
+## Workflow 03 用户批准后的修订
+
+先审阅 `revision_plan.md`，再由用户在项目 `00_meta/author_decisions/` 保存明确批准的 JSON，并显式执行：
+
+```powershell
+pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot <项目绝对路径> -Operation revision_apply -SourceFile 07_draft/episodes/EP001.md -RevisionApproval 00_meta/author_decisions/revision.json
+```
+
+批准文件字段：`schema_version=cnw_workflow03_user_approval_v1`、`author_decision=APPROVE_SELECTED_ITEMS`、`project_instance_id`、`plan_sha256`、`draft_sha256`（所选原章路径→字节 SHA）、`protected_sha256`（01_theme、02_logline、90_canon 全部 MD/TXT/JSON 文件路径→字节 SHA），以及 `approved_items` 列表，每项为 `chapter` 和 `plan_excerpt`。excerpt 是用户批准的计划中完整一行，不接受空的全计划批准。文件由用户明确选择，模型返回的批准字段不授予任何权限。
+
+项目、计划、原章或保护资料身份变更会拒绝执行；每个章稿均须有具体批准项。标记 `REQUIRES AUTHOR DECISION` 的核心变更不在此普通修订入口执行，须单独处理核心/Canon 决策。此批准只授权指定修订项，不授权 Provider、费用、Controller 签收或正式晋升。该新增路径尚未接入生产项目授权，原生传输在费用 guard/slot 前返回 `LIVE_AUTHORIZATION_REQUIRED`；即使有 Key 也不发送。当前验证仅使用离线模拟模型响应，不能宣称此命令已支持 Live 修订。
+
+候选稿、批准快照、修订记录和工作日志在同一 maintenance 事务中保存；中断后复用原回执恢复，不重新请求模型。不同批准文件产生独立目录；既有候选不得覆盖。正式晋升仍需单独明确操作与对应审查。
 
 模型返回文件映射与处理报告，执行器实际落盘；不是只导出提示词。完整官方方法与项目文件全文进入请求，归档原 request/raw。路径身份统一；选定原稿、master Canon、既有锁定记录及跨职责路径拒绝覆盖。报告/日志与选定原文碰撞在模型调用前拒绝。Canon/角色既有记录仅允许完整旧字节后追加，更正前的旧字节留历史。真正矛盾保留双方交作者决定。
 

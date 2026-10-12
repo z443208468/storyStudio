@@ -474,6 +474,11 @@ def _sanitize(value):
 
 
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
+    if stage == "project_revision_apply":
+        # Workflow03 creative approval grants no Provider/fee permission.
+        # Production project authorization is not integrated for this new path;
+        # keep it closed before even acquiring/reserving a Provider slot.
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "Workflow03 author approval is not Provider authorization; this path is verified only with isolated simulated transport")
     state = load_state(run_dir)
     if state.get("mode") == "offline":
         snapshot = run_dir / "artifacts/contract.json"

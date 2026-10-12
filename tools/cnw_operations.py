@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import inspect
+import difflib
 import hashlib
 import json
 from pathlib import Path
@@ -28,6 +29,9 @@ OPERATIONS = {
     "revision_plan": {"method": ("templates/_workflows/03_revision.md", "templates/09_revision/revision_plan.template.md"),
         "folders": ("09_revision/revision_plan.md",),
         "instruction": "Perform Workflow 03 Revision Plan: read ALL actual review files, including ordinary audit/beta feedback and CNW results, relevant draft, Canon and protected theme/promise. Ordinary feedback is not a three-verifier confirmed CNW Finding. Produce 09_revision/revision_plan.md with P0-P3, source chapter/scene, issue, proposed fix and Canon implications. Protected-core changes must be P0 REQUIRES AUTHOR DECISION. Be conservative with P0/P1; do not invent an issue just to fill categories. Only plan: no rewrite, approval, promotion or Canon change."},
+    "revision_apply": {"method": ("templates/_workflows/03_revision.md", "templates/09_revision/revision_plan.template.md"),
+        "folders": ("09_revision/approved/",),
+        "instruction": "Perform the user-approved branch of Workflow 03. The executor has verified the explicit user decision against this project instance, exact plan, original drafts and protected material. Apply ONLY the listed approved plan excerpts to their selected chapters. Return complete revised chapter copies at the exact supplied revision_destinations. Other review suggestions and unapproved plan items are context, not permission. Preserve protected theme/promise and all Canon facts. Never change 07_draft or 90_canon, never approve, promote, or start new production. If the approved fix cannot be made without breaking protected facts/core, refuse rather than silently implement it."},
 }
 
 
@@ -35,7 +39,115 @@ def identity():
     return json.dumps({"operations": OPERATIONS, "source_selector": inspect.getsource(source_names),
         "messages": inspect.getsource(messages), "publication": inspect.getsource(publication),
         "source_identity": inspect.getsource(normalize_sources), "output_protection": inspect.getsource(protect_selected_outputs),
+        "revision_approval": inspect.getsource(revision_approval), "revision_record": inspect.getsource(revision_record),
+        "revision_snapshot_binding": inspect.getsource(validate_revision_snapshot),
         "locked_record": inspect.getsource(has_locked_record)}, sort_keys=True)
+
+
+def revision_approval(root, sources, approval_file):
+    """Consume an explicitly selected author decision; model output cannot grant it.
+
+    This is a creative user decision, not Controller/Provider authorization.
+    The decision lives in project data and is snapshotted by the maintenance run.
+    """
+    if not isinstance(approval_file, str) or not approval_file:
+        raise ContractError("REVISION_USER_APPROVAL_REQUIRED", "explicitly select an author decision file")
+    path = assert_output_within_root(root, approval_file)
+    canonical = path.relative_to(root).as_posix()
+    if canonical != approval_file or not canonical.startswith("00_meta/author_decisions/") or path.suffix != ".json" or not path.is_file():
+        raise ContractError("REVISION_USER_APPROVAL_INVALID", "select a project author_decisions JSON file")
+    try:
+        from .cnw_project import _registered_project_identity
+    except ImportError:
+        from cnw_project import _registered_project_identity
+    identity = _registered_project_identity(root)
+    raw = path.read_bytes()
+    try:
+        value = json.loads(raw.decode("utf-8-sig"))
+    except (ValueError, UnicodeError) as exc:
+        raise ContractError("REVISION_USER_APPROVAL_INVALID", "invalid author decision JSON") from exc
+    if not isinstance(value, dict) or value.get("schema_version") != "cnw_workflow03_user_approval_v1" or value.get("author_decision") != "APPROVE_SELECTED_ITEMS" or value.get("project_instance_id") != identity["project_instance_id"]:
+        raise ContractError("REVISION_USER_APPROVAL_INVALID", "decision must bind the registered project instance")
+    plan = assert_output_within_root(root, "09_revision/revision_plan.md")
+    if not plan.is_file() or value.get("plan_sha256") != hashlib.sha256(plan.read_bytes()).hexdigest():
+        raise ContractError("REVISION_PLAN_CHANGED", "author decision does not match the current plan bytes")
+    names = sorted(sources)
+    drafts = value.get("draft_sha256")
+    if not names or not isinstance(drafts, dict) or set(drafts) != set(names):
+        raise ContractError("REVISION_DRAFT_BINDING_INVALID", "approval must bind every selected original chapter")
+    for name in names:
+        draft = assert_output_within_root(root, name)
+        if not name.startswith("07_draft/") or draft.suffix != ".md" or not draft.is_file() or any(term in draft.stem.casefold() for term in ("index", "brief")):
+            raise ContractError("REVISION_DRAFT_BINDING_INVALID", name)
+        if drafts[name] != hashlib.sha256(draft.read_bytes()).hexdigest():
+            raise ContractError("REVISION_DRAFT_CHANGED", name)
+    protected = {}
+    for folder in ("01_theme", "02_logline", "90_canon"):
+        for candidate in (root / folder).rglob("*"):
+            if candidate.is_file() and candidate.suffix.lower() in {".md", ".txt", ".json"}:
+                name = candidate.relative_to(root).as_posix()
+                safe = assert_output_within_root(root, name)  # reject links/escapes before reading bytes
+                protected[name] = hashlib.sha256(safe.read_bytes()).hexdigest()
+    if not protected or value.get("protected_sha256") != protected:
+        raise ContractError("REVISION_PROTECTED_CONTEXT_CHANGED", "author decision must bind all protected theme/logline/Canon files")
+    items = value.get("approved_items")
+    lines = set(plan.read_text(encoding="utf-8-sig").splitlines())
+    if not isinstance(items, list) or not items:
+        raise ContractError("REVISION_USER_APPROVAL_INVALID", "approve specific plan items, not the whole plan by default")
+    seen = set()
+    for item in items:
+        if not isinstance(item, dict) or set(item) != {"chapter", "plan_excerpt"}:
+            raise ContractError("REVISION_USER_APPROVAL_INVALID", "each item binds a chapter and an exact plan line")
+        name, excerpt = item["chapter"], item["plan_excerpt"]
+        if not isinstance(name, str) or name not in names or not isinstance(excerpt, str) or len(excerpt.strip()) < 12 or excerpt not in lines or excerpt.lstrip().startswith("#"):
+            raise ContractError("REVISION_USER_APPROVAL_INVALID", "approved item not in the frozen plan/chapter set")
+        if "REQUIRES AUTHOR DECISION" in excerpt.upper():
+            raise ContractError("REVISION_PROTECTED_CORE_DECISION_REQUIRED", "protected-core changes require a separate explicit core/Canon decision")
+        key = (name, excerpt)
+        if key in seen:
+            raise ContractError("REVISION_USER_APPROVAL_INVALID", "duplicate approved item")
+        seen.add(key)
+    if {item["chapter"] for item in items} != set(names):
+        raise ContractError("REVISION_USER_APPROVAL_INVALID", "each selected chapter needs a specific approved item")
+    digest = hashlib.sha256(raw).hexdigest()
+    destinations = {name: f"09_revision/approved/{digest}/{name[len('07_draft/'):]}" for name in names}
+    return {"approval_file": canonical, "approval_sha256": digest, "decision": value,
+        "project_identity": identity, "project_identity_sha256": hashlib.sha256((root / "project_identity.json").read_bytes()).hexdigest(),
+        "revision_destinations": destinations}
+
+
+def validate_revision_snapshot(inventory, options):
+    """Close the validation-to-snapshot race before any request/fee reservation."""
+    if options["operation"] != "revision_apply":
+        return
+    binding = options["revision_approval"]
+    decision = binding["decision"]
+    expected = {binding["approval_file"]: binding["approval_sha256"],
+        "project_identity.json": binding["project_identity_sha256"],
+        "09_revision/revision_plan.md": decision["plan_sha256"],
+        **decision["draft_sha256"], **decision["protected_sha256"]}
+    for name, digest in expected.items():
+        if inventory.get(name, {}).get("sha256") != digest:
+            raise ContractError("REVISION_APPROVAL_SNAPSHOT_MISMATCH", name)
+    identity = json.loads(inventory["project_identity.json"]["text"])
+    if identity != binding["project_identity"] or identity.get("project_instance_id") != decision["project_instance_id"]:
+        raise ContractError("REVISION_APPROVAL_SNAPSHOT_MISMATCH", "project_identity.json")
+
+
+def revision_record(root, options, documents):
+    binding = options["revision_approval"]
+    chapters = []
+    for original, revised in binding["revision_destinations"].items():
+        before = assert_output_within_root(root, original).read_bytes()
+        after = documents[revised].encode("utf-8")
+        chapters.append({"original_path": original, "original_sha256": hashlib.sha256(before).hexdigest(),
+            "revision_path": revised, "revision_sha256": hashlib.sha256(after).hexdigest(),
+            "approved_items": [item["plan_excerpt"] for item in binding["decision"]["approved_items"] if item["chapter"] == original],
+            "diff": "".join(difflib.unified_diff(before.decode("utf-8-sig").splitlines(keepends=True),
+                after.decode("utf-8").splitlines(keepends=True), fromfile=original, tofile=revised))})
+    return {"schema_version": "cnw_workflow03_revision_record_v1", "approval": binding,
+        "chapters": chapters, "originals_preserved": True, "canon_modified": False,
+        "promoted": False, "user_creative_accepted": False}
 
 
 def has_locked_record(text):
@@ -97,6 +209,14 @@ def source_names(root, options):
     if operation != "revision_plan" and not selected:
         raise ContractError("STANDARD_SOURCE_REQUIRED", "select the actual source files")
     names = set(selected)
+    if operation == "revision_apply":
+        names.update(("project_identity.json", "09_revision/revision_plan.md", options["revision_approval"]["approval_file"]))
+        names.update(options["revision_approval"]["decision"]["protected_sha256"])
+        actual_protected = {p.relative_to(root).as_posix()
+            for folder in ("01_theme", "02_logline", "90_canon") for p in (root / folder).rglob("*")
+            if p.is_file() and p.suffix.lower() in {".md", ".txt", ".json"}}
+        if actual_protected != set(options["revision_approval"]["decision"]["protected_sha256"]):
+            raise ContractError("REVISION_PROTECTED_CONTEXT_CHANGED", "protected file set changed after author approval")
     for name in selected:
         path = assert_output_within_root(root, name)
         if not path.is_file() or path.suffix.lower() not in {".md", ".txt", ".json"}:
@@ -110,6 +230,8 @@ def source_names(root, options):
             raise ContractError("REVISION_REVIEW_MISSING", "actual review input required")
     # Read prior outputs too, so updated plans/diagnostics preserve decisions.
     for prefix in OPERATIONS[operation]["folders"]:
+        if operation == "revision_apply":
+            continue  # revised candidates are outputs, not approval/input authority
         path = assert_output_within_root(root, prefix)
         if path.is_file():
             names.add(prefix)
@@ -159,6 +281,8 @@ def publication(root, options, value, write):
         raise ContractError("STANDARD_RESPONSE_INVALID", "assumptions, unresolved questions and one next action required")
     if operation == "revision_plan" and "09_revision/revision_plan.md" not in documents:
         raise ContractError("STANDARD_RESPONSE_INVALID", "official revision_plan.md required")
+    if operation == "revision_apply" and set(documents) != set(options["revision_approval"]["revision_destinations"].values()):
+        raise ContractError("REVISION_APPROVED_DESTINATIONS_REQUIRED", "return only the exact approved chapter-copy destinations")
     writes = {}
     for name, text in documents.items():
         if not isinstance(name, str) or not isinstance(text, str) or not text.strip():
@@ -170,6 +294,8 @@ def publication(root, options, value, write):
             raise ContractError("STANDARD_OUTPUT_FORBIDDEN", name)
         previous = path.read_bytes() if path.exists() else None
         if previous is not None:
+            if operation == "revision_apply" and previous != text.encode("utf-8"):
+                raise ContractError("REVISION_COPY_ALREADY_EXISTS", name)
             if operation == "decompose" and canonical.startswith("07_draft/") and previous != text.encode():
                 raise ContractError("STANDARD_ORIGINAL_PROTECTED", name)
             if operation in {"extract_canon", "character_os"}:
@@ -187,6 +313,18 @@ def publication(root, options, value, write):
         writes[canonical] = write(root, canonical, text)
     report_path = f"08_review/{operation}_report.md"
     writes[report_path] = write(root, report_path, report)
-    return writes, {"status": "STANDARD_OPERATION_RECORDED", "operation": operation, "documents": list(documents),
+    result = {"status": "STANDARD_OPERATION_RECORDED", "operation": operation, "documents": list(documents),
         "report": report_path, "assumptions": value["assumptions"], "unresolved_questions": value["unresolved_questions"],
         "next_action": value["next_action"], "revision_approved": False, "user_creative_accepted": False}
+    if operation == "revision_apply":
+        base = "09_revision/approved/" + options["revision_approval"]["approval_sha256"]
+        record = revision_record(root, options, documents)
+        for name, data in ((base + "/approval.json", options["revision_approval"]), (base + "/revision_record.json", record)):
+            text = json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+            path = assert_output_within_root(root, name)
+            if path.exists() and path.read_bytes() != text.encode("utf-8"):
+                raise ContractError("REVISION_RECORD_CHANGED", name)
+            writes[name] = write(root, name, text)
+        result.update(revision_approved=True, approval_sha256=options["revision_approval"]["approval_sha256"],
+            revision_record=base + "/revision_record.json", promoted=False, canon_modified=False)
+    return writes, result

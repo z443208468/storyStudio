@@ -33,6 +33,8 @@ StoryStudio 的 Workflow 01/02 执行器显式加载该版本的操作提示词�
 
 完整 Workflow 01 由 `initial-import` 执行。它读取项目 `_INBOX`，调用配置的语义组织流程，并使用当前共享 Provider/费用守卫：
 
+读取对象为实际用户原稿（包括 `_INBOX/originals/` 和普通 `_INBOX` 材料）。`source_manifest.json`、`source_index.json` 与整个保留目录 `_INBOX/revisions/` 是注册表/不可变身份快照，不进入 `original_sources`，也不能作为新故事事实或旧 confirmed Canon 的独立来源凭据。保留其原字节供合同身份回读；不要在该内部目录存放用户原稿。
+
 ```powershell
 python tools/cnw_project.py initial-import --project-root "<registered-project-root>"
 ```

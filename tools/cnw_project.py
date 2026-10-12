@@ -927,12 +927,12 @@ def handoff(project_root: str | Path, *, pipeline: bool = False) -> dict:
     return run_maintenance(project_root, "handoff", pipeline=pipeline)
 
 
-def standard_operation(project_root, operation, *, sources=(), target=None):
+def standard_operation(project_root, operation, *, sources=(), target=None, revision_approval=None):
     try:
         from .cnw_maintenance import run_maintenance
     except ImportError:
         from cnw_maintenance import run_maintenance
-    return run_maintenance(project_root, operation, sources=sources, target=target)
+    return run_maintenance(project_root, operation, sources=sources, target=target, revision_approval=revision_approval)
 
 
 def support_workflow_prompt(project_root: str | Path, number: str) -> dict:
@@ -1014,9 +1014,10 @@ def main(argv=None) -> int:
     hoff.add_argument("--pipeline", action="store_true")
     standard = sub.add_parser("standard-operation")
     standard.add_argument("--project-root", required=True)
-    standard.add_argument("--operation", required=True, choices=("decompose", "extract_canon", "jet_diagnostic", "character_os", "revision_plan"))
+    standard.add_argument("--operation", required=True, choices=("decompose", "extract_canon", "jet_diagnostic", "character_os", "revision_plan", "revision_apply"))
     standard.add_argument("--source", action="append", default=[])
     standard.add_argument("--target", help="character, time point or other requested scope; source-derived only")
+    standard.add_argument("--revision-approval", help="explicitly selected project-relative author_decisions JSON; not Provider authorization")
     support = sub.add_parser("support-workflow")
     support.add_argument("--project-root", required=True)
     support.add_argument("--number", required=True, choices=tuple(SUPPORT_WORKFLOW_SOURCE))
@@ -1080,7 +1081,7 @@ def main(argv=None) -> int:
     elif args.command == "handoff":
         result = handoff(args.project_root, pipeline=args.pipeline)
     elif args.command == "standard-operation":
-        result = standard_operation(args.project_root, args.operation, sources=args.source, target=args.target)
+        result = standard_operation(args.project_root, args.operation, sources=args.source, target=args.target, revision_approval=args.revision_approval)
     elif args.command == "support-workflow":
         result = support_workflow_prompt(args.project_root, args.number)
     elif args.command == "contract-preflight":

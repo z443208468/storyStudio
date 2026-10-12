@@ -36,8 +36,29 @@ IMPORT_OUTPUT_CAP = 12000
 FACT_SOURCE_KINDS = {"original", "confirmed_canon"}
 
 
+def _internal_inbox_metadata(name: str) -> bool:
+    """Source registries and frozen identity snapshots are not manuscripts."""
+    return name in {"_INBOX/source_manifest.json", "_INBOX/source_index.json"} or name.startswith("_INBOX/revisions/")
+
+
 def _confirmed_canon_sources(previous: dict, existing: dict[str, str]) -> dict[str, dict]:
     """Expose only retained, source-backed Canon claims, never a whole mixed file."""
+    def fact_backed(claim, trail):
+        for ref, kind in claim.get("source_kinds", {}).items():
+            if ref not in claim.get("sources", {}) or _internal_inbox_metadata(ref):
+                continue
+            if kind == "original":
+                return True
+            if kind == "confirmed_canon" and ref.startswith("confirmed_canon:"):
+                parent_id = ref.rsplit(":", 1)[-1]
+                parent = previous.get("claims", {}).get(parent_id, {})
+                if (parent_id not in trail and parent.get("status") == "CONFIRMED"
+                        and parent.get("source_role", "story_fact") == "story_fact"
+                        and ref == f"confirmed_canon:{parent.get('document')}:{parent_id}"
+                        and claim["sources"][ref] == sha(parent.get("text", "").encode("utf-8"))
+                        and fact_backed(parent, trail | {parent_id})):
+                    return True
+        return False
     result = {}
     for claim_id, claim in previous.get("claims", {}).items():
         name, text = claim.get("document", ""), claim.get("text", "")
@@ -45,8 +66,7 @@ def _confirmed_canon_sources(previous: dict, existing: dict[str, str]) -> dict[s
                 or not name.startswith("90_canon/")
                 or name == "90_canon/unresolved_questions.md" or not text
                 or f"{text}\n\nClassification: CONFIRMED\nSource:" not in existing.get(name, "")
-                or not any(kind in FACT_SOURCE_KINDS for ref, kind in claim.get("source_kinds", {}).items()
-                           if ref in claim.get("sources", {}))):
+                or not fact_backed(claim, {claim_id})):
             continue
         ref = f"confirmed_canon:{name}:{claim_id}"
         result[ref] = {"text": text, "sha256": sha(text.encode("utf-8")),
@@ -76,7 +96,7 @@ def _inventory(root: Path) -> dict[str, dict]:
     for file in sorted(inbox.rglob("*")):
         relative = file.relative_to(root).as_posix()
         assert_output_within_root(root, relative)
-        if not file.is_file() or relative in {"_INBOX/source_manifest.json", "_INBOX/source_index.json"}:
+        if not file.is_file() or _internal_inbox_metadata(relative):
             continue
         if file.suffix.lower() not in {".md", ".txt", ".json"}:
             raise ContractError("IMPORT_NEEDS_FORMAT_ADAPTER", relative)
