@@ -94,6 +94,33 @@ The exact committed candidate must also pass the source-only cold clone suite;
 the private raw index and Controller verdict identify that C/T. Worktree CRLF and
 Git LF differences are not silently treated as identical source-byte hashes.
 
+### Exact 550c94a RETURN and minimal fixture correction
+
+Candidate C `550c94a8dfb8ca27cb425fe68198ee10cfc38735`, T
+`26786a877f2abef48aaa8d3af3125038b9c4ed49` failed its cold clone:
+9 failed, 86 passed, 91 subtests; raw SHA
+`aa61f9a698ac4b5c2fbb415838cac777e4c0f91b94da7ff033b5071477c28768`.
+All nine failures came from W10 optional fixtures assuming an ignored workspace
+directory already existed. The original independent RETURN is retained verbatim
+in `ATOM07_CONTROLLER_RETURN_550c94a_20261013.md`; it is not a push authorization.
+
+The bounded repair changes that fixture to an independent TemporaryDirectory,
+explicit temporary DataHome and real registered project. Actual safe_run and
+registry checks remain. Initial `optional_cold_root_retest` omitted DataHome
+initialization (9 failed, 3 passed; raw SHA
+`35b484bd8169ee4f269566fcdefac2623314281a4d94a07897c86f5f39570ab8`).
+After explicit isolated setup, `optional_registered_root_retest` revealed a global
+subprocess stub also denied legitimate read-only ACL verification (2 failed,
+10 passed; raw SHA
+`78759aa2cce6980be5d61fb37d13e3b589cc34cf0d1c1e60b77bccb47b9e4ee4`).
+The fixture now permits only actual whoami and read-only icacls of its own private
+temp directory, still rejecting every support/Provider child process. No path,
+permission or preflight production guard was loosened; original assertions remain.
+`optional_registry_acl_retest`: 12 passed, 10 subtests, exit 0; raw SHA
+`c3c06248f45d85bcfbe242f022eaed1226808795a84693346b392fdd20296eed`.
+The new exact candidate still requires a successful cold clone and independent
+verdict before any push; this fixture correction alone is not an ACCEPT.
+
 ## Historical protection and recovery limits
 
 Original W10 source copies and SHAs were frozen before modification in

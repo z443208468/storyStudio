@@ -6,21 +6,27 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 import uuid
 
 from tools import cnw_live_executor, cnw_live_provider, cnw_runner, cnw_w10_critics, cnw_w10_policy
 from tools.cnw_contract import ContractError
+from tools.project_paths import create_project, setup_data_home
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class W10OptionalIntegrationTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix=".w10-optional-", dir=ROOT / "workspace")
+        self.temp = tempfile.TemporaryDirectory(prefix="w10-optional-fictional-")
         self.addCleanup(self.temp.cleanup)
-        self.project = Path(self.temp.name).resolve()
+        base = Path(self.temp.name).resolve()
+        home = base / "data-home"
+        setup_data_home(home, pointer_path=base / "isolated-user-config/setup.json")
+        registration = create_project(project_id="SYNTHETIC-W10", data_home=home)
+        self.project = Path(registration["project_root"])
         self.run = self.project / "runs" / f"SYNTHETIC-{uuid.uuid4().hex[:8]}"
         self.run.mkdir(parents=True)
         self.preflight = self.project / "review.json"
@@ -45,6 +51,20 @@ class W10OptionalIntegrationTests(unittest.TestCase):
                 "fingerprint": "synthetic-fingerprint"}}}
         (self.run / "run_state.json").write_text(json.dumps(state), encoding="utf-8")
         return contract
+
+    def forbid_support_spawn(self):
+        actual = subprocess.run
+        def checked(command, *args, **kwargs):
+            executable = Path(command[0]).name.casefold()
+            # The real registry verifier performs read-only Windows ACL checks.
+            # A global subprocess stub must not replace those checks with a lie.
+            if executable in {"whoami", "whoami.exe"} and command[1:] == ["/user", "/fo", "csv", "/nh"]:
+                return actual(command, *args, **kwargs)
+            if (executable in {"icacls", "icacls.exe"} and len(command) == 2
+                    and Path(command[1]).resolve().is_relative_to(Path(self.temp.name).resolve())):
+                return actual(command, *args, **kwargs)
+            raise AssertionError("CritiCS/NK/Provider subprocess forbidden in this offline fixture")
+        return checked
 
     def test_nk_disabled_builds_brief_without_a_pov_stage_or_input(self):
         self.write_contract(nk="DISABLED")
@@ -83,7 +103,7 @@ class W10OptionalIntegrationTests(unittest.TestCase):
     def test_disabled_critics_command_returns_before_stage_or_provider(self):
         self.write_contract(critics="DISABLED")
         with patch("tools.cnw_w10_critics.subprocess.run",
-                   side_effect=AssertionError("disabled CritiCS must not spawn")):
+                   side_effect=self.forbid_support_spawn()):
             result = cnw_w10_critics.run_action(self.run, "plan-critique")
         self.assertEqual(result, {"status": "DISABLED", "action": "plan-critique",
             "provider_call_count": 0, "provider_call": "none"})
@@ -92,7 +112,7 @@ class W10OptionalIntegrationTests(unittest.TestCase):
     def test_enabled_critics_requires_run_preflight_before_any_action(self):
         self.write_contract(critics="ENABLED")
         with patch("tools.cnw_w10_critics.subprocess.run",
-                   side_effect=AssertionError("unpreflighted CritiCS must not spawn")):
+                   side_effect=self.forbid_support_spawn()):
             with self.assertRaisesRegex(ContractError, "LIVE_STAGE_NOT_AUTHORIZED_OR_READY"):
                 cnw_w10_critics.run_action(self.run, "plan-critique")
 
