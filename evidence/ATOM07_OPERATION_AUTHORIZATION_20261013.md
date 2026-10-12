@@ -34,6 +34,8 @@ This is the reopened Atom-07 root; no new Atom or review platform is added.
   adding self-reported permission cannot turn it into an authorized legacy Run.
   After the existing no-traversal/reparse check, resolve the actual directory
   before inspecting parents; Windows case aliases cannot hide the operation.
+  Both reserved directory names are compared with casefold, including when the
+  physical disk spelling itself is uppercase.
 - Gate actual import/maintenance entry before inventory, cache recovery or
   authoritative publication. High-level requests reject before slot/Key/reserve;
   the low-level HTTP function remains closed for registered operations even during
@@ -99,6 +101,35 @@ existing Workflow fixtures retain actual temporary registration/setup permission
 A fictional temporary ledger remains byte-identical.
 Existing V1 import/maintenance, ordinary Revision and core/Early regressions are
 retained; exact-candidate cold clone results must be read separately before signing.
+
+### Exact 4b91436 RETURN and physical-case correction
+
+The new Controller's exact original verdict is retained verbatim in
+`ATOM07_CONTROLLER_RETURN_4b91436_20261013.md`: C
+`4b91436dcdb7afe18b2bcc1503e49cdbd3e57a21`, T
+`b112fa7d42d6264d732cbfc525083929d2393ee2`, RETURN/NO_PUSH_AUTHORIZATION.
+The one-line resolve repaired an uppercase alias of a lowercase disk directory,
+but did not recognize reserved operation directories physically stored uppercase.
+Only their reserved names now use casefold; no authorization policy is widened.
+
+The original exact candidate's eight-module source-only cold clone finished
+unchanged and clean: 68 passed, 79 subtests, exit 0; raw SHA256
+`ed7f4b51448f8e4ecac32323eb2b550fcb7dc4008fe2fe88d32239c022390307`.
+That green suite does not supersede the actual code RETURN or cover the new case.
+
+`operation_physical_case_before_fix` renamed only its owned temporary fixture via
+two hops, explicitly confirming actual uppercase Runtime/Import/Maintenance disk
+names. Four high/low subcases reached the forbidden mock cost guard; 5 failed,
+19 subtests passed, exit 1; raw SHA256
+`0e48f1164d94db0ade13ca33d8d8506ea65277adec3514b467ef32fa2a267e59`.
+Real reserve/HTTP were blocked. The same actual physical-case method after the
+minimal comparison repair passes: 1 passed, 23 subtests, exit 0; raw SHA256
+`a6a2dd8e32f2ef7a4db55f5e2e902dc00f77b8183b64d4a2c7447ed9d28b452e`.
+`operation_gate_physical_final` then runs all eight finite gate tests with the
+corrected source: 8 passed, 37 subtests, exit 0; source unchanged; raw SHA256
+`c8ab6cab44609725a137f670c3d463ca83519cc58aa24fd2c8f5deb8d32e7af6`.
+The corrected candidate still requires its own exact cold clone and independent
+verdict. No result is backfilled into the rejected candidate's run or judgment.
 
 ## Protected history and remaining gates
 

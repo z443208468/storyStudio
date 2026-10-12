@@ -156,6 +156,23 @@ class OperationAuthorizationTests(unittest.TestCase):
                 for function in (runner.cnw_live_call, runner._cnw_live_call_in_slot):
                     with self.subTest(kind=kind, case_alias=True, function=function.__name__), self.assertRaisesRegex(ContractError, "LIVE_AUTHORIZATION_REQUIRED"):
                         function(case_alias, stage="project_audit", role_id="project_audit", messages=[], output_cap=6000)
+        if os.name == "nt":
+            # Rename only this owned temporary fixture to exercise physical case.
+            # Two hops ensure Windows stores the requested spelling.
+            runtime = self.root / "94_runtime"
+            temporary = runtime.rename(self.root / "runtime-case-fixture")
+            runtime = temporary.rename(self.root / "94_RUNTIME")
+            for kind in ("imports", "maintenance"):
+                folder = runtime / kind
+                temporary = folder.rename(runtime / (kind + "-case-fixture"))
+                temporary.rename(runtime / kind.upper())
+                physical_alias = self.root / "94_runtime" / kind / "operation-run"
+                physical = physical_alias.resolve(strict=True)
+                self.assertEqual(physical.parent.name, kind.upper())
+                self.assertEqual(physical.parent.parent.name, "94_RUNTIME")
+                for function in (runner.cnw_live_call, runner._cnw_live_call_in_slot):
+                    with self.subTest(kind=kind, physical_case=True, function=function.__name__), self.assertRaisesRegex(ContractError, "LIVE_AUTHORIZATION_REQUIRED"):
+                        function(physical_alias, stage="project_audit", role_id="project_audit", messages=[], output_cap=6000)
         self.assertEqual((self.root / "90_canon/canon.md").read_bytes(), canon)
         self.assertFalse((self.root / imports.PENDING).exists())
         self.assertFalse((self.root / maintenance.PENDING).exists())

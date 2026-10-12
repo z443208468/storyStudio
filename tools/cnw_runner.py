@@ -502,7 +502,7 @@ def _operation_owner(run_dir: Path, state: dict) -> Path | None:
     supplied = Path(run_dir).absolute()
     _assert_no_reparse(supplied, code="OPERATION_PROJECT_PATH_UNSAFE")
     supplied = supplied.resolve(strict=True)
-    if supplied.parent.name in {"imports", "maintenance"} and supplied.parent.parent.name == "94_runtime":
+    if supplied.parent.name.casefold() in {"imports", "maintenance"} and supplied.parent.parent.name.casefold() == "94_runtime":
         if state.get("run_id") != supplied.name:
             raise ContractError("OPERATION_RUN_IDENTITY_INVALID", "operation state differs from its actual Run directory")
         return supplied.parents[2]
