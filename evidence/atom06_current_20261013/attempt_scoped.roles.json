@@ -1,0 +1,24 @@
+{
+  "schema_version": "atom06_synthetic_request_trace_v1",
+  "execution": "SYNTHETIC_OFFLINE_ONLY",
+  "groups": {
+    "native_live_attempt_isolation": {
+      "execution": "MOCK_ONLY",
+      "blocking_code": "LIVE_AUTHORIZATION_REQUIRED",
+      "attempt_id": "67bf1344-2a4c-4160-8947-63e4ba102d90",
+      "contract_sha256": "c36d4e639897fe5bcf8d5eee974c43e1c10bc574eb89747c74019feaf697d2b6",
+      "index_sha256": "62b308b6cf0f007e4ec8f0decdaf5435ef015b9dab0b092d304c95652077d880",
+      "selected_source_id": "c633a64537d1d1ef",
+      "old_contracts_and_runs_unchanged": true,
+      "source_remap_and_material_set_rejected": true
+    },
+    "live_export_evidence_rejection": {
+      "execution": "MOCK_ONLY",
+      "validator": "actual verify_live",
+      "blocking_code": "LIVE_PROVIDER_EVIDENCE_MISSING",
+      "export_calls": 0,
+      "state_unchanged": true,
+      "live_success": "NOT_VERIFIED"
+    }
+  }
+}

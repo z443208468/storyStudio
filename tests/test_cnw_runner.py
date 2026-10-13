@@ -151,7 +151,9 @@ class RunnerTests(unittest.TestCase):
             calls = [{"http_status": 200, "request": {"messages": [{"role": "user", "content": conversation_template.format(history="", input=prompts[key])}]}, "response": {"id": f"MOCK-{key}", "model": "deepseek-flash", "choices": [{"finish_reason": "stop", "message": {"content": native[key]}}]}} for key in ("image", "voice", "select")]
             (directory / "provider-calls.json").write_text(json.dumps(calls), encoding="utf-8")
             return SimpleNamespace(returncode=0)
+        actual_refine_messages = []
         def refine_provider(*args, **kwargs):
+            actual_refine_messages.append(kwargs["messages"])
             request = json.loads(kwargs["messages"][1]["content"])
             self.assertEqual(request["confirmed_findings"]["critics_supplement"]["result"], native)
             self.assertEqual(request["confirmed_findings"]["confirmed"], [finding])
@@ -193,6 +195,16 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(ContractError, "CRITICS_RECEIPT_HASH_MISMATCH"):
                 cnw_runner._critics_hook(run, "prose")
             self.assertEqual(process.call_count, 1)
+            from tests.test_cnw_atom06 import _record_trace
+            _record_trace("actual_critics_refine_cache_consumer", {
+                "execution": "MOCK_ONLY", "simulation_status": "SIMULATED",
+                "native_result": native, "native_output_bytes_hex": saved_output.hex(),
+                "native_receipt_bytes_hex": saved_receipt.hex(), "native_calls_bytes_hex": saved_calls.hex(),
+                "actual_refine_messages": actual_refine_messages, "revision_plan": plan,
+                "revised_body": cnw_runner._read_stage_text(run, cnw_runner.load_state(run), "refine"),
+                "native_invocations": process.call_count, "pending_native_result_resumed": True,
+                "cache_revalidated": True, "tampered_result_raw_and_duplicate_provider_ids_rejected": True,
+                "provider_live": "NOT_RUN", "production_authorization": "UNCHANGED_NOT_MOCKED"})
 
     def test_critics_excerpt_limits_whole_scene_evidence_to_five_sentences(self):
         run = self.base / "runs/FICT_SCENE_A"

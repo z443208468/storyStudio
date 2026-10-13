@@ -703,11 +703,17 @@ def _write_contract_draft_unlocked(project_root: str | Path, draft_path: str | P
         manifest = json.loads((root / "_INBOX/source_manifest.json").read_text(encoding="utf-8"))
         validate_source_identity(contract, source_root=root, expected_version=contract["source"]["version"], expected_zip_sha256=manifest["import_id"], expected_manifest_sha256=contract["source"]["source_manifest_sha256"])
     output = root / "contracts" / f"{contract['unit']['id']}.json"
+    if contract.get("input_pack", {}).get("schema_version") == "cnw_native_input_binding_v2":
+        try:
+            from .cnw_native_pack import contract_relative
+        except ImportError:
+            from cnw_native_pack import contract_relative
+        output = root / contract_relative(contract["input_pack"])
     if output.exists():
         raise ContractError("CONTRACT_OUTPUT_COLLISION", output.name)
     output.parent.mkdir(parents=True, exist_ok=True)
     encoded_contract = json.dumps(contract, ensure_ascii=False, indent=2) + "\n"
-    if contract.get("input_pack", {}).get("schema_version") == "cnw_native_input_binding_v1":
+    if contract.get("input_pack", {}).get("schema_version") in {"cnw_native_input_binding_v1", "cnw_native_input_binding_v2"}:
         try:
             from .cnw_native_pack import _immutable
         except ImportError:

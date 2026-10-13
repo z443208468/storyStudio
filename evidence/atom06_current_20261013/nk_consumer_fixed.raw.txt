@@ -1,0 +1,97 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ SupportConsumerTests.test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering _
+
+self = <tests.test_cnw_support_consumers.SupportConsumerTests testMethod=test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering>
+
+    def test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering(self):
+        owner = legacy.RunnerTests()
+        owner.setUp()
+        self.addCleanup(owner.tearDown)
+        root = owner.base
+        run = root/'runs/FICT_SCENE_A'
+        contract = owner.contract
+        for name in roles.AUTHOR_ROLE_READS['brief'] + roles.AUTHOR_TEMPLATE_READS['brief']:
+            path = root/name.replace('<work_id>', contract['unit']['id'])
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('Fictional source: '+name, encoding='utf-8')
+        cards = '## Scene S1\n### Required beats\n- A neighbor asks for a tool.\n- The keeper answers.\n'
+        runner._persist_stage(run, 'plot', 'artifacts/plot.md', 'ACTUAL_SAME_RUN_PLOT')
+        runner._persist_stage(run, 'scene_cards', 'artifacts/cards.md', cards)
+        build = root/'runtime/patched/NK/test'
+        (build/'node_modules/next/dist/bin').mkdir(parents=True)
+        (build/'node_modules/next/dist/bin/next').write_text('fictional launcher', encoding='utf-8')
+        index = root/'patches/nk/PATCH_INDEX.json'
+        index.parent.mkdir(parents=True)
+        index.write_text('{"runtime_build_id":"test"}', encoding='utf-8')
+        process = Mock(pid=1234)
+        process.poll.return_value = None
+        process.terminate.side_effect = lambda: setattr(process.poll, 'return_value', 0)
+        listener = Mock()
+        listener.getsockname.return_value = ('127.0.0.1', 49123)
+        socket_context = Mock()
+        socket_context.__enter__ = Mock(return_value=listener)
+        socket_context.__exit__ = Mock(return_value=False)
+        guard = SimpleNamespace(provider_slot=nullcontext,
+            command_reserve=Mock(return_value={'status':'RESERVED'}),
+            command_settle=Mock(return_value={'status':'SETTLED'}),
+            load_config=lambda: ({}, {}), estimate=lambda *a: Decimal('0.001'))
+        launch, requests, payloads = {}, [], []
+        reflection = 'MOCK_ONLY: reflect only on the visible offered tool.'
+        def start(command, **kwargs):
+            launch.update(command=command, env=kwargs['env'])
+            return process
+        def http(url, **kwargs):
+            payloads.append(kwargs['json'])
+            Path(launch['env']['STORYSTUDIO_NK_LIVE_CAPTURE']).write_text(json.dumps({
+                'request_id': launch['env']['STORYSTUDIO_NK_LIVE_REQUEST_ID'],
+                'response': {'id':'SIMULATED_NK_RESPONSE', 'model':runner.MODEL,
+                    'usage':{'prompt_tokens':10,'completion_tokens':5},
+                    'choices':[{'finish_reason':'stop','message':{'content':reflection}}]}}), encoding='utf-8')
+            return SimpleNamespace(status_code=200, json=lambda: {'perspectives':[{'reflection':reflection}]})
+        brief = '\n'.join(roles.ROLE_REQUIRED_SECTIONS['brief'])
+        def transport(_run, **kwargs):
+            requests.append(kwargs['messages'])
+            return brief, {'request_id':'MOCK_ONLY_BRIEF', 'provider_request_id':None}
+        with patch.dict(runner.os.environ, {'DEEPSEEK_API_KEY':'FICTIONAL_TEST_KEY'}), \
+             patch('shutil.which', return_value='node.exe'), \
+             patch('socket.socket', return_value=socket_context), \
+             patch('subprocess.Popen', side_effect=start), \
+             patch.object(runner.httpx, 'get'), patch.object(runner.httpx, 'post', side_effect=http) as post, \
+             patch.object(runner, '_p2_guard', return_value=guard), \
+             patch.object(runner, 'cnw_live_call', side_effect=transport):
+>           runner.execute_writing_brief(run)
+
+tests\test_cnw_support_consumers.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:1682: in execute_writing_brief
+    _validate_role("brief", contract, content, meta)
+tools\cnw_runner.py:1328: in _validate_role
+    validate_role_output(role, contract, content, meta)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+role = 'brief'
+contract = {'schema_version': 'cnw_work_unit_v1', 'project_id': 'FICT_CNW_TEST', 'source': {'zip_sha256': 'aaaaaaaaaaaaaaaaaaaaaa...bb'}, 'unit': {'id': 'FICT_SCENE_A', 'kind': 'scene', 'planning_mode': 'legacy_frozen', 'language': 'zh-CN', ...}, ...}
+output = '## Quick Header\n## Active Canon\n## Scene-by-Scene Instructions\n## Voice References\n## Hard Constraints\n## Style Targets\n## What NOT to include in the prose'
+metadata = {'role': 'brief', 'work_id': 'FICT_SCENE_A', 'target_visible_chars': 1800, 'min_visible_chars': 1500, ...}
+
+    def validate_role_output(role: str, contract: dict[str, Any], output: str, metadata: dict[str, Any] | None = None) -> None:
+        if role not in {"plot", "cards", "brief", "prose"}:
+            raise ContractError("ROLE_UNKNOWN", role)
+        if not output.strip() or output.lstrip().startswith("RETURN:"):
+            raise ContractError("ROLE_OUTPUT_INVALID", "empty output or role returned a failure")
+        beat_ids = [beat["beat_id"] for beat in contract["story"].get("required_beats", [])]
+        if role in ("plot", "cards", "brief"):
+            required_sections = ROLE_REQUIRED_SECTIONS[role]
+            missing_sections = [section for section in required_sections if section.casefold() not in output.casefold()]
+            if missing_sections:
+                raise ContractError("ROLE_TEMPLATE_SECTION_MISSING", ", ".join(missing_sections))
+            missing = [beat_id for beat_id in beat_ids if beat_id not in output]
+            if missing:
+>               raise ContractError("ROLE_BEAT_ID_DROPPED", ", ".join(missing))
+E               tools.cnw_contract.ContractError: ROLE_BEAT_ID_DROPPED: B1, B2, B3, B4
+
+tools\cnw_roles.py:663: ContractError
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering
+1 failed in 0.24s

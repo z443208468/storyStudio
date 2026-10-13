@@ -1,0 +1,24 @@
+{
+  "atom": "ATOM05",
+  "verdict": "ACCEPT_ALL_CURRENT_OFFLINE_ENGINE_GATES",
+  "commit": "85cf861ad84851fbaaa91c0b95a75ee0fb5b9be6",
+  "tree": "48c9b06ec9c5bdd06641759ce0c821558d19856f",
+  "plan_sha256": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d",
+  "controller_agent": "/root/goal_controller_61_restart_20261013",
+  "controller_source_line": 3593,
+  "controller_verbatim_sha256": "67285f1b2069f78a3cbc79c5dc0b4624d8d333496b145e06f95785811fc26542",
+  "manifests_git_sha256": {
+    "evidence/ATOM05_CLOSURE_MANIFEST_20261013.json": "b733c53a406efa119dc57ab0af9881613dd828b6380eb88973ef2036a7242d04",
+    "evidence/ATOM05_ROUTE_BINDING_MANIFEST_20261013.json": "cd74ea475a21438cfd52b9ce01252eb2f1959aacacd8ef0cccb522dc7d607fb2",
+    "evidence/ATOM05_NATIVE_ENTRY_MANIFEST_20261013.json": "067eb7aca5ee77f8ab81d4119ae6bead8cf371dc3a970fb27c8f633fa8322af6"
+  },
+  "push": "NORMAL_FAST_FORWARD_049b0d2_TO_85cf861",
+  "remote_readback_commit": "85cf861ad84851fbaaa91c0b95a75ee0fb5b9be6",
+  "remote_readback_tree": "48c9b06ec9c5bdd06641759ce0c821558d19856f",
+  "next_atom_permission": "ATOM06_ONLY",
+  "prior_return_verdicts": "UNCHANGED",
+  "cutover_blocked": true,
+  "private_migration": "NOT_RUN",
+  "generic_live_production": "NOT_RUN",
+  "input_pack_to_story_gate": "RETURN/NOT_RUN"
+}

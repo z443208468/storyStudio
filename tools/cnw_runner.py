@@ -1023,14 +1023,16 @@ def produce(args) -> dict:
         raise ContractError("WORK_ID_MISMATCH", unit_id)
     validate_work_unit(contract)
     validate_work_unit_policy(contract)
+    if args.mode == "live" and contract.get("schema_version") == "cnw_work_unit_v2":
+        # Keep the existing closed production gate ahead of optional services,
+        # which can inspect credentials. Planning does not grant Provider access.
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "generic v2 live execution remains closed until project authorization is integrated")
     if args.mode == "live":
         _assert_support_components_available(contract)
     production_config = ROOT / "config/production.example.json"
     cost_guard_runner = ROOT / "tools/p2_cost_guard.py"
     if contract.get("schema_version") == "cnw_work_unit_v2":
         production_config = ROOT / "config/policies/provider_policy.deepseek_flash.v1.json"
-        if args.mode == "live":
-            raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "generic v2 live execution remains closed until project authorization is integrated")
     provider_settings = json.loads(production_config.read_text(encoding="utf-8-sig"))
     max_in_flight = (provider_settings.get("request_policy", {}).get("max_in_flight") if contract.get("schema_version") == "cnw_work_unit_v2" else provider_settings.get("provider", {}).get("max_in_flight"))
     if type(max_in_flight) is not int or not 1 <= max_in_flight <= 5:
@@ -1506,7 +1508,7 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
         if sha(reflection.read_bytes()) != artifact["sha256"]:
             raise ContractError("NK_REFLECTION_HASH_MISMATCH", receipt["request_id"])
         _receipt_content(run_dir, receipt)
-        return {"path": artifact["path"], "mapping": existing["mapping"], "provider_call": "reused"}
+        return {"status": "MATERIALIZED", "path": artifact["path"], "mapping": existing["mapping"], "provider_call": "reused"}
     nk_result = _invoke_nk_service(run_dir, payload)
     reflection_response = nk_result["response"]
     receipt = nk_result["receipt"]
@@ -1526,7 +1528,7 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
             provider.append(receipt)
         s["provider_requests"] = provider
         save_state(run_dir, s)
-    return {"path": "artifacts/support/nk-reflection.md", "mapping": mapping}
+    return {"status": "MATERIALIZED", "path": "artifacts/support/nk-reflection.md", "mapping": mapping}
 
 
 def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:

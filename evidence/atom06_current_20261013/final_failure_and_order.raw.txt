@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking 
+tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking PASSED [ 25%]
+tests/test_cnw_pack_attempts.py::NativeDeclarationOrderTests::test_existing_native_parser_orders_predecessors_without_rewriting_declarations PASSED [ 50%]
+tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering PASSED [ 75%]
+tests/test_cnw_pack_attempts.py::ProductionExportEvidenceTests::test_actual_live_validator_blocks_export_without_receipts PASSED [100%]
+
+==================== 4 passed, 3 subtests passed in 0.25s =====================

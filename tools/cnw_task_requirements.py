@@ -180,7 +180,7 @@ def validate_derivation(context: dict, *, sources: dict[str, tuple[str, bytes]],
 
 
 def frozen_task_sources(project_root: Path, index: dict) -> dict[str, tuple[str, bytes]]:
-    if index.get("schema_version") == "cnw_native_input_binding_v1":
+    if index.get("schema_version") in {"cnw_native_input_binding_v1", "cnw_native_input_binding_v2"}:
         names = {"work_order": index["original_work_order"]}
         if index.get("native_context_file"):
             names["scene_packet"] = index["native_context_file"]
@@ -246,8 +246,16 @@ def verify_bound_task_context(project_root: Path, index: dict) -> tuple[str, dic
     if descriptor is None:
         # Existing contracts/bindings retain their historical input semantics.
         return None
-    native = index.get("schema_version") == "cnw_native_input_binding_v1"
-    expected_name = (f"_INBOX/input_packs/{index['pack_sha256']}/tasks/{index['task_alias']}" if native else f"_INBOX/input_packs/{index['pack_sha256']}") + "/derived/task_requirements.v1.json"
+    native = index.get("schema_version") in {"cnw_native_input_binding_v1", "cnw_native_input_binding_v2"}
+    if native:
+        try:
+            from .cnw_native_pack import binding_prefix
+        except ImportError:
+            from cnw_native_pack import binding_prefix
+        prefix = binding_prefix(index)
+    else:
+        prefix = f"_INBOX/input_packs/{index['pack_sha256']}"
+    expected_name = prefix + "/derived/task_requirements.v1.json"
     if (not isinstance(descriptor, dict) or descriptor.get("schema_version") != SCHEMA or
             descriptor.get("recipe_version") != (NATIVE_RECIPE if native else RECIPE) or descriptor.get("file") != expected_name or
             descriptor.get("sha256") != index["files"].get(expected_name)):

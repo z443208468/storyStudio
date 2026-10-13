@@ -1,0 +1,841 @@
+{
+  "schema_version": "atom06_synthetic_request_trace_v1",
+  "execution": "SYNTHETIC_OFFLINE_ONLY",
+  "groups": {
+    "actual_closed_live_gate_order": {
+      "registered_project": "LIVE-GATE-ORDER",
+      "modes_tested": [
+        "DISABLED",
+        "ENABLED"
+      ],
+      "blocking_code": "LIVE_AUTHORIZATION_REQUIRED",
+      "key_reads": 0,
+      "slots": 0,
+      "reservations": 0,
+      "http_calls": 0,
+      "runs_created": 0
+    },
+    "completeness_refine_feedback": {
+      "candidate": {
+        "finding_id": "CANON-OMISSION-1",
+        "lens_id": "story_specific",
+        "issue": "A confirmed project question is not resolved in the draft.",
+        "evidence": "unresolved question",
+        "prompt_update": "On the next review, check whether the confirmed project question receives a concrete response."
+      },
+      "completeness_messages": [
+        [
+          {
+            "role": "system",
+            "content": "你是 Completeness Critic，负责找出前面 Lens 设计遗漏的问题类别。读完整 draft 与已确认/已驳回 findings，输出 JSON：{\"inspected_full_text_sha256\":\"<draft sha256>\",\"candidate_findings\":[{\"finding_id\":\"C1\",\"lens_id\":\"style|character|plot|canon|story_specific\",\"category\":\"遗漏类别\",\"issue\":\"缺口\",\"evidence\":\"正文位置或引文\",\"recommendation\":\"补入修订队列的动作\",\"prompt_update\":\"对应 Lens 今后检查这类遗漏的具体指令\"}]}。每个遗漏同时进入本章修订队列并更新对应 Lens 后续提示。prompt_update 只描述可复用的检查类别，不包含本章结论或其他 Lens 的意见。不得直接改写正文。"
+          },
+          {
+            "role": "user",
+            "content": "{\"confirmed_findings\": [], \"draft\": \"SYNTHETIC UNANSWERED DRAFT\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"rejected_findings\": [], \"source_materials\": {\"project_specific_canon\": \"PROJECT_CANON\", \"scene_cards\": \"A synthetic unresolved question.\", \"writing_brief\": \"Retain the unresolved question.\"}}"
+          }
+        ]
+      ],
+      "feedback_file": [
+        {
+          "instruction": "On the next review, check whether the confirmed project question receives a concrete response.",
+          "category": null,
+          "run_id": "RUN",
+          "finding_id": "CANON-OMISSION-1",
+          "provider_request_id": "SYNTH_COMPLETENESS"
+        }
+      ],
+      "refine_messages": [
+        [
+          {
+            "role": "system",
+            "content": "You are the CNW Refine Agent. Based on confirmed findings and Completeness candidates, revise the complete scene, preserving effective dramatic content and required beats. Keep the same scene scope. Revise in English (en-US); measure length in visible Unicode code points, not words. Do not remove required actions, introduce new Canon, or cross the reader-knowledge boundary. Output only the complete revised prose in Markdown, with no explanation, evaluation, or JSON wrapper. CritiCS suggestions are unaccepted alternative wording, not CNW review decisions; use them only to address listed findings. Reject suggestions that add scenes not approved by the Brief, reveal new secrets, change the story route, or violate the Brief; never treat support suggestions as new facts."
+          },
+          {
+            "role": "user",
+            "content": "{\"brief_constraints\": \"Retain the unresolved question.\", \"confirmed_findings\": {\"completeness_candidates\": [{\"evidence\": \"unresolved question\", \"finding_id\": \"CANON-OMISSION-1\", \"issue\": \"A confirmed project question is not resolved in the draft.\", \"lens_id\": \"story_specific\", \"prompt_update\": \"On the next review, check whether the confirmed project question receives a concrete response.\"}], \"confirmed\": []}, \"v0\": \"SYNTHETIC UNANSWERED DRAFT\"}"
+          }
+        ]
+      ],
+      "refine_messages_sha256": [
+        "4455aec9c94fa4073f0ba455386e9bc97f9cf638af20171176f94e0389eca98b"
+      ],
+      "next_review_sources": {
+        "story_specific_feedback": "On the next review, check whether the confirmed project question receives a concrete response."
+      },
+      "consumer_result": {
+        "affected_lenses": [
+          "story_specific"
+        ],
+        "refine_status": "STAGE_MATERIALIZED"
+      },
+      "re_review": "DEFERRED_TO_ATOM_09"
+    },
+    "support_disabled": {
+      "integrations": {
+        "nk": "DISABLED",
+        "critics": "DISABLED"
+      },
+      "writing_brief_messages": [
+        [
+          {
+            "role": "user",
+            "content": "safe brief"
+          }
+        ]
+      ],
+      "nk_call": "not_called",
+      "critics_call": "not_called",
+      "consumer_results": [
+        "Brief request constructed without NK material",
+        "CritiCS hook DISABLED"
+      ]
+    },
+    "support_enabled_unavailable": {
+      "integrations": {
+        "nk": "ENABLED",
+        "critics": "DISABLED"
+      },
+      "result": "ENABLED_BUT_UNAVAILABLE",
+      "provider_dispatch": "not reached"
+    },
+    "continuation_en-US": {
+      "locale": "en-US",
+      "messages": [
+        [
+          {
+            "role": "system",
+            "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary.\n[project_language_contract]\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count."
+          },
+          {
+            "role": "user",
+            "content": "{\"writing_brief\": \"## Voice References\\n- Speaker\\n## Hard Constraints\\nFixture only.\", \"voice_samples\": \"## Speaker\\nSynthetic voice.\"}"
+          }
+        ],
+        [
+          {
+            "role": "system",
+            "content": "Continue the same chapter in English (en-US). Output only new text following the prior passage; do not repeat or summarize it, and do not add a heading or commentary. Continue writing the required actions, responses, dialogue, and pauses from the Writing Brief until the complete chapter is complete and within the contract's visible-character range. Preserve the order and content of scenes required by the Writing Brief; do not collapse multiple scenes into one."
+          },
+          {
+            "role": "user",
+            "content": "{\"already_written_tail\": \"abc\", \"brief\": \"{\\\"writing_brief\\\": \\\"## Voice References\\\\n- Speaker\\\\n## Hard Constraints\\\\nFixture only.\\\", \\\"voice_samples\\\": \\\"## Speaker\\\\nSynthetic voice.\\\"}\", \"instruction\": \"Continue only; do not repeat earlier text.\", \"still_needed_visible_chars\": 3}"
+          }
+        ]
+      ],
+      "response_texts": [
+        "abc",
+        "def"
+      ],
+      "consumer_result": "length accepted",
+      "message_sha256": [
+        "b16d7969cbffcb2e3ce5a37c7c76cdf9aec6214cecea7445e8edb26f4b661b9c",
+        "dad32cecd25679d2fadf4372330bf666b8835eaf40996007743e1d2625e6575c"
+      ]
+    },
+    "continuation_zh-CN": {
+      "locale": "zh-CN",
+      "messages": [
+        [
+          {
+            "role": "system",
+            "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary.\n[project_language_contract]\n本工作单元的输出语言为简体中文（zh-CN）。长度按 NFC 规范化后、剔除 Markdown 控制符与空白的可见 Unicode 码点计数；这不是词数。"
+          },
+          {
+            "role": "user",
+            "content": "{\"writing_brief\": \"## Voice References\\n- Speaker\\n## Hard Constraints\\nFixture only.\", \"voice_samples\": \"## Speaker\\nSynthetic voice.\"}"
+          }
+        ],
+        [
+          {
+            "role": "system",
+            "content": "你是在续写同一章简体中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到整章完整且达到合同可见字数。保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。"
+          },
+          {
+            "role": "user",
+            "content": "{\"already_written_tail\": \"abc\", \"brief\": \"{\\\"writing_brief\\\": \\\"## Voice References\\\\n- Speaker\\\\n## Hard Constraints\\\\nFixture only.\\\", \\\"voice_samples\\\": \\\"## Speaker\\\\nSynthetic voice.\\\"}\", \"instruction\": \"只续写，不重复。\", \"still_needed_visible_chars\": 3}"
+          }
+        ]
+      ],
+      "response_texts": [
+        "abc",
+        "def"
+      ],
+      "consumer_result": "length accepted",
+      "message_sha256": [
+        "c8dbe16ec8009eeb0084266011535c5c873c19cd765579f13820c01f7d2644d2",
+        "7e0920b0f3e12f9e95be4adbc2147e51fc8a213d0c20b747eb6e2f3f094d8262"
+      ]
+    },
+    "fict_live_rejection": {
+      "project_id": "FICT_BAD",
+      "result": "PROJECT_ROOT_OUTSIDE_PRIVATE_WORKSPACE and LIVE_FIXTURE_FORBIDDEN",
+      "provider_dispatch": "not reached",
+      "run_created": false
+    },
+    "legacy_v1_chinese_compatibility": {
+      "contract": {
+        "schema_version": "cnw_work_unit_v1",
+        "project_id": "FICT_LEGACY",
+        "unit": {
+          "id": "ep01",
+          "kind": "episode",
+          "language": "en-US",
+          "target_visible_chars": 5,
+          "min_visible_chars": 4,
+          "max_visible_chars": 20,
+          "pov": "Speaker"
+        },
+        "story": {
+          "required_beats": []
+        }
+      },
+      "locale_field": "absent",
+      "legacy_language_field": "en-US",
+      "historical_first_prose_prompt": "exact match to pre-Atom-06 builder at 659a1bd",
+      "prose_requests": [
+        [
+          {
+            "role": "system",
+            "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary."
+          },
+          {
+            "role": "user",
+            "content": "{\"writing_brief\": \"## Voice References\\n- Speaker\\n## Hard Constraints\\nFixture only.\", \"voice_samples\": \"## Speaker\\nSynthetic voice.\"}"
+          }
+        ],
+        [
+          {
+            "role": "system",
+            "content": "你是在续写同一章简体中文正文。只输出接续上一段末尾的新内容，不得重复、不得概述前文、不得使用标题或说明。继续把 Writing Brief 中尚未落位的必需动作、回应、对白与停顿实际写成戏，直到整章完整且达到合同可见字数。保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。"
+          },
+          {
+            "role": "user",
+            "content": "{\"already_written_tail\": \"短\", \"brief\": \"{\\\"writing_brief\\\": \\\"## Voice References\\\\n- Speaker\\\\n## Hard Constraints\\\\nFixture only.\\\", \\\"voice_samples\\\": \\\"## Speaker\\\\nSynthetic voice.\\\"}\", \"instruction\": \"只续写，不重复。\", \"still_needed_visible_chars\": 3}"
+          }
+        ]
+      ],
+      "prose_responses": [
+        "短",
+        "这是正文"
+      ],
+      "refine_requests": [
+        [
+          {
+            "role": "system",
+            "content": "你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订整章正文，保留有效戏剧内容与所有必需节拍，保留 Brief 规定的各场顺序与内容，不得把多场缩成一场。按合同语言简体中文（zh-CN）修订，长度按可见 Unicode 码点计算。 不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。"
+          },
+          {
+            "role": "user",
+            "content": "{\"brief_constraints\": \"保留合成节拍\", \"confirmed_findings\": {\"completeness_candidates\": [{\"evidence\": \"fixture\", \"finding_id\": \"SYNTHETIC-1\", \"issue\": \"synthetic omission\", \"lens_id\": \"story_specific\"}], \"confirmed\": []}, \"v0\": \"这是原始正文\"}"
+          }
+        ]
+      ],
+      "refine_response": "修订后的正文",
+      "consumer_result": "actual v1 first Prose builder retained historical prompt identity; continuation and Refine retained Chinese instructions",
+      "message_sha256": [
+        "837d4d4f65688a3900557d5d5f988572aab4f5bd5a63fd6835770243f58fba46",
+        "d8a6d970e69cd5172c7419dcb9b25b6fd1355d75dfbf5e73988bfb6ecac5d24c",
+        "ea580c5a3d63d73f22c94adedd8a58b2479ea1f49cfee3665e019b8a07c477bb"
+      ]
+    },
+    "fifth_lens_project_policy_isolation": {
+      "synthetic_projects": [
+        {
+          "project": "FICT_MYSTERY",
+          "packet": {
+            "lens_id": "story_specific",
+            "draft": "synthetic draft",
+            "sources": {
+              "project_specific_canon": "project canon",
+              "fifth_lens_id": "reader-promise",
+              "fifth_lens_responsibility": "Check whether the promised mystery receives an earned clue."
+            },
+            "author_lens_definition": "核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「reader-promise」，批准的专属职责：Check whether the promised mystery receives an earned clue.",
+            "execution_mode": "LIVE_REQUEST_READY",
+            "input_sha256": "29c70b7a8b6a34a5adf7ed396510c5b6ecee118f5221553bc2368f0a886f740b"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 story_specific Lens。核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「reader-promise」，批准的专属职责：Check whether the promised mystery receives an earned clue. 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「reader-promise」，批准的专属职责：Check whether the promised mystery receives an earned clue.\", \"draft\": \"synthetic draft\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"story_specific\", \"sources\": {\"fifth_lens_id\": \"reader-promise\", \"fifth_lens_responsibility\": \"Check whether the promised mystery receives an earned clue.\", \"project_specific_canon\": \"project canon\"}}"
+            }
+          ],
+          "messages_sha256": "13e8c0c45e7775f320bd384e3585b7135d35dfa97717be592af66ce69ecffd92"
+        },
+        {
+          "project": "FICT_ARGUMENT",
+          "packet": {
+            "lens_id": "story_specific",
+            "draft": "synthetic draft",
+            "sources": {
+              "project_specific_canon": "project canon",
+              "fifth_lens_id": "argument-evidence",
+              "fifth_lens_responsibility": "Check whether the argument's central claim is supported."
+            },
+            "author_lens_definition": "核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「argument-evidence」，批准的专属职责：Check whether the argument's central claim is supported.",
+            "execution_mode": "LIVE_REQUEST_READY",
+            "input_sha256": "2d037d8048a51cec4344bf159908eda869961657153d34a5b25e86bcf3aa4ec2"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 story_specific Lens。核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「argument-evidence」，批准的专属职责：Check whether the argument's central claim is supported. 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「argument-evidence」，批准的专属职责：Check whether the argument's central claim is supported.\", \"draft\": \"synthetic draft\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"story_specific\", \"sources\": {\"fifth_lens_id\": \"argument-evidence\", \"fifth_lens_responsibility\": \"Check whether the argument's central claim is supported.\", \"project_specific_canon\": \"project canon\"}}"
+            }
+          ],
+          "messages_sha256": "96eab7ace2944045246ebc3e74727f389559be8ab5e925c43693763e618d519b"
+        }
+      ],
+      "consumer_result": "actual story_specific messages differ; each carries only its own frozen project duty",
+      "provider_call": "none; deterministic packet/message builders"
+    },
+    "review_requests": {
+      "lens_requests": [
+        {
+          "role_id": "style",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 style Lens。核验节奏、密度、信息重复与 style_guide / forbidden_patterns 的冲突；只报告可定位的语言问题。 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"核验节奏、密度、信息重复与 style_guide / forbidden_patterns 的冲突；只报告可定位的语言问题。\", \"draft\": \"SYNTHETIC FULL DRAFT\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"style\", \"sources\": {\"forbidden_patterns\": \"LINT_ONLY_CANARY\", \"style_guide\": \"STYLE_SOURCE\"}}"
+            }
+          ],
+          "messages_sha256": "b7f0838b9fc779c344e8c3220bce7e608991c015c68400b1afe7af59fde0e3dc"
+        },
+        {
+          "role_id": "character",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 character Lens。核验人物声音漂移、台词行为越界与称呼错误；只依据 character_bible 与 voice_samples。 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"核验人物声音漂移、台词行为越界与称呼错误；只依据 character_bible 与 voice_samples。\", \"draft\": \"SYNTHETIC FULL DRAFT\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"character\", \"sources\": {\"character_bible\": \"CHARACTER_SOURCE\", \"voice_samples\": \"VOICE_SOURCE\"}}"
+            }
+          ],
+          "messages_sha256": "7a55dc2e5cf70989c356659e8f2f51a828325c7e31edc438ce8e6266ddf222a4"
+        },
+        {
+          "role_id": "plot",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 plot Lens。核验 Scene Card 与 Writing Brief 中每个必需节拍、Hook 与连接是否真正落在正文。 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"核验 Scene Card 与 Writing Brief 中每个必需节拍、Hook 与连接是否真正落在正文。\", \"draft\": \"SYNTHETIC FULL DRAFT\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"plot\", \"sources\": {\"scene_cards\": \"SAME_RUN_CARDS\", \"writing_brief\": \"SAME_RUN_BRIEF\"}}"
+            }
+          ],
+          "messages_sha256": "a3c65a40a97bca93fe15be0823373b3a39a281f2c8d044a2d106d67e285d4ac0"
+        },
+        {
+          "role_id": "canon",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 canon Lens。只用 glossary / timeline / world_bible 核验世界事实与术语；不得把推断当事实。 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"只用 glossary / timeline / world_bible 核验世界事实与术语；不得把推断当事实。\", \"draft\": \"SYNTHETIC FULL DRAFT\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"canon\", \"sources\": {\"glossary\": \"GLOSSARY_SOURCE\", \"timeline\": \"TIMELINE_SOURCE\", \"world_bible\": \"WORLD_SOURCE\"}}"
+            }
+          ],
+          "messages_sha256": "c852eeb4bd62c05ed579b06ab774b0d76c2f18ff58482f8905da2143e092f810"
+        },
+        {
+          "role_id": "story_specific",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是独立的 story_specific Lens。核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「reader-promise」，批准的专属职责：Check the project's confirmed reader promise. 只使用 sources 中本岗位来源与完整 draft。必须输出 JSON：{\"lens_id\":\"<id>\",\"findings\":[{\"finding_id\":\"F1\",\"severity\":\"major|minor\",\"evidence\":\"原文短引\",\"issue\":\"具体问题\",\"recommendation\":\"可执行修改\"}]}。无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
+            },
+            {
+              "role": "user",
+              "content": "{\"author_lens_definition\": \"核验项目专属 Canon 中的场景功能、可演性与禁区；不得照抄其他作品的角色设定。 项目配置的第五 Lens 标识为「reader-promise」，批准的专属职责：Check the project's confirmed reader promise.\", \"draft\": \"SYNTHETIC FULL DRAFT\", \"execution_mode\": \"LIVE_REQUEST_READY\", \"lens_id\": \"story_specific\", \"sources\": {\"fifth_lens_id\": \"reader-promise\", \"fifth_lens_responsibility\": \"Check the project's confirmed reader promise.\", \"project_specific_canon\": \"PROJECT_CANON\"}}"
+            }
+          ],
+          "messages_sha256": "42de258a74b8c7f385aee9f216388a54714042739da8463b91f20489bffa11fd"
+        }
+      ],
+      "lens_responses": [
+        {
+          "request_id": "LENS_0",
+          "response": {
+            "lens_id": "style",
+            "findings": [
+              {
+                "finding_id": "RAW",
+                "severity": "minor",
+                "issue": "style"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "LENS_0",
+            "provider_request_id": "OFFLINE_LENS_0"
+          }
+        },
+        {
+          "request_id": "LENS_1",
+          "response": {
+            "lens_id": "character",
+            "findings": []
+          },
+          "identity": {
+            "request_id": "LENS_1",
+            "provider_request_id": "OFFLINE_LENS_1"
+          }
+        },
+        {
+          "request_id": "LENS_2",
+          "response": {
+            "lens_id": "plot",
+            "findings": [
+              {
+                "finding_id": "RAW",
+                "severity": "minor",
+                "issue": "plot"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "LENS_2",
+            "provider_request_id": "OFFLINE_LENS_2"
+          }
+        },
+        {
+          "request_id": "LENS_3",
+          "response": {
+            "lens_id": "canon",
+            "findings": []
+          },
+          "identity": {
+            "request_id": "LENS_3",
+            "provider_request_id": "OFFLINE_LENS_3"
+          }
+        },
+        {
+          "request_id": "LENS_4",
+          "response": {
+            "lens_id": "story_specific",
+            "findings": []
+          },
+          "identity": {
+            "request_id": "LENS_4",
+            "provider_request_id": "OFFLINE_LENS_4"
+          }
+        }
+      ],
+      "vote_requests": [
+        {
+          "role_id": "correctness",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是反证 verifier：correctness。从事实正确性角度尝试反驳该 finding；证据不足时默认反驳。 只核验给定 finding 是否被证据支持。输出 JSON：{\"verifier_id\":\"<id>\",\"votes\":[{\"finding_id\":\"<id>\",\"verdict\":\"not_refuted|refuted|uncertain\",\"evidence\":\"理由\"}]}。不得新增 finding，不得参考其他 verifier 结论。"
+            },
+            {
+              "role": "user",
+              "content": "{\"challenge_angle\": \"从事实正确性角度尝试反驳该 finding；证据不足时默认反驳。\", \"claim\": {\"finding_id\": \"style-1\", \"issue\": \"style\", \"lens_finding_id\": \"RAW\", \"lens_finding_index\": 1, \"lens_id\": \"style\", \"lens_provider_request_id\": \"OFFLINE_LENS_0\", \"severity\": \"minor\"}, \"counter_evidence\": {\"character_bible\": \"CHARACTER_SOURCE\", \"glossary\": \"GLOSSARY_SOURCE\", \"scene_cards\": \"SAME_RUN_CARDS\", \"timeline\": \"TIMELINE_SOURCE\", \"writing_brief\": \"SAME_RUN_BRIEF\"}, \"finding_id\": \"style-1\", \"full_draft\": \"SYNTHETIC FULL DRAFT\", \"instruction\": \"Try to refute the claim. Default to refuted=true under uncertainty.\", \"verifier_id\": \"correctness\"}"
+            }
+          ],
+          "messages_sha256": "b5d9961f844e42e09bf86732cbeef9b5adae4321ff034ebc245e764fbfa0a90d"
+        },
+        {
+          "role_id": "character_consistency",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是反证 verifier：character_consistency。从人物一致性与知识边界角度尝试反驳该 finding；证据不足时默认反驳。 只核验给定 finding 是否被证据支持。输出 JSON：{\"verifier_id\":\"<id>\",\"votes\":[{\"finding_id\":\"<id>\",\"verdict\":\"not_refuted|refuted|uncertain\",\"evidence\":\"理由\"}]}。不得新增 finding，不得参考其他 verifier 结论。"
+            },
+            {
+              "role": "user",
+              "content": "{\"challenge_angle\": \"从人物一致性与知识边界角度尝试反驳该 finding；证据不足时默认反驳。\", \"claim\": {\"finding_id\": \"style-1\", \"issue\": \"style\", \"lens_finding_id\": \"RAW\", \"lens_finding_index\": 1, \"lens_id\": \"style\", \"lens_provider_request_id\": \"OFFLINE_LENS_0\", \"severity\": \"minor\"}, \"counter_evidence\": {\"character_bible\": \"CHARACTER_SOURCE\", \"glossary\": \"GLOSSARY_SOURCE\", \"scene_cards\": \"SAME_RUN_CARDS\", \"timeline\": \"TIMELINE_SOURCE\", \"writing_brief\": \"SAME_RUN_BRIEF\"}, \"finding_id\": \"style-1\", \"full_draft\": \"SYNTHETIC FULL DRAFT\", \"instruction\": \"Try to refute the claim. Default to refuted=true under uncertainty.\", \"verifier_id\": \"character_consistency\"}"
+            }
+          ],
+          "messages_sha256": "3390694e201d7919c3e63c9eb135de6b77f5ad4c162c285c0fb103b76c539122"
+        },
+        {
+          "role_id": "continuity_plausibility",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是反证 verifier：continuity_plausibility。从连续性与情节可信度角度尝试反驳该 finding；证据不足时默认反驳。 只核验给定 finding 是否被证据支持。输出 JSON：{\"verifier_id\":\"<id>\",\"votes\":[{\"finding_id\":\"<id>\",\"verdict\":\"not_refuted|refuted|uncertain\",\"evidence\":\"理由\"}]}。不得新增 finding，不得参考其他 verifier 结论。"
+            },
+            {
+              "role": "user",
+              "content": "{\"challenge_angle\": \"从连续性与情节可信度角度尝试反驳该 finding；证据不足时默认反驳。\", \"claim\": {\"finding_id\": \"style-1\", \"issue\": \"style\", \"lens_finding_id\": \"RAW\", \"lens_finding_index\": 1, \"lens_id\": \"style\", \"lens_provider_request_id\": \"OFFLINE_LENS_0\", \"severity\": \"minor\"}, \"counter_evidence\": {\"character_bible\": \"CHARACTER_SOURCE\", \"glossary\": \"GLOSSARY_SOURCE\", \"scene_cards\": \"SAME_RUN_CARDS\", \"timeline\": \"TIMELINE_SOURCE\", \"writing_brief\": \"SAME_RUN_BRIEF\"}, \"finding_id\": \"style-1\", \"full_draft\": \"SYNTHETIC FULL DRAFT\", \"instruction\": \"Try to refute the claim. Default to refuted=true under uncertainty.\", \"verifier_id\": \"continuity_plausibility\"}"
+            }
+          ],
+          "messages_sha256": "fefae68b17244b7aa70c8bf3be07f0cd3f11ef5bb643455b602f9f41b46b2817"
+        },
+        {
+          "role_id": "correctness",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是反证 verifier：correctness。从事实正确性角度尝试反驳该 finding；证据不足时默认反驳。 只核验给定 finding 是否被证据支持。输出 JSON：{\"verifier_id\":\"<id>\",\"votes\":[{\"finding_id\":\"<id>\",\"verdict\":\"not_refuted|refuted|uncertain\",\"evidence\":\"理由\"}]}。不得新增 finding，不得参考其他 verifier 结论。"
+            },
+            {
+              "role": "user",
+              "content": "{\"challenge_angle\": \"从事实正确性角度尝试反驳该 finding；证据不足时默认反驳。\", \"claim\": {\"finding_id\": \"plot-1\", \"issue\": \"plot\", \"lens_finding_id\": \"RAW\", \"lens_finding_index\": 1, \"lens_id\": \"plot\", \"lens_provider_request_id\": \"OFFLINE_LENS_2\", \"severity\": \"minor\"}, \"counter_evidence\": {\"character_bible\": \"CHARACTER_SOURCE\", \"glossary\": \"GLOSSARY_SOURCE\", \"scene_cards\": \"SAME_RUN_CARDS\", \"timeline\": \"TIMELINE_SOURCE\", \"writing_brief\": \"SAME_RUN_BRIEF\"}, \"finding_id\": \"plot-1\", \"full_draft\": \"SYNTHETIC FULL DRAFT\", \"instruction\": \"Try to refute the claim. Default to refuted=true under uncertainty.\", \"verifier_id\": \"correctness\"}"
+            }
+          ],
+          "messages_sha256": "fe2306b84088b8c9a735a5dfd53d0d8fb25f85bda9d9d5b5e6e717fef35707be"
+        },
+        {
+          "role_id": "character_consistency",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是反证 verifier：character_consistency。从人物一致性与知识边界角度尝试反驳该 finding；证据不足时默认反驳。 只核验给定 finding 是否被证据支持。输出 JSON：{\"verifier_id\":\"<id>\",\"votes\":[{\"finding_id\":\"<id>\",\"verdict\":\"not_refuted|refuted|uncertain\",\"evidence\":\"理由\"}]}。不得新增 finding，不得参考其他 verifier 结论。"
+            },
+            {
+              "role": "user",
+              "content": "{\"challenge_angle\": \"从人物一致性与知识边界角度尝试反驳该 finding；证据不足时默认反驳。\", \"claim\": {\"finding_id\": \"plot-1\", \"issue\": \"plot\", \"lens_finding_id\": \"RAW\", \"lens_finding_index\": 1, \"lens_id\": \"plot\", \"lens_provider_request_id\": \"OFFLINE_LENS_2\", \"severity\": \"minor\"}, \"counter_evidence\": {\"character_bible\": \"CHARACTER_SOURCE\", \"glossary\": \"GLOSSARY_SOURCE\", \"scene_cards\": \"SAME_RUN_CARDS\", \"timeline\": \"TIMELINE_SOURCE\", \"writing_brief\": \"SAME_RUN_BRIEF\"}, \"finding_id\": \"plot-1\", \"full_draft\": \"SYNTHETIC FULL DRAFT\", \"instruction\": \"Try to refute the claim. Default to refuted=true under uncertainty.\", \"verifier_id\": \"character_consistency\"}"
+            }
+          ],
+          "messages_sha256": "a3f64dc76a30ec727d1c1b7a497ca4ecdbad58a120c0647571fcb365388fadf6"
+        },
+        {
+          "role_id": "continuity_plausibility",
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是反证 verifier：continuity_plausibility。从连续性与情节可信度角度尝试反驳该 finding；证据不足时默认反驳。 只核验给定 finding 是否被证据支持。输出 JSON：{\"verifier_id\":\"<id>\",\"votes\":[{\"finding_id\":\"<id>\",\"verdict\":\"not_refuted|refuted|uncertain\",\"evidence\":\"理由\"}]}。不得新增 finding，不得参考其他 verifier 结论。"
+            },
+            {
+              "role": "user",
+              "content": "{\"challenge_angle\": \"从连续性与情节可信度角度尝试反驳该 finding；证据不足时默认反驳。\", \"claim\": {\"finding_id\": \"plot-1\", \"issue\": \"plot\", \"lens_finding_id\": \"RAW\", \"lens_finding_index\": 1, \"lens_id\": \"plot\", \"lens_provider_request_id\": \"OFFLINE_LENS_2\", \"severity\": \"minor\"}, \"counter_evidence\": {\"character_bible\": \"CHARACTER_SOURCE\", \"glossary\": \"GLOSSARY_SOURCE\", \"scene_cards\": \"SAME_RUN_CARDS\", \"timeline\": \"TIMELINE_SOURCE\", \"writing_brief\": \"SAME_RUN_BRIEF\"}, \"finding_id\": \"plot-1\", \"full_draft\": \"SYNTHETIC FULL DRAFT\", \"instruction\": \"Try to refute the claim. Default to refuted=true under uncertainty.\", \"verifier_id\": \"continuity_plausibility\"}"
+            }
+          ],
+          "messages_sha256": "499999c548f3b2e1c2c3a76381a0c6de761549a2bd26fd82980797699858c413"
+        }
+      ],
+      "vote_responses": [
+        {
+          "request_id": "VOTE_0",
+          "response": {
+            "verifier_id": "correctness",
+            "votes": [
+              {
+                "finding_id": "style-1",
+                "verdict": "uncertain",
+                "evidence": "Synthetic only"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "VOTE_0",
+            "provider_request_id": "OFFLINE_VOTE_0"
+          }
+        },
+        {
+          "request_id": "VOTE_1",
+          "response": {
+            "verifier_id": "character_consistency",
+            "votes": [
+              {
+                "finding_id": "style-1",
+                "verdict": "not_refuted",
+                "evidence": "Synthetic only"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "VOTE_1",
+            "provider_request_id": "OFFLINE_VOTE_1"
+          }
+        },
+        {
+          "request_id": "VOTE_2",
+          "response": {
+            "verifier_id": "continuity_plausibility",
+            "votes": [
+              {
+                "finding_id": "style-1",
+                "verdict": "not_refuted",
+                "evidence": "Synthetic only"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "VOTE_2",
+            "provider_request_id": "OFFLINE_VOTE_2"
+          }
+        },
+        {
+          "request_id": "VOTE_3",
+          "response": {
+            "verifier_id": "correctness",
+            "votes": [
+              {
+                "finding_id": "plot-1",
+                "verdict": "uncertain",
+                "evidence": "Synthetic only"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "VOTE_3",
+            "provider_request_id": "OFFLINE_VOTE_3"
+          }
+        },
+        {
+          "request_id": "VOTE_4",
+          "response": {
+            "verifier_id": "character_consistency",
+            "votes": [
+              {
+                "finding_id": "plot-1",
+                "verdict": "not_refuted",
+                "evidence": "Synthetic only"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "VOTE_4",
+            "provider_request_id": "OFFLINE_VOTE_4"
+          }
+        },
+        {
+          "request_id": "VOTE_5",
+          "response": {
+            "verifier_id": "continuity_plausibility",
+            "votes": [
+              {
+                "finding_id": "plot-1",
+                "verdict": "not_refuted",
+                "evidence": "Synthetic only"
+              }
+            ]
+          },
+          "identity": {
+            "request_id": "VOTE_5",
+            "provider_request_id": "OFFLINE_VOTE_5"
+          }
+        }
+      ],
+      "consumer_result": {
+        "stage": "adversarial_verify",
+        "findings": 2,
+        "confirmed": 2
+      },
+      "provider_requests": "none; injected transport"
+    },
+    "role_requests_A": {
+      "project": "FICT_A",
+      "work_id": "ep01",
+      "role_requests": [
+        {
+          "project": "A",
+          "role": "plot",
+          "allowed_input_keys": [
+            "04_chapter_design/arc_<NN>.md",
+            "90_canon/canon.md",
+            "90_canon/character_bible.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "[pinned_author_template: templates/06_plot/plot.template.md blob=8eb22fa6221351c2b614a3ae7d5dc4a53d3e8688]\n# Chapter Plot — ch<NN>\n\nThe structured plot for a single chapter. The first agent in the per-chapter pipeline produces this; the scene card agent expands it; the brief agent narrows it; the prose agent writes from the brief.\n\nThis file is the macro layer. It answers: \"What is this chapter about, and what must it accomplish?\"\n\n---\n\n## Identity\n\n- **Chapter number**: <NN>\n- **Working title**: <title>\n- **Arc**: <which arc this chapter belongs to (e.g. \"Arc 2, chapter 5 of 20\")>\n- **POV**: <character>\n\n---\n\n## Role in the Arc\n\nOne paragraph: what does this chapter exist to do at the arc level?\n\n- Is it a setup chapter (planting seeds)?\n- A payoff chapter (resolving prior setups)?\n- A pivot chapter (changing the direction of the arc)?\n- A breather chapter (character beat / world detail)?\n- A climactic chapter (arc-level resolution)?\n\nIf the chapter doesn't have a clear role, the chapter shouldn't exist yet — go back to the arc design.\n\n---\n\n## Key Scenes (3–6 typical)\n\nBullet list of the scenes this chapter must include, in order. Each scene gets one line at this stage; the scene card agent will expand each one.\n\n1. <scene one — one-line summary>\n2. <scene two — one-line summary>\n3. <scene three — one-line summary>\n4. ...\n\n---\n\n## Hook (chapter ending)\n\nThe last beat of the chapter. What makes the reader want to read the next one?\n\n- **Hook type**: <cliffhanger / revelation / atmospheric / character-moment / question-raised>\n- **Specific hook**: <one sentence>\n\nThe hook should match the arc-level pacing target. Not every chapter needs a cliffhanger; not every chapter can afford a quiet ending.\n\n---\n\n## Required Story Beats (must land in this chapter)\n\nThings that MUST happen, regardless of how the prose develops:\n\n- <beat — e.g. \"Character X learns Character Y is alive\">\n- <beat — e.g. \"The reader sees the antagonist make decision Z\">\n- <beat>\n\nThese are non-negotiable. The plot review lens checks for them.\n\n---\n\n## Forbidden Items (must NOT appear in this chapter)\n\nThings that must NOT show up:\n\n- <forbidden — e.g. \"No mention of [future plot element] yet\">\n- <forbidden — e.g. \"Character X's true name must not be spoken aloud\">\n- <forbidden — e.g. \"The reader must not learn fact Y until chapter NN+3\">\n\nThese are the per-scene/per-chapter forbidden items, distinct from the global `forbidden_patterns.md` (which is about prose style, not story disclosure).\n\n---\n\n## Foreshadowing — plant / payoff\n\nIf this chapter plants a seed for later payoff, or pays off a seed planted earlier, document it:\n\n- **Planting**: <seed planted in this chapter, target payoff chapter>\n- **Paying off**: <seed planted in ch<NN>, paid off here>\n\nUpdate `../90_canon/timeline.md` foreshadowing ledger to match.\n\n---\n\n## Connections\n\n- **Previous chapter (ch<NN-1>) ended with**: <one sentence>\n- **This chapter starts at**: <time gap from previous? location change?>\n- **Next chapter (ch<NN+1>) will need to receive from this one**: <what must be true at chapter end>\n\n---\n\n## Target Length\n\n<word count or character count target>\n\n---\n\n## Notes for the Scene Card Agent\n\nAnything the next stage of the pipeline needs to know that doesn't fit above:\n\n- <note>\n- <note>\n\n---\n\n## How Agents Use This File\n\n- **Scene card agent** reads this and expands each \"key scene\" into a structured scene card.\n- **Brief agent** reads this for the macro view, then narrows it to per-scene instructions.\n- **Plot review lens** checks the drafted chapter against the \"Required Story Beats\" and \"Forbidden Items\" sections.\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：## Identity / ## Role in the Arc / ## Key Scenes / ## Hook / ## Required Story Beats / ## Forbidden Items / ## Connections / ## Target Length。\n每个合同必需节拍必须以其 ID 出现于正文结构：。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n\n[plot_design_responsibility]\n依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、Required Story Beats、Hook、伏笔与章节衔接。已有必需节拍是必须覆盖的要求，不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。按作者模板区分 Key Scenes（场景概要）与 Required Story Beats（必须发生的事件），本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。所有动作必须与所给前后原文连续；不得把来源中已有的位置和动作改写成未经支持的离场或返场。他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。不得从执行器的记账元数据推导创作要求。\n"
+            },
+            {
+              "role": "user",
+              "content": "{\"assignment\": {\"project_id\": \"FICT_A\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"required_beats\": []}, \"unit\": {\"id\": \"ep01\", \"kind\": \"episode\", \"language\": \"zh-CN\", \"language_locale\": \"zh-CN\", \"max_visible_chars\": 30, \"min_visible_chars\": 10, \"pov\": \"Speaker\", \"target_visible_chars\": 20}}, \"materials\": {\"04_chapter_design/arc_<NN>.md\": \"ARC:PROJECT_A_CANARY\", \"90_canon/canon.md\": \"CANON:PROJECT_A_CANARY GUARD_SECRET_CANARY\", \"90_canon/character_bible.md\": \"CHARACTER:PROJECT_A_CANARY\"}}"
+            }
+          ],
+          "messages_sha256": "d216389b18d1d0ea3c18dfc221ecf3025b480ccf1b862532733dc91cc17a3360",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        },
+        {
+          "project": "A",
+          "role": "cards",
+          "allowed_input_keys": [
+            "06_plot/<work_id>_plot.md",
+            "90_canon/character_bible.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "[pinned_author_template: templates/05_scene_cards/scene_cards.template.md blob=b003a987ac1bd5eb1ae6f8dcf7dceffdfdfeaf5d]\n# Scene Cards — ch<NN>\n\nPer-scene breakdown. The scene card agent expands each \"key scene\" from the plot file into a structured card. The brief agent then uses these cards to build the prose-writing instructions.\n\nFormat: one section per scene, in the order they appear in the chapter.\n\n---\n\n## Scene 1\n\n### Identity\n- **Scene label**: <e.g. \"Opening — discovery in the library\">\n- **POV**: <character — usually inherited from chapter POV but can shift>\n- **Location**: <specific place>\n- **Time**: <when in the in-world day; how long after previous scene>\n- **Approximate length**: <% of chapter, or word/character count>\n\n### Cast\n- **On-screen characters**: <list>\n- **Mentioned but off-screen**: <list>\n\n### Start state\nWhat is the situation as the scene opens? One paragraph.\n- Where are the characters physically?\n- What just happened?\n- What does each on-screen character WANT in this moment?\n- What does the POV character know / not know?\n\n### End state\nWhat must be true when the scene ends? One paragraph.\n- What has changed in the situation?\n- What has changed in the POV character's understanding?\n- What new fact / feeling does the reader walk away with?\n\n### Required beats\nBullet list of beats that MUST happen in this scene:\n- <beat — e.g. \"Character A names the artifact for the first time\">\n- <beat — e.g. \"Character B's hesitation is visible to the reader but not to character A\">\n- <beat>\n\n### Forbidden items for this scene\nThings that must NOT happen in THIS scene, even if they're fine in other scenes:\n- <forbidden — e.g. \"POV character does not yet realize what they're looking at\">\n- <forbidden — e.g. \"No mention of [later plot element]\">\n- <forbidden — e.g. \"Character C does not enter the room until next scene\">\n\n### Sensory anchor\nOne sense detail to ground the scene. (Helps prose stay specific instead of generic.)\n- <e.g. \"The library smells faintly of mildew under the lamp oil\">\n\n### Tone / pacing\n- **Tempo**: <slow / measured / brisk / urgent>\n- **Emotional register**: <one sentence>\n\n### Connection to next scene\n- **How this scene hands off to scene 2**: <one sentence>\n\n---\n\n## Scene 2\n\n(Repeat the block above for each scene in the chapter.)\n\n---\n\n## Scene 3\n\n...\n\n---\n\n## Notes for the Brief Agent\n\nAnything the next stage needs to know about the chapter as a whole, that didn't fit into individual scenes:\n\n- <note>\n- <note>\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** reads all scene cards for the chapter, plus the plot file, plus relevant canon, and produces the final writing brief.\n- **Prose agent** does NOT read this file directly (too much for one prompt). It reads the brief instead.\n- **Plot review lens** checks the drafted chapter to verify each scene's \"Required beats\" landed and no \"Forbidden items\" appeared.\n\nThe scene card stage is where most structural problems get caught early — before any prose is generated. If a scene's start state, required beats, and end state don't add up, fix it here, not in the prose.\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：### Identity / ### Cast / ### Start state / ### End state / ### Required beats / ### Forbidden items for this scene / ### Sensory anchor / ### Tone / pacing / ### Connection to next scene。\n每个合同必需节拍必须以其 ID 出现于正文结构：。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+            },
+            {
+              "role": "user",
+              "content": "{\"assignment\": {\"project_id\": \"FICT_A\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"required_beats\": []}, \"unit\": {\"id\": \"ep01\", \"kind\": \"episode\", \"language\": \"zh-CN\", \"language_locale\": \"zh-CN\", \"max_visible_chars\": 30, \"min_visible_chars\": 10, \"pov\": \"Speaker\", \"target_visible_chars\": 20}}, \"materials\": {\"06_plot/<work_id>_plot.md\": \"PLOT_FROM_THIS_RUN:PROJECT_A_CANARY\", \"90_canon/character_bible.md\": \"CHARACTER:PROJECT_A_CANARY\"}}"
+            }
+          ],
+          "messages_sha256": "f034497d3a4d67f9c3416226c37d3c190c169bf57e238b7c8474d7aa56a28e37",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        },
+        {
+          "project": "A",
+          "role": "brief",
+          "allowed_input_keys": [
+            "05_scene_cards/<work_id>_scene_cards.md",
+            "06_plot/<work_id>_plot.md",
+            "90_canon/canon.md",
+            "90_canon/character_bible.md",
+            "90_canon/glossary.md",
+            "90_canon/timeline.md",
+            "90_canon/world_bible.md",
+            "92_style_engine/style_guide.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "[pinned_author_template: templates/07_draft/writing_brief.template.md blob=d67e3c4539eaea5bbcce904f3eb3ee42ff1e2fc5]\n# Writing Brief — ch<NN>\n\nThe compressed, scene-scoped instruction packet that goes directly to the prose agent.\n\nThis is the file the prose agent reads. Nothing else. (Well — plus the relevant character voice samples.)\n\nThe brief agent's job is to take the plot file, the scene cards, and the relevant canon, and distill everything into THIS file. Compression matters: the prose agent shouldn't have to wade through the whole world bible to find what it needs.\n\n---\n\n## Quick Header\n\n- **Chapter**: ch<NN>\n- **POV**: <character>\n- **Target length**: <word / character count>\n- **Style register**: <one phrase — e.g. \"wry restraint\", \"rising tension\", \"domestic warmth\">\n\n---\n\n## Active Canon (extracted, scene-scoped)\n\n### Characters in this chapter\n\nFor each character who appears: pull their essential facts from `character_bible.md` AND the relevant calling rules. The prose agent should be able to write every interaction without consulting the full bible.\n\n**<CHARACTER NAME>**\n- Role: <one line>\n- How they address others in this chapter: <calling rules for the specific pairings that appear>\n- How others address them in this chapter: <same>\n- MUST-INCLUDE facts (physical, behavioral): <e.g. \"missing left eye since ch5\", \"speaks formally to elders only\">\n\n**<CHARACTER NAME>**\n(repeat for each)\n\n### Glossary terms in play\n\nPull only the glossary terms that will or may appear:\n- **<TERM>**: <definition>\n- **<TERM>**: <definition>\n\n### World rules in play\n\nPull only the world-bible facts that this chapter's events touch:\n- <rule — e.g. \"magic at this academy is silent — no incantations spoken aloud\">\n- <rule — e.g. \"travel from capital to academy takes 2 days by carriage\">\n\n---\n\n## Scene-by-Scene Instructions\n\nFor each scene, distill the scene card into action-oriented instructions for prose generation.\n\n### Scene 1\n- **Goal**: <what this scene accomplishes>\n- **Open with**: <specific opening beat>\n- **Required beats**: <bullet list, in order>\n- **Forbidden in this scene**: <bullet list>\n- **End with**: <specific closing beat>\n- **Approximate length**: <X% of chapter>\n\n### Scene 2\n(repeat)\n\n### Scene 3\n...\n\n---\n\n## Voice References\n\nVoice samples are loaded separately from `../92_style_engine/character_voice_samples.md`. Include only the samples for characters who SPEAK in this chapter.\n\n- <CHARACTER NAME> — see voice sample\n- <CHARACTER NAME> — see voice sample\n\n---\n\n## Hard Constraints\n\nThe non-negotiables for this chapter. Anything that's a \"must\" or \"must not\" at the chapter level.\n\n- <MUST: e.g. \"POV character's internal narration uses 俺, never 私\">\n- <MUST: e.g. \"Chapter must end on a hook of type X\">\n- <MUST NOT: e.g. \"Antagonist's true name does not appear\">\n- <MUST NOT: e.g. \"Em-dash count must stay under 5\">\n\n---\n\n## Style Targets (chapter-specific, on top of the global style guide)\n\n- <e.g. \"Dialogue density slightly elevated vs default — this is a conversation-heavy chapter\">\n- <e.g. \"Description sparse — pacing is brisk\">\n- <e.g. \"Internal monologue minimal — POV character is in shock\">\n\n---\n\n## What NOT to include in the prose\n\nDirect from scene cards' forbidden items, consolidated:\n- <forbidden>\n- <forbidden>\n\n---\n\n## How the Prose Agent Should Use This Brief\n\n- Read it once, fully, before writing.\n- Treat \"Hard Constraints\" as inviolable.\n- Treat \"Required beats\" as the structural skeleton — every one must land.\n- Treat \"Forbidden in this scene\" / \"What NOT to include\" as veto rules.\n- Follow scene order. Write each scene completely before moving to the next.\n- Output the chapter as one continuous markdown file. No commentary, no meta-text.\n\n---\n\n## Notes (optional, for human reviewer)\n\n- <e.g. \"This is a tricky chapter — the misperception layer between the protagonist and the academy must stay visible without becoming explicit. Watch for accidental leakage in scene 3.\">\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/canon.template.md blob=b39055a63394ec8e738517a49160260ebb3b3e78]\n# Canon\n\nThe master index and final-arbiter file for canonical facts about the story.\n\nIf something is contested across other canon files, the value in **this** file wins.\nMost canonical facts should live in their specialized files (`character_bible.md`, `world_bible.md`, etc.). This file is for cross-cutting decisions, story-level facts, and the authoritative pointer to where everything else lives.\n\n---\n\n## Canonical Policy\n\n- **Canon-promoted decisions** are locked. Agents cannot override them. To change canon, a human author must edit the source file.\n- **Provisional decisions** are decisions made during drafting that may still change. Use `Provisional (YYYY-MM-DD)` markers in the source files.\n- **Source-of-truth precedence (high → low)**:\n  1. This file (`canon.md`)\n  2. Specialized canon files (`character_bible.md`, `world_bible.md`, `glossary.md`, `timeline.md`)\n  3. Style engine (`style_guide.md`, `forbidden_patterns.md`)\n  4. Per-arc design files\n  5. Per-chapter scene cards and briefs\n  6. The drafts themselves (lowest authority — drafts are output, not source)\n\n---\n\n## Story-Level Canon\n\nThe handful of facts that define what makes this story THIS story. If you change any of these, you're writing a different story.\n\n- **Genre / hybrid**: <e.g. \"reincarnation fantasy with misperception comedy\">\n- **Core premise (one sentence)**: <the elevator pitch>\n- **Protagonist's defining wound / drive**: <one sentence>\n- **The promise to the reader**: <what you guarantee the story will deliver>\n- **The thing you won't do**: <one or two anti-promises — what this story will NEVER become>\n\n---\n\n## Cross-File Indexing\n\nPointers to where specific canonical info lives:\n\n| Topic | Lives in |\n|---|---|\n| Character names, roles, calling rules | `character_bible.md` |\n| Detailed character voice and speech | `../03_project_design/characters/<NAME>.md` (if exists) |\n| Locations, magic system, institutions | `world_bible.md` |\n| Terminology and proper nouns | `glossary.md` |\n| In-world dates and event sequence | `timeline.md` |\n| Prose style rules | `../92_style_engine/style_guide.md` |\n| Banned constructions and AI-tells | `../92_style_engine/forbidden_patterns.md` |\n\n---\n\n## Canon Change Log\n\nEvery promotion from Provisional → Canon, every demotion, every contested-then-resolved decision goes here:\n\n| Date | Change | Reason |\n|---|---|---|\n| YYYY-MM-DD | <e.g. \"Character X's calling pattern in private with Y: promoted to Canon\"> | <reason> |\n| YYYY-MM-DD | <change> | <reason> |\n\nThis log is for human review during arc-end canon passes. It is NOT loaded into agent context (would bloat too fast).\n\n---\n\n## Hard Rules (story-specific things agents must never do)\n\nThis section is where you encode the project's non-negotiables. Things that can't be expressed cleanly in `forbidden_patterns.md` (because they're not patterns, they're story facts).\n\nExamples:\n\n- \"Character X never reveals their true name in dialogue.\"\n- \"The enemy faction's existence is not narrated directly in the protagonist's POV before chapter 60.\"\n- \"Magic system rule: no character can use [specific ability] without paying [specific cost]. Any draft that does is wrong.\"\n- \"[Character Y] is dead from chapter 15 onward and cannot appear except in flashback or as a corpse.\"\n\n---\n\n## How Agents Use This File\n\n- **All agents** read `canon.md` first when given a task. It tells them which other files to consult and which non-negotiables apply.\n- **Canon review lens** uses the Hard Rules section as a checklist against the draft.\n- **Brief agent** uses the Story-Level Canon to keep every chapter aligned with the story's defining promises.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/timeline.template.md blob=88240b3720175123b59e48fda92941e22371d7c6]\n# Timeline\n\nThe canonical sequence of events in the story, plus the time each chapter covers and when characters reach which milestones.\n\nWhy this file exists: continuity errors love long projects. If chapter 12 says the journey takes 3 days and chapter 28 says it took 5, you need a single source of truth that catches the contradiction.\n\n---\n\n## Story Timeline (in-world dates)\n\n| Date / Year | Event | Chapter |\n|---|---|---:|\n| Year 0 (story start) | <protagonist's age, world state> | ch1 |\n| Year 0, Month 3 | <event> | ch5 |\n| Year 1 | <event> | ch20 |\n\nUse relative dates (\"Year 0, Day 47\") rather than real-world dates unless your story explicitly uses them. Relative dates are easier to keep consistent.\n\n---\n\n## Per-Chapter Time Coverage\n\n| Chapter | Starts | Ends | Duration | POV |\n|---|---|---|---:|---|\n| ch1 | Year 0, Day 1, morning | Year 0, Day 1, evening | 1 day | <character> |\n| ch2 | Year 0, Day 2, morning | Year 0, Day 5, night | 4 days | <character> |\n| ch3 | Year 0, Day 6 | Year 0, Day 6 | 1 day | <character> |\n\nThis table is what the canon review lens uses to catch \"chapter 12 happens AFTER chapter 14 but references events from chapter 13\" errors.\n\n---\n\n## Character Ages / Milestones\n\n| Character | Age at ch1 | Age at ch20 | Age at ch50 | Notes |\n|---|---:|---:|---:|---|\n| <CHAR> | 10 | 12 | 15 | Birthday is in Month 4 |\n| <CHAR> | 25 | 27 | 30 | |\n\nIf your story spans multiple in-world years, this is the table that prevents the \"wait, isn't she still 10?\" error in later chapters.\n\n---\n\n## Major Events (cross-chapter)\n\nFor events that have ripples across many chapters (a war, a death, a reveal), track them as anchored points:\n\n| Event | Happens in | Referenced in | Status |\n|---|---|---|---|\n| <EVENT> | ch15 | ch16, ch18, ch24, ch31 | Active reference |\n| <EVENT> | ch7 | ch9, ch12 | Resolved by ch20 |\n\n---\n\n## Foreshadowing Ledger\n\nIf you do plant-and-payoff structure (especially important for mysteries and long-running series), track every planted seed here:\n\n| Seed | Planted in | Payoff target | Status |\n|---|---|---|---|\n| <SEED — one line> | ch3 | ch28 | Planted |\n| <SEED> | ch7 | ch20 | Paid off in ch20 |\n| <SEED> | ch12 | ch45 | Planted, needs reinforcement at ch30 |\n\nThe plot review lens checks this ledger and flags:\n- Seeds that have been visible too long without movement (probably forgotten)\n- Payoff chapters whose brief doesn't reference their planted seeds (will read as unmotivated)\n\nFor long series with deep foreshadowing, this is the most important table in the timeline file.\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** for chapter N reads the per-chapter time coverage of chapter N-1, ensuring the new chapter starts at a valid point in story-time.\n- **Canon review lens** loads this whole file and catches date/age/duration contradictions.\n- **Plot review lens** uses the foreshadowing ledger to verify setup and payoff land correctly.\n\nWhen a chapter is finalized, update this file: add its time coverage, age any characters whose birthdays passed, mark any seeds as paid off.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/world_bible.template.md blob=f8165ace427d0e46ae1d4b7dffd653b0060f943d]\n# World Bible\n\nThe physical, social, and metaphysical laws of the story world.\nIf something is true about how the world works — and any character in any chapter could be affected by it — it lives here.\n\n---\n\n## Setting Overview\n\n- **Genre**: <e.g. fantasy / sci-fi / mystery / contemporary>\n- **Time period / equivalent**: <e.g. \"early industrial revolution analog\", \"Heian-era Japan analog\">\n- **Geographic scope**: <e.g. \"single kingdom\", \"multi-continent\">\n- **Tech / magic level**: <one paragraph summary>\n\n---\n\n## Geography\n\n| Place | Type | Notes |\n|---|---|---|\n| <PLACE NAME> | capital / town / region / continent | <role in story> |\n| <PLACE NAME> | <type> | <notes> |\n\nTravel times between major locations (relevant if the timeline.md references them):\n\n| From → To | Method | Duration |\n|---|---|---|\n| <A> → <B> | <horse / train / portal> | <X days> |\n\n---\n\n## Political / Social Structure\n\n- **Government type**: <e.g. constitutional monarchy, federation, tribal council>\n- **Class structure**: <e.g. nobility / commoner / slave; or none>\n- **Currency**: <name and rough purchasing power>\n- **Languages**: <number, who speaks what>\n\n---\n\n## Magic / Tech System (if applicable)\n\nDefine the rules. The clearer the rules, the harder it is for AI to violate them by accident.\n\n- **Source of power**: <where magic/tech comes from>\n- **Cost**: <what does using it cost the user>\n- **Limits**: <hard limits — what's impossible>\n- **Common applications**: <typical everyday uses>\n- **Rare / forbidden applications**: <what's possible but restricted>\n\n---\n\n## Institutions\n\nFor any organization that has its own rules, hierarchy, or culture (academies, guilds, churches, courts), give it a dedicated subsection:\n\n### <INSTITUTION NAME>\n\n- **Purpose**: <what it does>\n- **Hierarchy**: <ranks, leadership>\n- **Membership / access**: <who's in it, who's not>\n- **Internal rules / culture**: <relevant for character behavior>\n\n---\n\n## Calendar / Time\n\n- **Year length**: <e.g. 360 days, 4 seasons>\n- **Week / month structure**: <if it matters>\n- **Notable annual events**: <festivals, ceremonies, anniversaries the plot might use>\n\n---\n\n## Material Culture (only what matters for prose)\n\nDon't write a complete anthropology. Document only what would surface in a scene:\n\n- **Clothing**: <enough that the prose agent doesn't invent silk dresses in a Bronze Age setting>\n- **Food**: <staples, status foods, taboos>\n- **Transport**: <relevant to pacing>\n- **Architecture**: <enough to set a scene>\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** extracts the world details relevant to a chapter's setting (if the chapter is set in <PLACE X>, pull the geography + institution details for <PLACE X>).\n- **Canon review lens** loads this whole file and checks the draft for contradictions: travel time errors, magic-rule violations, institution misuse, anachronisms.\n- **Plot review lens** uses the calendar to verify timeline consistency across chapters.\n\nIf a rule established here is broken by a chapter, the canon lens should flag it before the chapter is finalized.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/glossary.template.md blob=6e7403fc6f93d82c1f7dbb6a2537348b39a5be81]\n# Glossary\n\nEvery proper noun, in-world term, or specialized vocabulary item in the story, with its canonical definition.\n\nWhy this file exists: AI models will happily invent synonyms, alternate spellings, or \"creative\" rewordings of your terminology if you don't lock it down. The glossary is the lock.\n\n---\n\n## Format\n\n| Term | Definition | First Appearance | Notes |\n|---|---|---:|---|\n| <TERM> | <one-sentence canonical definition> | ch1 | <usage notes, e.g. \"always capitalized; never abbreviated\"> |\n| <TERM> | <definition> | ch5 | <notes> |\n\n---\n\n## Suggested Categories\n\nFor long projects, group terms by category. Examples:\n\n### Places\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Titles / Ranks\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Magic / Tech Terms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Cultural / Religious Terms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### In-World Slang / Idioms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Faction-Specific Vocabulary\nDifferent factions may have different words for the same thing. Document the mapping:\n\n| Concept | Faction A calls it | Faction B calls it | Reader knows it as |\n|---|---|---|---|\n| <CONCEPT> | <TERM> | <TERM> | <TERM> |\n\nThis is critical for multi-faction stories — agents writing from Faction A's POV must use Faction A's vocabulary, not the reader-default term.\n\n---\n\n## Character-Specific Vocabulary\n\nSome characters have signature phrases or unique vocabulary tied to their voice. Document them here (or cross-reference to `character_voice_samples.md`):\n\n| Character | Signature term / phrase | Meaning / use |\n|---|---|---|\n| <CHAR> | <PHRASE> | <when they say it, what it conveys> |\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** scans the chapter outline, identifies which glossary terms will appear, and includes their definitions in the prose prompt.\n- **Style review lens** flags any in-world term that doesn't appear in this glossary (could be a typo, could be an invented term that needs to be added or removed).\n- **Canon review lens** flags any glossary term used with the wrong meaning.\n\nWhen a term is upgraded from invented-in-draft to canon, add it here. The glossary should grow with the story.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：## Quick Header / ## Active Canon / ## Scene-by-Scene Instructions / ## Voice References / ## Hard Constraints / ## Style Targets / ## What NOT to include in the prose。\n每个合同必需节拍必须以其 ID 出现于正文结构：。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+            },
+            {
+              "role": "user",
+              "content": "{\"assignment\": {\"project_id\": \"FICT_A\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"required_beats\": []}, \"unit\": {\"id\": \"ep01\", \"kind\": \"episode\", \"language\": \"zh-CN\", \"language_locale\": \"zh-CN\", \"max_visible_chars\": 30, \"min_visible_chars\": 10, \"pov\": \"Speaker\", \"target_visible_chars\": 20}}, \"materials\": {\"05_scene_cards/<work_id>_scene_cards.md\": \"CARDS_FROM_THIS_RUN:PROJECT_A_CANARY\", \"06_plot/<work_id>_plot.md\": \"PLOT_FROM_THIS_RUN:PROJECT_A_CANARY\", \"90_canon/canon.md\": \"CANON:PROJECT_A_CANARY GUARD_SECRET_CANARY\", \"90_canon/character_bible.md\": \"CHARACTER:PROJECT_A_CANARY\", \"90_canon/glossary.md\": \"GLOSSARY:PROJECT_A_CANARY\", \"90_canon/timeline.md\": \"TIMELINE:PROJECT_A_CANARY\", \"90_canon/world_bible.md\": \"WORLD:PROJECT_A_CANARY\", \"92_style_engine/style_guide.md\": \"STYLE:PROJECT_A_CANARY\"}}"
+            }
+          ],
+          "messages_sha256": "33f654b0f4b472894e69858906eec582f1cd9b54e312d0450a0a5ecd798513ca",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        },
+        {
+          "project": "A",
+          "role": "prose",
+          "allowed_input_keys": [
+            "07_draft/<work_id>_writing_brief.md",
+            "92_style_engine/character_voice_samples.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary."
+            },
+            {
+              "role": "user",
+              "content": "{\"writing_brief\": \"BRIEF_FOR_THIS_PROJECT:PROJECT_A_CANARY\\n## Voice References\\n- Speaker — approved sample\\n## Hard Constraints\\nStay within the fixture.\", \"voice_samples\": \"## Speaker\\nVOICE_SAMPLE_ONLY\"}"
+            }
+          ],
+          "messages_sha256": "9b9bc69a62ec31a98184a13a581ca3ba932c2d648cd7bccf8c844a0724c38072",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        }
+      ]
+    },
+    "role_requests_B": {
+      "project": "FICT_B",
+      "work_id": "ep01",
+      "role_requests": [
+        {
+          "project": "B",
+          "role": "plot",
+          "allowed_input_keys": [
+            "04_chapter_design/arc_<NN>.md",
+            "90_canon/canon.md",
+            "90_canon/character_bible.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "[pinned_author_template: templates/06_plot/plot.template.md blob=8eb22fa6221351c2b614a3ae7d5dc4a53d3e8688]\n# Chapter Plot — ch<NN>\n\nThe structured plot for a single chapter. The first agent in the per-chapter pipeline produces this; the scene card agent expands it; the brief agent narrows it; the prose agent writes from the brief.\n\nThis file is the macro layer. It answers: \"What is this chapter about, and what must it accomplish?\"\n\n---\n\n## Identity\n\n- **Chapter number**: <NN>\n- **Working title**: <title>\n- **Arc**: <which arc this chapter belongs to (e.g. \"Arc 2, chapter 5 of 20\")>\n- **POV**: <character>\n\n---\n\n## Role in the Arc\n\nOne paragraph: what does this chapter exist to do at the arc level?\n\n- Is it a setup chapter (planting seeds)?\n- A payoff chapter (resolving prior setups)?\n- A pivot chapter (changing the direction of the arc)?\n- A breather chapter (character beat / world detail)?\n- A climactic chapter (arc-level resolution)?\n\nIf the chapter doesn't have a clear role, the chapter shouldn't exist yet — go back to the arc design.\n\n---\n\n## Key Scenes (3–6 typical)\n\nBullet list of the scenes this chapter must include, in order. Each scene gets one line at this stage; the scene card agent will expand each one.\n\n1. <scene one — one-line summary>\n2. <scene two — one-line summary>\n3. <scene three — one-line summary>\n4. ...\n\n---\n\n## Hook (chapter ending)\n\nThe last beat of the chapter. What makes the reader want to read the next one?\n\n- **Hook type**: <cliffhanger / revelation / atmospheric / character-moment / question-raised>\n- **Specific hook**: <one sentence>\n\nThe hook should match the arc-level pacing target. Not every chapter needs a cliffhanger; not every chapter can afford a quiet ending.\n\n---\n\n## Required Story Beats (must land in this chapter)\n\nThings that MUST happen, regardless of how the prose develops:\n\n- <beat — e.g. \"Character X learns Character Y is alive\">\n- <beat — e.g. \"The reader sees the antagonist make decision Z\">\n- <beat>\n\nThese are non-negotiable. The plot review lens checks for them.\n\n---\n\n## Forbidden Items (must NOT appear in this chapter)\n\nThings that must NOT show up:\n\n- <forbidden — e.g. \"No mention of [future plot element] yet\">\n- <forbidden — e.g. \"Character X's true name must not be spoken aloud\">\n- <forbidden — e.g. \"The reader must not learn fact Y until chapter NN+3\">\n\nThese are the per-scene/per-chapter forbidden items, distinct from the global `forbidden_patterns.md` (which is about prose style, not story disclosure).\n\n---\n\n## Foreshadowing — plant / payoff\n\nIf this chapter plants a seed for later payoff, or pays off a seed planted earlier, document it:\n\n- **Planting**: <seed planted in this chapter, target payoff chapter>\n- **Paying off**: <seed planted in ch<NN>, paid off here>\n\nUpdate `../90_canon/timeline.md` foreshadowing ledger to match.\n\n---\n\n## Connections\n\n- **Previous chapter (ch<NN-1>) ended with**: <one sentence>\n- **This chapter starts at**: <time gap from previous? location change?>\n- **Next chapter (ch<NN+1>) will need to receive from this one**: <what must be true at chapter end>\n\n---\n\n## Target Length\n\n<word count or character count target>\n\n---\n\n## Notes for the Scene Card Agent\n\nAnything the next stage of the pipeline needs to know that doesn't fit above:\n\n- <note>\n- <note>\n\n---\n\n## How Agents Use This File\n\n- **Scene card agent** reads this and expands each \"key scene\" into a structured scene card.\n- **Brief agent** reads this for the macro view, then narrows it to per-scene instructions.\n- **Plot review lens** checks the drafted chapter against the \"Required Story Beats\" and \"Forbidden Items\" sections.\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：## Identity / ## Role in the Arc / ## Key Scenes / ## Hook / ## Required Story Beats / ## Forbidden Items / ## Connections / ## Target Length。\n每个合同必需节拍必须以其 ID 出现于正文结构：。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n\n[plot_design_responsibility]\n依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、Required Story Beats、Hook、伏笔与章节衔接。已有必需节拍是必须覆盖的要求，不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。按作者模板区分 Key Scenes（场景概要）与 Required Story Beats（必须发生的事件），本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。所有动作必须与所给前后原文连续；不得把来源中已有的位置和动作改写成未经支持的离场或返场。他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。不得从执行器的记账元数据推导创作要求。\n"
+            },
+            {
+              "role": "user",
+              "content": "{\"assignment\": {\"project_id\": \"FICT_B\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"required_beats\": []}, \"unit\": {\"id\": \"ep01\", \"kind\": \"episode\", \"language\": \"zh-CN\", \"language_locale\": \"zh-CN\", \"max_visible_chars\": 30, \"min_visible_chars\": 10, \"pov\": \"Speaker\", \"target_visible_chars\": 20}}, \"materials\": {\"04_chapter_design/arc_<NN>.md\": \"ARC:PROJECT_B_CANARY\", \"90_canon/canon.md\": \"CANON:PROJECT_B_CANARY GUARD_SECRET_CANARY\", \"90_canon/character_bible.md\": \"CHARACTER:PROJECT_B_CANARY\"}}"
+            }
+          ],
+          "messages_sha256": "9bd10e14b2593a78f361b5a3d30fa22867f2f8061eec7582d9ab8555ee116b68",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        },
+        {
+          "project": "B",
+          "role": "cards",
+          "allowed_input_keys": [
+            "06_plot/<work_id>_plot.md",
+            "90_canon/character_bible.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "[pinned_author_template: templates/05_scene_cards/scene_cards.template.md blob=b003a987ac1bd5eb1ae6f8dcf7dceffdfdfeaf5d]\n# Scene Cards — ch<NN>\n\nPer-scene breakdown. The scene card agent expands each \"key scene\" from the plot file into a structured card. The brief agent then uses these cards to build the prose-writing instructions.\n\nFormat: one section per scene, in the order they appear in the chapter.\n\n---\n\n## Scene 1\n\n### Identity\n- **Scene label**: <e.g. \"Opening — discovery in the library\">\n- **POV**: <character — usually inherited from chapter POV but can shift>\n- **Location**: <specific place>\n- **Time**: <when in the in-world day; how long after previous scene>\n- **Approximate length**: <% of chapter, or word/character count>\n\n### Cast\n- **On-screen characters**: <list>\n- **Mentioned but off-screen**: <list>\n\n### Start state\nWhat is the situation as the scene opens? One paragraph.\n- Where are the characters physically?\n- What just happened?\n- What does each on-screen character WANT in this moment?\n- What does the POV character know / not know?\n\n### End state\nWhat must be true when the scene ends? One paragraph.\n- What has changed in the situation?\n- What has changed in the POV character's understanding?\n- What new fact / feeling does the reader walk away with?\n\n### Required beats\nBullet list of beats that MUST happen in this scene:\n- <beat — e.g. \"Character A names the artifact for the first time\">\n- <beat — e.g. \"Character B's hesitation is visible to the reader but not to character A\">\n- <beat>\n\n### Forbidden items for this scene\nThings that must NOT happen in THIS scene, even if they're fine in other scenes:\n- <forbidden — e.g. \"POV character does not yet realize what they're looking at\">\n- <forbidden — e.g. \"No mention of [later plot element]\">\n- <forbidden — e.g. \"Character C does not enter the room until next scene\">\n\n### Sensory anchor\nOne sense detail to ground the scene. (Helps prose stay specific instead of generic.)\n- <e.g. \"The library smells faintly of mildew under the lamp oil\">\n\n### Tone / pacing\n- **Tempo**: <slow / measured / brisk / urgent>\n- **Emotional register**: <one sentence>\n\n### Connection to next scene\n- **How this scene hands off to scene 2**: <one sentence>\n\n---\n\n## Scene 2\n\n(Repeat the block above for each scene in the chapter.)\n\n---\n\n## Scene 3\n\n...\n\n---\n\n## Notes for the Brief Agent\n\nAnything the next stage needs to know about the chapter as a whole, that didn't fit into individual scenes:\n\n- <note>\n- <note>\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** reads all scene cards for the chapter, plus the plot file, plus relevant canon, and produces the final writing brief.\n- **Prose agent** does NOT read this file directly (too much for one prompt). It reads the brief instead.\n- **Plot review lens** checks the drafted chapter to verify each scene's \"Required beats\" landed and no \"Forbidden items\" appeared.\n\nThe scene card stage is where most structural problems get caught early — before any prose is generated. If a scene's start state, required beats, and end state don't add up, fix it here, not in the prose.\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：### Identity / ### Cast / ### Start state / ### End state / ### Required beats / ### Forbidden items for this scene / ### Sensory anchor / ### Tone / pacing / ### Connection to next scene。\n每个合同必需节拍必须以其 ID 出现于正文结构：。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+            },
+            {
+              "role": "user",
+              "content": "{\"assignment\": {\"project_id\": \"FICT_B\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"required_beats\": []}, \"unit\": {\"id\": \"ep01\", \"kind\": \"episode\", \"language\": \"zh-CN\", \"language_locale\": \"zh-CN\", \"max_visible_chars\": 30, \"min_visible_chars\": 10, \"pov\": \"Speaker\", \"target_visible_chars\": 20}}, \"materials\": {\"06_plot/<work_id>_plot.md\": \"PLOT_FROM_THIS_RUN:PROJECT_B_CANARY\", \"90_canon/character_bible.md\": \"CHARACTER:PROJECT_B_CANARY\"}}"
+            }
+          ],
+          "messages_sha256": "a9eb2ebdb9e916bc7efa61ccf9d8b000e98548add5450c8454c862f250ac9b52",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        },
+        {
+          "project": "B",
+          "role": "brief",
+          "allowed_input_keys": [
+            "05_scene_cards/<work_id>_scene_cards.md",
+            "06_plot/<work_id>_plot.md",
+            "90_canon/canon.md",
+            "90_canon/character_bible.md",
+            "90_canon/glossary.md",
+            "90_canon/timeline.md",
+            "90_canon/world_bible.md",
+            "92_style_engine/style_guide.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "[pinned_author_template: templates/07_draft/writing_brief.template.md blob=d67e3c4539eaea5bbcce904f3eb3ee42ff1e2fc5]\n# Writing Brief — ch<NN>\n\nThe compressed, scene-scoped instruction packet that goes directly to the prose agent.\n\nThis is the file the prose agent reads. Nothing else. (Well — plus the relevant character voice samples.)\n\nThe brief agent's job is to take the plot file, the scene cards, and the relevant canon, and distill everything into THIS file. Compression matters: the prose agent shouldn't have to wade through the whole world bible to find what it needs.\n\n---\n\n## Quick Header\n\n- **Chapter**: ch<NN>\n- **POV**: <character>\n- **Target length**: <word / character count>\n- **Style register**: <one phrase — e.g. \"wry restraint\", \"rising tension\", \"domestic warmth\">\n\n---\n\n## Active Canon (extracted, scene-scoped)\n\n### Characters in this chapter\n\nFor each character who appears: pull their essential facts from `character_bible.md` AND the relevant calling rules. The prose agent should be able to write every interaction without consulting the full bible.\n\n**<CHARACTER NAME>**\n- Role: <one line>\n- How they address others in this chapter: <calling rules for the specific pairings that appear>\n- How others address them in this chapter: <same>\n- MUST-INCLUDE facts (physical, behavioral): <e.g. \"missing left eye since ch5\", \"speaks formally to elders only\">\n\n**<CHARACTER NAME>**\n(repeat for each)\n\n### Glossary terms in play\n\nPull only the glossary terms that will or may appear:\n- **<TERM>**: <definition>\n- **<TERM>**: <definition>\n\n### World rules in play\n\nPull only the world-bible facts that this chapter's events touch:\n- <rule — e.g. \"magic at this academy is silent — no incantations spoken aloud\">\n- <rule — e.g. \"travel from capital to academy takes 2 days by carriage\">\n\n---\n\n## Scene-by-Scene Instructions\n\nFor each scene, distill the scene card into action-oriented instructions for prose generation.\n\n### Scene 1\n- **Goal**: <what this scene accomplishes>\n- **Open with**: <specific opening beat>\n- **Required beats**: <bullet list, in order>\n- **Forbidden in this scene**: <bullet list>\n- **End with**: <specific closing beat>\n- **Approximate length**: <X% of chapter>\n\n### Scene 2\n(repeat)\n\n### Scene 3\n...\n\n---\n\n## Voice References\n\nVoice samples are loaded separately from `../92_style_engine/character_voice_samples.md`. Include only the samples for characters who SPEAK in this chapter.\n\n- <CHARACTER NAME> — see voice sample\n- <CHARACTER NAME> — see voice sample\n\n---\n\n## Hard Constraints\n\nThe non-negotiables for this chapter. Anything that's a \"must\" or \"must not\" at the chapter level.\n\n- <MUST: e.g. \"POV character's internal narration uses 俺, never 私\">\n- <MUST: e.g. \"Chapter must end on a hook of type X\">\n- <MUST NOT: e.g. \"Antagonist's true name does not appear\">\n- <MUST NOT: e.g. \"Em-dash count must stay under 5\">\n\n---\n\n## Style Targets (chapter-specific, on top of the global style guide)\n\n- <e.g. \"Dialogue density slightly elevated vs default — this is a conversation-heavy chapter\">\n- <e.g. \"Description sparse — pacing is brisk\">\n- <e.g. \"Internal monologue minimal — POV character is in shock\">\n\n---\n\n## What NOT to include in the prose\n\nDirect from scene cards' forbidden items, consolidated:\n- <forbidden>\n- <forbidden>\n\n---\n\n## How the Prose Agent Should Use This Brief\n\n- Read it once, fully, before writing.\n- Treat \"Hard Constraints\" as inviolable.\n- Treat \"Required beats\" as the structural skeleton — every one must land.\n- Treat \"Forbidden in this scene\" / \"What NOT to include\" as veto rules.\n- Follow scene order. Write each scene completely before moving to the next.\n- Output the chapter as one continuous markdown file. No commentary, no meta-text.\n\n---\n\n## Notes (optional, for human reviewer)\n\n- <e.g. \"This is a tricky chapter — the misperception layer between the protagonist and the academy must stay visible without becoming explicit. Watch for accidental leakage in scene 3.\">\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/canon.template.md blob=b39055a63394ec8e738517a49160260ebb3b3e78]\n# Canon\n\nThe master index and final-arbiter file for canonical facts about the story.\n\nIf something is contested across other canon files, the value in **this** file wins.\nMost canonical facts should live in their specialized files (`character_bible.md`, `world_bible.md`, etc.). This file is for cross-cutting decisions, story-level facts, and the authoritative pointer to where everything else lives.\n\n---\n\n## Canonical Policy\n\n- **Canon-promoted decisions** are locked. Agents cannot override them. To change canon, a human author must edit the source file.\n- **Provisional decisions** are decisions made during drafting that may still change. Use `Provisional (YYYY-MM-DD)` markers in the source files.\n- **Source-of-truth precedence (high → low)**:\n  1. This file (`canon.md`)\n  2. Specialized canon files (`character_bible.md`, `world_bible.md`, `glossary.md`, `timeline.md`)\n  3. Style engine (`style_guide.md`, `forbidden_patterns.md`)\n  4. Per-arc design files\n  5. Per-chapter scene cards and briefs\n  6. The drafts themselves (lowest authority — drafts are output, not source)\n\n---\n\n## Story-Level Canon\n\nThe handful of facts that define what makes this story THIS story. If you change any of these, you're writing a different story.\n\n- **Genre / hybrid**: <e.g. \"reincarnation fantasy with misperception comedy\">\n- **Core premise (one sentence)**: <the elevator pitch>\n- **Protagonist's defining wound / drive**: <one sentence>\n- **The promise to the reader**: <what you guarantee the story will deliver>\n- **The thing you won't do**: <one or two anti-promises — what this story will NEVER become>\n\n---\n\n## Cross-File Indexing\n\nPointers to where specific canonical info lives:\n\n| Topic | Lives in |\n|---|---|\n| Character names, roles, calling rules | `character_bible.md` |\n| Detailed character voice and speech | `../03_project_design/characters/<NAME>.md` (if exists) |\n| Locations, magic system, institutions | `world_bible.md` |\n| Terminology and proper nouns | `glossary.md` |\n| In-world dates and event sequence | `timeline.md` |\n| Prose style rules | `../92_style_engine/style_guide.md` |\n| Banned constructions and AI-tells | `../92_style_engine/forbidden_patterns.md` |\n\n---\n\n## Canon Change Log\n\nEvery promotion from Provisional → Canon, every demotion, every contested-then-resolved decision goes here:\n\n| Date | Change | Reason |\n|---|---|---|\n| YYYY-MM-DD | <e.g. \"Character X's calling pattern in private with Y: promoted to Canon\"> | <reason> |\n| YYYY-MM-DD | <change> | <reason> |\n\nThis log is for human review during arc-end canon passes. It is NOT loaded into agent context (would bloat too fast).\n\n---\n\n## Hard Rules (story-specific things agents must never do)\n\nThis section is where you encode the project's non-negotiables. Things that can't be expressed cleanly in `forbidden_patterns.md` (because they're not patterns, they're story facts).\n\nExamples:\n\n- \"Character X never reveals their true name in dialogue.\"\n- \"The enemy faction's existence is not narrated directly in the protagonist's POV before chapter 60.\"\n- \"Magic system rule: no character can use [specific ability] without paying [specific cost]. Any draft that does is wrong.\"\n- \"[Character Y] is dead from chapter 15 onward and cannot appear except in flashback or as a corpse.\"\n\n---\n\n## How Agents Use This File\n\n- **All agents** read `canon.md` first when given a task. It tells them which other files to consult and which non-negotiables apply.\n- **Canon review lens** uses the Hard Rules section as a checklist against the draft.\n- **Brief agent** uses the Story-Level Canon to keep every chapter aligned with the story's defining promises.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/timeline.template.md blob=88240b3720175123b59e48fda92941e22371d7c6]\n# Timeline\n\nThe canonical sequence of events in the story, plus the time each chapter covers and when characters reach which milestones.\n\nWhy this file exists: continuity errors love long projects. If chapter 12 says the journey takes 3 days and chapter 28 says it took 5, you need a single source of truth that catches the contradiction.\n\n---\n\n## Story Timeline (in-world dates)\n\n| Date / Year | Event | Chapter |\n|---|---|---:|\n| Year 0 (story start) | <protagonist's age, world state> | ch1 |\n| Year 0, Month 3 | <event> | ch5 |\n| Year 1 | <event> | ch20 |\n\nUse relative dates (\"Year 0, Day 47\") rather than real-world dates unless your story explicitly uses them. Relative dates are easier to keep consistent.\n\n---\n\n## Per-Chapter Time Coverage\n\n| Chapter | Starts | Ends | Duration | POV |\n|---|---|---|---:|---|\n| ch1 | Year 0, Day 1, morning | Year 0, Day 1, evening | 1 day | <character> |\n| ch2 | Year 0, Day 2, morning | Year 0, Day 5, night | 4 days | <character> |\n| ch3 | Year 0, Day 6 | Year 0, Day 6 | 1 day | <character> |\n\nThis table is what the canon review lens uses to catch \"chapter 12 happens AFTER chapter 14 but references events from chapter 13\" errors.\n\n---\n\n## Character Ages / Milestones\n\n| Character | Age at ch1 | Age at ch20 | Age at ch50 | Notes |\n|---|---:|---:|---:|---|\n| <CHAR> | 10 | 12 | 15 | Birthday is in Month 4 |\n| <CHAR> | 25 | 27 | 30 | |\n\nIf your story spans multiple in-world years, this is the table that prevents the \"wait, isn't she still 10?\" error in later chapters.\n\n---\n\n## Major Events (cross-chapter)\n\nFor events that have ripples across many chapters (a war, a death, a reveal), track them as anchored points:\n\n| Event | Happens in | Referenced in | Status |\n|---|---|---|---|\n| <EVENT> | ch15 | ch16, ch18, ch24, ch31 | Active reference |\n| <EVENT> | ch7 | ch9, ch12 | Resolved by ch20 |\n\n---\n\n## Foreshadowing Ledger\n\nIf you do plant-and-payoff structure (especially important for mysteries and long-running series), track every planted seed here:\n\n| Seed | Planted in | Payoff target | Status |\n|---|---|---|---|\n| <SEED — one line> | ch3 | ch28 | Planted |\n| <SEED> | ch7 | ch20 | Paid off in ch20 |\n| <SEED> | ch12 | ch45 | Planted, needs reinforcement at ch30 |\n\nThe plot review lens checks this ledger and flags:\n- Seeds that have been visible too long without movement (probably forgotten)\n- Payoff chapters whose brief doesn't reference their planted seeds (will read as unmotivated)\n\nFor long series with deep foreshadowing, this is the most important table in the timeline file.\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** for chapter N reads the per-chapter time coverage of chapter N-1, ensuring the new chapter starts at a valid point in story-time.\n- **Canon review lens** loads this whole file and catches date/age/duration contradictions.\n- **Plot review lens** uses the foreshadowing ledger to verify setup and payoff land correctly.\n\nWhen a chapter is finalized, update this file: add its time coverage, age any characters whose birthdays passed, mark any seeds as paid off.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/world_bible.template.md blob=f8165ace427d0e46ae1d4b7dffd653b0060f943d]\n# World Bible\n\nThe physical, social, and metaphysical laws of the story world.\nIf something is true about how the world works — and any character in any chapter could be affected by it — it lives here.\n\n---\n\n## Setting Overview\n\n- **Genre**: <e.g. fantasy / sci-fi / mystery / contemporary>\n- **Time period / equivalent**: <e.g. \"early industrial revolution analog\", \"Heian-era Japan analog\">\n- **Geographic scope**: <e.g. \"single kingdom\", \"multi-continent\">\n- **Tech / magic level**: <one paragraph summary>\n\n---\n\n## Geography\n\n| Place | Type | Notes |\n|---|---|---|\n| <PLACE NAME> | capital / town / region / continent | <role in story> |\n| <PLACE NAME> | <type> | <notes> |\n\nTravel times between major locations (relevant if the timeline.md references them):\n\n| From → To | Method | Duration |\n|---|---|---|\n| <A> → <B> | <horse / train / portal> | <X days> |\n\n---\n\n## Political / Social Structure\n\n- **Government type**: <e.g. constitutional monarchy, federation, tribal council>\n- **Class structure**: <e.g. nobility / commoner / slave; or none>\n- **Currency**: <name and rough purchasing power>\n- **Languages**: <number, who speaks what>\n\n---\n\n## Magic / Tech System (if applicable)\n\nDefine the rules. The clearer the rules, the harder it is for AI to violate them by accident.\n\n- **Source of power**: <where magic/tech comes from>\n- **Cost**: <what does using it cost the user>\n- **Limits**: <hard limits — what's impossible>\n- **Common applications**: <typical everyday uses>\n- **Rare / forbidden applications**: <what's possible but restricted>\n\n---\n\n## Institutions\n\nFor any organization that has its own rules, hierarchy, or culture (academies, guilds, churches, courts), give it a dedicated subsection:\n\n### <INSTITUTION NAME>\n\n- **Purpose**: <what it does>\n- **Hierarchy**: <ranks, leadership>\n- **Membership / access**: <who's in it, who's not>\n- **Internal rules / culture**: <relevant for character behavior>\n\n---\n\n## Calendar / Time\n\n- **Year length**: <e.g. 360 days, 4 seasons>\n- **Week / month structure**: <if it matters>\n- **Notable annual events**: <festivals, ceremonies, anniversaries the plot might use>\n\n---\n\n## Material Culture (only what matters for prose)\n\nDon't write a complete anthropology. Document only what would surface in a scene:\n\n- **Clothing**: <enough that the prose agent doesn't invent silk dresses in a Bronze Age setting>\n- **Food**: <staples, status foods, taboos>\n- **Transport**: <relevant to pacing>\n- **Architecture**: <enough to set a scene>\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** extracts the world details relevant to a chapter's setting (if the chapter is set in <PLACE X>, pull the geography + institution details for <PLACE X>).\n- **Canon review lens** loads this whole file and checks the draft for contradictions: travel time errors, magic-rule violations, institution misuse, anachronisms.\n- **Plot review lens** uses the calendar to verify timeline consistency across chapters.\n\nIf a rule established here is broken by a chapter, the canon lens should flag it before the chapter is finalized.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/glossary.template.md blob=6e7403fc6f93d82c1f7dbb6a2537348b39a5be81]\n# Glossary\n\nEvery proper noun, in-world term, or specialized vocabulary item in the story, with its canonical definition.\n\nWhy this file exists: AI models will happily invent synonyms, alternate spellings, or \"creative\" rewordings of your terminology if you don't lock it down. The glossary is the lock.\n\n---\n\n## Format\n\n| Term | Definition | First Appearance | Notes |\n|---|---|---:|---|\n| <TERM> | <one-sentence canonical definition> | ch1 | <usage notes, e.g. \"always capitalized; never abbreviated\"> |\n| <TERM> | <definition> | ch5 | <notes> |\n\n---\n\n## Suggested Categories\n\nFor long projects, group terms by category. Examples:\n\n### Places\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Titles / Ranks\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Magic / Tech Terms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Cultural / Religious Terms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### In-World Slang / Idioms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Faction-Specific Vocabulary\nDifferent factions may have different words for the same thing. Document the mapping:\n\n| Concept | Faction A calls it | Faction B calls it | Reader knows it as |\n|---|---|---|---|\n| <CONCEPT> | <TERM> | <TERM> | <TERM> |\n\nThis is critical for multi-faction stories — agents writing from Faction A's POV must use Faction A's vocabulary, not the reader-default term.\n\n---\n\n## Character-Specific Vocabulary\n\nSome characters have signature phrases or unique vocabulary tied to their voice. Document them here (or cross-reference to `character_voice_samples.md`):\n\n| Character | Signature term / phrase | Meaning / use |\n|---|---|---|\n| <CHAR> | <PHRASE> | <when they say it, what it conveys> |\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** scans the chapter outline, identifies which glossary terms will appear, and includes their definitions in the prose prompt.\n- **Style review lens** flags any in-world term that doesn't appear in this glossary (could be a typo, could be an invented term that needs to be added or removed).\n- **Canon review lens** flags any glossary term used with the wrong meaning.\n\nWhen a term is upgraded from invented-in-draft to canon, add it here. The glossary should grow with the story.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：## Quick Header / ## Active Canon / ## Scene-by-Scene Instructions / ## Voice References / ## Hard Constraints / ## Style Targets / ## What NOT to include in the prose。\n每个合同必需节拍必须以其 ID 出现于正文结构：。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+            },
+            {
+              "role": "user",
+              "content": "{\"assignment\": {\"project_id\": \"FICT_B\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"required_beats\": []}, \"unit\": {\"id\": \"ep01\", \"kind\": \"episode\", \"language\": \"zh-CN\", \"language_locale\": \"zh-CN\", \"max_visible_chars\": 30, \"min_visible_chars\": 10, \"pov\": \"Speaker\", \"target_visible_chars\": 20}}, \"materials\": {\"05_scene_cards/<work_id>_scene_cards.md\": \"CARDS_FROM_THIS_RUN:PROJECT_B_CANARY\", \"06_plot/<work_id>_plot.md\": \"PLOT_FROM_THIS_RUN:PROJECT_B_CANARY\", \"90_canon/canon.md\": \"CANON:PROJECT_B_CANARY GUARD_SECRET_CANARY\", \"90_canon/character_bible.md\": \"CHARACTER:PROJECT_B_CANARY\", \"90_canon/glossary.md\": \"GLOSSARY:PROJECT_B_CANARY\", \"90_canon/timeline.md\": \"TIMELINE:PROJECT_B_CANARY\", \"90_canon/world_bible.md\": \"WORLD:PROJECT_B_CANARY\", \"92_style_engine/style_guide.md\": \"STYLE:PROJECT_B_CANARY\"}}"
+            }
+          ],
+          "messages_sha256": "e186a18dc2413d9b958890b019223b5b3125b64aa60c6032442103dda100e6fd",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        },
+        {
+          "project": "B",
+          "role": "prose",
+          "allowed_input_keys": [
+            "07_draft/<work_id>_writing_brief.md",
+            "92_style_engine/character_voice_samples.md"
+          ],
+          "messages": [
+            {
+              "role": "system",
+              "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary."
+            },
+            {
+              "role": "user",
+              "content": "{\"writing_brief\": \"BRIEF_FOR_THIS_PROJECT:PROJECT_B_CANARY\\n## Voice References\\n- Speaker — approved sample\\n## Hard Constraints\\nStay within the fixture.\", \"voice_samples\": \"## Speaker\\nVOICE_SAMPLE_ONLY\"}"
+            }
+          ],
+          "messages_sha256": "69826b2ce46c2c9cf069d9374f50caf3224ab6d4c351ff01f7839c5a87dd84a2",
+          "consumer": "Plot->Cards same-run Plot; Plot+Cards->Brief; Brief+selected voice->Prose",
+          "guard_secret_in_prose": false,
+          "lint_only_canary_in_prose": false
+        }
+      ]
+    }
+  }
+}

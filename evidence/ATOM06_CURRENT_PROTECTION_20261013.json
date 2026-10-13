@@ -1,0 +1,16 @@
+{
+  "scope": "WRITER_READ_ONLY_HASH_CHECK_NOT_CONTROLLER_ACCEPT",
+  "observed_date": "2026-10-13",
+  "protected_hashes": {
+    "original_shared_fee_ledger": "c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b",
+    "original_ts_run_state": "3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d",
+    "protected_untracked_provider_slot_lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "matched_previous_frozen_hashes": true,
+  "frozen_pre_r5_reference_status_porcelain": "",
+  "origin_main_readback": "85cf861ad84851fbaaa91c0b95a75ee0fb5b9be6",
+  "real_provider_calls": "NOT_RUN",
+  "private_migration": "NOT_RUN",
+  "ts_resume": "NOT_RUN",
+  "cutover_blocked": true
+}

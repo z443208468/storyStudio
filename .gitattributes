@@ -9,3 +9,7 @@ evidence/atom05_closure_20261013/*.raw.txt binary
 # Preserve the Controller's original Markdown hard breaks without editing its verdict.
 evidence/ATOM05_CONTROLLER_RETURN_3a911ab_20261013.md -text whitespace=-blank-at-eol
 evidence/ATOM05_CONTROLLER_RETURN_01d348e_20261013.md -text whitespace=-blank-at-eol
+evidence/ATOM05_CONTROLLER_ACCEPT_85cf861_20261013.md -text whitespace=-blank-at-eol
+# Preserve the exact offline Atom-06 evidence bytes and original Controller guidance.
+evidence/atom06_current_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom06_current_20261013/*.raw.txt binary

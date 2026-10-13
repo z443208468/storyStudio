@@ -1,0 +1,12 @@
+test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering (tests.test_cnw_support_consumers.SupportConsumerTests.test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering) ... ok
+test_v1_role_requests_match_pre_r5_baseline (tests.test_cnw_pre_r5_role_compat.PreR5RoleCompatibilityTests.test_v1_role_requests_match_pre_r5_baseline) ... ok
+test_existing_native_parser_orders_predecessors_without_rewriting_declarations (tests.test_cnw_pack_attempts.NativeDeclarationOrderTests.test_existing_native_parser_orders_predecessors_without_rewriting_declarations) ... ok
+test_actual_live_validator_blocks_export_without_receipts (tests.test_cnw_pack_attempts.ProductionExportEvidenceTests.test_actual_live_validator_blocks_export_without_receipts) ... ok
+test_actual_v2_live_gate_precedes_enabled_support_key_and_fee_checks (tests.test_cnw_atom06.Atom06Tests.test_actual_v2_live_gate_precedes_enabled_support_key_and_fee_checks) ... ok
+test_enabled_critics_runtime_failures_are_recorded_and_blocking (tests.test_cnw_atom06.Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking) ... ok
+test_native_critics_result_reaches_refine_and_is_verified_on_reuse (tests.test_cnw_runner.RunnerTests.test_native_critics_result_reaches_refine_and_is_verified_on_reuse) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 2.505s
+
+OK

@@ -102,13 +102,15 @@ class PackApplicationTests(unittest.TestCase):
         result = self.invoke("-SourceRepository", str(self.fixture.repo), "-Offline", "-Mode", "live", "-ExecuteJob")
         self.assertNotEqual(result.returncode, 0, result.stderr + result.stdout)
         report = json.loads(result.stdout)
-        self.assertEqual(report["status"], "LIVE_ROUTE_NOT_READY")
+        self.assertEqual(report["status"], "JOB_EXECUTION_INCOMPLETE")
         self.assertEqual(report["requested_execution_mode"], "live")
         self.assertTrue(report["job_record"].endswith("result.json"))
         self.assertEqual(report["blocking_code"], "LIVE_AUTHORIZATION_REQUIRED")
         self.assertEqual(report["provider_request_count"], 0)
         self.assertEqual(report["fee_reservation_count"], 0)
         self.assertEqual(report["provider_call"], "none")
+        self.assertTrue(Path(report["attempt_record"]).is_file())
+        self.assertNotEqual(report["attempt_record"], report["job_record"])
 
     def set_bounds(self, maximum):
         for label in ("A", "B", "C"):

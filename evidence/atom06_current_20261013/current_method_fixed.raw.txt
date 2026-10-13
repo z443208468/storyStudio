@@ -1,0 +1,248 @@
+............................................................. [ 67%]
+..............................                                       [100%]
+================================== FAILURES ===================================
+_ Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking (failure_kind='missing') _
+
+self = <tests.test_cnw_atom06.Atom06Tests testMethod=test_enabled_critics_runtime_failures_are_recorded_and_blocking>
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                _write(run, "run_state.json", json.dumps(state))
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+>                       cnw_runner._critics_hook(run, "plot")
+
+tests\test_cnw_atom06.py:303: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:2317: in _critics_hook
+    cost_account = _cost_account(run_dir, hook_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:469: in _cost_account
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:289: in for_run
+    registration = resolve_project(root, data_home=root.parent.parent)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:455: in resolve_project
+    root = resolve_data_home(explicit=data_home, env=env, pointer_path=pointer_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:306: in resolve_data_home
+    _assert_private_permissions(canonical)
+tools\project_paths.py:135: in _assert_private_permissions
+    _windows_private_acl(path, create=False, require_independent=require_independent_acl)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _windows_private_acl(path: Path, *, create: bool, require_independent: bool = True) -> None:
+        icacls = shutil.which("icacls.exe") or shutil.which("icacls")
+        whoami = shutil.which("whoami.exe") or shutil.which("whoami")
+        if not icacls or not whoami:
+            raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "icacls and whoami are required to verify Windows DataHome ACLs")
+        try:
+            user_result = subprocess.run([whoami, "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, timeout=10, check=False)
+            user_row = next(csv.reader(io.StringIO(user_result.stdout))) if user_result.returncode == 0 else []
+            user_sid = user_row[-1] if len(user_row) >= 2 else ""
+            if not user_sid.startswith("S-"):
+>               raise ValueError("current Windows user SID unavailable")
+E               ValueError: current Windows user SID unavailable
+
+tools\project_paths.py:97: ValueError
+_ Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking (failure_kind='timeout') _
+
+    def _windows_private_acl(path: Path, *, create: bool, require_independent: bool = True) -> None:
+        icacls = shutil.which("icacls.exe") or shutil.which("icacls")
+        whoami = shutil.which("whoami.exe") or shutil.which("whoami")
+        if not icacls or not whoami:
+            raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "icacls and whoami are required to verify Windows DataHome ACLs")
+        try:
+>           user_result = subprocess.run([whoami, "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, timeout=10, check=False)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools\project_paths.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Program Files\Python313\Lib\unittest\mock.py:1167: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\unittest\mock.py:1171: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MagicMock name='run' id='2187073508688'>
+args = (['C:\\Windows\\system32\\whoami.exe', '/user', '/fo', 'csv', '/nh'],)
+kwargs = {'capture_output': True, 'text': True, 'timeout': 10, 'check': False}
+
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+    
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+>               raise effect
+E               TimeoutError: fixture timeout
+
+C:\Program Files\Python313\Lib\unittest\mock.py:1226: TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+self = <tests.test_cnw_atom06.Atom06Tests testMethod=test_enabled_critics_runtime_failures_are_recorded_and_blocking>
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                _write(run, "run_state.json", json.dumps(state))
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+>                       cnw_runner._critics_hook(run, "plot")
+
+tests\test_cnw_atom06.py:303: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:2317: in _critics_hook
+    cost_account = _cost_account(run_dir, hook_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:469: in _cost_account
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:289: in for_run
+    registration = resolve_project(root, data_home=root.parent.parent)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:455: in resolve_project
+    root = resolve_data_home(explicit=data_home, env=env, pointer_path=pointer_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:306: in resolve_data_home
+    _assert_private_permissions(canonical)
+tools\project_paths.py:135: in _assert_private_permissions
+    _windows_private_acl(path, create=False, require_independent=require_independent_acl)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _windows_private_acl(path: Path, *, create: bool, require_independent: bool = True) -> None:
+        icacls = shutil.which("icacls.exe") or shutil.which("icacls")
+        whoami = shutil.which("whoami.exe") or shutil.which("whoami")
+        if not icacls or not whoami:
+            raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "icacls and whoami are required to verify Windows DataHome ACLs")
+        try:
+            user_result = subprocess.run([whoami, "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, timeout=10, check=False)
+            user_row = next(csv.reader(io.StringIO(user_result.stdout))) if user_result.returncode == 0 else []
+            user_sid = user_row[-1] if len(user_row) >= 2 else ""
+            if not user_sid.startswith("S-"):
+                raise ValueError("current Windows user SID unavailable")
+            if create:
+                grants = [f"*{user_sid}:(OI)(CI)F", "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F"]
+                changed = subprocess.run([icacls, str(path), "/inheritance:r", "/grant:r", *grants], capture_output=True, text=True, timeout=10, check=False)
+                if changed.returncode != 0:
+                    raise ValueError("icacls could not protect the new DataHome")
+            result = subprocess.run([icacls, str(path)], capture_output=True, text=True, timeout=10, check=False)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+>           raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "Windows ACL inspection failed") from exc
+E           tools.project_paths.PathResolutionError: DATA_HOME_PERMISSION_CHECK_UNAVAILABLE: Windows ACL inspection failed
+
+tools\project_paths.py:105: PathResolutionError
+_ Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking (failure_kind='nonzero') _
+
+self = <tests.test_cnw_atom06.Atom06Tests testMethod=test_enabled_critics_runtime_failures_are_recorded_and_blocking>
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                _write(run, "run_state.json", json.dumps(state))
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+>                       cnw_runner._critics_hook(run, "plot")
+
+tests\test_cnw_atom06.py:303: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:2317: in _critics_hook
+    cost_account = _cost_account(run_dir, hook_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:469: in _cost_account
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:289: in for_run
+    registration = resolve_project(root, data_home=root.parent.parent)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:455: in resolve_project
+    root = resolve_data_home(explicit=data_home, env=env, pointer_path=pointer_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:306: in resolve_data_home
+    _assert_private_permissions(canonical)
+tools\project_paths.py:135: in _assert_private_permissions
+    _windows_private_acl(path, create=False, require_independent=require_independent_acl)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def _windows_private_acl(path: Path, *, create: bool, require_independent: bool = True) -> None:
+        icacls = shutil.which("icacls.exe") or shutil.which("icacls")
+        whoami = shutil.which("whoami.exe") or shutil.which("whoami")
+        if not icacls or not whoami:
+            raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "icacls and whoami are required to verify Windows DataHome ACLs")
+        try:
+            user_result = subprocess.run([whoami, "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, timeout=10, check=False)
+            user_row = next(csv.reader(io.StringIO(user_result.stdout))) if user_result.returncode == 0 else []
+            user_sid = user_row[-1] if len(user_row) >= 2 else ""
+            if not user_sid.startswith("S-"):
+>               raise ValueError("current Windows user SID unavailable")
+E               ValueError: current Windows user SID unavailable
+
+tools\project_paths.py:97: ValueError
+=========================== short test summary info ===========================
+SUBFAILED(failure_kind='missing') tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking
+SUBFAILED(failure_kind='timeout') tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking
+SUBFAILED(failure_kind='nonzero') tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking
+3 failed, 91 passed, 12 subtests passed in 168.13s (0:02:48)

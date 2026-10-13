@@ -30,6 +30,8 @@ except ImportError:
 
 JOB_SCHEMA = "cnw_input_pack_job_v2"
 BINDING_SCHEMA = "cnw_native_input_binding_v1"
+ATTEMPT_BINDING_SCHEMA = "cnw_native_input_binding_v2"
+BINDING_SCHEMAS = {BINDING_SCHEMA, ATTEMPT_BINDING_SCHEMA}
 RESERVED_REQUIREMENTS = {"schema_version", "unit_id", "project_id", "project_instance_id", "source_id", "source_revision_id",
     "source_manifest_revision_sha256", "source_index_revision_sha256", "input_pack", "previous_episode_ref", "policy", "provider",
     "execution", "provider_call_authorized", "integrations", "review", "work_intent", "first_episode"}
@@ -312,7 +314,9 @@ def _task_index(root: Path, report: dict, row: dict, *, previous=None) -> dict:
     group = report["projects"][row["project_alias"]]
     declaration = row["declaration"]
     snapshot = f"_INBOX/input_packs/{report['pack_sha256']}"
-    return {"schema_version": BINDING_SCHEMA, "pack_sha256": report["pack_sha256"],
+    return {"schema_version": ATTEMPT_BINDING_SCHEMA if report.get("execution_attempt") else BINDING_SCHEMA,
+            **({"execution_attempt": report["execution_attempt"]} if report.get("execution_attempt") else {}),
+            "pack_sha256": report["pack_sha256"],
             **{k: row[k] for k in ("project_id", "project_instance_id", "unit_id", "task_alias")},
             "scene_root": f"tasks/{row['task_alias']}", "files": copy.deepcopy(group["files"]),
             "original_work_order": f"{snapshot}/{declaration['requirements']}",
@@ -321,6 +325,23 @@ def _task_index(root: Path, report: dict, row: dict, *, previous=None) -> dict:
             "native_index_file": f"{snapshot}/workpack_index.json",
             "adapter_choices": {"fifth_lens": group["declaration"]["fifth_lens"], "integrations": {"nk": "DISABLED", "critics": "DISABLED"}},
             "source_aliases": group["sources"], "previous_binding": previous}
+
+
+def binding_prefix(index: dict) -> str:
+    prefix = f"_INBOX/input_packs/{index['pack_sha256']}"
+    if index.get("schema_version") == ATTEMPT_BINDING_SCHEMA:
+        metadata = index.get("execution_attempt", {})
+        if (set(metadata) != {"job_id", "attempt_id", "declaration_sha256"}
+                or any(str(uuid.UUID(metadata[k])) != metadata[k] for k in ("job_id", "attempt_id"))):
+            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_INVALID", "invalid native attempt namespace")
+        prefix += f"/attempts/{metadata['attempt_id']}"
+    return prefix + f"/tasks/{_alias(index['task_alias'])}"
+
+
+def contract_relative(index: dict) -> str:
+    if index.get("schema_version") == ATTEMPT_BINDING_SCHEMA:
+        return f"contracts/input_pack_attempts/{index['execution_attempt']['attempt_id']}/{_unit_id(index['task_alias'])}.json"
+    return f"contracts/{index['unit_id']}.json"
 
 
 def _draft(root: Path, index: dict) -> dict:
@@ -356,16 +377,36 @@ def validate_binding(root: Path, binding: dict, *, contract=None) -> dict:
     if not isinstance(pack_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", pack_sha):
         raise ContractError("INPUT_PACK_BINDING_INVALID", "native input pack hash is invalid")
     _alias(alias)
-    expected_file = f"_INBOX/input_packs/{pack_sha}/tasks/{alias}/binding.json"
+    if binding.get("schema_version") not in BINDING_SCHEMAS:
+        raise ContractError("INPUT_PACK_BINDING_INVALID", "invalid native binding schema")
+    expected_file = binding_prefix(binding) + "/binding.json"
     if binding.get("index_file") != expected_file:
         raise ContractError("INPUT_PACK_BINDING_INVALID", "native task must select its own binding file")
     raw = _safe_source_file(root, expected_file).read_bytes()
     index = _json(raw)
     identity = projects._registered_project_identity(root)
-    if (_sha(raw) != binding.get("index_sha256") or index.get("schema_version") != BINDING_SCHEMA
+    if (_sha(raw) != binding.get("index_sha256") or index.get("schema_version") != binding["schema_version"]
             or index.get("task_alias") != alias or index.get("pack_sha256") != pack_sha
             or any(index.get(k) != identity[k] for k in ("project_id", "project_instance_id"))):
         raise ContractError("INPUT_PACK_BINDING_HASH_MISMATCH", "native task binding or instance changed")
+    if index["schema_version"] == ATTEMPT_BINDING_SCHEMA:
+        try:
+            from .cnw_pack_app import validate_attempt_metadata
+        except ImportError:
+            from cnw_pack_app import validate_attempt_metadata
+        if binding.get("execution_attempt") != index.get("execution_attempt"):
+            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native contract selects another attempt")
+        checked = validate_attempt_metadata(root, index["execution_attempt"], task_key=alias)
+        if index["unit_id"] != checked["row"]["unit_id"]:
+            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native unit differs from original declaration")
+        group = checked["projects"][checked["source_task"]["project_alias"]]
+        derived_file = binding_prefix(index) + "/derived/task_requirements.v1.json"
+        if (index.get("source_aliases") != group["sources"]
+                or index.get("native_group") != group["declaration"]
+                or index.get("native_declaration") != checked["source_task"]["declaration"]
+                or set(index["files"]) != set(group["files"]) | {derived_file}
+                or any(index["files"].get(name) != digest for name, digest in group["files"].items())):
+            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native source mapping or original material set changed")
     for name, digest in index["files"].items():
         if _sha(_safe_source_file(root, name).read_bytes()) != digest:
             raise ContractError("INPUT_PACK_MATERIAL_CHANGED", "frozen native material differs")
@@ -398,7 +439,8 @@ def validate_binding(root: Path, binding: dict, *, contract=None) -> dict:
             if not expected["first_episode"]:
                 equal(story["previous_episode_ref"], expected["previous_episode_ref"])
                 equal(story["previous_episode_sha256"], index["previous_binding"]["sha256"])
-                validate_previous(root, index["previous_binding"])
+                validate_previous(root, index["previous_binding"], attempt=index.get("execution_attempt"),
+                                  expected_task=index["native_declaration"].get("previous_task"))
         else:
             equal(contract["source"]["source_id"], expected["source_id"])
             equal(contract["source"]["source_revision_id"], expected["source_revision_id"])
@@ -415,20 +457,33 @@ def validate_binding(root: Path, binding: dict, *, contract=None) -> dict:
     return index
 
 
-def validate_previous(root: Path, previous: dict) -> None:
+def validate_previous(root: Path, previous: dict, *, attempt=None, expected_task=None) -> None:
     try:
         from . import cnw_runner as runner, cnw_recovery as recovery
     except ImportError:
         import cnw_runner as runner, cnw_recovery as recovery
+    live = attempt is not None
+    if live:
+        if previous.get("status") != "LIVE_VALIDATED_CARRY_FORWARD" or previous.get("execution_attempt") != attempt:
+            raise ContractError("NATIVE_PACK_SIMULATED_PREDECESSOR_FORBIDDEN", "production requires this attempt's actual Live predecessor")
+        try:
+            from .cnw_pack_app import validate_attempt_metadata
+        except ImportError:
+            from cnw_pack_app import validate_attempt_metadata
+        planned = validate_attempt_metadata(root, attempt, task_key=expected_task)["row"]
+        if previous.get("task_alias") != expected_task or previous.get("run_id") != planned["planned_run_id"]:
+            raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "predecessor belongs to another task or attempt")
     run = root / "runs" / previous["run_id"]
     _assert_no_reparse(run, code="NATIVE_PACK_PREDECESSOR_INVALID")
     state = runner.load_state(run)
     recovery.verify_contract(run, state); recovery.verify_evidence(run, state)
     identity = projects._registered_project_identity(root)
-    if (previous.get("status") != "SIMULATED_CARRY_FORWARD" or previous.get("promoted") is not False
-            or previous["project_instance_id"] != identity["project_instance_id"] or state["mode"] != "offline"
+    if (previous.get("status") != ("LIVE_VALIDATED_CARRY_FORWARD" if live else "SIMULATED_CARRY_FORWARD") or previous.get("promoted") is not False
+            or previous["project_instance_id"] != identity["project_instance_id"] or state["mode"] != ("live" if live else "offline")
             or any(s["status"] not in runner._MATERIALIZED for s in state["stages"].values())):
-        raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "predecessor is not this instance's completed offline candidate")
+        raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "predecessor is not this instance's completed candidate in the selected mode")
+    if live:
+        runner.verify_live(SimpleNamespace(project_root=str(root), run_id=run.name))
     review = json.loads(runner._read_stage_text(run, state, "re_review"))
     body = _safe_source_file(root, previous["path"]).read_bytes()
     candidate = runner._read_stage_text(run, state, "refine").encode("utf-8")
@@ -437,8 +492,8 @@ def validate_previous(root: Path, previous: dict) -> None:
             or state["stages"]["refine"]["artifact"] != previous["source_artifact"]
             or state["stages"]["re_review"]["artifact"]["sha256"] != previous["review_sha256"]
             or not state.get("provider_requests")
-            or any(r.get("mode") != "MOCK_ONLY" or r.get("simulation_status") != "SIMULATED" or r.get("fixture_only") is not True for r in state["provider_requests"])):
-        raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "predecessor body, review or simulated receipts differ")
+            or (not live and any(r.get("mode") != "MOCK_ONLY" or r.get("simulation_status") != "SIMULATED" or r.get("fixture_only") is not True for r in state["provider_requests"]))):
+        raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "predecessor body, review or receipts differ")
     if _json(_safe_source_file(root, previous["record"]).read_bytes()) != previous:
         raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "carry-forward record changed")
 
@@ -448,8 +503,11 @@ def _previous_binding(root: Path, report: dict, row: dict) -> dict | None:
     if not task.get("previous_task"):
         return None
     preceding = next(r for r in report["tasks"] if r["task_alias"] == task["previous_task"])
-    if preceding.get("status") != "MOCK_STORY_EXPORTED":
+    attempt = report.get("execution_attempt")
+    if preceding.get("status") != ("LIVE_STORY_EXPORTED" if attempt else "MOCK_STORY_EXPORTED"):
         return None
+    if attempt and preceding.get("execution_attempt") != attempt:
+        raise ContractError("NATIVE_PACK_PREDECESSOR_INVALID", "predecessor belongs to another attempt")
     try:
         from . import cnw_runner as runner, cnw_recovery as recovery
     except ImportError:
@@ -460,27 +518,34 @@ def _previous_binding(root: Path, report: dict, row: dict) -> dict | None:
     review = json.loads(runner._read_stage_text(run, state, "re_review"))
     if review.get("status") not in {"CLEAN", "NO_CHANGED_TEXT"}:
         return None
+    if attempt:
+        runner.verify_live(SimpleNamespace(project_root=str(root), run_id=run.name))
     relative = f"94_runtime/cnw_candidate_carry_forward/{report['job_id']}/{preceding['task_alias']}"
+    if attempt:
+        relative = f"94_runtime/cnw_candidate_carry_forward/{report['job_id']}/{attempt['attempt_id']}/{preceding['task_alias']}"
     body = runner._read_stage_text(run, state, "refine").encode("utf-8")
-    previous = {"status": "SIMULATED_CARRY_FORWARD", "promoted": False, "job_id": report["job_id"],
+    previous = {"status": "LIVE_VALIDATED_CARRY_FORWARD" if attempt else "SIMULATED_CARRY_FORWARD", "promoted": False,
+                **({"execution_attempt": attempt} if attempt else {}), "job_id": report["job_id"],
                 "project_instance_id": row["project_instance_id"], "task_alias": preceding["task_alias"],
                 "run_id": preceding["planned_run_id"], "contract_sha256": state["contract_sha256"],
                 "source_stage": "refine", "source_artifact": state["stages"]["refine"]["artifact"],
                 "review_sha256": state["stages"]["re_review"]["artifact"]["sha256"],
                 "path": relative + ".md", "record": relative + ".json", "sha256": _sha(body)}
     _immutable(root / previous["path"], body); _immutable(root / previous["record"], _bytes(previous))
-    validate_previous(root, previous)
+    validate_previous(root, previous, attempt=attempt, expected_task=task["previous_task"])
     return previous
 
 
 def materialize_task(report: dict, row: dict, job: Path, *, data_home) -> bool:
     """Append one actual contract; never edit original task/project declarations."""
     root = Path(resolve_project(row["project_root"], data_home=data_home)["project_root"])
+    layout = _task_index(root, report, row)
+    expected_contract = root / contract_relative(layout)
     record = job / "materializations" / (row["task_alias"] + ".json")
     with project_write_lock(root):
         if record.exists():
             material = _json(_safe_source_file(job, record.relative_to(job).as_posix()).read_bytes())
-            contract_path = root / "contracts" / (row["unit_id"] + ".json")
+            contract_path = expected_contract
             if (material.get("task_declaration_sha256") != row["declaration_sha256"]
                     or material.get("project_instance_id") != row["project_instance_id"]
                     or material.get("contract") != str(contract_path) or _sha(_safe_source_file(root, contract_path.relative_to(root).as_posix()).read_bytes()) != material.get("contract_sha256")):
@@ -494,7 +559,7 @@ def materialize_task(report: dict, row: dict, job: Path, *, data_home) -> bool:
                 row["status"] = "WAITING_PREDECESSOR"
                 return False
             index = _task_index(root, report, row, previous=previous)
-            descriptor = f"_INBOX/input_packs/{report['pack_sha256']}/tasks/{row['task_alias']}"
+            descriptor = binding_prefix(index)
             derived_file = descriptor + "/derived/task_requirements.v1.json"
             context = tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root, index),
                 identity={k: row[k] for k in ("project_id", "project_instance_id")}, index=index)
@@ -505,11 +570,13 @@ def materialize_task(report: dict, row: dict, job: Path, *, data_home) -> bool:
             binding_file = descriptor + "/binding.json"
             index_raw = _bytes(index); _immutable(root / binding_file, index_raw)
             draft = _draft(root, index)
-            draft["input_pack"] = {"schema_version": BINDING_SCHEMA, "pack_sha256": report["pack_sha256"],
+            draft["input_pack"] = {"schema_version": index["schema_version"],
+                **({"execution_attempt": report["execution_attempt"]} if report.get("execution_attempt") else {}),
+                "pack_sha256": report["pack_sha256"],
                 "task_alias": row["task_alias"], "index_file": binding_file, "index_sha256": _sha(index_raw)}
-            draft_path = root / "contracts" / (row["unit_id"] + ".draft.json")
+            draft_path = expected_contract.with_suffix(".draft.json")
             _immutable(draft_path, _bytes(draft))
-            contract_path = root / "contracts" / (row["unit_id"] + ".json")
+            contract_path = expected_contract
             if not contract_path.exists():
                 try:
                     projects.write_contract_draft(root, draft_path)
@@ -547,11 +614,17 @@ def prepare_native_task(report: dict, row: dict, job: Path, *, data_home) -> boo
     run = root / "runs" / row["planned_run_id"]
     with project_write_lock(root):
         _assert_no_reparse(run, code="INPUT_PACK_RUN_UNSAFE")
-        contract = _json(_safe_source_file(root, "contracts/" + row["unit_id"] + ".json").read_bytes())
+        contract = _json(_safe_source_file(root, str(Path(row["contract"]).relative_to(root))).read_bytes())
         if not run.exists():
             projects.build_contract_preflight(root, row["contract"], run_id=row["planned_run_id"])
-            runner.produce(SimpleNamespace(mode="offline", unit=contract["unit"]["kind"], work_id=row["unit_id"],
+            runner.produce(SimpleNamespace(mode="live" if report.get("execution_attempt") else "offline", unit=contract["unit"]["kind"], work_id=row["unit_id"],
                 contract=row["contract"], project_root=str(root), run_id=row["planned_run_id"], create_only=True))
+        if report.get("execution_attempt"):
+            try:
+                from .cnw_pack_app import _job_run
+            except ImportError:
+                from cnw_pack_app import _job_run
+            _job_run(run, "live")
         bindings = projects.build_run_contract_preflight(root, row["contract"], run_id=row["planned_run_id"])
         recorded = job / "run_bindings" / (row["task_alias"] + ".json")
         if recorded.exists():
@@ -560,7 +633,7 @@ def prepare_native_task(report: dict, row: dict, job: Path, *, data_home) -> boo
                 raise ContractError("INPUT_PACK_RUN_BINDINGS_CHANGED", "native Run inputs differ from their first preparation")
         else:
             _immutable(recorded, _bytes(bindings))
-        row["run_preparation"] = {"status": "OFFLINE_BINDINGS_VALIDATED", "run_id": row["planned_run_id"], "run_path": str(run),
+        row["run_preparation"] = {"status": "LIVE_BINDINGS_VALIDATED" if report.get("execution_attempt") else "OFFLINE_BINDINGS_VALIDATED", "run_id": row["planned_run_id"], "run_path": str(run),
             "identity_sha256": bindings["identity_sha256"], "record": str(recorded), "record_sha256": _sha(recorded.read_bytes()),
             "provider_call_authorized": False, "controller_attestation_status": "ATTESTATION_PENDING", "live_authorization_status": "NOT_AUTHORIZED"}
         if not row.get("execution"):

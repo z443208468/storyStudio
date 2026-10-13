@@ -1,0 +1,109 @@
+"""Real auxiliary-to-Brief consumer regression, with fictional network/processes."""
+import json
+from pathlib import Path
+from types import SimpleNamespace
+from decimal import Decimal
+from contextlib import nullcontext
+import unittest
+from unittest.mock import Mock, patch
+
+from tests import test_cnw_runner as legacy
+from tests.test_cnw_atom06 import _record_trace
+from tools import cnw_runner as runner, cnw_roles as roles
+from tools.cnw_contract import ContractError
+
+
+class SupportConsumerTests(unittest.TestCase):
+    def test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering(self):
+        owner = legacy.RunnerTests()
+        owner.setUp()
+        self.addCleanup(owner.tearDown)
+        root = owner.base
+        run = root/'runs/FICT_SCENE_A'
+        contract = owner.contract
+        for name in roles.AUTHOR_ROLE_READS['brief'] + roles.AUTHOR_TEMPLATE_READS['brief']:
+            path = root/name.replace('<work_id>', contract['unit']['id'])
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('Fictional source: '+name, encoding='utf-8')
+        cards = '## Scene S1\n### Required beats\n- A neighbor asks for a tool.\n- The keeper answers.\n'
+        runner._persist_stage(run, 'plot', 'artifacts/plot.md', 'ACTUAL_SAME_RUN_PLOT')
+        runner._persist_stage(run, 'scene_cards', 'artifacts/cards.md', cards)
+        build = root/'runtime/patched/NK/test'
+        (build/'node_modules/next/dist/bin').mkdir(parents=True)
+        (build/'node_modules/next/dist/bin/next').write_text('fictional launcher', encoding='utf-8')
+        index = root/'patches/nk/PATCH_INDEX.json'
+        index.parent.mkdir(parents=True)
+        index.write_text('{"runtime_build_id":"test"}', encoding='utf-8')
+        process = Mock(pid=1234)
+        process.poll.return_value = None
+        process.terminate.side_effect = lambda: setattr(process.poll, 'return_value', 0)
+        listener = Mock()
+        listener.getsockname.return_value = ('127.0.0.1', 49123)
+        socket_context = Mock()
+        socket_context.__enter__ = Mock(return_value=listener)
+        socket_context.__exit__ = Mock(return_value=False)
+        guard = SimpleNamespace(provider_slot=nullcontext,
+            command_reserve=Mock(return_value={'status':'RESERVED'}),
+            command_settle=Mock(return_value={'status':'SETTLED'}),
+            load_config=lambda: ({}, {}), estimate=lambda *a: Decimal('0.001'))
+        launch, requests, payloads = {}, [], []
+        reflection = 'MOCK_ONLY: reflect only on the visible offered tool.'
+        def start(command, **kwargs):
+            launch.update(command=command, env=kwargs['env'])
+            return process
+        def http(url, **kwargs):
+            payloads.append(kwargs['json'])
+            Path(launch['env']['STORYSTUDIO_NK_LIVE_CAPTURE']).write_text(json.dumps({
+                'request_id': launch['env']['STORYSTUDIO_NK_LIVE_REQUEST_ID'],
+                'response': {'id':'SIMULATED_NK_RESPONSE', 'model':runner.MODEL,
+                    'usage':{'prompt_tokens':10,'completion_tokens':5},
+                    'choices':[{'finish_reason':'stop','message':{'content':reflection}}]}}), encoding='utf-8')
+            return SimpleNamespace(status_code=200, json=lambda: {'perspectives':[{'reflection':reflection}]})
+        brief = '\n'.join(roles.ROLE_REQUIRED_SECTIONS['brief']) + '\n' + '\n'.join(
+            '- '+beat['beat_id']+': '+beat['goal'] for beat in contract['story']['required_beats'])
+        def transport(_run, **kwargs):
+            requests.append(kwargs['messages'])
+            return brief, {'request_id':'MOCK_ONLY_BRIEF', 'provider_request_id':None}
+        with patch.dict(runner.os.environ, {'DEEPSEEK_API_KEY':'FICTIONAL_TEST_KEY'}), \
+             patch('shutil.which', return_value='node.exe'), \
+             patch('socket.socket', return_value=socket_context), \
+             patch('subprocess.Popen', side_effect=start), \
+             patch.object(runner.httpx, 'get'), patch.object(runner.httpx, 'post', side_effect=http) as post, \
+             patch.object(runner, '_p2_guard', return_value=guard), \
+             patch.object(runner, 'cnw_live_call', side_effect=transport):
+            runner.execute_writing_brief(run)
+            state = runner.load_state(run)
+            saved_brief = (run/state['stages']['writing_brief']['artifact']['path']).read_bytes()
+            supplement = json.loads(requests[0][1]['content'])['support']['nk_perspective_reflection_support_only']
+            self.assertIn(reflection, supplement)
+            self.assertIn('ACTUAL_SAME_RUN_PLOT', requests[0][1]['content'])
+            self.assertEqual(payloads[0]['eventSequence'][0]['description'], 'A neighbor asks for a tool.')
+            runner.execute_writing_brief(run)
+            self.assertEqual(requests[0], requests[1])
+            self.assertEqual(post.call_count, 1)
+            self.assertEqual(guard.command_reserve.call_count, 1)
+            self.assertEqual(guard.command_settle.call_count, 1)
+            hook = state['support_hooks']['nk_pov']
+            reflected = run/hook['artifact']['path']
+            raw = reflected.read_bytes()
+            reflected.write_bytes(raw+b' altered')
+            with self.assertRaisesRegex(ContractError, 'NK_REFLECTION_HASH_MISMATCH'):
+                runner.execute_writing_brief(run)
+            reflected.write_bytes(raw)
+            receipt = next(r for r in state['provider_requests'] if r['role_id']=='nk_pov')
+            response_path = run/receipt['raw_response_path']
+            original_raw = response_path.read_bytes()
+            response_path.write_bytes(b'{}')
+            with self.assertRaisesRegex(ContractError, 'LIVE_RAW_RESPONSE_HASH_MISMATCH'):
+                runner.execute_writing_brief(run)
+            response_path.write_bytes(original_raw)
+            self.assertEqual(len(requests), 2)
+            self.assertEqual(post.call_count, 1)
+            self.assertEqual((run/state['stages']['writing_brief']['artifact']['path']).read_bytes(), saved_brief)
+        _record_trace('actual_nk_brief_cache_consumer', {
+            'execution':'MOCK_ONLY', 'simulation_status':'SIMULATED',
+            'request_payloads':payloads, 'brief_messages':requests,
+            'reflection_bytes_hex':raw.hex(), 'native_raw_bytes_hex':original_raw.hex(),
+            'brief_bytes_hex':saved_brief.hex(), 'native_transports':1,
+            'unchanged_cache_reused':True, 'tampered_reflection_and_raw_rejected':True,
+            'provider_live':'NOT_RUN', 'authorization_function':'UNCHANGED_NOT_MOCKED'})

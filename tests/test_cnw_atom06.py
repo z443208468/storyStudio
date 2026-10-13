@@ -41,6 +41,43 @@ def _artifact_record(run: Path, stage: str, text: str) -> dict:
 
 
 class Atom06Tests(unittest.TestCase):
+    def test_actual_v2_live_gate_precedes_enabled_support_key_and_fee_checks(self):
+        from types import SimpleNamespace
+        from tests.test_cnw_work_intent_v2 import GenericWorkIntentV2Tests
+        from tools import p2_cost_guard
+        fixture = GenericWorkIntentV2Tests()
+        fixture.setUp()
+        self.addCleanup(fixture.tearDown)
+        root = fixture.project('LIVE-GATE-ORDER')
+        source = fixture.import_bytes(root, 'source.md', b'A fictional offer.\nA neighbor accepts.\n')
+        original_get = os.environ.get
+        def environment_get(key, *defaults):
+            if key == 'DEEPSEEK_API_KEY':
+                self.fail('closed V2 gate queried a Provider key')
+            return original_get(key, *defaults)
+        for number, mode in enumerate(('DISABLED', 'ENABLED')):
+            unit_id = f'CLOSED-{number}'
+            fixture.draft(root, source, intent='ADAPT_SOURCE', unit_id=unit_id,
+                start_line=1, end_line=2, integrations={'nk': mode, 'critics': mode})
+            with patch.object(os.environ, 'get', side_effect=environment_get), \
+                 patch.object(cnw_runner, '_assert_support_components_available',
+                     wraps=cnw_runner._assert_support_components_available) as support, \
+                 patch.object(p2_cost_guard, 'provider_slot') as slot, \
+                 patch.object(p2_cost_guard, 'command_reserve') as reserve, \
+                 patch.object(cnw_runner.httpx, 'post') as http:
+                with self.assertRaisesRegex(cnw_contract.ContractError, 'LIVE_AUTHORIZATION_REQUIRED'):
+                    cnw_runner.produce(SimpleNamespace(mode='live', unit='scene', run_id=unit_id,
+                        work_id=unit_id, project_root=str(root), contract=str(root/'contracts'/f'{unit_id}.json'),
+                        create_only=True))
+                support.assert_not_called()
+                slot.assert_not_called()
+                reserve.assert_not_called()
+                http.assert_not_called()
+            self.assertFalse((root/'runs'/unit_id).exists())
+        _record_trace('actual_closed_live_gate_order', {'registered_project': 'LIVE-GATE-ORDER',
+            'modes_tested': ['DISABLED', 'ENABLED'], 'blocking_code': 'LIVE_AUTHORIZATION_REQUIRED',
+            'key_reads': 0, 'slots': 0, 'reservations': 0, 'http_calls': 0, 'runs_created': 0})
+
     def test_two_projects_use_their_own_four_role_sources_and_same_run_plot(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
@@ -242,10 +279,13 @@ class Atom06Tests(unittest.TestCase):
         for failure_kind in ("missing", "timeout", "nonzero"):
             with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
-                run = root / "project" / "runs" / "RUN"
+                # This legacy native-component fixture uses the real supported
+                # runs namespace; a fake registered project is not authorization.
+                run = root / "runs" / "RUN"
                 input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
                 state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
                          "support_hooks": {}}
+                _write(run, "run_state.json", json.dumps(state))
                 contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
                 runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
                 if failure_kind != "missing":

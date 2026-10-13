@@ -1,0 +1,19 @@
+{
+  "schema_version": "atom06_synthetic_request_trace_v1",
+  "execution": "SYNTHETIC_OFFLINE_ONLY",
+  "groups": {
+    "actual_closed_live_gate_order": {
+      "registered_project": "LIVE-GATE-ORDER",
+      "modes_tested": [
+        "DISABLED",
+        "ENABLED"
+      ],
+      "blocking_code": "LIVE_AUTHORIZATION_REQUIRED",
+      "key_reads": 0,
+      "slots": 0,
+      "reservations": 0,
+      "http_calls": 0,
+      "runs_created": 0
+    }
+  }
+}

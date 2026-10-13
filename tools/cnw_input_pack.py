@@ -396,7 +396,7 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
 
 
 def validate_input_pack_binding(project_root: Path, binding: dict, *, contract: dict | None = None) -> dict:
-    if isinstance(binding, dict) and binding.get("schema_version") == "cnw_native_input_binding_v1":
+    if isinstance(binding, dict) and binding.get("schema_version") in {"cnw_native_input_binding_v1", "cnw_native_input_binding_v2"}:
         try:
             from .cnw_native_pack import validate_binding
         except ImportError:
@@ -448,7 +448,7 @@ def _original_order(project_root: Path, index: dict) -> dict:
 
 def validate_input_pack_draft(project_root: Path, draft: dict) -> None:
     index = validate_input_pack_binding(project_root, draft["input_pack"])
-    if index.get("schema_version") == "cnw_native_input_binding_v1":
+    if index.get("schema_version") in {"cnw_native_input_binding_v1", "cnw_native_input_binding_v2"}:
         try:
             from .cnw_native_pack import validate_draft
         except ImportError:

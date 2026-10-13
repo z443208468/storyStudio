@@ -1,0 +1,194 @@
+............................................................. [ 79%]
+................                                                     [100%]
+================================== FAILURES ===================================
+_ Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking (failure_kind='missing') _
+
+self = <tests.test_cnw_atom06.Atom06Tests testMethod=test_enabled_critics_runtime_failures_are_recorded_and_blocking>
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+>                       cnw_runner._critics_hook(run, "plot")
+
+tests\test_cnw_atom06.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:2317: in _critics_hook
+    cost_account = _cost_account(run_dir, hook_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:469: in _cost_account
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:267: in for_run
+    state = json.loads(state_path.read_text(encoding="utf-8-sig"))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\tmp5nnmwpvx\\project\\runs\\RUN\\run_state.json'
+
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: FileNotFoundError
+_ Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking (failure_kind='timeout') _
+
+self = <tests.test_cnw_atom06.Atom06Tests testMethod=test_enabled_critics_runtime_failures_are_recorded_and_blocking>
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+>                       cnw_runner._critics_hook(run, "plot")
+
+tests\test_cnw_atom06.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:2317: in _critics_hook
+    cost_account = _cost_account(run_dir, hook_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:469: in _cost_account
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:267: in for_run
+    state = json.loads(state_path.read_text(encoding="utf-8-sig"))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\tmpjutb4dux\\project\\runs\\RUN\\run_state.json'
+
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: FileNotFoundError
+_ Atom06Tests.test_enabled_critics_runtime_failures_are_recorded_and_blocking (failure_kind='nonzero') _
+
+self = <tests.test_cnw_atom06.Atom06Tests testMethod=test_enabled_critics_runtime_failures_are_recorded_and_blocking>
+
+    def test_enabled_critics_runtime_failures_are_recorded_and_blocking(self):
+        for failure_kind in ("missing", "timeout", "nonzero"):
+            with self.subTest(failure_kind=failure_kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                run = root / "project" / "runs" / "RUN"
+                input_path = _write(run, "artifacts/plot.md", "SYNTHETIC PLOT")
+                state = {"stages": {"plot": {"artifact": {"path": "artifacts/plot.md"}}},
+                         "support_hooks": {}}
+                contract = {"schema_version": "cnw_work_unit_v2", "integrations": {"critics": "ENABLED"}}
+                runtime = root / "runtime/envs/critics-api/Scripts/python.exe"
+                if failure_kind != "missing":
+                    runtime.parent.mkdir(parents=True)
+                    runtime.write_text("fixture executable placeholder", encoding="utf-8")
+                records = []
+                with patch.object(cnw_runner, "ROOT", root), \
+                     patch.object(cnw_runner, "_contract_for", return_value=contract), \
+                     patch.object(cnw_runner, "load_state", return_value=state), \
+                     patch.object(cnw_runner, "_record_hook", side_effect=lambda _run, _hook, evidence: records.append(evidence)), \
+                     patch("subprocess.run", side_effect=(TimeoutError("fixture timeout") if failure_kind == "timeout" else None)) as process:
+                    if failure_kind == "nonzero":
+                        process.side_effect = None
+                        process.return_value = type("Result", (), {"returncode": 7, "stderr": "synthetic failure"})()
+                    expected = "ENABLED_BUT_UNAVAILABLE" if failure_kind == "missing" else "CRITICS_INVOCATION_FAILED"
+                    with self.assertRaisesRegex(cnw_contract.ContractError, expected):
+>                       cnw_runner._critics_hook(run, "plot")
+
+tests\test_cnw_atom06.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_runner.py:2317: in _critics_hook
+    cost_account = _cost_account(run_dir, hook_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:469: in _cost_account
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:267: in for_run
+    state = json.loads(state_path.read_text(encoding="utf-8-sig"))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\tmp4cxismy_\\project\\runs\\RUN\\run_state.json'
+
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: FileNotFoundError
+=========================== short test summary info ===========================
+SUBFAILED(failure_kind='missing') tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking
+SUBFAILED(failure_kind='timeout') tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking
+SUBFAILED(failure_kind='nonzero') tests/test_cnw_atom06.py::Atom06Tests::test_enabled_critics_runtime_failures_are_recorded_and_blocking
+3 failed, 77 passed, 12 subtests passed in 81.88s (0:01:21)
