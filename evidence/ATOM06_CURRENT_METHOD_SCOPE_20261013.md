@@ -110,6 +110,9 @@ manifest separately states their worktree SHA and Git's declared LF-normalized
 SHA. Original checks keep their byte identities. Python's source loader uses
 universal newlines; this declared checkout normalization changes neither the
 tested code nor the inspected method fingerprint.
+Source archives carry a `.source` suffix so default pytest discovery cannot
+collect duplicate tests from evidence. Their bytes and SHA remain unchanged;
+the initial local preparation and this packaging correction remain in history.
 
 | Record | Actual result and effect |
 |---|---|
