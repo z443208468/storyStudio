@@ -4,7 +4,7 @@ StoryStudio is being separated into a reusable writing application that can host
 
 ## Active plan and governance
 
-- Active plan: [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](plans/MASTER_PLAN_GENERIC_APP_R5.md), original approved source SHA256 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`; current owner-amended file SHA256 `757F8D7CF7458697B5CC97AA4764583512AAB45E9CC04F78B3B7703E8F5BF773`.
+- Active plan: [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](plans/MASTER_PLAN_GENERIC_APP_R5.md), original approved source SHA256 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`; current owner-amended file SHA256 `5859C39E600B0D3B07D3884A9E136B7DCBCDF281C56F888202BFB43363D6A6E0`.
 - Read [`AGENTS.md`](AGENTS.md), [`CODEX_START.md`](CODEX_START.md), and [`docs/governance/GOVERNANCE.md`](docs/governance/GOVERNANCE.md) before changing the project.
 - The R5 plan advances one Atom at a time, with an independent read-only Controller review for each candidate. Historical P2/P3/J19 plans and records remain historical and do not describe the current product goal.
 
