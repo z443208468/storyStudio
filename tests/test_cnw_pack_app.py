@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import copy
+import contextlib
 import hashlib
 import json
 import os
 import shutil
 import subprocess
+import sys
 import socketserver
 import threading
 import unittest
@@ -166,7 +168,28 @@ class PackApplicationTests(unittest.TestCase):
                 # Only the network transfer is replaced; native Git still
                 # persists the exact fictional objects and the app verifies them.
                 self.assertEqual(args[-2], "https://github.com/synthetic/source.git")
-                return subprocess.run(["git", "-C", str(cwd), "fetch", "--no-tags", "--depth=1", str(self.fixture.repo), args[-1]], capture_output=True)
+                source = self.fixture.repo.resolve(strict=True)
+                destination = Path(cwd).resolve(strict=True)
+                hooks = self.fixture.base.resolve(strict=True) / "transfer-empty-hooks"
+                hooks.mkdir(exist_ok=True)
+                command = [shutil.which("git"), "-c", "protocol.allow=never", "-c", "protocol.file.allow=always",
+                           "-c", "core.hooksPath=" + str(hooks), "-c", "submodule.recurse=false",
+                           "-c", "fetch.recurseSubmodules=false", "-C", str(destination), "fetch",
+                           "--no-tags", "--depth=1", "--no-write-fetch-head", "--no-recurse-submodules",
+                           str(source), args[-1]]
+                system_keys = {"PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC", "TEMP", "TMP",
+                               "USERPROFILE", "APPDATA", "LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)"}
+                env = {k: v for k, v in os.environ.items() if k.upper() in system_keys}
+                env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+                           GIT_NO_LAZY_FETCH="1", GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never")
+                # Optional external verification guard. No production code
+                # imports it or obtains Provider permission from this scope.
+                guard = sys.modules.get("sitecustomize")
+                permit = getattr(guard, "fixture_git_transfer", None)
+                scope = (permit(self.fixture.temp, source, destination, args[-1], command, env)
+                         if permit else contextlib.nullcontext())
+                with scope:
+                    return subprocess.run(command, env=env, capture_output=True, timeout=60)
             return actual_git(args, cwd=cwd)
         with patch.object(app, "_git", side_effect=local_transfer):
             cached = app.source_repository(home, authority, local=None, offline=False)

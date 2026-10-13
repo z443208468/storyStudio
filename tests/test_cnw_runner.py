@@ -760,14 +760,17 @@ class RunnerTests(unittest.TestCase):
 
     def test_semantic_import_accepts_registered_datahome_root(self):
         from tools import cnw_import_workflow, cnw_project
-        root = self.base / "data-home" / "projects" / "P1"
-        root.mkdir(parents=True)
-        identity = {"project_id": "P1", "project_instance_id": "11111111-1111-4111-8111-111111111111"}
+        from tools.project_paths import setup_data_home, create_project
+        home = self.base / "data-home"
+        setup_data_home(home, pointer_path=self.base / "route-pointer.json")
+        registered = create_project(project_id="P1", data_home=home)
+        root = Path(registered["project_root"])
         with patch.object(cnw_import_workflow, "ROOT", self.base), \
-                patch.object(cnw_project, "_registered_project_identity", return_value=identity), \
+                patch.object(cnw_project, "_registered_project_identity", wraps=cnw_project._registered_project_identity) as identity_reader, \
                 patch.object(cnw_import_workflow, "_run_import", return_value={"status": "FIXTURE_IMPORT"}) as importer:
             result = cnw_import_workflow.run_import(root)
         self.assertEqual(result["status"], "FIXTURE_IMPORT")
+        identity_reader.assert_called_once_with(root.resolve(strict=True))
         importer.assert_called_once()
 
     def test_stage_inputs_reject_absolute_escape_and_symlink(self):

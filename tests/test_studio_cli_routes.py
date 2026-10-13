@@ -246,10 +246,13 @@ class StudioCliRouteTests(unittest.TestCase):
             self.assertNotIn("Fictional source fixture", str(result))
 
     def test_maintenance_and_fixture_sprint_accept_only_resolved_generic_identity(self):
-        identity = {"project_id": "FIXTURE", "project_instance_id": "00000000-0000-0000-0000-000000000001"}
+        from tools.project_paths import setup_data_home, create_project
         with tempfile.TemporaryDirectory(prefix="studio-registered-route-") as temporary:
-            root = Path(temporary)
-            with patch.object(cnw_project, "_registered_project_identity", return_value=identity) as resolve_identity:
+            base = Path(temporary)
+            home = base / "data"
+            setup_data_home(home, pointer_path=base / "pointer.json")
+            root = Path(create_project(project_id="FIXTURE", data_home=home)["project_root"])
+            with patch.object(cnw_project, "_registered_project_identity", wraps=cnw_project._registered_project_identity) as resolve_identity:
                 with self.assertRaisesRegex(cnw_project.ContractError, "MAINTENANCE_OPERATION_INVALID"):
                     cnw_maintenance.run_maintenance(root, "not-a-route")
                 resolved_root = root.resolve(strict=True)
