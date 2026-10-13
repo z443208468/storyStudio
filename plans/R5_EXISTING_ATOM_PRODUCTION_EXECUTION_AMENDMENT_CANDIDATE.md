@@ -1,0 +1,69 @@
+# R5 既有 Atom 生产执行能力修订候选
+
+**状态：非活动计划，待独立只读 Controller 对精确候选审查。** 唯一活动计划仍是 `plans/MASTER_PLAN_GENERIC_APP_R5.md`。本文件只有在项目所有者按治理接受且 Controller 核准后，才可用于更新活动计划；当前不授权代码实施、Provider 请求、费用预留、TS 恢复、迁移、cutover 或默认入口切换。
+
+## 目标与依据
+
+最终用户验收要求是：把写作输入包交给应用后，应用完整保留包中的要求和素材，自行管理合同、项目/Run 身份及哈希，将每项材料送入正确岗位，按原 CNW 阶段实际生产、审查并导出故事。用户不应手工编制内部合同、Run ID、阶段文件或身份 SHA。
+
+本候选基于：
+
+- 活动 R5 SHA256 `AE5A1959EEAB75AD6A8F41460C38BF9678284C1D51A8D63B25CE37F7CB4F5183`；
+- ATOM-09 精确离线验收并推送的 `8e5f787f0c863d9c507c6120d2fa354e613dd4e3` / Tree `82b5b27c6c5bbfc62de0fa200363c5e4f2aaeef3`；
+- 生产依赖范围文档 `docs/governance/PRODUCTION_EXECUTION_SCOPE_CANDIDATE_R5.md`，已获 `ACCEPT_DOCUMENT_ONLY` / `ACCEPT_AS_PROPOSAL_ONLY`，并推送于其后的 `ca2ffde739c19c0190c7e026edc99d467b223f4d`。
+
+ATOM-09 已证明包在虚构项目中通过真实 CNW 调度、审查和模拟导出；尚未证明可用通用生产路径。当前 V2 Provider 路由、包执行 Live 路由和新项目费用上下文存在源码缺口。这不是只差一个 API Key，也不是离线测试的验收范围可以覆盖的事实。
+
+## 拟对活动计划作出的精确修订
+
+不新增 Atom，不改变 Atom 顺序，不删改历史 verdict。Controller 请评估以下插入文本是否可并入现有 ATOM-04/05/06/07，并据此调整 ATOM-10 的完成门。
+
+### 插入 ATOM-04（现有包入口）
+
+输入包生产执行必须由现有受支持的包命令启动。命令明确区分来源下载策略与模型执行意图。用户提供输入包、已选 DataHome/项目上下文及必要的单独授权；应用自行建立和维护项目实例、合同、Run、来源选择、阶段身份和输出。不得要求用户手填内部身份字段或手工逐阶段运行。开始前完整验证包清单、必需材料、任务与工作意图；缺项、冲突或无法映射时在 Provider/费用边界之前报告准确问题，不得静默丢弃用户要求。
+
+### 插入 ATOM-05（新项目费用上下文）
+
+新通用项目必须在每次 Provider 操作中显式携带其项目实例绑定的费用上下文，并通过既有单一账本/锁和现有 accounting primitives 记录；不得为各项目复制多个可写全局账本，也不得通过修改模块全局 `LEDGER/config` 在请求间切换项目。费用上下文验证失败、项目错配或上下文缺失时，在 reserve/send 前拒绝。项目间费用归属隔离不得增加或复制既有共同 Provider 并发上限。所有既有账本、UNKNOWN/PENDING 行和历史身份保持原字节。
+
+### 插入 ATOM-06（生产代码复用原 CNW 方法）
+
+包生产请求必须经同一已验收的正式 `execute_checked`/阶段消费者和导出路径执行，不得另造简化生成器。保留 M01–M16 的职责、允许读集、阶段顺序、双层 Lint、五 Lens、每 Finding 三个独立反证、2/3 门槛、Completeness→Refine→受影响新稿 Re-review、Canon/正式晋升与 Sprint 约束。离线/模拟 receipts 必须标 `MOCK_ONLY/SIMULATED`，不能作为 Live 回执、正式前章、用户创意接受或晋升凭据。
+
+### 插入 ATOM-07（授权与签收）
+
+生产调用必须分别验证：
+
+1. 实际项目/实例、Run、合同、来源、Policy、Workflow 与可信独立审查签收；
+2. 对本操作有效的、由用户明确授予的 Live/费用权限、Provider 配置、额度/期限与费用上下文。
+
+两者不能相互替代。保留可信预检 `provider_call_authorized=false` 的含义，不得改该字段放行。测试私钥、普通 JSON、自报 ACCEPT、工程 Controller ACCEPT、CLI `--live` 或拥有 Key 本身均不构成用户 Live/费用授权。尚无合格生产信任来源或 grant 时系统 fail closed，并报告缺少的授权项。不得借用旧 J19 的固定政策/签收解锁新项目。
+
+### 修订 ATOM-10 完成门（全目标验收）
+
+ATOM-10 不得仅凭 `GENERIC_OFFLINE_FUNCTIONAL_VERIFIED` 宣称达到用户最终目标。必须分开验证：
+
+- **工程生产路径：**输入包经单一正式入口，真实应用代码完成身份/权限/费用验证、项目隔离、11 阶段 CNW 调度、审稿反馈消费、恢复及可读导出；上述代码和负例经独立 Controller 对精确 C/T 接受。生产调用测试不允许把模拟结果当 Live。
+- **真实故事能力：**须先有用户针对所选项目/输入包、Provider 和费用上限的单独明确授权，再由实际 Provider 执行所需阶段，核对真实收据、费用记录、全部阶段消费者及导出故事；只有在用户阅读后才记录创意接受。没有这项单独授权时状态为 `GENERIC_LIVE_PRODUCTION=NOT_RUN`，整体目标保持未完成，不得虚报，但可报告代码路径验收状态。
+
+此前没有 Provider 权限、真实收据或 Live 私钥，不得倒推为离线工程失败；同样，离线 ACCEPT 不得解释为真实作品已产出或 Live 已可用。TS 恢复、旧项目迁移、DataHome cutover 仍是独立危险门，不因本修订解锁；`CUTOVER_BLOCKED=true` 继续有效，直至原门独立通过。
+
+## 拟议施工与验收顺序
+
+1. Controller 对本修订候选明确判定它是否适合成为活动 R5 的有限补充、要更新的活动入口，以及是否保留 04→05→06→07→08→09→10 的正确依赖顺序。
+2. 只有活动计划修订获得明确接受、被应用到唯一活动计划并重新固定 SHA 后，才形成最小代码候选；不把本候选文档本身解释为实施许可。
+3. 生产代码候选限于既有入口/真实调用链/授权边界/费用上下文消费者及其自包含虚构测试；第三方 CNW 角色与阶段不重写。候选必须覆盖两项目费用隔离、授权错配/过期/重放、模拟结果拒绝 Live、恢复重新授权和所有拒绝在 reserve/send 前发生。
+4. Controller 对精确代码 C/T 复核后，只允许按该候选的明确 verdict 正常推送。Live/费用实跑仍等待用户单独授权；真实 TS、历史账本、旧项目和 cutover 继续保持独立状态。
+
+## 请求 Controller 作出的裁决
+
+请基于实际 R5 原文、所有者最终目标、ATOM-09 精确 ACCEPT、已接受的生产依赖范围文档及当前实现，对本提案逐项给出：
+
+- `PLAN_AMENDMENT_VERDICT`：提案是否准确补足最终产品目标，且不降低 M01–M16、历史兼容或原工作流保护；
+- `ATOM_DEPENDENCY_VERDICT`：应在哪些现有 Atom 中实施，顺序是否正确，是否缺少真实调用点/必要证据；
+- `OWNER_AUTHORIZATION_STATUS`：项目所有者既有目标是否足以接受该有限计划补充，若不足请指出需要的具体授权，不要将其误读为 Live/费用授权；
+- `IMPLEMENTATION_SCOPE_VERDICT`：是否足以授权形成代码候选；若是，列明范围与保留门禁；若否，说明最小缺项；
+- `LIVE_FEE_TS_CUTOVER_STATUS`：分别确认仍未获授权的操作边界；
+- `GIT_GOVERNANCE_VERDICT`：对包含本提案的精确 C/T 是否授权正常推送。
+
+本候选不改变当前事实：`ATOM07_OFFLINE_ENGINE_ACCEPT` 仅限原范围；可信 W10 签收仍 Pending；TS Live/恢复未授权；`CUTOVER_BLOCKED=true`；ATOM-09 只接受离线模拟；通用生产代码未完成；用户对真实故事的创意接受待阅读。
