@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -14,12 +14,14 @@ from tools.cnw_contract import ContractError
 
 
 class RoleInputTests(unittest.TestCase):
-    def _native_nk_case(self, mode):
+    def _native_nk_case(self, mode, *, account=None):
         import socket
+        import shutil
+        import subprocess
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            run = root / "run"
-            run.mkdir()
+            run = account.run if account else root / "run"
+            run.mkdir(exist_ok=True)
             build = root / "runtime/patched/NK/mock"
             (build / "node_modules/next/dist/bin").mkdir(parents=True)
             (build / "node_modules/next/dist/bin/next").write_text("MOCK", encoding="utf-8")
@@ -32,11 +34,23 @@ class RoleInputTests(unittest.TestCase):
                 process.poll.return_value = 0
             process.terminate.side_effect = stop
             process.kill.side_effect = stop
+            slot_entries = []
+            @contextmanager
+            def slot():
+                slot_entries.append("entered")
+                yield
             guard = SimpleNamespace(command_reserve=Mock(return_value={"status": "RESERVED"}),
                 command_settle=Mock(return_value={"status": "SETTLED"}),
+                provider_slot=slot,
                 load_config=lambda: ({}, {}), estimate=lambda *args: Decimal("0.001"))
             launch = {}
+            original_popen = subprocess.Popen
+            original_which = shutil.which
+            def which(command, *args, **kwargs):
+                return "node.exe" if command == "node" else original_which(command, *args, **kwargs)
             def start(command, **kwargs):
+                if command[0] != "node.exe":
+                    return original_popen(command, **kwargs)
                 launch.update(command=command, env=kwargs["env"])
                 return process
             def request(url, **kwargs):
@@ -53,20 +67,31 @@ class RoleInputTests(unittest.TestCase):
             context = Mock()
             context.__enter__ = Mock(return_value=listener)
             context.__exit__ = Mock(return_value=False)
-            with patch.object(runner, "ROOT", root), patch.object(runner, "_p2_guard", return_value=guard), \
+            active_guard = account or guard
+            def invoke_component():
+                with active_guard.provider_slot():
+                    return runner._invoke_nk_service_in_slot(run, {"MOCK": "fictional source"}, active_guard)
+            with patch.object(runner, "ROOT", root), \
                     patch.dict(runner.os.environ, {"DEEPSEEK_API_KEY": "MOCK_SECRET"}), \
-                    patch("shutil.which", return_value="node.exe"), patch("socket.socket", return_value=context), \
+                    patch("shutil.which", side_effect=which), patch("socket.socket", return_value=context), \
                     patch("subprocess.Popen", side_effect=start), \
                     patch.object(runner.httpx, "get") as health, patch.object(runner.httpx, "post", side_effect=request) as post:
                 if mode == "success":
-                    result = runner._invoke_nk_service(run, {"MOCK": "private source"})
+                    result = invoke_component()
                     self.assertEqual(runner._receipt_content(run, result["receipt"]), "MOCK reflection")
-                    self.assertEqual(guard.command_settle.call_args.args[0].input_tokens, 10)
+                    if account:
+                        result["receipt"].update(mode="MOCK_ONLY", simulation_status="SIMULATED", fixture_only=True)
+                        account.verify_receipt(result["receipt"])
+                    else:
+                        self.assertEqual(guard.command_settle.call_args.args[0].input_tokens, 10)
                 else:
                     with self.assertRaisesRegex(ContractError, "NK_SERVER_EXITED" if mode == "exited" else "NK_PROVIDER_CAPTURE_MISSING_OR_INVALID"):
-                        runner._invoke_nk_service(run, {"MOCK": "private source"})
-                    self.assertIsNone(guard.command_settle.call_args.args[0].input_tokens)
-                guard.command_settle.assert_called_once()
+                        invoke_component()
+                    if not account:
+                        self.assertIsNone(guard.command_settle.call_args.args[0].input_tokens)
+                if not account:
+                    guard.command_settle.assert_called_once()
+                    self.assertEqual(slot_entries, ["entered"])
                 self.assertEqual(launch["command"], ["node.exe", str(build / "node_modules/next/dist/bin/next"),
                     "start", "--hostname", "127.0.0.1", "--port", "49123"])
                 if mode == "exited":
@@ -77,9 +102,61 @@ class RoleInputTests(unittest.TestCase):
                 manifest = json.loads(next(run.glob("nk-service*.json")).read_text())
                 self.assertEqual(manifest["status"], "STOPPED")
                 self.assertNotIn("MOCK_SECRET", json.dumps(manifest))
+            return result if mode == "success" else None
 
     def test_native_nk_owns_port_process_and_receipt(self):
         self._native_nk_case("success")
+
+    def test_registered_nk_uses_run_account_and_common_provider_slot(self):
+        from tests.test_cnw_run_bindings import ExistingRunBindingTests
+        from tests.test_p2_cost_guard import CampaignLimitTests
+        from tools import cost_guard, p2_cost_guard
+        fixtures = [ExistingRunBindingTests(), ExistingRunBindingTests()]
+        for fixture in fixtures:
+            fixture.setUp()
+            self.addCleanup(fixture.doCleanups)
+        fees = CampaignLimitTests()
+        fees.setUp()
+        self.addCleanup(fees.doCleanups)
+        with p2_cost_guard.locked_ledger():
+            pass
+        accounts = [cost_guard.for_run(fixture.run, stage="support_hook", model=runner.MODEL)
+                    for fixture in fixtures]
+        states = [(fixture.run / "run_state.json").read_bytes() for fixture in fixtures]
+        observed = []
+        original_slot = p2_cost_guard.provider_slot
+        @contextmanager
+        def shared_slot():
+            with original_slot():
+                observed.append(str(p2_cost_guard.LEDGER.parent / "provider-slots"))
+                yield
+        with patch.object(p2_cost_guard, "provider_slot", new=shared_slot):
+            native_result = self._native_nk_case("success", account=accounts[0])
+            self._native_nk_case("missing", account=accounts[1])
+        rows = p2_cost_guard.read_ledger_snapshot()["requests"]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["status"], "SETTLED")
+        self.assertEqual(rows[1]["status"], "UNKNOWN_NOT_ZERO")
+        for account, row in zip(accounts, rows):
+            self.assertEqual(row["cost_context"], account.context.record())
+        self.assertNotEqual(rows[0]["cost_context"]["project_instance_id"], rows[1]["cost_context"]["project_instance_id"])
+        self.assertEqual(observed, [str(fees.ledger.parent / "provider-slots")] * 2)
+        original_rows = json.loads(json.dumps(rows))
+        with patch.object(runner, "_cost_account", side_effect=AssertionError("No account before admission")), \
+             patch.object(runner, "_invoke_nk_service_in_slot", side_effect=AssertionError("No native execution")):
+            with self.assertRaisesRegex(ContractError, "OFFLINE_PROVIDER_FORBIDDEN"):
+                runner._invoke_nk_service(fixtures[0].run, {"MOCK": "fictional source"})
+        self.assertEqual(p2_cost_guard.read_ledger_snapshot()["requests"], original_rows)
+        for fixture, state in zip(fixtures, states):
+            self.assertEqual((fixture.run / "run_state.json").read_bytes(), state)
+        from tests.test_cnw_work_intent_v2 import _record_atom07_evidence
+        _record_atom07_evidence("atom05_nk_account_effect", {
+            "execution": "MOCK_ONLY", "ledger": rows, "receipt": native_result["receipt"],
+            "actual_native_response": native_result["response"], "slot_directories": observed,
+            "files": [{"label": key, "bytes_hex": (accounts[0].run/native_result["receipt"][key]).read_bytes().hex(),
+                "sha256": runner.sha((accounts[0].run/native_result["receipt"][key]).read_bytes())}
+                for key in ("request_path", "raw_response_path")],
+            "production_admission_rejected": True, "parent_states_unchanged": True})
 
     def test_native_nk_does_not_use_health_after_child_exits(self):
         self._native_nk_case("exited")
@@ -128,7 +205,8 @@ class RoleInputTests(unittest.TestCase):
                 "choices": [{"finish_reason": "stop", "message": {"content": "MOCK brief"}}],
                 "usage": {"prompt_tokens": 10, "completion_tokens": 10}}
             messages = [{"role": "user", "content": "MOCK private sources"}]
-            with patch.object(runner, "_p2_guard", return_value=guard), \
+            with patch.object(runner, "_cost_account", return_value=None), \
+                    patch.object(runner, "_p2_guard", return_value=guard), \
                     patch.dict(runner.os.environ, {"DEEPSEEK_API_KEY": "MOCK_ONLY_NOT_A_REAL_KEY_12345"}), \
                     patch.object(runner.httpx, "post", return_value=response) as post:
                 first = runner.cnw_live_call(run, stage="writing_brief", role_id="brief_agent", messages=messages, output_cap=100)

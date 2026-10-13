@@ -1,0 +1,49 @@
+{
+  "label": "first_roots",
+  "targets": [
+    "tests/test_cnw_generation.py::CnwGenerationTests::test_promotion_requires_external_hash_bound_review_and_archives_old_copy",
+    "tests/test_cnw_role_inputs.py::RoleInputTests::test_registered_nk_uses_run_account_and_common_provider_slot",
+    "tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_native_component_uses_real_shared_accounts_and_preserves_unknown",
+    "tests/test_cnw_adapters.py::AdapterTests::test_native_result_rechecks_registered_parent_run_cost_identity"
+  ],
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-c",
+    "import sys; sys.path.insert(0,'D:\\\\CangqiStudio\\\\StoryStudio'); \ndef deny_network(event,args):\n if event in ('socket.connect','socket.sendto','socket.getaddrinfo'): raise RuntimeError('OFFLINE_TEST_NETWORK_BLOCKED')\nsys.addaudithook(deny_network)\nimport pytest\nraise SystemExit(pytest.main(['tests/test_cnw_generation.py::CnwGenerationTests::test_promotion_requires_external_hash_bound_review_and_archives_old_copy', 'tests/test_cnw_role_inputs.py::RoleInputTests::test_registered_nk_uses_run_account_and_common_provider_slot', 'tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_native_component_uses_real_shared_accounts_and_preserves_unknown', 'tests/test_cnw_adapters.py::AdapterTests::test_native_result_rechecks_registered_parent_run_cost_identity', '-q']))\n"
+  ],
+  "python": "C:\\Program Files\\Python313\\python.exe",
+  "exit_code": 1,
+  "raw_sha256": "bcddb13d3d9ab255b4d0772491c714c6ccb284e672854fb8dafa0d0d2d9701de",
+  "source_sha256_before": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "b74f68a91b4c22ef42723e5f74c4ee6ef6f079f0f624c265104e6d6accff252d",
+    "tools/cnw_critics_adapter.py": "1d9f094c4d89d06c70482221078476f28ee54005917e8c2bbce47605edc2d6d1",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "607e9eac5e2c3373764792dbe9250dff311c86b692f7562c1eb4cab7eefebae6",
+    "tests/test_cnw_role_inputs.py": "1ae4a1d96df26b5da9f4968e467c8c784d2f0b64b5f685cb0b95de69575eae54",
+    "tests/test_cnw_adapters.py": "476a67fa8a62d470ec51645a0ce41b449596d2c4c2a70ace60e7f3902ee79469",
+    "tests/test_critics_bridge_datahome.py": "a703df8ea9ead9ceed04d9dbe1ddc6597ea6e1f091988c05161da443858950d6",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b"
+  },
+  "source_sha256_after": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "b74f68a91b4c22ef42723e5f74c4ee6ef6f079f0f624c265104e6d6accff252d",
+    "tools/cnw_critics_adapter.py": "1d9f094c4d89d06c70482221078476f28ee54005917e8c2bbce47605edc2d6d1",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "607e9eac5e2c3373764792dbe9250dff311c86b692f7562c1eb4cab7eefebae6",
+    "tests/test_cnw_role_inputs.py": "1ae4a1d96df26b5da9f4968e467c8c784d2f0b64b5f685cb0b95de69575eae54",
+    "tests/test_cnw_adapters.py": "476a67fa8a62d470ec51645a0ce41b449596d2c4c2a70ace60e7f3902ee79469",
+    "tests/test_critics_bridge_datahome.py": "a703df8ea9ead9ceed04d9dbe1ddc6597ea6e1f091988c05161da443858950d6",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b"
+  },
+  "source_unchanged": true,
+  "network_audit": "DENY_socket.connect_socket.sendto_socket.getaddrinfo",
+  "provider_credentials_removed": true,
+  "scope": "ATOM05_COMPONENT_EFFECTS_ONLY_MOCK_ONLY_NOT_LIVE"
+}

@@ -3,3 +3,6 @@
 config/policy_snapshots/objects/sha256/*.blob binary
 # This historical active configuration is frozen with its original CRLF bytes.
 config/production.example.json -text whitespace=cr-at-eol
+# Preserve original Atom-05 execution/effect record bytes, including Windows CRLF.
+evidence/atom05_closure_20261013/** -text whitespace=cr-at-eol
+evidence/atom05_closure_20261013/*.raw.txt binary

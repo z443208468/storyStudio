@@ -9,8 +9,10 @@ import re
 
 try:
     from .cnw_contract import ContractError, assert_output_within_root
+    from . import critics_bridge
 except ImportError:  # direct script execution
     from cnw_contract import ContractError, assert_output_within_root
+    import critics_bridge
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "tools" / "p2_06_critics_run.py"
@@ -60,11 +62,21 @@ def verify_plan_receipt(receipt: dict, *, action: str, input_path: str | Path, o
     return {"action": action, "input_sha256": expected, "output_sha256": actual, "build": expected_build, "status": "FOUND_AND_HASH_VERIFIED"}
 
 
-def read_native_result(run_name: str, *, action: str, input_path: Path, critique_path: Path | None = None) -> dict:
+def read_native_result(run_name: str | Path, *, action: str, input_path: Path,
+                       critique_path: Path | None = None, parent_run_dir: Path | None = None,
+                       parent_stage: str | None = None) -> dict:
     """Read the native result and bind it to its original receipt and responses."""
-    if Path(run_name).name != run_name or run_name in ("", ".", ".."):
-        raise ContractError("CRITICS_RUN_ID_INVALID", run_name)
-    directory = assert_output_within_root(ROOT / "runs", run_name)
+    supplied = Path(run_name)
+    if supplied.is_absolute():
+        directory = critics_bridge.project_path(str(supplied), directory=True)
+        run_id = directory.name
+        if parent_run_dir is None and critics_bridge._registered_project_for_path(directory):
+            raise ContractError("CRITICS_PARENT_RUN_BINDING_REQUIRED", run_id)
+    else:
+        if Path(run_name).name != run_name or run_name in ("", ".", ".."):
+            raise ContractError("CRITICS_RUN_ID_INVALID", str(run_name))
+        run_id = str(run_name)
+        directory = assert_output_within_root(ROOT / "runs", run_id)
     names = {"plan-critique": "critique.json", "text-refine": "text_refinement.json", "plan-revise": "modified_plot.md"}
     if action not in names:
         raise ContractError("CRITICS_ACTION_INVALID", action)
@@ -72,6 +84,46 @@ def read_native_result(run_name: str, *, action: str, input_path: Path, critique
     receipt_path = assert_output_within_root(directory, "run_receipt.json")
     calls_path = assert_output_within_root(directory, "provider-calls.json")
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    if parent_run_dir is not None:
+        parent = critics_bridge.project_path(str(parent_run_dir), directory=True)
+        owner = critics_bridge._registered_project_for_path(parent)
+        child_owner = critics_bridge._registered_project_for_path(directory)
+        if not owner or owner != child_owner or parent.parent != directory.parent or not parent_stage:
+            raise ContractError("CRITICS_PARENT_RUN_BINDING_INVALID", str(parent))
+        if not input_path.resolve(strict=True).is_relative_to(parent):
+            raise ContractError("CRITICS_INPUT_PARENT_RUN_MISMATCH", str(input_path))
+        try:
+            from .cost_guard import for_run, RunAccount
+            from . import p2_cost_guard
+        except ImportError:
+            from cost_guard import for_run, RunAccount
+            import p2_cost_guard
+        account = for_run(parent, stage=parent_stage, model="deepseek-flash")
+        expected_context = account.context.record() if isinstance(account, RunAccount) else None
+        binding = receipt.get("cost_binding")
+        if (not expected_context or not isinstance(binding, dict)
+                or binding.get("project_id") != expected_context["project_id"]
+                or binding.get("project_instance_id") != expected_context["project_instance_id"]
+                or binding.get("parent_run_id") != parent.name
+                or binding.get("parent_run_path") != str(parent)
+                or binding.get("stage") != parent_stage
+                or binding.get("cost_context") != expected_context):
+            raise ContractError("CRITICS_COST_CONTEXT_MISMATCH", run_id)
+        calls_for_binding = json.loads(calls_path.read_text(encoding="utf-8")) if calls_path.is_file() else []
+        ledger_rows = [row for row in p2_cost_guard.read_ledger_snapshot()["requests"]
+                       if row.get("cost_context") == expected_context]
+        for call in calls_for_binding:
+            settlement = call.get("ledger_settlement") if isinstance(call, dict) else None
+            if (not isinstance(settlement, dict)
+                    or call.get("cost_context") != expected_context
+                    or settlement.get("cost_context") != expected_context):
+                raise ContractError("CRITICS_COST_RECEIPT_MISMATCH", run_id)
+            account.verify_receipt({"request_id": call.get("local_request_id"),
+                "provider_request_id": call.get("response", {}).get("id"),
+                "model": call.get("response", {}).get("model"), "ledger_settlement": settlement},
+                ledger={"requests": ledger_rows})
+    elif receipt.get("cost_binding") is not None:
+        raise ContractError("CRITICS_PARENT_RUN_BINDING_REQUIRED", run_id)
     verified = verify_plan_receipt(receipt, action=action, input_path=input_path, output_path=output)
     payload = output.read_text(encoding="utf-8") if action == "plan-revise" else json.loads(output.read_text(encoding="utf-8"))
     keys = ("structure", "ending", "original", "inspector") if action == "plan-critique" else ("voice", "image", "select")
@@ -147,10 +199,16 @@ def read_native_result(run_name: str, *, action: str, input_path: Path, critique
     files = [output, receipt_path, calls_path]
     if critique_path is not None:
         files.append(critique_path.resolve(strict=True))
-    return {"status": "SUCCEEDED", "action": action, "run_name": run_name,
+    def evidence_path(path: Path) -> str:
+        try:
+            return path.relative_to(ROOT.resolve()).as_posix()
+        except ValueError:
+            return "external:" + path.as_posix()
+    return {"status": "SUCCEEDED", "action": action, "run_name": run_id,
+            "run_dir": str(directory),
             "input_sha256": verified["input_sha256"].lower(), "result": payload,
             "provider_request_ids": provider_ids,
-            "evidence_files": [{"path": path.relative_to(ROOT.resolve()).as_posix(), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in files]}
+            "evidence_files": [{"path": evidence_path(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for path in files]}
 
 
 def native_text_templates() -> dict[str, str]:

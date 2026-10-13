@@ -1,0 +1,115 @@
+{
+  "base_commit": "049b0d26bd4bc6c2c4c1b5662782a4c8b34a8dcb",
+  "base_tree": "0554196d3ea6341184b77b5416807bf3a125573f",
+  "plan_sha256": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d",
+  "source_sha256": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "82915fe21bb0fa8fe3eb9e79cce700066b3150266344af94d5823440faa54ef8",
+    "tools/cnw_critics_adapter.py": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "9af79bd493c0b4e9a072005b0fa7149e9baa20aaa1bfcb3c5af807085d8b24c2",
+    "tests/test_cnw_role_inputs.py": "792ff20760c5562aefda600f5f764dfba071087fbda7de666f231f9a56d53eb3",
+    "tests/test_cnw_adapters.py": "44f2f32ef0abf2884f33f20e53c35e5446dec421c0789c069fbc7f38c9b3cf51",
+    "tests/test_critics_bridge_datahome.py": "5d3c5288f0040b6898829d474da6b912fca2631b4b41b5634912c4bdfbdd70a6"
+  },
+  "records": [
+    {
+      "file": "evidence/atom05_closure_20261013/first_roots.raw.txt",
+      "sha256": "bcddb13d3d9ab255b4d0772491c714c6ccb284e672854fb8dafa0d0d2d9701de",
+      "size": 4824
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/first_roots.check.json",
+      "sha256": "e8521c5c5be424cde8d1e5c6915f980af456857eb8036f6a140f5242ca6a896c",
+      "size": 4342
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/nk_real_account_retest.raw.txt",
+      "sha256": "e5c0b58081d2d7d46ef220b62162781e6b36dceafc3a1fd3d578b9583232d610",
+      "size": 101
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/nk_real_account_retest.check.json",
+      "sha256": "153f1c8a195715ac2b8d6e201cf79725560a068b3286c3be5bcb130a9fa84ae3",
+      "size": 3588
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/current_scope.raw.txt",
+      "sha256": "76308784c77a8600ab876e9bd5aafae7f8f330a843845c1378cc01bc1b6f115f",
+      "size": 212
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/current_scope.check.json",
+      "sha256": "a402c21b9a6df62265ea4bc6607c1d52d1548a6803266a6e72cc6d87b2d01faa",
+      "size": 4167
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/final_effect_capture.raw.txt",
+      "sha256": "6eee1be80edb4c093c912c8237e459e9a6de6b706c7e2a21616747e3f2de7d54",
+      "size": 101
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/final_effect_capture.check.json",
+      "sha256": "f0a2d2380b39e8003b45d209d92ab712ea39af8638ee8a3b0e00e54a013b3be9",
+      "size": 4428
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/final_effect_capture.effects.json",
+      "sha256": "47a22fb4b7770a99a38579f442360072c50237028153c5bec6467b9644f50331",
+      "size": 42878
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/effect_artifact_readback.json",
+      "sha256": "b2d90431c13070174b094619f5e921fa5fb1754c1de1af9fc1afb9c8704f2a66",
+      "size": 2665
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_final.raw.txt",
+      "sha256": "27ec2ab6709ab65c47ac1b007841aabe1134763c0248495f3bded2858a36447d",
+      "size": 1482
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_final.check.json",
+      "sha256": "8cd3025b7092d0701549499012552bebc1e04ab97eb13c0a0995853db8131887",
+      "size": 4671
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/final_native_readback.raw.txt",
+      "sha256": "5ba9b542aad8183ad23b0a3b22beb54d701bd54b8a83be43aa55a235b0f35f02",
+      "size": 102
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/final_native_readback.check.json",
+      "sha256": "acb77c2aca6ca6ba5dc433e49850d080c403b6d5032512c227a2e15b43ea23bf",
+      "size": 3812
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_native_readback.raw.txt",
+      "sha256": "67b7649f2162789c6de87928b24e1b98d76bfe342baf85f173588ee47e54f16a",
+      "size": 277
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_native_readback.check.json",
+      "sha256": "15a082035707d2bc29000b7e4976cb74aa61327512ac650cb4e713d5fcd8b902",
+      "size": 4076
+    }
+  ],
+  "coverage": {
+    "affected_regression": "133 passed, 66 subtests; all production files except final missing-parent reader guard match; final guard and both native/legacy readers covered by final_native_readback",
+    "final_artifact_capture": "3 passed; all final producer/test bytes match",
+    "python311": "4 unittest tests OK including actual pre-R5 role comparison",
+    "test_changes_after_broad": "Only three artifact-recorder file snapshots added; final component and 3.11 checks cover modified methods",
+    "final_native_readback": "16 pytest tests passed, plus 1 Python 3.11 unittest passed; final native-reader byte identity; missing-parent refusal added after main regression"
+  },
+  "protection": {
+    "real_ledger_sha256": "c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b",
+    "real_ts_state_sha256": "3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d",
+    "untracked_slot_lock_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "private_migration": "NOT_RUN",
+    "cutover_blocked": true
+  },
+  "new_live_requests": 0,
+  "candidate_verdict": "PENDING_INDEPENDENT_CONTROLLER_FULL_CURRENT_ATOM05_REVIEW",
+  "artifact_count": 13,
+  "evidence_recorder": "Reuses existing fixture recorder; legacy atom07 schema name grants no Atom07 scope"
+}

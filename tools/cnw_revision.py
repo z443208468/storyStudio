@@ -8,13 +8,16 @@ import os
 from pathlib import Path
 import sys
 import re
+import uuid
 
 try:
     from .cnw_contract import ContractError, count_visible_chars, load_contract
     from .cnw_generate import _private_project_root, _project_input, validate_generated_scene
+    from .project_paths import _assert_no_reparse
 except ImportError:  # direct script execution
     from cnw_contract import ContractError, count_visible_chars, load_contract
     from cnw_generate import _private_project_root, _project_input, validate_generated_scene
+    from project_paths import _assert_no_reparse
 
 
 def validate_revision(contract: dict, v0: str, v1: str, *, finish_reason: str, v0_beat_evidence: dict[str, str], v1_beat_evidence: dict[str, str], v1_dialogue_evidence: list[str], v1_action_evidence: list[str], start_state_evidence: str, end_state_evidence: str, shortening_reason: str = "") -> dict:
@@ -143,6 +146,93 @@ def promote_revision(project_root:str|Path,run_dir:str|Path,candidate_path:str|P
         return _promote_revision_unlocked(project_root, run_dir, candidate_path, contract, review_evidence, test_fixture=test_fixture)
 
 
+def _durable_replace(path: Path, raw: bytes) -> None:
+    """Write one transaction artifact durably, then atomically publish that file."""
+    _assert_no_reparse(path, code="PROMOTION_TRANSACTION_UNSAFE")
+    tmp = path.with_name(path.name + ".attempt-" + uuid.uuid4().hex)
+    with tmp.open("xb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(tmp, path)
+
+
+def _promotion_transaction_id(project: Path, destination: Path, candidate_sha: str,
+                              review_evidence: dict) -> str:
+    identity = {"project": str(project), "destination": destination.relative_to(project).as_posix(),
+        "candidate_sha256": candidate_sha, "controller_acceptance_ref": review_evidence.get("controller_acceptance_ref"),
+        "expected_current_sha": review_evidence.get("expected_current_sha"),
+        "contract_sha256": review_evidence.get("contract_sha256"),
+        "source_identity_sha256": review_evidence.get("source_identity_sha256")}
+    return hashlib.sha256(json.dumps(identity, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _recover_promotion_transaction(project: Path, tx_dir: Path, *, transaction_id: str,
+                                   destination: Path, index: Path, candidate_sha: str,
+                                   review_evidence: dict) -> dict:
+    journal_path = tx_dir / "journal.json"
+    staged_index = tx_dir / "manuscript_index.new"
+    candidate_stage = tx_dir / "candidate.new"
+    for path in (tx_dir, journal_path, staged_index, candidate_stage, tx_dir / "destination.before"):
+        _assert_no_reparse(path, code="PROMOTION_TRANSACTION_UNSAFE")
+    if not journal_path.is_file() or not staged_index.is_file() or not candidate_stage.is_file():
+        raise ContractError("PROMOTION_TRANSACTION_INCOMPLETE", transaction_id)
+    journal = json.loads(journal_path.read_text(encoding="utf-8"))
+    prior_sha = journal.get("prior_destination_sha256")
+    prior_index_sha = journal.get("prior_index_sha256")
+    new_index_sha = hashlib.sha256(staged_index.read_bytes()).hexdigest()
+    staged_candidate = candidate_stage.read_bytes()
+    if (journal.get("schema") != "cnw_revision_promotion_v1"
+            or journal.get("transaction_id") != transaction_id
+            or journal.get("destination") != destination.relative_to(project).as_posix()
+            or journal.get("index") != index.relative_to(project).as_posix()
+            or journal.get("candidate_sha256") != candidate_sha
+            or journal.get("work_id") != review_evidence.get("work_id")
+            or prior_sha != review_evidence.get("expected_current_sha")
+            or hashlib.sha256(staged_candidate).hexdigest() != candidate_sha
+            or journal.get("review_evidence_sha256") != hashlib.sha256(json.dumps(review_evidence,
+                ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+            or journal.get("new_index_sha256") != new_index_sha):
+        raise ContractError("PROMOTION_TRANSACTION_BINDING_MISMATCH", transaction_id)
+    current_destination_sha = hashlib.sha256(destination.read_bytes()).hexdigest() if destination.is_file() else None
+    current_index_sha = hashlib.sha256(index.read_bytes()).hexdigest() if index.is_file() else None
+    if current_destination_sha not in {prior_sha, candidate_sha}:
+        raise ContractError("PUBLISH_CONFLICT", "published manuscript differs from both transaction preimage and candidate")
+    if current_index_sha not in {prior_index_sha, new_index_sha}:
+        raise ContractError("PUBLISH_CONFLICT", "manuscript index differs from both transaction preimage and candidate")
+
+    archive_rel = journal.get("archive")
+    if archive_rel:
+        archive = (project / archive_rel).absolute()
+        if archive.is_symlink() or not archive.resolve(strict=False).is_relative_to(project):
+            raise ContractError("PROMOTION_ARCHIVE_UNSAFE", archive_rel)
+        prior_bytes = (tx_dir / "destination.before").read_bytes()
+        if hashlib.sha256(prior_bytes).hexdigest() != prior_sha:
+            raise ContractError("PROMOTION_TRANSACTION_PREIMAGE_MISMATCH", transaction_id)
+        archive.parent.mkdir(parents=True, exist_ok=True)
+        if archive.exists() and hashlib.sha256(archive.read_bytes()).hexdigest() != prior_sha:
+            raise ContractError("PROMOTION_ARCHIVE_COLLISION", archive_rel)
+        if not archive.exists():
+            _durable_replace(archive, prior_bytes)
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if current_destination_sha != candidate_sha:
+        _durable_replace(destination, staged_candidate)
+        journal["status"] = "DESTINATION_PUBLISHED"
+        _durable_replace(journal_path, json.dumps(journal, ensure_ascii=False,
+            sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    if current_index_sha != new_index_sha:
+        _durable_replace(index, staged_index.read_bytes())
+    journal["status"] = "COMMITTED"
+    _durable_replace(journal_path, json.dumps(journal, ensure_ascii=False,
+        sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    return {"status": "PROMOTED", "work_id": journal["work_id"],
+        "path": journal["destination"], "candidate_sha256": candidate_sha,
+        "archive_path": archive_rel, "promotion_transaction_id": transaction_id,
+        "review_evidence_sha256": journal["review_evidence_sha256"], "provider_call": "none"}
+
+
 def _promote_revision_unlocked(project_root:str|Path,run_dir:str|Path,candidate_path:str|Path,contract:dict,review_evidence:dict,*,test_fixture:bool=False)->dict:
     """Promote only an externally accepted, hash-bound candidate; preserve prior text and index."""
     project_input=Path(project_root).absolute(); run_input=Path(run_dir).absolute()
@@ -207,22 +297,48 @@ def _promote_revision_unlocked(project_root:str|Path,run_dir:str|Path,candidate_
         if output.exists() and not output.resolve().is_relative_to(project): raise ContractError("PROMOTION_OUTPUT_OUTSIDE_PROJECT",str(output))
     if "expected_current_sha" not in review_evidence:
         raise ContractError("PUBLISH_EXPECTATION_REQUIRED", "review evidence must bind the current published version SHA or null")
-    current_sha = hashlib.sha256(destination.read_bytes()).hexdigest() if destination.is_file() else None
+    transaction_id = _promotion_transaction_id(project, destination, candidate_sha, review_evidence)
+    transaction_root = project / "94_runtime" / "revision_promotions"
+    tx_dir = transaction_root / transaction_id
+    _assert_no_reparse(tx_dir, code="PROMOTION_TRANSACTION_UNSAFE")
+    if tx_dir.exists():
+        return _recover_promotion_transaction(project, tx_dir, transaction_id=transaction_id,
+            destination=destination, index=index, candidate_sha=candidate_sha, review_evidence=review_evidence)
+
+    current_bytes = destination.read_bytes() if destination.is_file() else None
+    current_sha = hashlib.sha256(current_bytes).hexdigest() if current_bytes is not None else None
     if review_evidence.get("expected_current_sha") != current_sha:
         raise ContractError("PUBLISH_CONFLICT", "published project output changed after candidate review began")
-    destination.parent.mkdir(parents=True,exist_ok=True)
-    if destination.exists():
-        prior=destination.read_bytes(); prior_sha=hashlib.sha256(prior).hexdigest()
-        archive=project/"09_revision"/"accepted_archive"/f"{work_id}.{prior_sha}.md"; archive.parent.mkdir(parents=True,exist_ok=True)
-        if archive.exists() and hashlib.sha256(archive.read_bytes()).hexdigest()!=prior_sha: raise ContractError("PROMOTION_ARCHIVE_COLLISION",str(archive))
-        if not archive.exists(): archive.write_bytes(prior)
-    destination.parent.mkdir(parents=True,exist_ok=True)
-    tmp=destination.with_name(destination.name+".tmp"); tmp.write_bytes(raw); os.replace(tmp,destination)
+    prior_index = index.read_bytes() if index.is_file() else None
+    prior_index_text = prior_index.decode("utf-8-sig") if prior_index is not None else "# Manuscript Index\n"
     line=f"- {work_id} | {unit['kind']} | {destination.relative_to(project).as_posix()} | SHA256={candidate_sha} | review={review_evidence['controller_acceptance_ref']} | source={review_evidence['source_identity_sha256']}"
-    prior_index=index.read_text(encoding="utf-8") if index.exists() else "# Manuscript Index\n"
-    rows=[row for row in prior_index.splitlines() if not row.startswith(f"- {work_id} |")]
-    idx_tmp=index.with_name(index.name+".tmp"); idx_tmp.write_text("\n".join([*rows,line])+"\n",encoding="utf-8"); os.replace(idx_tmp,index)
-    return {"status":"PROMOTED","work_id":work_id,"path":destination.relative_to(project).as_posix(),"candidate_sha256":candidate_sha,"archive_path":archive.relative_to(project).as_posix() if archive else None,"review_evidence_sha256":hashlib.sha256(json.dumps(review_evidence,ensure_ascii=False,sort_keys=True).encode()).hexdigest(),"provider_call":"none"}
+    rows=[row for row in prior_index_text.splitlines() if not row.startswith(f"- {work_id} |")]
+    new_index_raw = ("\n".join([*rows,line])+"\n").encode("utf-8")
+    prior_index_sha = hashlib.sha256(prior_index).hexdigest() if prior_index is not None else None
+    archive_rel = (f"09_revision/accepted_archive/{work_id}.{current_sha}.md" if current_bytes is not None else None)
+    transaction_root.mkdir(parents=True, exist_ok=True)
+    prepared_dir = transaction_root / (transaction_id + ".prepare-" + uuid.uuid4().hex)
+    prepared_dir.mkdir(exist_ok=False)
+    _durable_replace(prepared_dir / "candidate.new", raw)
+    _durable_replace(prepared_dir / "manuscript_index.new", new_index_raw)
+    if current_bytes is not None:
+        _durable_replace(prepared_dir / "destination.before", current_bytes)
+    review_sha = hashlib.sha256(json.dumps(review_evidence,ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+    journal = {"schema": "cnw_revision_promotion_v1", "transaction_id": transaction_id,
+        "status": "PREPARED", "work_id": work_id,
+        "destination": destination.relative_to(project).as_posix(),
+        "index": index.relative_to(project).as_posix(),
+        "candidate_sha256": candidate_sha, "prior_destination_sha256": current_sha,
+        "prior_index_sha256": prior_index_sha,
+        "new_index_sha256": hashlib.sha256(new_index_raw).hexdigest(),
+        "archive": archive_rel, "review_evidence_sha256": review_sha}
+    _durable_replace(prepared_dir / "journal.json", json.dumps(journal, ensure_ascii=False,
+        sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    # The stable transaction directory appears only after all recovery inputs exist.
+    # A crash during preparation retains its attempt without poisoning later retries.
+    os.rename(prepared_dir, tx_dir)
+    return _recover_promotion_transaction(project, tx_dir, transaction_id=transaction_id,
+        destination=destination, index=index, candidate_sha=candidate_sha, review_evidence=review_evidence)
 
 
 def validate_episode_assembly(expected_scene_ids: list[str], scene_results: dict[str, dict]) -> dict:

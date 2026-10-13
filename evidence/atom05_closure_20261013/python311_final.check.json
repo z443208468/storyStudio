@@ -1,0 +1,51 @@
+{
+  "label": "python311_final",
+  "targets": [
+    "tests.test_cnw_generation.CnwGenerationTests.test_promotion_requires_external_hash_bound_review_and_archives_old_copy",
+    "tests.test_cnw_role_inputs.RoleInputTests.test_registered_nk_uses_run_account_and_common_provider_slot",
+    "tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown",
+    "tests.test_cnw_pre_r5_role_compat"
+  ],
+  "command": [
+    "D:\\CangqiStudio\\StoryStudio\\runtime\\envs\\critics-api\\Scripts\\python.exe",
+    "-c",
+    "import sys; sys.path.insert(0,'D:\\\\CangqiStudio\\\\StoryStudio'); \ndef deny_network(event,args):\n if event in ('socket.connect','socket.sendto','socket.getaddrinfo'): raise RuntimeError('OFFLINE_TEST_NETWORK_BLOCKED')\nsys.addaudithook(deny_network)\nimport unittest\nsuite=unittest.TestLoader().loadTestsFromNames(['tests.test_cnw_generation.CnwGenerationTests.test_promotion_requires_external_hash_bound_review_and_archives_old_copy', 'tests.test_cnw_role_inputs.RoleInputTests.test_registered_nk_uses_run_account_and_common_provider_slot', 'tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown', 'tests.test_cnw_pre_r5_role_compat'])\nresult=unittest.TextTestRunner(verbosity=2).run(suite)\nraise SystemExit(0 if result.wasSuccessful() else 1)\n"
+  ],
+  "python": "D:\\CangqiStudio\\StoryStudio\\runtime\\envs\\critics-api\\Scripts\\python.exe",
+  "exit_code": 0,
+  "raw_sha256": "27ec2ab6709ab65c47ac1b007841aabe1134763c0248495f3bded2858a36447d",
+  "source_sha256_before": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "82915fe21bb0fa8fe3eb9e79cce700066b3150266344af94d5823440faa54ef8",
+    "tools/cnw_critics_adapter.py": "1d9f094c4d89d06c70482221078476f28ee54005917e8c2bbce47605edc2d6d1",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "9af79bd493c0b4e9a072005b0fa7149e9baa20aaa1bfcb3c5af807085d8b24c2",
+    "tests/test_cnw_role_inputs.py": "792ff20760c5562aefda600f5f764dfba071087fbda7de666f231f9a56d53eb3",
+    "tests/test_cnw_adapters.py": "476a67fa8a62d470ec51645a0ce41b449596d2c4c2a70ace60e7f3902ee79469",
+    "tests/test_critics_bridge_datahome.py": "5d3c5288f0040b6898829d474da6b912fca2631b4b41b5634912c4bdfbdd70a6",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b",
+    "runtime/reference/cnw_97ad71fe5e5e/templates/config/workflow.template.yml": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f"
+  },
+  "source_sha256_after": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "82915fe21bb0fa8fe3eb9e79cce700066b3150266344af94d5823440faa54ef8",
+    "tools/cnw_critics_adapter.py": "1d9f094c4d89d06c70482221078476f28ee54005917e8c2bbce47605edc2d6d1",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "9af79bd493c0b4e9a072005b0fa7149e9baa20aaa1bfcb3c5af807085d8b24c2",
+    "tests/test_cnw_role_inputs.py": "792ff20760c5562aefda600f5f764dfba071087fbda7de666f231f9a56d53eb3",
+    "tests/test_cnw_adapters.py": "476a67fa8a62d470ec51645a0ce41b449596d2c4c2a70ace60e7f3902ee79469",
+    "tests/test_critics_bridge_datahome.py": "5d3c5288f0040b6898829d474da6b912fca2631b4b41b5634912c4bdfbdd70a6",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b",
+    "runtime/reference/cnw_97ad71fe5e5e/templates/config/workflow.template.yml": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f"
+  },
+  "source_unchanged": true,
+  "network_audit": "DENY_socket.connect_socket.sendto_socket.getaddrinfo",
+  "provider_credentials_removed": true,
+  "scope": "ATOM05_COMPONENT_EFFECTS_ONLY_MOCK_ONLY_NOT_LIVE"
+}

@@ -1,0 +1,85 @@
+{
+  "checks": [
+    {
+      "group": "atom05_promotion_recovery",
+      "label": "manuscript",
+      "size": 540,
+      "sha256": "9f75720b42afc090daa786c12b05174f44125a178b40c9d83e8bc8168af5345e"
+    },
+    {
+      "group": "atom05_promotion_recovery",
+      "label": "index",
+      "size": 241,
+      "sha256": "cd291b1e080f974ae14e59e47e06b447b72bab38379e3c9ecdd9f18fc420fde8"
+    },
+    {
+      "group": "atom05_promotion_recovery",
+      "label": "archive",
+      "size": 19,
+      "sha256": "fba5714d8b76eef762866da5f4aac90d3dbe4c25c5b2964e390dea63acb0297a"
+    },
+    {
+      "group": "atom05_promotion_recovery",
+      "label": "journal",
+      "size": 746,
+      "sha256": "dd820d907bf093d7c9e9951161d4a135d53523bfdeae149c250b3d99dbefb06f"
+    },
+    {
+      "group": "atom05_nk_account_effect",
+      "label": "request_path",
+      "size": 30,
+      "sha256": "7038d809356abfe683f4a0a2402be21232e295474a27b45b86218cfc6b9c6c04"
+    },
+    {
+      "group": "atom05_nk_account_effect",
+      "label": "raw_response_path",
+      "size": 311,
+      "sha256": "82f4fe35602ee67a2b8d60da3bf51d3774285eba6e07917340eacbb2163b50d4"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "input",
+      "size": 30,
+      "sha256": "220c01ee43dfa368a72a2b037ff224408389f49d71a4c3a56f1b8c18eae92224"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "critique",
+      "size": 47,
+      "sha256": "e4a22b1ce5d06c129565ba538590d29f24ccee93a66e0b4d5eae54884801dea6"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "output",
+      "size": 25,
+      "sha256": "0c63348b9d7f8e0e6c00d8f3ecdf122f98e4ae2c6361d5e5be8eb0b8e2e8bb26"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "receipt",
+      "size": 1140,
+      "sha256": "c1ab2f932a1a94b9f366e6410c02d7dac14265ac0764713dc1d90dc9076c070b"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "calls",
+      "size": 3285,
+      "sha256": "e723b03705b1c42bf6981966532c933088fdd2c6f0ef6f83929aa44f4b156cbf"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "scoped_ledger",
+      "size": 1994,
+      "sha256": "d7eb7214d0aa52dbbda9eefcfb06cdd062ed368a06345be0b102cbf1524a4a6f"
+    },
+    {
+      "group": "atom05_critics_account_effect",
+      "label": "failed_calls",
+      "size": 2916,
+      "sha256": "9bcecfe9cf2ab3f018665c6843d0c81330c9529394e23adf339c2d17b904fd8e"
+    }
+  ],
+  "count": 13,
+  "scope": "SYNTHETIC_COMPONENT_ARTIFACT_BYTES_AND_BINDINGS_NOT_LIVE",
+  "result": "PASS"
+}

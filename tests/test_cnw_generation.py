@@ -239,14 +239,58 @@ class CnwGenerationTests(unittest.TestCase):
                 promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
             self.assertEqual(old.read_text(encoding="utf-8"),"concurrent publication")
             old.write_text("prior accepted copy",encoding="utf-8")
+            with patch.object(rev.os,"rename",side_effect=OSError("INTERRUPTED_DURING_PREPARATION")):
+                with self.assertRaisesRegex(OSError,"INTERRUPTED_DURING_PREPARATION"):
+                    promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+            self.assertEqual(old.read_text(encoding="utf-8"),"prior accepted copy")
+            self.assertFalse((project/"07_draft/manuscript_index.md").exists())
+            self.assertTrue(list((project/"94_runtime/revision_promotions").glob("*.prepare-*")))
+            original_replace=rev.os.replace
+            interrupted={"value":False}
+            def fail_between_manuscript_and_index(source,target):
+                if Path(target).name=="manuscript_index.md" and not interrupted["value"]:
+                    interrupted["value"]=True
+                    raise OSError("INTERRUPTED_AFTER_MANUSCRIPT_PUBLISH")
+                return original_replace(source,target)
+            with patch.object(rev.os,"replace",side_effect=fail_between_manuscript_and_index):
+                with self.assertRaisesRegex(OSError,"INTERRUPTED_AFTER_MANUSCRIPT_PUBLISH"):
+                    promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+            index_path=project/"07_draft/manuscript_index.md"
+            self.assertEqual(old.read_text(encoding="utf-8"),self.prose[:180])
+            self.assertFalse(index_path.exists())
+            index_path.write_text("unrelated concurrent publication",encoding="utf-8")
+            with self.assertRaisesRegex(ContractError,"PUBLISH_CONFLICT"):
+                promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+            self.assertEqual(index_path.read_text(encoding="utf-8"),"unrelated concurrent publication")
+            index_path.unlink()  # Restore the test-owned preimage, never a user file.
+            # The same accepted transaction resumes idempotently from its durable journal.
             result=promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+            published_bytes=old.read_bytes(); indexed_bytes=index_path.read_bytes()
+            replay=promote_revision(project,run,candidate,contract,evidence,test_fixture=True)
+            self.assertEqual(replay,result)
+            self.assertEqual(old.read_bytes(),published_bytes)
+            self.assertEqual(index_path.read_bytes(),indexed_bytes)
         self.assertEqual(result["status"],"PROMOTED")
+        self.assertTrue(result["promotion_transaction_id"])
         self.assertEqual(old.read_text(encoding="utf-8"),self.prose[:180])
         self.assertEqual((project/result["archive_path"]).read_text(encoding="utf-8"),"prior accepted copy")
         index=(project/"07_draft/manuscript_index.md").read_text(encoding="utf-8")
         self.assertIn("# Manuscript Index",index)
         self.assertIn("review=TEST_FIXTURE_ONLY",index)
         self.assertNotIn("fixture_only",index)
+        from tests.test_cnw_work_intent_v2 import _record_atom07_evidence
+        _record_atom07_evidence("atom05_promotion_recovery", {
+            "execution": "MOCK_ONLY", "result": result,
+            "manuscript_sha256": hashlib.sha256(old.read_bytes()).hexdigest(),
+            "index_sha256": hashlib.sha256((project/"07_draft/manuscript_index.md").read_bytes()).hexdigest(),
+            "archived_preimage_sha256": hashlib.sha256((project/result["archive_path"]).read_bytes()).hexdigest(),
+            "files": [{"label": label, "bytes_hex": path.read_bytes().hex(),
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest()} for label, path in (
+                    ("manuscript", old), ("index", project/"07_draft/manuscript_index.md"),
+                    ("archive", project/result["archive_path"]),
+                    ("journal", project/"94_runtime/revision_promotions"/result["promotion_transaction_id"]/"journal.json"))],
+            "preparation_interrupted_then_retried": True, "manuscript_index_interrupted_then_recovered": True,
+            "concurrent_index_conflict_rejected": True, "identical_replay": replay == result})
 
     def test_c06_episode_assembly_requires_every_scene(self):
         result = validate_episode_assembly(["S1", "S2", "S3"], {"S1": {"status": "CONTENT_VALID", "finish_reason": "stop"}, "S2": {"status": "CONTENT_VALID", "finish_reason": "stop"}})

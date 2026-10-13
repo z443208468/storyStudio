@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from contextlib import contextmanager
 import json
 import os
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from tools import critics_bridge, cnw_w10_critics, p2_06_critics_run, p2_cost_guard
@@ -50,7 +52,7 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
                 critics_bridge.create_run_directory(unsafe_run)
             self.assertFalse(unsafe_run.exists())
 
-    def test_p2_runner_honors_explicit_registered_run_directory(self):
+    def test_p2_runner_rejects_unbound_registered_run_before_provider_or_cost(self):
         with tempfile.TemporaryDirectory(prefix="critics-run-route-") as temp_name:
             temp = Path(temp_name).resolve()
             data_home = temp / "selected-data-home"
@@ -75,14 +77,157 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
             with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "synthetic-offline-test-key"}), \
                  patch.object(p2_06_critics_run.p2_cost_guard, "LEDGER", ledger), \
                  patch.object(p2_06_critics_run.critics_bridge, "main", side_effect=create_bridge_run):
-                result = p2_06_critics_run.main(["--action", "plan-critique", "--input", str(source),
-                    "--run-dir", str(target), "--ledger-run-id", "SYNTHETIC-PARENT"])
+                self.assertEqual(critics_bridge.project_path(str(target), directory=True), target)
+                with self.assertRaisesRegex(SystemExit, "CRITICS_PARENT_RUN_BINDING_REQUIRED"):
+                    p2_06_critics_run.main(["--action", "plan-critique", "--input", str(source),
+                        "--run-dir", str(target), "--ledger-run-id", "SYNTHETIC-PARENT"])
 
-            self.assertEqual(result, 0)
-            self.assertTrue(target.is_dir())
-            self.assertTrue((target / "provider-calls.json").is_file())
+            self.assertFalse(target.exists())
+            self.assertEqual(observed, {})
             self.assertEqual(json.loads(ledger.read_text(encoding="utf-8")), {"requests": []})
             self.assertFalse((Path(p2_06_critics_run.ROOT) / "runs" / target.name).exists())
+
+    def test_native_component_uses_real_shared_accounts_and_preserves_unknown(self):
+        from tests.test_cnw_run_bindings import ExistingRunBindingTests
+        from tests.test_p2_cost_guard import CampaignLimitTests
+        from tools import cost_guard, cnw_critics_adapter
+        from tools.cnw_contract import ContractError
+
+        fixtures = [ExistingRunBindingTests(), ExistingRunBindingTests()]
+        for fixture in fixtures:
+            fixture.setUp()
+            self.addCleanup(fixture.doCleanups)
+        fees = CampaignLimitTests()
+        fees.setUp()
+        self.addCleanup(fees.doCleanups)
+        with p2_cost_guard.locked_ledger():
+            pass
+        parents = [fixture.run for fixture in fixtures]
+        states = [(parent / 'run_state.json').read_bytes() for parent in parents]
+        accounts = [cost_guard.for_run(parent, stage='critics_plot', model='deepseek-flash')
+                    for parent in parents]
+        self.assertNotEqual(accounts[0].context.project_instance_id, accounts[1].context.project_instance_id)
+        inputs, critiques, children = [], [], []
+        for parent in parents:
+            support = parent / 'artifacts/support'
+            support.mkdir(parents=True, exist_ok=True)
+            source = support / 'fictional-plot.md'
+            source.write_text('A fictional reversible choice.', encoding='utf-8')
+            critique = support / 'fictional-critique.json'
+            critique.write_text(json.dumps({'inspector': 'Preserve the fictional choice.'}), encoding='utf-8')
+            inputs.append(source)
+            critiques.append(critique)
+            children.append(parent.parent / 'NATIVE-COMPONENT')
+
+        calls, slots, holding = [], [], [False]
+        original_slot = p2_cost_guard.provider_slot
+        @contextmanager
+        def observed_slot():
+            with original_slot():
+                holding[0] = True
+                slots.append(str(p2_cost_guard.LEDGER.parent / 'provider-slots'))
+                try:
+                    yield
+                finally:
+                    holding[0] = False
+
+        def network_mock(client, request, *args, **kwargs):
+            self.assertTrue(holding[0])
+            calls.append(request)
+            if len(calls) == 2:
+                raise RuntimeError('SIMULATED_TRANSPORT_INTERRUPTION')
+            return p2_06_critics_run.httpx.Response(200, request=request, json={
+                'id': 'MOCK-PROVIDER-A', 'model': 'deepseek-flash',
+                'choices': [{'finish_reason': 'stop', 'message': {'content': 'Fictional revised choice.'}}],
+                'usage': {'prompt_tokens': 10, 'completion_tokens': 5}})
+
+        def native_transport(command):
+            target = critics_bridge.create_run_directory(command[command.index('--run-dir') + 1])
+            source = Path(command[command.index('--plot') + 1])
+            critique = Path(command[command.index('--critique') + 1])
+            template = cnw_critics_adapter.native_templates('storyline_template.py', {'applyQA'})['applyQA']
+            messages = [{'role': 'user', 'content': template.format(
+                storyline=source.read_text(encoding='utf-8'),
+                final_critic=json.loads(critique.read_text(encoding='utf-8')))}]
+            request = p2_06_critics_run.httpx.Request('POST', 'https://api.deepseek.com/v1/chat/completions',
+                json={'model': 'deepseek-flash', 'messages': messages})
+            with p2_06_critics_run.httpx.Client() as client:
+                response = client.send(request).json()
+            output = target / 'modified_plot.md'
+            output.write_text(response['choices'][0]['message']['content'], encoding='utf-8')
+            build = critics_bridge.PATCH_INDEX['runtime_build_id']
+            receipt = {'action': 'plan-revise', 'status': 'SUCCEEDED', 'model': 'deepseek-flash',
+                'base_url': 'https://api.deepseek.com/v1', 'build': f'runtime/patched/CritiCS/{build}',
+                'input_sha256': critics_bridge.sha256_file(source),
+                'output_sha256': critics_bridge.sha256_file(output),
+                'mode': 'MOCK_ONLY', 'simulation_status': 'SIMULATED', 'fixture_only': True}
+            (target / 'run_receipt.json').write_text(json.dumps(receipt), encoding='utf-8')
+            return 0
+
+        with patch.object(p2_cost_guard, 'provider_slot', new=observed_slot), \
+             patch.object(p2_06_critics_run.httpx.Client, 'send', new=network_mock), \
+             patch.object(p2_06_critics_run.critics_bridge, 'main', side_effect=native_transport) as native:
+            for index in range(2):
+                args = SimpleNamespace(action='plan-revise', input=str(inputs[index]),
+                    critique=str(critiques[index]), ledger_run_id=parents[index].name,
+                    parent_stage='critics_plot')
+                result = p2_06_critics_run._execute_native(args, children[index],
+                    account=accounts[index], parent_run_dir=parents[index])
+                self.assertEqual(result, 0 if index == 0 else 1)
+            ledger = p2_cost_guard.read_ledger_snapshot()
+            self.assertEqual(len(ledger['requests']), 2)
+            for index, row in enumerate(ledger['requests']):
+                self.assertEqual(row['cost_context'], accounts[index].context.record())
+                self.assertEqual(row['run_id'], parents[index].name)
+            self.assertEqual(ledger['requests'][0]['status'], 'SETTLED')
+            self.assertEqual(ledger['requests'][1]['status'], 'UNKNOWN_NOT_ZERO')
+            self.assertGreater(float(ledger['requests'][1]['reserved_cny']), 0)
+            unknown = json.loads(json.dumps(ledger['requests'][1]))
+            self.assertEqual(slots, [str(fees.ledger.parent / 'provider-slots')] * 2)
+            consumed = cnw_critics_adapter.read_native_result(children[0], action='plan-revise',
+                input_path=inputs[0], critique_path=critiques[0], parent_run_dir=parents[0],
+                parent_stage='critics_plot')
+            self.assertEqual(consumed['result'], 'Fictional revised choice.')
+            self.assertEqual(consumed['provider_request_ids'], ['MOCK-PROVIDER-A'])
+            with self.assertRaisesRegex(ContractError, 'CRITICS_PARENT_RUN_BINDING_INVALID'):
+                cnw_critics_adapter.read_native_result(children[0], action='plan-revise',
+                    input_path=inputs[1], critique_path=critiques[1], parent_run_dir=parents[1],
+                    parent_stage='critics_plot')
+            scoped = json.loads((children[0] / 'p2-cost-ledger.json').read_text(encoding='utf-8'))
+            self.assertEqual(len(scoped['requests']), 1)
+            self.assertEqual(scoped['cost_context'], accounts[0].context.record())
+            failed_calls = json.loads((children[1] / 'provider-calls.json').read_text(encoding='utf-8'))
+            self.assertEqual(failed_calls[0]['ledger_settlement']['status'], 'UNKNOWN_NOT_ZERO')
+            with self.assertRaisesRegex(ContractError, 'OFFLINE_PROVIDER_FORBIDDEN'):
+                p2_06_critics_run.main(['--action', 'plan-revise', '--input', str(inputs[0]),
+                    '--critique', str(critiques[0]), '--run-dir', str(parents[0].parent / 'CLI-DENIED'),
+                    '--ledger-run-id', parents[0].name, '--parent-run-dir', str(parents[0]),
+                    '--parent-stage', 'critics_plot'])
+            with self.assertRaisesRegex(SystemExit, 'CRITICS_PARENT_RUN_BINDING_INVALID'):
+                p2_06_critics_run.main(['--action', 'plan-revise', '--input', str(inputs[0]),
+                    '--critique', str(critiques[0]), '--run-dir', str(parents[1].parent / 'CROSS-PROJECT'),
+                    '--ledger-run-id', parents[0].name, '--parent-run-dir', str(parents[0]),
+                    '--parent-stage', 'critics_plot'])
+            self.assertEqual(native.call_count, 2)
+            self.assertEqual(len(calls), 2)
+            self.assertEqual(p2_cost_guard.read_ledger_snapshot()['requests'][1], unknown)
+            for parent, original in zip(parents, states):
+                self.assertEqual((parent / 'run_state.json').read_bytes(), original)
+            from tests.test_cnw_work_intent_v2 import _record_atom07_evidence
+            import hashlib
+            _record_atom07_evidence('atom05_critics_account_effect', {
+                'execution': 'MOCK_ONLY', 'ledger': ledger['requests'],
+                'consumed': consumed, 'scoped_ledger': scoped, 'failed_calls': failed_calls,
+                'files': [{'label': label, 'bytes_hex': path.read_bytes().hex(),
+                    'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for label, path in (
+                        ('input', inputs[0]), ('critique', critiques[0]),
+                        ('output', children[0]/'modified_plot.md'),
+                        ('receipt', children[0]/'run_receipt.json'),
+                        ('calls', children[0]/'provider-calls.json'),
+                        ('scoped_ledger', children[0]/'p2-cost-ledger.json'),
+                        ('failed_calls', children[1]/'provider-calls.json'))],
+                'production_admission_rejected': True, 'cross_project_replay_rejected': True,
+                'unknown_preserved': True, 'parent_states_unchanged': True})
 
 
 if __name__ == "__main__":

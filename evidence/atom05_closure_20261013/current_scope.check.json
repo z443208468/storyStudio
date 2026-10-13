@@ -1,0 +1,56 @@
+{
+  "label": "current_scope",
+  "targets": [
+    "tests/test_cnw_generation.py",
+    "tests/test_cnw_role_inputs.py",
+    "tests/test_critics_bridge_datahome.py",
+    "tests/test_cnw_adapters.py",
+    "tests/test_cost_context.py",
+    "tests/test_cost_operation_context.py",
+    "tests/test_cnw_operation_authorization.py",
+    "tests/test_p2_cost_guard.py",
+    "tests/test_cnw_pre_r5_role_compat.py",
+    "tests/test_cnw_runner.py",
+    "tests/test_cnw_recovery.py"
+  ],
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-c",
+    "import sys; sys.path.insert(0,'D:\\\\CangqiStudio\\\\StoryStudio'); \ndef deny_network(event,args):\n if event in ('socket.connect','socket.sendto','socket.getaddrinfo'): raise RuntimeError('OFFLINE_TEST_NETWORK_BLOCKED')\nsys.addaudithook(deny_network)\nimport pytest\nraise SystemExit(pytest.main(['tests/test_cnw_generation.py', 'tests/test_cnw_role_inputs.py', 'tests/test_critics_bridge_datahome.py', 'tests/test_cnw_adapters.py', 'tests/test_cost_context.py', 'tests/test_cost_operation_context.py', 'tests/test_cnw_operation_authorization.py', 'tests/test_p2_cost_guard.py', 'tests/test_cnw_pre_r5_role_compat.py', 'tests/test_cnw_runner.py', 'tests/test_cnw_recovery.py', '-q']))\n"
+  ],
+  "python": "C:\\Program Files\\Python313\\python.exe",
+  "exit_code": 0,
+  "raw_sha256": "76308784c77a8600ab876e9bd5aafae7f8f330a843845c1378cc01bc1b6f115f",
+  "source_sha256_before": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "82915fe21bb0fa8fe3eb9e79cce700066b3150266344af94d5823440faa54ef8",
+    "tools/cnw_critics_adapter.py": "1d9f094c4d89d06c70482221078476f28ee54005917e8c2bbce47605edc2d6d1",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "607e9eac5e2c3373764792dbe9250dff311c86b692f7562c1eb4cab7eefebae6",
+    "tests/test_cnw_role_inputs.py": "512662c6472be4fd0233f9a86fb34779ccde8f466f6cbae7f3b205402748d02f",
+    "tests/test_cnw_adapters.py": "476a67fa8a62d470ec51645a0ce41b449596d2c4c2a70ace60e7f3902ee79469",
+    "tests/test_critics_bridge_datahome.py": "a703df8ea9ead9ceed04d9dbe1ddc6597ea6e1f091988c05161da443858950d6",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b"
+  },
+  "source_sha256_after": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "82915fe21bb0fa8fe3eb9e79cce700066b3150266344af94d5823440faa54ef8",
+    "tools/cnw_critics_adapter.py": "1d9f094c4d89d06c70482221078476f28ee54005917e8c2bbce47605edc2d6d1",
+    "tools/p2_06_critics_run.py": "8780ceb75a2defa5a80398a0d3f52924495f76bd8ba9f5fb01f824442c6e2f26",
+    "tests/test_cnw_generation.py": "607e9eac5e2c3373764792dbe9250dff311c86b692f7562c1eb4cab7eefebae6",
+    "tests/test_cnw_role_inputs.py": "512662c6472be4fd0233f9a86fb34779ccde8f466f6cbae7f3b205402748d02f",
+    "tests/test_cnw_adapters.py": "476a67fa8a62d470ec51645a0ce41b449596d2c4c2a70ace60e7f3902ee79469",
+    "tests/test_critics_bridge_datahome.py": "a703df8ea9ead9ceed04d9dbe1ddc6597ea6e1f091988c05161da443858950d6",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b"
+  },
+  "source_unchanged": true,
+  "network_audit": "DENY_socket.connect_socket.sendto_socket.getaddrinfo",
+  "provider_credentials_removed": true,
+  "scope": "ATOM05_COMPONENT_EFFECTS_ONLY_MOCK_ONLY_NOT_LIVE"
+}

@@ -1,0 +1,85 @@
+.F..                                                                     [100%]
+================================== FAILURES ===================================
+_ RoleInputTests.test_registered_nk_uses_run_account_and_common_provider_slot _
+
+self = <tests.test_cnw_role_inputs.RoleInputTests testMethod=test_registered_nk_uses_run_account_and_common_provider_slot>
+
+    def test_registered_nk_uses_run_account_and_common_provider_slot(self):
+        from tests.test_cnw_run_bindings import ExistingRunBindingTests
+        from tests.test_p2_cost_guard import CampaignLimitTests
+        from tools import cost_guard, p2_cost_guard
+        fixtures = [ExistingRunBindingTests(), ExistingRunBindingTests()]
+        for fixture in fixtures:
+            fixture.setUp()
+            self.addCleanup(fixture.doCleanups)
+        fees = CampaignLimitTests()
+        fees.setUp()
+        self.addCleanup(fees.doCleanups)
+        with p2_cost_guard.locked_ledger():
+            pass
+        accounts = [cost_guard.for_run(fixture.run, stage="support_hook", model=runner.MODEL)
+                    for fixture in fixtures]
+        states = [(fixture.run / "run_state.json").read_bytes() for fixture in fixtures]
+        observed = []
+        original_slot = p2_cost_guard.provider_slot
+        @contextmanager
+        def shared_slot():
+            with original_slot():
+                observed.append(str(p2_cost_guard.LEDGER.parent / "provider-slots"))
+                yield
+        with patch.object(p2_cost_guard, "provider_slot", new=shared_slot):
+>           native_result = self._native_nk_case("success", account=accounts[0])
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_cnw_role_inputs.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_cnw_role_inputs.py:72: in _native_nk_case
+    result = invoke_component()
+             ^^^^^^^^^^^^^^^^^^
+tests\test_cnw_role_inputs.py:65: in invoke_component
+    return runner._invoke_nk_service_in_slot(run, {"MOCK": "fictional source"}, active_guard)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:1556: in _invoke_nk_service_in_slot
+    reservation = guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name,
+tools\cost_guard.py:198: in command_reserve
+    current = for_run(self.run, stage=self.context.stage, model=self.model)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:289: in for_run
+    registration = resolve_project(root, data_home=root.parent.parent)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:455: in resolve_project
+    root = resolve_data_home(explicit=data_home, env=env, pointer_path=pointer_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\project_paths.py:306: in resolve_data_home
+    _assert_private_permissions(canonical)
+tools\project_paths.py:135: in _assert_private_permissions
+    _windows_private_acl(path, create=False, require_independent=require_independent_acl)
+tools\project_paths.py:93: in _windows_private_acl
+    user_result = subprocess.run([whoami, "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, timeout=10, check=False)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\subprocess.py:556: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\unittest\mock.py:1167: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\unittest\mock.py:1171: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\unittest\mock.py:1232: in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+command = ['node.exe', '/user', '/fo', 'csv', '/nh']
+kwargs = {'text': True, 'stdout': -1, 'stderr': -1}
+
+    def start(command, **kwargs):
+>       launch.update(command=command, env=kwargs["env"])
+                                           ^^^^^^^^^^^^^
+E       KeyError: 'env'
+
+tests\test_cnw_role_inputs.py:46: KeyError
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_role_inputs.py::RoleInputTests::test_registered_nk_uses_run_account_and_common_provider_slot
+1 failed, 3 passed in 117.01s (0:01:57)

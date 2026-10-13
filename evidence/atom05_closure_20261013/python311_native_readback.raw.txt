@@ -1,0 +1,6 @@
+test_native_result_rechecks_registered_parent_run_cost_identity (tests.test_cnw_adapters.AdapterTests.test_native_result_rechecks_registered_parent_run_cost_identity) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.164s
+
+OK

@@ -1,0 +1,11 @@
+test_promotion_requires_external_hash_bound_review_and_archives_old_copy (tests.test_cnw_generation.CnwGenerationTests.test_promotion_requires_external_hash_bound_review_and_archives_old_copy) ... ok
+test_registered_nk_uses_run_account_and_common_provider_slot (tests.test_cnw_role_inputs.RoleInputTests.test_registered_nk_uses_run_account_and_common_provider_slot) ... ok
+test_native_component_uses_real_shared_accounts_and_preserves_unknown (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown) ... ok
+test_v1_role_requests_match_pre_r5_baseline (tests.test_cnw_pre_r5_role_compat.PreR5RoleCompatibilityTests.test_v1_role_requests_match_pre_r5_baseline) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 73.145s
+
+OK
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-ux3ez_fy\\data\\projects\\696a7382-a30c-4823-8f95-358216cc883b\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": ["MOCK-PROVIDER-A"], "error_type": null}
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-bb_xwje7\\data\\projects\\1ba36de8-0d0a-4f98-99f3-bf29bde58149\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": [null], "error_type": "RuntimeError"}

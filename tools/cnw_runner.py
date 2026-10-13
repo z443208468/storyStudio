@@ -1531,6 +1531,13 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
 
 def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
     _require_generic_provider_authorization(run_dir, stage="writing_brief")
+    account = _cost_account(run_dir, "support_hook")
+    guard = account or _p2_guard()
+    with guard.provider_slot():
+        return _invoke_nk_service_in_slot(run_dir, payload, guard)
+
+
+def _invoke_nk_service_in_slot(run_dir: Path, payload: dict, guard) -> dict:
     import socket
     import shutil
     import subprocess
@@ -1545,7 +1552,6 @@ def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key:
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", "nk")
-    guard = _p2_guard()
     request_id = f"nk-{run_dir.name}-{uuid.uuid4().hex}"
     reservation = guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name,
         purpose="P3.1 NK generate-perspective", input_token_cap=10000, output_token_cap=1024), emit=False)
@@ -1637,8 +1643,11 @@ def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
     raw_path = run_dir / "artifacts/provider" / f"{request_id}.json"
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     raw_path.write_text(json.dumps({"request_id": request_id, "status": http_status, "requested_model": MODEL, "response": _sanitize(provider_response)}, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
-    _, pricing = guard.load_config()
-    cost = guard.estimate(usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0), pricing)
+    if getattr(guard, "context", None) is not None:
+        cost = Decimal(settlement["estimated_request_cny"])
+    else:
+        _, pricing = guard.load_config()
+        cost = guard.estimate(usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0), pricing)
     nk_content = (((provider_response.get("choices") or [{}])[0].get("message")) or {}).get("content") or ""
     receipt = {"stage": "support_hook", "role_id": "nk_pov", "request_id": request_id, "provider_request_id": provider_response.get("id"),
         "model": provider_response.get("model"), "status": "SUCCEEDED", "http_status": http_status,
@@ -2303,6 +2312,7 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         from cnw_critics_adapter import read_native_result
     action = "plan-critique" if stage == "plot" else "text-refine"
     hook_name = "critics_plot" if action == "plan-critique" else "critics_text"
+    cost_account = _cost_account(run_dir, hook_name)
     python = ROOT / "runtime/envs/critics-api/Scripts/python.exe"
     state = load_state(run_dir)
     previous = state.get("support_hooks", {}).get(hook_name, {})
@@ -2330,7 +2340,12 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
     input_path = input_snapshot
     input_artifact = {"path": input_snapshot.relative_to(run_dir).as_posix(), "sha256": input_sha}
     if previous.get("status") in ("SUCCEEDED", "NATIVE_RESULT_PENDING") and previous.get("input_sha256") == input_sha:
-        evidence = read_native_result(previous["run_name"], action=action, input_path=input_path)
+        previous_run = previous.get("run_dir") if cost_account else previous.get("run_name")
+        if not previous_run:
+            raise ContractError("CRITICS_NATIVE_RUN_IDENTITY_MISSING", hook_name)
+        evidence = read_native_result(previous_run, action=action, input_path=input_path,
+            parent_run_dir=run_dir if cost_account else None,
+            parent_stage=hook_name if cost_account else None)
         if previous.get("evidence_files") and previous["evidence_files"] != evidence["evidence_files"]:
             raise ContractError("CRITICS_EVIDENCE_CHANGED", previous["run_name"])
         evidence["input_artifact"] = input_artifact
@@ -2342,15 +2357,27 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         _record_hook(run_dir, hook_name, evidence)
         raise ContractError("ENABLED_BUT_UNAVAILABLE", evidence["reason"])
     run_name = f"{run_dir.name}-critics-{action}-{uuid.uuid4().hex[:8]}"
-    command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action, "--input", str(input_path), "--run-name", run_name, "--ledger-run-id", run_dir.name]
+    if cost_account:
+        critics_run_dir = _run_dir_base(run_dir) / "runs" / run_name
+        command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action,
+            "--input", str(input_path), "--run-dir", str(critics_run_dir), "--ledger-run-id", run_dir.name,
+            "--parent-run-dir", str(run_dir), "--parent-stage", hook_name]
+        native_run = critics_run_dir
+    else:
+        command = [str(python), str(ROOT / "tools/p2_06_critics_run.py"), "--action", action,
+            "--input", str(input_path), "--run-name", run_name, "--ledger-run-id", run_dir.name]
+        native_run = run_name
+    native_identity = {"run_name": run_name}
+    if cost_account:
+        native_identity["run_dir"] = str(native_run)
     try:
         completed = subprocess.run(command, cwd=str(ROOT), capture_output=True, text=True, timeout=600)
     except Exception as exc:
-        evidence = {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__, "run_name": run_name,
+        evidence = {"status": "CRITICS_INVOCATION_FAILED", "error": type(exc).__name__, **native_identity,
                     "action": action, "input_sha256": input_sha, "input_artifact": input_artifact}
         _record_hook(run_dir, hook_name, evidence)
         raise ContractError("CRITICS_INVOCATION_FAILED", f"CritiCS {action} invocation failed ({type(exc).__name__})") from exc
-    evidence = {"status": "SUCCEEDED" if completed.returncode == 0 else "FAILED", "action": action, "run_name": run_name, "returncode": completed.returncode, "input_sha256": input_sha}
+    evidence = {"status": "SUCCEEDED" if completed.returncode == 0 else "FAILED", "action": action, **native_identity, "returncode": completed.returncode, "input_sha256": input_sha}
     if completed.returncode != 0:
         evidence["stderr_tail"] = (completed.stderr or "")[-300:]
         evidence["input_artifact"] = input_artifact
@@ -2360,7 +2387,9 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         # Persist the successful native invocation before dependency validation.
         # A validator repair can re-read its paid evidence without another call.
         _record_hook(run_dir, hook_name, {**evidence, "status": "NATIVE_RESULT_PENDING", "input_artifact": input_artifact})
-        evidence = read_native_result(run_name, action=action, input_path=input_path)
+        evidence = read_native_result(native_run, action=action, input_path=input_path,
+            parent_run_dir=run_dir if cost_account else None,
+            parent_stage=hook_name if cost_account else None)
     evidence["input_artifact"] = input_artifact
     _record_hook(run_dir, hook_name, evidence)
     return evidence

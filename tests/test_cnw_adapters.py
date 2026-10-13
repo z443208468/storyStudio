@@ -9,6 +9,8 @@ from unittest.mock import patch
 from tools.cnw_contract import ContractError, load_contract, check_required_fields, validate_work_unit
 from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt, read_native_result, native_templates, native_conversation_template, native_prompt_dependencies_match
 from tools.cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
+from tools import cost_guard, p2_cost_guard
+from tools.project_paths import create_project, setup_data_home
 from tools import cnw_roles as roles
 from tools.cnw_roles import build_prose_input_view, build_role_packet, role_receipt, validate_role_output, verify_stage_chain, resolve_arc, read_production_preparation, role_metadata, plot_structure
 from synthetic_cnw_fixtures import write_imported_v1_project
@@ -78,6 +80,70 @@ class AdapterTests(unittest.TestCase):
             calls.write_text(json.dumps([call]), encoding="utf-8")
             with self.assertRaisesRegex(ContractError, "CRITICS_NATIVE_DEPENDENCY_MISMATCH"):
                 read_native_result(run.name, action="plan-revise", input_path=source, critique_path=critique_path)
+
+    def test_native_result_rechecks_registered_parent_run_cost_identity(self):
+        with tempfile.TemporaryDirectory(prefix="native-critics-datahome-") as temp_name:
+            temp = Path(temp_name).resolve()
+            home = temp / "data-home"
+            setup_data_home(home, pointer_path=temp / "setup.json")
+            registration = create_project(project_id="NATIVE-CRITICS-OWNER", data_home=home)
+            project = Path(registration["project_root"])
+            runs = project / "runs"
+            runs.mkdir()
+            parent = runs / "PARENT-RUN"
+            parent.mkdir()
+            child = runs / "CRITICS-RUN"
+            child.mkdir()
+            source = parent / "source.md"
+            source.write_text("Fictional source plot.", encoding="utf-8")
+            critique_path = child / "critique.json"
+            critique = {"inspector": "Fictional revision guidance."}
+            critique_path.write_text(json.dumps(critique, ensure_ascii=False), encoding="utf-8")
+            output = child / "modified_plot.md"
+            output.write_text("Fictional revised plot.", encoding="utf-8")
+            context = {"project_id": registration["project_id"],
+                "project_instance_id": registration["project_instance_id"], "run_id": parent.name,
+                "stage": "critics_plot", "binding_sha256": "c" * 64}
+
+            account = cost_guard.RunAccount(parent, p2_cost_guard.CostContext(**context), "deepseek-flash")
+            build_id = json.loads((ROOT / "patches/critics/PATCH_INDEX.json").read_text(encoding="utf-8"))["runtime_build_id"]
+            template = native_templates("storyline_template.py", {"applyQA"})["applyQA"]
+            settlement = {"status": "SETTLED", "request_id": "MOCK-LOCAL-1",
+                "provider_request_id": "MOCK-PROVIDER-1", "cost_context": context,
+                "estimated_request_cny": "0.001"}
+            receipt = {"action": "plan-revise", "status": "SUCCEEDED", "model": "deepseek-flash",
+                "base_url": "https://api.deepseek.com/v1", "build": f"runtime/patched/CritiCS/{build_id}",
+                "input_sha256": sha(source.read_bytes()).upper(), "output_sha256": sha(output.read_bytes()).upper(),
+                "cost_binding": {"project_id": registration["project_id"],
+                    "project_instance_id": registration["project_instance_id"], "parent_run_id": parent.name,
+                    "parent_run_path": str(parent), "stage": "critics_plot", "cost_context": context}}
+            (child / "run_receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            call = {"local_request_id": "MOCK-LOCAL-1", "http_status": 200,
+                "cost_context": context, "ledger_settlement": settlement,
+                "request": {"messages": [{"role": "user", "content": template.format(
+                    final_critic=critique, storyline=source.read_text(encoding="utf-8"))}]},
+                "response": {"id": "MOCK-PROVIDER-1", "model": "deepseek-flash",
+                    "choices": [{"finish_reason": "stop", "message": {"content": output.read_text(encoding="utf-8")}}]}}
+            calls_path = child / "provider-calls.json"
+            calls_path.write_text(json.dumps([call], ensure_ascii=False), encoding="utf-8")
+            with patch.object(cost_guard, "for_run", return_value=account) as for_run, \
+                 patch.object(p2_cost_guard, "LEDGER", temp / "synthetic-ledger.json"), \
+                 patch.object(p2_cost_guard, "read_ledger_snapshot", return_value={"requests": [{
+                     "request_id": "MOCK-LOCAL-1", "provider_request_id": "MOCK-PROVIDER-1",
+                     "run_id": parent.name, "status": "SETTLED", "cost_context": context,
+                     "requested_model": "deepseek-flash", "estimated_actual_cny": "0.001"}]}):
+                result = read_native_result(child, action="plan-revise", input_path=source,
+                    critique_path=critique_path, parent_run_dir=parent, parent_stage="critics_plot")
+                self.assertEqual(result["status"], "SUCCEEDED")
+                self.assertEqual(result["run_dir"], str(child))
+                for_run.assert_called_once_with(parent, stage="critics_plot", model="deepseek-flash")
+                with self.assertRaisesRegex(ContractError, "CRITICS_PARENT_RUN_BINDING_REQUIRED"):
+                    read_native_result(child, action="plan-revise", input_path=source, critique_path=critique_path)
+                receipt["cost_binding"]["project_instance_id"] = "FOREIGN-INSTANCE"
+                (child / "run_receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+                with self.assertRaisesRegex(ContractError, "CRITICS_COST_CONTEXT_MISMATCH"):
+                    read_native_result(child, action="plan-revise", input_path=source,
+                        critique_path=critique_path, parent_run_dir=parent, parent_stage="critics_plot")
 
     def test_author_plot_design_needs_no_prefilled_beats_or_scenes(self):
         contract = load_contract(self.contract_path)
