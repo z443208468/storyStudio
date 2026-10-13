@@ -1,0 +1,36 @@
+....F..............................                  [100%]
+================================== FAILURES ===================================
+_ CriticsBridgeDataHomeTests.test_true_legacy_input_and_output_keep_actual_native_route _
+
+self = <tests.test_p2_cost_guard.CampaignLimitTests testMethod=test_true_crossing_is_blocked_at_reserve>
+methodName = 'test_true_crossing_is_blocked_at_reserve'
+
+    def __init__(self, methodName='runTest'):
+        """Create an instance of the class that will use the named test
+           method when executed. Raises a ValueError if the instance does
+           not have a method with the specified name.
+        """
+        self._testMethodName = methodName
+        self._outcome = None
+        self._testMethodDoc = 'No test'
+        try:
+>           testMethod = getattr(self, methodName)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'CampaignLimitTests' object has no attribute 'test_true_crossing_is_blocked_at_reserve'
+
+C:\Program Files\Python313\Lib\unittest\case.py:420: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests testMethod=test_true_legacy_input_and_output_keep_actual_native_route>
+
+    def test_true_legacy_input_and_output_keep_actual_native_route(self):
+        from tests.test_p2_cost_guard import CampaignLimitTests
+>       fees = CampaignLimitTests(methodName="test_true_crossing_is_blocked_at_reserve")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: no such test method in <class 'tests.test_p2_cost_guard.CampaignLimitTests'>: test_true_crossing_is_blocked_at_reserve
+
+tests\test_critics_bridge_datahome.py:148: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_true_legacy_input_and_output_keep_actual_native_route
+1 failed, 34 passed, 20 subtests passed in 60.75s (0:01:00)

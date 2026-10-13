@@ -87,6 +87,104 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
             self.assertEqual(json.loads(ledger.read_text(encoding="utf-8")), {"requests": []})
             self.assertFalse((Path(p2_06_critics_run.ROOT) / "runs" / target.name).exists())
 
+    def test_legacy_output_cannot_downgrade_registered_input_or_critique(self):
+        from tools import cost_guard
+        with tempfile.TemporaryDirectory(prefix="critics-route-downgrade-") as temp_name:
+            temp = Path(temp_name).resolve()
+            data_home = temp / "selected-data-home"
+            setup_data_home(data_home, pointer_path=temp / "setup.json")
+            project = Path(create_project(project_id="ROUTE-BOUNDARY", data_home=data_home)["project_root"])
+            registered_input = project / "input.md"
+            registered_critique = project / "critique.json"
+            registered_input.write_text("registered fictional input", encoding="utf-8")
+            registered_critique.write_text("{}", encoding="utf-8")
+            repo = temp / "legacy-repo"
+            (repo / "workspace").mkdir(parents=True)
+            (repo / "runs").mkdir()
+            legacy_input = repo / "workspace/input.md"
+            legacy_critique = repo / "workspace/critique.json"
+            legacy_input.write_text("legacy fictional input", encoding="utf-8")
+            legacy_critique.write_text("{}", encoding="utf-8")
+            originals = {path: path.read_bytes() for path in
+                         (registered_input, registered_critique, legacy_input, legacy_critique)}
+            original_get = os.environ.get
+
+            def environment_get(key, *defaults):
+                if key == "DEEPSEEK_API_KEY":
+                    self.fail("downgraded route reached Key access")
+                return original_get(key, *defaults)
+
+            with patch.object(p2_06_critics_run, "ROOT", repo), \
+                 patch.object(critics_bridge, "ROOT", repo), \
+                 patch.object(os.environ, "get", side_effect=environment_get), \
+                 patch.object(cost_guard, "for_run", wraps=cost_guard.for_run) as account, \
+                 patch.object(p2_cost_guard, "provider_slot") as slot, \
+                 patch.object(p2_cost_guard, "command_reserve") as reserve, \
+                 patch.object(critics_bridge, "main") as native:
+                pairs = [(registered_input, legacy_critique),
+                         (legacy_input, registered_critique),
+                         (registered_input, registered_critique)]
+                for output in (["--run-name", "LEGACY"], ["--run-dir", str(repo / "runs/EXPLICIT")]):
+                    for source, critique in pairs:
+                        with self.subTest(output=output[0], source=source.name, critique=str(critique)):
+                            with self.assertRaisesRegex(SystemExit, "CRITICS_PARENT_RUN_BINDING_REQUIRED"):
+                                p2_06_critics_run.main(["--action", "plan-revise", "--input", str(source),
+                                    "--critique", str(critique), *output])
+                            args = SimpleNamespace(action="plan-revise", input=str(source), critique=str(critique))
+                            with self.assertRaisesRegex(SystemExit, "CRITICS_PARENT_RUN_BINDING_REQUIRED"):
+                                p2_06_critics_run._execute_native(args, repo / "runs/DIRECT")
+                    with self.assertRaisesRegex(SystemExit, "CRITICS_PARENT_RUN_BINDING_REQUIRED"):
+                        p2_06_critics_run.main(["--action", "plan-critique", "--input", str(registered_input), *output])
+                account.assert_not_called()
+                slot.assert_not_called()
+                reserve.assert_not_called()
+                native.assert_not_called()
+            self.assertEqual(list((repo / "runs").iterdir()), [])
+            for path, raw in originals.items():
+                self.assertEqual(path.read_bytes(), raw)
+
+    def test_true_legacy_input_and_output_keep_actual_native_route(self):
+        from tests.test_p2_cost_guard import CampaignLimitTests
+        fees = CampaignLimitTests()
+        fees.setUp()
+        self.addCleanup(fees.doCleanups)
+        with p2_cost_guard.locked_ledger():
+            pass
+        with tempfile.TemporaryDirectory(prefix="critics-legacy-compat-") as temp_name:
+            repo = Path(temp_name).resolve()
+            (repo / "workspace").mkdir()
+            (repo / "runs").mkdir()
+            source = repo / "workspace/input.md"
+            critique = repo / "workspace/critique.json"
+            source.write_text("unchanged fictional V1 material", encoding="utf-8")
+            critique.write_text("{}", encoding="utf-8")
+            ledger_before = fees.ledger.read_bytes()
+            consumed = []
+
+            def native_boundary(command):
+                target = Path(command[command.index("--run-dir") + 1])
+                actual_input = Path(command[command.index("--plot") + 1])
+                actual_critique = Path(command[command.index("--critique") + 1])
+                consumed.append((actual_input.read_bytes(), actual_critique.read_bytes()))
+                critics_bridge.create_run_directory(target)
+                (target / "fixture-output.md").write_bytes(actual_input.read_bytes())
+                return 0
+
+            with patch.object(p2_06_critics_run, "ROOT", repo), \
+                 patch.object(critics_bridge, "ROOT", repo), \
+                 patch.dict(os.environ, {"DEEPSEEK_API_KEY": "synthetic-offline-test-key"}), \
+                 patch.object(critics_bridge, "main", side_effect=native_boundary) as native:
+                for output in (["--run-name", "V1-NAMED"], ["--run-dir", str(repo / "runs/V1-EXPLICIT")]):
+                    self.assertEqual(p2_06_critics_run.main(["--action", "plan-revise", "--input", str(source),
+                        "--critique", str(critique), *output]), 0)
+                self.assertEqual(native.call_count, 2)
+            self.assertEqual(consumed, [(source.read_bytes(), critique.read_bytes())] * 2)
+            self.assertEqual(fees.ledger.read_bytes(), ledger_before)
+            for name in ("V1-NAMED", "V1-EXPLICIT"):
+                self.assertEqual((repo / "runs" / name / "fixture-output.md").read_bytes(), source.read_bytes())
+                self.assertEqual(json.loads((repo / "runs" / name / "provider-calls.json").read_text()), [])
+                self.assertEqual((repo / "runs" / name / "p2-cost-ledger.json").read_bytes(), ledger_before)
+
     def test_native_component_uses_real_shared_accounts_and_preserves_unknown(self):
         from tests.test_cnw_run_bindings import ExistingRunBindingTests
         from tests.test_p2_cost_guard import CampaignLimitTests

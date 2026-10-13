@@ -1,0 +1,78 @@
+{
+  "parent_commit": "3a911ab51ca849925e3d526a964b048a4304587b",
+  "parent_tree": "b345d8de42959c5236b297a6071dcbd1852b471a",
+  "original_controller_return_sha256": "899bd2759f871e2353147d4918cb0d448874b65bc039dd857657627853d78b5c",
+  "source_sha256": {
+    "tools/cnw_revision.py": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+    "tools/cnw_runner.py": "82915fe21bb0fa8fe3eb9e79cce700066b3150266344af94d5823440faa54ef8",
+    "tools/cnw_critics_adapter.py": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+    "tools/p2_06_critics_run.py": "a9f8fa4ef21a8d6475d528d5d35804e98ed94fb8dd4a3690fc04d1c8e7c9018c",
+    "tests/test_cnw_generation.py": "9af79bd493c0b4e9a072005b0fa7149e9baa20aaa1bfcb3c5af807085d8b24c2",
+    "tests/test_cnw_role_inputs.py": "792ff20760c5562aefda600f5f764dfba071087fbda7de666f231f9a56d53eb3",
+    "tests/test_cnw_adapters.py": "44f2f32ef0abf2884f33f20e53c35e5446dec421c0789c069fbc7f38c9b3cf51",
+    "tests/test_critics_bridge_datahome.py": "7399e58b107ec5d62364ce48634ea29fe078078348637a4ca235003856942dba",
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/project_paths.py": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+    "tools/project_transactions.py": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b",
+    "runtime/reference/cnw_97ad71fe5e5e/templates/config/workflow.template.yml": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f"
+  },
+  "records": [
+    {
+      "file": "evidence/atom05_closure_20261013/route_downgrade_retest.raw.txt",
+      "sha256": "aad39c3c82f5b99f2b9d0aaa7c15e811897d0031d6dc38378e5d7f42942274af",
+      "size": 2093
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/route_downgrade_retest.check.json",
+      "sha256": "83c52e7676e4d4057471adc6aff787c45af12909750a54d51d474d729adb52ae",
+      "size": 3880
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/route_downgrade_final.raw.txt",
+      "sha256": "437c9d813b487efa559a27e4b9b32ec510cf70d4c79998373f89a6bfa65099fd",
+      "size": 112
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/route_downgrade_final.check.json",
+      "sha256": "df650515d71c4d24e496ac1765b46d660875907b00a8dce9385d734f6309db6b",
+      "size": 3879
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_route_final.raw.txt",
+      "sha256": "a9d0b36423aa1aa7f4a5707fa9ca32c034da9d5a3599ff317aeee5586f85f02b",
+      "size": 1808
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_route_final.check.json",
+      "sha256": "d83d234a4cb79a4984c9085d671ba998397351e6a59d1a081795e8d16a02a08b",
+      "size": 4652
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/route_downgrade_final.effects.json",
+      "sha256": "f21e282dc2037808f95199737cf6d2419d7c7bfe876fb72b24669d98928fb20c",
+      "size": 31195
+    },
+    {
+      "file": "evidence/atom05_closure_20261013/python311_route_final.effects.json",
+      "sha256": "8edfcd5c8e782dcfdf0f35e4c829805366da42c6a671c5b807a85598da830de3",
+      "size": 31195
+    }
+  ],
+  "verification": {
+    "first_attempt": "34 passed, 20 subtests; one new fixture initialization failure retained",
+    "final": "35 passed, 20 subtests; complete data-home/native-adapter/shared-cost tests",
+    "python311": "3 unittest tests OK: CLI/lower rejection, true legacy route, real registered cost component",
+    "mock_auth_to_admit": false,
+    "new_live_requests": 0,
+    "network": "socket connect/sendto/getaddrinfo denied"
+  },
+  "protection": {
+    "real_ledger_sha256": "c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b",
+    "real_ts_state_sha256": "3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d",
+    "untracked_slot_lock_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scope": "ATOM05_ONLY; CURRENT_FULL_GATE_PENDING_INDEPENDENT_CONTROLLER",
+  "next_atom_permission": "DENIED",
+  "cutover_blocked": true
+}

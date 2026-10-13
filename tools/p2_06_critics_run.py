@@ -35,6 +35,33 @@ def strip_key(value):
     return value
 
 
+def _validated_native_materials(args, run_dir: Path, parent_run_dir: Path | None):
+    """Bind every consumed material to the output route before admission or fees."""
+    input_path = critics_bridge.project_path(args.input)
+    if not input_path.is_file():
+        raise SystemExit("INPUT_FILE_NOT_FOUND")
+    critique_path = None
+    if args.action == "plan-revise":
+        critique_path = critics_bridge.project_path(args.critique)
+        if not critique_path.is_file():
+            raise SystemExit("CRITIQUE_FILE_NOT_FOUND")
+    owner = critics_bridge._registered_project_for_path(run_dir)
+    input_owner = critics_bridge._registered_project_for_path(input_path)
+    critique_owner = critics_bridge._registered_project_for_path(critique_path) if critique_path else None
+    if owner or input_owner or critique_owner:
+        if parent_run_dir is None:
+            raise SystemExit("CRITICS_PARENT_RUN_BINDING_REQUIRED")
+        if not owner or critics_bridge._registered_project_for_path(parent_run_dir) != owner:
+            raise SystemExit("CRITICS_PARENT_RUN_BINDING_INVALID")
+        if input_owner != owner or not input_path.is_relative_to(parent_run_dir):
+            raise SystemExit("CRITICS_INPUT_PARENT_RUN_MISMATCH")
+        if critique_path and critique_owner != owner:
+            raise SystemExit("CRITICS_CRITIQUE_PROJECT_MISMATCH")
+    elif parent_run_dir is not None:
+        raise SystemExit("CRITICS_PARENT_RUN_BINDING_INVALID")
+    return input_path, critique_path
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--action", required=True, choices=("plan-critique", "plan-revise", "text-refine"))
@@ -63,6 +90,8 @@ def main(argv=None) -> int:
     parent_run_dir = None
     if args.parent_run_dir:
         parent_run_dir = critics_bridge.project_path(args.parent_run_dir, directory=True)
+    _validated_native_materials(args, run_dir, parent_run_dir)
+    if parent_run_dir is not None:
         project = critics_bridge._registered_project_for_path(parent_run_dir)
         child_project = critics_bridge._registered_project_for_path(run_dir)
         if (not project or child_project != project or run_dir.parent != parent_run_dir.parent
@@ -93,27 +122,17 @@ def _execute_native(args, run_dir: Path, *, account=None, parent_run_dir: Path |
     component tests inject only native transport, using a synthetic shared ledger.
     """
     run_name = run_dir.name
+    input_path, critique_path = _validated_native_materials(args, run_dir, parent_run_dir)
     owner = critics_bridge._registered_project_for_path(run_dir)
-    if owner and (not isinstance(account, cost_guard.RunAccount) or parent_run_dir is None
+    if (owner or account is not None) and (not isinstance(account, cost_guard.RunAccount) or parent_run_dir is None
                   or parent_run_dir.parent.parent != owner or parent_run_dir.parent != run_dir.parent
                   or account.run != parent_run_dir or args.ledger_run_id != parent_run_dir.name
                   or account.context.run_id != parent_run_dir.name
                   or account.context.stage != args.parent_stage):
         raise SystemExit("CRITICS_PARENT_RUN_BINDING_INVALID")
     guard = account or p2_cost_guard
-    input_path = critics_bridge.project_path(args.input)
-    if not input_path.is_file():
-        raise SystemExit("INPUT_FILE_NOT_FOUND")
-    if account and (parent_run_dir is None or not input_path.is_relative_to(parent_run_dir)
-                    or critics_bridge._registered_project_for_path(input_path) != parent_run_dir.parent.parent):
-        raise SystemExit("CRITICS_INPUT_PARENT_RUN_MISMATCH")
     command = [args.action, "--run-dir", str(run_dir), "--plot" if args.action != "text-refine" else "--excerpt", str(input_path)]
     if args.action == "plan-revise":
-        critique_path = critics_bridge.project_path(args.critique)
-        if not critique_path.is_file():
-            raise SystemExit("CRITIQUE_FILE_NOT_FOUND")
-        if account and critics_bridge._registered_project_for_path(critique_path) != parent_run_dir.parent.parent:
-            raise SystemExit("CRITICS_CRITIQUE_PROJECT_MISMATCH")
         command.extend(["--critique", str(critique_path)])
 
     calls = []

@@ -1,0 +1,12 @@
+test_legacy_output_cannot_downgrade_registered_input_or_critique (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_legacy_output_cannot_downgrade_registered_input_or_critique) ... ok
+test_true_legacy_input_and_output_keep_actual_native_route (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_true_legacy_input_and_output_keep_actual_native_route) ... ok
+test_native_component_uses_real_shared_accounts_and_preserves_unknown (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 86.346s
+
+OK
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-o0a0vukh\\runs\\V1-NAMED", "provider_call_count": 0, "provider_request_ids": [], "error_type": null}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-o0a0vukh\\runs\\V1-EXPLICIT", "provider_call_count": 0, "provider_request_ids": [], "error_type": null}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-lmytncms\\data\\projects\\4a562b12-bbff-42a9-a8f7-7b7381ded923\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": ["MOCK-PROVIDER-A"], "error_type": null}
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-r9j8fh84\\data\\projects\\f7882282-5144-47d0-a124-5acb358ce614\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": [null], "error_type": "RuntimeError"}
