@@ -1,0 +1,6 @@
+test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (tests.test_cnw_native_rebinding.NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 57.648s
+
+OK

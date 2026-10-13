@@ -1,0 +1,12 @@
+{
+  "source": "C:\\Users\\Administrator\\.codex\\sessions\\2026\\10\\13\\rollout-2026-10-13T06-04-01-01a131ed-f0fa-7501-9f6c-59b52010ce36.jsonl",
+  "line": 3907,
+  "record_type": "event_msg",
+  "record_timestamp": "2026-10-13T11:11:40.808Z",
+  "json_pointer": "/payload/item/content/0/text",
+  "raw_sha256": "49e1eb6e48ac53a324ae906d10f4d16375f7ea4352c31e1580bb01336e1d7f63",
+  "verbatim_sha256": "e160e04f509349b1f8714590d30579bd6e80eb95cbc719d6a071facca4b535ba",
+  "length": 6050,
+  "matches": 3,
+  "candidate": "310f21e42e72cd03b824512683b80329ea833048"
+}

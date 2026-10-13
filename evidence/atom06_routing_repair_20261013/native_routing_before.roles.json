@@ -1,0 +1,16 @@
+{
+  "schema_version": "atom06_synthetic_request_trace_v1",
+  "execution": "SYNTHETIC_OFFLINE_ONLY",
+  "groups": {
+    "native_rehashed_declared_task_routing": {
+      "execution": "MOCK_ONLY",
+      "cases": [],
+      "original_index_sha256": "bb9704aeae7d911ab2ca9d1cdcc017885702dec3359bc17a6cc5c27c677b6a49",
+      "original_derived_sha256": "4ed24752885598a381b6c22c323107e51f38ca1f49f9ce5044f5244b0c46a3ea",
+      "original_contract_sha256": "1273bb73ecc2fcc9134a632452861f360d949b2682bef14fe32d4183967f2e94",
+      "origin_sha256": "bf9a1aeb84a3bf2d8e67e2c0176e7afa26f672ae2034a999081927511f41b022",
+      "model_run_and_provider_and_fee_calls": 0,
+      "original_inputs_unchanged": true
+    }
+  }
+}

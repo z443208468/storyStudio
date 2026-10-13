@@ -1,0 +1,504 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration 
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration PASSED [100%]
+
+================================== FAILURES ===================================
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='work_order') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: work_order
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='context_added') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: context_added
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='context_zero') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: context_zero
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='index') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: index
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='fifth_lens') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: fifth_lens
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='nk') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: nk
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+_ NativeRebindingTests.test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration (kind='critics') _
+
+self = <test_native_rebinding.NativeRebindingTests testMethod=test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration>
+
+    def test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration(self):
+        owner=fixtures.NativeAttemptTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        before=owner.record.read_bytes()
+        origin_path=owner.record.parent/'origin.json'
+        origin_before=origin_path.read_bytes()
+        result=app.execute_package_job(owner.record,data_home=owner.f.home,execution_mode='live')
+        self.assertEqual(result['blocking_code'],'LIVE_AUTHORIZATION_REQUIRED')
+        row=result['tasks'][0]
+        other=next(r for r in result['tasks'] if r['project_alias']==row['project_alias'] and r['task_alias']!=row['task_alias'])
+        root=Path(row['project_root'])
+        contract=json.loads(Path(row['contract']).read_bytes())
+        binding=contract['input_pack']
+        index_path=root/binding['index_file']
+        original_index=index_path.read_bytes()
+        index=json.loads(original_index)
+        derived_path=root/index['task_context']['file']
+        original_derived=derived_path.read_bytes()
+        prefix=f"_INBOX/input_packs/{result['pack_sha256']}"
+        extra_index=root/(prefix+'/test-owned-extra-index.json')
+        extra_index.write_bytes((root/index['native_index_file']).read_bytes())
+        protected_contract=Path(row['contract']).read_bytes()
+        results=[]
+        with patch.object(runner,'produce',wraps=runner.produce) as create, \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+            for kind in ('work_order','context_added','context_zero','index','fifth_lens','nk','critics'):
+                with self.subTest(kind=kind):
+                    changed=copy.deepcopy(index)
+                    if kind=='work_order': changed['original_work_order']=prefix+'/'+other['declaration']['requirements']
+                    # This fixture declares no context: an existing group's
+                    # requirements JSON is a hostile but byte-valid new choice.
+                    elif kind=='context_added': changed['native_context_file']=prefix+'/'+other['declaration']['requirements']
+                    elif kind=='context_zero': changed['native_context_file']=0
+                    elif kind=='index': changed['native_index_file']=extra_index.relative_to(root).as_posix()
+                    elif kind=='fifth_lens': changed['adapter_choices']['fifth_lens']['responsibility']='UNAPPROVED_OTHER_TASK_DUTY'
+                    else: changed['adapter_choices']['integrations'][kind]='ENABLED'
+                    context=tasks.derive_native_task_context(sources=tasks.frozen_task_sources(root,changed),
+                        identity={k:row[k] for k in ('project_id','project_instance_id')},index=changed)
+                    derived=tasks.encode(context)
+                    changed['task_context']['sha256']=app._sha(derived)
+                    changed['files'][changed['task_context']['file']]=app._sha(derived)
+                    derived_path.write_bytes(derived)
+                    altered_index=app._bytes(changed)
+                    index_path.write_bytes(altered_index)
+                    rebound={**binding,'index_sha256':app._sha(altered_index)}
+                    try:
+                        draft=native._draft(root,changed)
+                        draft['input_pack']=rebound
+                        try:
+                            forged=projects.build_work_contract_v2(root,draft)
+                            native.validate_binding(root,rebound,contract=forged)
+                        except ContractError as error:
+                            self.assertEqual(error.code,'INPUT_PACK_ATTEMPT_BINDING_CHANGED')
+                        else:
+                            _record_trace('unexpected_rebinding_accepted_'+kind,{'execution':'MOCK_ONLY',
+                                'forged_contract':forged,'forged_contract_sha256':app._sha(app._bytes(forged)),
+                                'rehashed_binding_sha256':app._sha(altered_index),
+                                'rehashed_derived_sha256':app._sha(derived),'provider':'NOT_RUN'})
+>                           self.fail('rehashed task routing was accepted by the actual contract constructor: '+kind)
+E                           AssertionError: rehashed task routing was accepted by the actual contract constructor: critics
+
+..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py:74: AssertionError
+=========================== short test summary info ===========================
+SUBFAILED(kind='work_order') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: work_order
+SUBFAILED(kind='context_added') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: context_added
+SUBFAILED(kind='context_zero') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: context_zero
+SUBFAILED(kind='index') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: index
+SUBFAILED(kind='fifth_lens') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: fifth_lens
+SUBFAILED(kind='nk') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: nk
+SUBFAILED(kind='critics') ..\StoryStudio_R5_Atom06_Close_20261013\test_native_rebinding.py::NativeRebindingTests::test_rehashed_task_locators_and_adapters_cannot_replace_original_declaration - AssertionError: rehashed task routing was accepted by the actual contract constructor: critics
+=================== 7 failed, 1 passed in 84.56s (0:01:24) ====================

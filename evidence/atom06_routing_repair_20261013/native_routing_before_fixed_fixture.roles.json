@@ -1,0 +1,779 @@
+{
+  "schema_version": "atom06_synthetic_request_trace_v1",
+  "execution": "SYNTHETIC_OFFLINE_ONLY",
+  "groups": {
+    "unexpected_rebinding_accepted_work_order": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "DISABLED",
+          "critics": "DISABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "Check NATIVE_PROMISE_harbor: the tool leads to an observable next request.",
+            "responsibility_sha256": "91c66dc9c1ebc63d7a010db80034f6d6fd49eb88e6da59bea2ef891109e88ce9"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "8de70ab2d373a02072707269e8dd9135a9189d73eb1b2f2a0d76f3b4e86ff8d9",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "27119dddbfa73bba500eeb425cce71cb88320645a0e1ddacb697171d31279661",
+      "rehashed_binding_sha256": "8de70ab2d373a02072707269e8dd9135a9189d73eb1b2f2a0d76f3b4e86ff8d9",
+      "rehashed_derived_sha256": "b6ecc2b40b745c8f20f27924fbadc5390711dd9b288041ffb6b4a6f8bd4f99ea",
+      "provider": "NOT_RUN"
+    },
+    "unexpected_rebinding_accepted_context_added": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "DISABLED",
+          "critics": "DISABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "Check NATIVE_PROMISE_harbor: the tool leads to an observable next request.",
+            "responsibility_sha256": "91c66dc9c1ebc63d7a010db80034f6d6fd49eb88e6da59bea2ef891109e88ce9"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "8feda2af9d731ffd2033c70384c8bbc0f5b3b5a68f9713cefe49d5a99332c0eb",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "0a25c02efc156f20464ad81e0a663b57bef03f2ded18e2c544ad600d5f8278e6",
+      "rehashed_binding_sha256": "8feda2af9d731ffd2033c70384c8bbc0f5b3b5a68f9713cefe49d5a99332c0eb",
+      "rehashed_derived_sha256": "3345d339528bd09066a92256a9f1bd7966e65a1c25a2c52b1674a18d947a45c6",
+      "provider": "NOT_RUN"
+    },
+    "unexpected_rebinding_accepted_context_zero": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "DISABLED",
+          "critics": "DISABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "Check NATIVE_PROMISE_harbor: the tool leads to an observable next request.",
+            "responsibility_sha256": "91c66dc9c1ebc63d7a010db80034f6d6fd49eb88e6da59bea2ef891109e88ce9"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "db0f954d23c2297db8836d644aafc25f76503b9c9705cdf1235756c1c8c7157b",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "0a2b1464e0512d57a33331f1278b2adb21207ee08300b20ffb7fbe8a05d83ece",
+      "rehashed_binding_sha256": "db0f954d23c2297db8836d644aafc25f76503b9c9705cdf1235756c1c8c7157b",
+      "rehashed_derived_sha256": "25e1eeec978115dba7d2849ead66003518fe82c9d67a42a2df888980df459024",
+      "provider": "NOT_RUN"
+    },
+    "unexpected_rebinding_accepted_index": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "DISABLED",
+          "critics": "DISABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "Check NATIVE_PROMISE_harbor: the tool leads to an observable next request.",
+            "responsibility_sha256": "91c66dc9c1ebc63d7a010db80034f6d6fd49eb88e6da59bea2ef891109e88ce9"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "f270d7b3112ed8df8452f0a8d0fe589ce0b5d5e8df43a8ba8c7dd912e07e738e",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "851ca60847922f6ced6282d4a46da3f94b85788c938c724bbe827983de8b5fe3",
+      "rehashed_binding_sha256": "f270d7b3112ed8df8452f0a8d0fe589ce0b5d5e8df43a8ba8c7dd912e07e738e",
+      "rehashed_derived_sha256": "25e1eeec978115dba7d2849ead66003518fe82c9d67a42a2df888980df459024",
+      "provider": "NOT_RUN"
+    },
+    "unexpected_rebinding_accepted_fifth_lens": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "DISABLED",
+          "critics": "DISABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "UNAPPROVED_OTHER_TASK_DUTY",
+            "responsibility_sha256": "3b8eed50da0f3968a70b8c2f8fa1d8f9e1585f313b3f33710b41a77a4eea2a60"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "b7c245654d9285361dca2a6271ddbcf842d809a441575c452e6301ffefad9003",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "8eac3751bfdf8551255312213219178f8bec360e57b70e48530f8eb187fb828a",
+      "rehashed_binding_sha256": "b7c245654d9285361dca2a6271ddbcf842d809a441575c452e6301ffefad9003",
+      "rehashed_derived_sha256": "25e1eeec978115dba7d2849ead66003518fe82c9d67a42a2df888980df459024",
+      "provider": "NOT_RUN"
+    },
+    "unexpected_rebinding_accepted_nk": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "ENABLED",
+          "critics": "DISABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "Check NATIVE_PROMISE_harbor: the tool leads to an observable next request.",
+            "responsibility_sha256": "91c66dc9c1ebc63d7a010db80034f6d6fd49eb88e6da59bea2ef891109e88ce9"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "e129eec7e4cce2cf92a1680be7b571ce2b7fc54b93c7ed7ccebeb4ca5be866cf",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "04048275c06ccb339ac72d9cf1279e40d01dbc8107f926f96c2c8bb1d4b76158",
+      "rehashed_binding_sha256": "e129eec7e4cce2cf92a1680be7b571ce2b7fc54b93c7ed7ccebeb4ca5be866cf",
+      "rehashed_derived_sha256": "25e1eeec978115dba7d2849ead66003518fe82c9d67a42a2df888980df459024",
+      "provider": "NOT_RUN"
+    },
+    "unexpected_rebinding_accepted_critics": {
+      "execution": "MOCK_ONLY",
+      "forged_contract": {
+        "schema_version": "cnw_work_unit_v2",
+        "project_id": "TEST_HARBOR",
+        "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+        "status": "PROPOSED_FOR_HUMAN_PREFLIGHT",
+        "work_intent": "INSERT_BETWEEN",
+        "source": {
+          "source_origin": "IMPORTED_PROJECT",
+          "project_instance_id": "aa77dcc0-1329-43db-a202-7101c37cbafd",
+          "source_id": "c633a64537d1d1ef",
+          "source_revision_id": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "source_file_sha256": "c633a64537d1d1ef29d087613f8469072430691cd79bb77c902520d43d71ccb4",
+          "manifest_file": "_INBOX/revisions/manifests/a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337.json",
+          "source_manifest_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "manifest_revision_sha256": "a7867bce4254b62f0df8b47ded9bae051dd6671a8ea970956b8dd3656157e337",
+          "source_index_file": "_INBOX/revisions/indexes/a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f.json",
+          "source_index_sha256": "a4d86b0d5610daa84c90a02f2236bb0286ab8d2736ac45dfe6fadf608203a86f"
+        },
+        "unit": {
+          "id": "TASK-HARBOR_INSERT",
+          "kind": "scene",
+          "planning_mode": "author_plot",
+          "language": "en-US",
+          "language_locale": "en-US",
+          "length_metric": "unicode_visible_code_points",
+          "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
+          "pov": "Mira",
+          "target_visible_chars": 180,
+          "min_visible_chars": 100,
+          "max_visible_chars": 320,
+          "policy_sha256": "c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f"
+        },
+        "integrations": {
+          "nk": "DISABLED",
+          "critics": "ENABLED"
+        },
+        "story": {
+          "source_file": "_INBOX/originals/c633a64537d1d1ef_B.md",
+          "before_anchor": {
+            "scene": "SOURCE",
+            "source_line": 1,
+            "source_line_end": 1,
+            "sha256": "c0d07d980f5675a9e0a26115a93f08f17c03f87eddc46f23de75f1f7d2b7d8c6"
+          },
+          "after_anchor": {
+            "scene": "SOURCE",
+            "source_line": 3,
+            "source_line_end": 3,
+            "sha256": "9e766b3769fa3b9cbb3758a6619b72a558d13bfe0d5fcfee31cff1a5ce109fa8"
+          },
+          "arc_ref": "04_chapter_design/arc_01.md",
+          "arc_sha256": "6272ed4641c9c3723dd85f1c11caf0fb6cc1028e2f762d5e74a447899200dda1",
+          "chapter_context": "CONTEXT_harbor: practical choice at harbor.",
+          "role_in_story": "A small visible repair at harbor.",
+          "reader_reward": "A practical offer earns a concrete next request.",
+          "entry_state": "The repair is unsettled.",
+          "exit_state": "The neighbors choose a next step.",
+          "required_beats": [
+            {
+              "beat_id": "B01",
+              "goal": "Mira asks for help and chooses a next step."
+            }
+          ],
+          "characters_in_scene": [
+            "Mira",
+            "Keeper"
+          ],
+          "character_knowledge_boundary_ref": "90_canon/canon.md",
+          "forbidden_future_revelations": [
+            "Do not invent a family relationship."
+          ],
+          "voice_sample_refs": [
+            "Mira",
+            "Keeper"
+          ]
+        },
+        "review": {
+          "workflow_template_git_blob": "146ea01a484cc0578cf290478b3941599ad7fb15",
+          "require_cnw_11_stages": true,
+          "require_3_verifiers": true,
+          "require_completeness_critic": true,
+          "require_re_review": true,
+          "fifth_lens": {
+            "id": "harbor-promise",
+            "responsibility": "Check NATIVE_PROMISE_harbor: the tool leads to an observable next request.",
+            "responsibility_sha256": "91c66dc9c1ebc63d7a010db80034f6d6fd49eb88e6da59bea2ef891109e88ce9"
+          },
+          "cnw_reference_manifest_sha256": "e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983"
+        },
+        "input_pack": {
+          "execution_attempt": {
+            "attempt_id": "d0378626-591c-4067-8989-7504d3600d73",
+            "declaration_sha256": "4964fa23a3aaf7f921488f55cec32095343d03eb4d0f1c70d2e91e0b25d42c7d",
+            "job_id": "d27bd6ce-9487-4b07-b3e8-419eac156b90"
+          },
+          "index_file": "_INBOX/input_packs/09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250/attempts/d0378626-591c-4067-8989-7504d3600d73/tasks/HARBOR_INSERT/binding.json",
+          "index_sha256": "9c9f4778b0de40373ef89109558a69a587d72d6c63bbf225012a56f482905195",
+          "pack_sha256": "09eb2e3c3aa041c540291a6d9e072a9b081ae277b3df097e10533907d5b87250",
+          "schema_version": "cnw_native_input_binding_v2",
+          "task_alias": "HARBOR_INSERT"
+        }
+      },
+      "forged_contract_sha256": "6ef15b8e3f3a73f6a4b84b1274179eede0183b5ee0646d952a9d8382e22d1d29",
+      "rehashed_binding_sha256": "9c9f4778b0de40373ef89109558a69a587d72d6c63bbf225012a56f482905195",
+      "rehashed_derived_sha256": "25e1eeec978115dba7d2849ead66003518fe82c9d67a42a2df888980df459024",
+      "provider": "NOT_RUN"
+    },
+    "native_rehashed_declared_task_routing": {
+      "execution": "MOCK_ONLY",
+      "cases": [],
+      "original_index_sha256": "4f28cf0b1040e2c25def859a1de4bbaa32e9b5fd86321c53c9a42aa55a0fd483",
+      "original_derived_sha256": "25e1eeec978115dba7d2849ead66003518fe82c9d67a42a2df888980df459024",
+      "original_contract_sha256": "1bc684ff46215cf522aa46ed6e0bfd2bbaac2e7327985cae0814728f4c5e3958",
+      "origin_sha256": "5d5a1fdf75f6166d96857d44ae5aad9fe152d3938c3d5b96e76077db6348a5c7",
+      "model_run_and_provider_and_fee_calls": 0,
+      "original_inputs_unchanged": true
+    }
+  }
+}

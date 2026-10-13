@@ -399,14 +399,18 @@ def validate_binding(root: Path, binding: dict, *, contract=None) -> dict:
         checked = validate_attempt_metadata(root, index["execution_attempt"], task_key=alias)
         if index["unit_id"] != checked["row"]["unit_id"]:
             raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native unit differs from original declaration")
-        group = checked["projects"][checked["source_task"]["project_alias"]]
-        derived_file = binding_prefix(index) + "/derived/task_requirements.v1.json"
-        if (index.get("source_aliases") != group["sources"]
-                or index.get("native_group") != group["declaration"]
-                or index.get("native_declaration") != checked["source_task"]["declaration"]
-                or set(index["files"]) != set(group["files"]) | {derived_file}
-                or any(index["files"].get(name) != digest for name, digest in group["files"].items())):
-            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native source mapping or original material set changed")
+        expected = _task_index(root, {"projects": checked["projects"],
+            "pack_sha256": checked["declaration"]["pack_sha256"],
+            "execution_attempt": index["execution_attempt"]}, checked["source_task"])
+        # Recompute material routing and choices from the original declaration;
+        # rehashing a self-selected file or adapter does not grant a new task.
+        if any(_bytes(index.get(name)) != _bytes(value) for name, value in expected.items()
+               if name not in {"files", "previous_binding"}):
+            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native task routing or adapter choices differ from the original declaration")
+        derived_file = binding_prefix(expected) + "/derived/task_requirements.v1.json"
+        if (set(index["files"]) != set(expected["files"]) | {derived_file}
+                or any(index["files"].get(name) != digest for name, digest in expected["files"].items())):
+            raise ContractError("INPUT_PACK_ATTEMPT_BINDING_CHANGED", "native original material set changed")
     for name, digest in index["files"].items():
         if _sha(_safe_source_file(root, name).read_bytes()) != digest:
             raise ContractError("INPUT_PACK_MATERIAL_CHANGED", "frozen native material differs")

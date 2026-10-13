@@ -1,0 +1,94 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_cnw_native_v1_consumer_compat.py::NativeV1ConsumerCompatibilityTests::test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages FAILED [100%]
+
+================================== FAILURES ===================================
+_ NativeV1ConsumerCompatibilityTests.test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages _
+
+self = <tests.test_cnw_native_v1_consumer_compat.NativeV1ConsumerCompatibilityTests testMethod=test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages>
+
+    def test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages(self):
+        owner=fixtures.NativePackageTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        report=app.import_package(owner.package,data_home=owner.f.home,offline=True)
+        row=report['tasks'][0]
+        root=Path(row['project_root'])
+        run=root/'runs'/row['planned_run_id']
+        contract_raw=Path(row['contract']).read_bytes()
+        contract=json.loads(contract_raw)
+        self.assertEqual(contract['input_pack']['schema_version'],native.BINDING_SCHEMA)
+        archive=owner.package.read_bytes()
+        stages=('plot','scene_cards','writing_brief','prose')
+        with owner.owner.disconnected(), patch.object(runner,'cnw_live_call',side_effect=owner.transport), \
+             patch.object(p2_cost_guard,'provider_slot') as slot, \
+             patch.object(p2_cost_guard,'command_reserve') as reserve, \
+             patch.object(runner.httpx,'post') as http:
+>           for stage in stages: recovery.execute_checked(run,stage)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_cnw_native_v1_consumer_compat.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tools\cnw_recovery.py:347: in execute_checked
+    identity = stage_identity(run_dir, stage)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_recovery.py:276: in stage_identity
+    value["cost_boundary_sha256"] = _code(cost_guard.for_run, cost_guard.RunAccount,
+tools\cnw_recovery.py:32: in _code
+    return _digest([inspect.getsource(getattr(f, "__wrapped__", f)) for f in functions])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:1256: in getsource
+    lines, lnum = getsourcelines(object)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:1238: in getsourcelines
+    lines, lnum = findsource(object)
+                  ^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:1060: in findsource
+    file = getsourcefile(object)
+           ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:963: in getsourcefile
+    filename = getfile(object)
+               ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+object = <MagicMock name='command_reserve' id='3047217180224'>
+
+    def getfile(object):
+        """Work out which source or compiled file an object was defined in."""
+        if ismodule(object):
+            if getattr(object, '__file__', None):
+                return object.__file__
+            raise TypeError('{!r} is a built-in module'.format(object))
+        if isclass(object):
+            if hasattr(object, '__module__'):
+                module = sys.modules.get(object.__module__)
+                if getattr(module, '__file__', None):
+                    return module.__file__
+                if object.__module__ == '__main__':
+                    raise OSError('source code not available')
+            raise TypeError('{!r} is a built-in class'.format(object))
+        if ismethod(object):
+            object = object.__func__
+        if isfunction(object):
+            object = object.__code__
+        if istraceback(object):
+            object = object.tb_frame
+        if isframe(object):
+            object = object.f_code
+        if iscode(object):
+            return object.co_filename
+>       raise TypeError('module, class, method, function, traceback, frame, or '
+                        'code object was expected, got {}'.format(
+                        type(object).__name__))
+E       TypeError: module, class, method, function, traceback, frame, or code object was expected, got MagicMock
+
+C:\Program Files\Python313\Lib\inspect.py:943: TypeError
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_native_v1_consumer_compat.py::NativeV1ConsumerCompatibilityTests::test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages - TypeError: module, class, method, function, traceback, frame, or code object was expected, got MagicMock
+======================== 1 failed in 219.95s (0:03:39) ========================

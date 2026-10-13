@@ -1,0 +1,111 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_cnw_native_v1_consumer_compat.py::NativeV1ConsumerCompatibilityTests::test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages FAILED [100%]
+
+================================== FAILURES ===================================
+_ NativeV1ConsumerCompatibilityTests.test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages _
+
+self = <tests.test_cnw_native_v1_consumer_compat.NativeV1ConsumerCompatibilityTests testMethod=test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages>
+
+    def test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages(self):
+        owner=fixtures.NativePackageTests()
+        owner.setUp()
+        self.addCleanup(owner.doCleanups)
+        report=app.import_package(owner.package,data_home=owner.f.home,offline=True)
+        row=report['tasks'][0]
+        root=Path(row['project_root'])
+        run=root/'runs'/row['planned_run_id']
+        contract_raw=Path(row['contract']).read_bytes()
+        contract=json.loads(contract_raw)
+        self.assertEqual(contract['input_pack']['schema_version'],native.BINDING_SCHEMA)
+        archive=owner.package.read_bytes()
+        stages=('plot','scene_cards','writing_brief','prose')
+        counts={'slot':0,'reserve':0}
+        original_slot=p2_cost_guard.provider_slot
+        original_reserve=p2_cost_guard.command_reserve
+        @wraps(original_slot)
+        def slot(*args,**kwargs):
+            counts['slot']+=1
+            return original_slot(*args,**kwargs)
+        @wraps(original_reserve)
+        def reserve(*args,**kwargs):
+            counts['reserve']+=1
+            return original_reserve(*args,**kwargs)
+        with owner.owner.disconnected(), patch.object(runner,'cnw_live_call',side_effect=owner.transport), \
+             patch.object(p2_cost_guard,'provider_slot',new=slot), \
+             patch.object(p2_cost_guard,'command_reserve',new=reserve), \
+             patch.object(runner.httpx,'post') as http:
+            for stage in stages: recovery.execute_checked(run,stage)
+            state=runner.load_state(run)
+            captured=[]
+            for stage in stages:
+                record=state['stages'][stage]
+                raw=(run/record['artifact']['path']).read_bytes()
+                self.assertEqual(app._sha(raw),record['artifact']['sha256'])
+                captured.append({'stage':stage,'utf8':raw.decode('utf-8'),'sha256':app._sha(raw),
+                                 'execution_identity':record['execution_identity']})
+            requests=len(owner.model.requests)
+            for stage in stages:
+                self.assertEqual(recovery.execute_checked(run,stage)['status'],'STAGE_REUSED')
+            self.assertEqual(len(owner.model.requests),requests)
+            self.assertTrue(all(r['mode']=='MOCK_ONLY' and r['simulation_status']=='SIMULATED'
+                                and r['fixture_only'] is True for r in state['provider_requests']))
+            self.assertEqual(counts,{'slot':0,'reserve':0}); http.assert_not_called()
+        self.assertEqual(Path(row['contract']).read_bytes(),contract_raw)
+        self.assertEqual(owner.package.read_bytes(),archive)
+>       _record_trace('old_native_v1_four_role_consumers',{'execution':'MOCK_ONLY','contract':contract,
+            'actual_calls':owner.model.requests,'artifacts':captured,'matching_stages_reused':True,
+            'original_contract_and_archive_unchanged':True,'provider_and_fee_calls':0})
+
+tests\test_cnw_native_v1_consumer_compat.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_cnw_atom06.py:25: in _record_trace
+    path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\json\__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+C:\Program Files\Python313\Lib\json\encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\json\encoder.py:261: in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0x0000027824C8FAD0>
+o = WindowsPath('C:/Users/Administrator/AppData/Local/Temp/storystudio-input-pack-863v3ups/data/projects/43035c2b-646c-4289-a6d6-8cea212fd19a/runs/PACK-b6054d3b279a-01/artifacts/provider/SIM-00001-plot-plot_agent.request.json')
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+    
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+    
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return super().default(o)
+    
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       TypeError: Object of type WindowsPath is not JSON serializable
+
+C:\Program Files\Python313\Lib\json\encoder.py:180: TypeError
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_native_v1_consumer_compat.py::NativeV1ConsumerCompatibilityTests::test_old_native_binding_consumes_selected_materials_and_reuses_actual_stages - TypeError: Object of type WindowsPath is not JSON serializable
+======================== 1 failed in 112.35s (0:01:52) ========================

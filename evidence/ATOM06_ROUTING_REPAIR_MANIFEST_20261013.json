@@ -1,0 +1,349 @@
+{
+  "schema_version": "atom06_bounded_routing_repair_evidence_v1",
+  "returned_commit": "310f21e42e72cd03b824512683b80329ea833048",
+  "returned_tree": "063a7aa7f40e984f716b5f2cca19d0e860174b91",
+  "original_verdict_sha256": "e160e04f509349b1f8714590d30579bd6e80eb95cbc719d6a071facca4b535ba",
+  "source_identity": {
+    "tools/cnw_pack_app.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_pack_app.py.source",
+      "tested_worktree_sha256": "c56f8c271172bc95d5b546b7ca7c9368b3e945ef167a02c43a1686d2840211c3",
+      "git_lf_sha256": "0c38a6e8958675938db60ef3de17d77107dc827152cab730c547173e27fa4ccf"
+    },
+    "tools/cnw_native_pack.py": {
+      "archive": "evidence/atom06_routing_repair_20261013/source_bytes/tools/cnw_native_pack.py.source",
+      "tested_worktree_sha256": "b5924239470531a5a50b25388525789f7b182584ab012eb8c6077ee29a477c38",
+      "git_lf_sha256": "b5924239470531a5a50b25388525789f7b182584ab012eb8c6077ee29a477c38"
+    },
+    "tools/cnw_input_pack.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_input_pack.py.source",
+      "tested_worktree_sha256": "37f7495f100de5f01d90c19698c34f0b7f5f805893418e9e31a4d5db586d6686",
+      "git_lf_sha256": "37f7495f100de5f01d90c19698c34f0b7f5f805893418e9e31a4d5db586d6686"
+    },
+    "tools/cnw_task_requirements.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_task_requirements.py.source",
+      "tested_worktree_sha256": "4b881590ee074a12f736969793832d40d293af060dba1211353ac5f2fa76278d",
+      "git_lf_sha256": "4b881590ee074a12f736969793832d40d293af060dba1211353ac5f2fa76278d"
+    },
+    "tools/cnw_project.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_project.py.source",
+      "tested_worktree_sha256": "30ba0e6465833735d4590d77b0fb9a2aac04d28f4e3e20a2b70f15266d08ccfe",
+      "git_lf_sha256": "fea6f6459bc8fc24caf527d6ffe54e4efb85f35d534fb36de35844f2fc63be66"
+    },
+    "tools/cnw_runner.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_runner.py.source",
+      "tested_worktree_sha256": "bd0492a119f97e9c59e4f47caa1af48a9a21de4137055315faf93994f8249102",
+      "git_lf_sha256": "d53596b8ffe9a8c13de6b2b8aa9711a231aebbe44d6a37ea6bf8d6f10343e5a0"
+    },
+    "tools/cnw_recovery.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_recovery.py.source",
+      "tested_worktree_sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+      "git_lf_sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69"
+    },
+    "tools/cnw_roles.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_roles.py.source",
+      "tested_worktree_sha256": "7c4fe61499ecf3e78e7e1c99cffe4312592a3a06b1b4d6eb1592527a6166a206",
+      "git_lf_sha256": "33d8167751329536c53a1064422c55466cf98df1f57ce5609324b1f942e5da87"
+    },
+    "tools/cnw_review.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_review.py.source",
+      "tested_worktree_sha256": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+      "git_lf_sha256": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3"
+    },
+    "tools/cnw_lint.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_lint.py.source",
+      "tested_worktree_sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+      "git_lf_sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b"
+    },
+    "tools/cnw_export.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_export.py.source",
+      "tested_worktree_sha256": "7ecde8077036b26251ec3d3eb9d186533949f90559285d77b5140a403e56adfa",
+      "git_lf_sha256": "cfde506cbda8287bc36570705cd8318dc100bc1b2e8aae959de1b4d9e5e6aaba"
+    },
+    "tools/cnw_critics_adapter.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_critics_adapter.py.source",
+      "tested_worktree_sha256": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+      "git_lf_sha256": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb"
+    },
+    "tools/critics_bridge.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/critics_bridge.py.source",
+      "tested_worktree_sha256": "397b6a5b31733d5937bf9ed7224c871fa37990362f794a124add8b000048fce7",
+      "git_lf_sha256": "faf83fdf5932afaca9c98af72854e0a5746c82a7e73e7c4f8521b95235efc93f"
+    },
+    "tools/p2_06_critics_run.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/p2_06_critics_run.py.source",
+      "tested_worktree_sha256": "ff397742f371a8a738e723be19364c1c4cd6e3153ac147b999e0d7ce96362353",
+      "git_lf_sha256": "09ce9f0ca20704bb8dfd71b1f1ee9db06f4b8f2a84d5244fa9a27abc81ffc037"
+    },
+    "tools/cnw_nk_adapter.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cnw_nk_adapter.py.source",
+      "tested_worktree_sha256": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+      "git_lf_sha256": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5"
+    },
+    "tools/cost_guard.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/cost_guard.py.source",
+      "tested_worktree_sha256": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+      "git_lf_sha256": "a5c2b68e900b4f0be98a854e9eddab3902b4ebd448987c1e19f601da9c92e37d"
+    },
+    "tools/p2_cost_guard.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tools/p2_cost_guard.py.source",
+      "tested_worktree_sha256": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+      "git_lf_sha256": "11d80ded3ec790c9b65e6c91202eb6ce2744099679ab1102f786d580add7ff05"
+    },
+    "tests/test_cnw_atom06.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_atom06.py.source",
+      "tested_worktree_sha256": "045df4aa86efa61b496932e3856a97b0a4ff0440f760852e78df2a65b70eb3ca",
+      "git_lf_sha256": "045df4aa86efa61b496932e3856a97b0a4ff0440f760852e78df2a65b70eb3ca"
+    },
+    "tests/test_cnw_task_consumers.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_task_consumers.py.source",
+      "tested_worktree_sha256": "8214f577a6ff244041b82f77c2c88d1ae92621aedcc74b6b6bfaf66bd01f3d5d",
+      "git_lf_sha256": "8214f577a6ff244041b82f77c2c88d1ae92621aedcc74b6b6bfaf66bd01f3d5d"
+    },
+    "tests/test_cnw_pack_job.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_pack_job.py.source",
+      "tested_worktree_sha256": "05ed093bcbd28e23f749dbb728092183aebad6c2100c8db35d0c379f049bf7db",
+      "git_lf_sha256": "05ed093bcbd28e23f749dbb728092183aebad6c2100c8db35d0c379f049bf7db"
+    },
+    "tests/test_cnw_native_pack_job.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_native_pack_job.py.source",
+      "tested_worktree_sha256": "079df433c7bcb960716d011255992094b8f72450ca319118341d9e71afe51a1d",
+      "git_lf_sha256": "079df433c7bcb960716d011255992094b8f72450ca319118341d9e71afe51a1d"
+    },
+    "tests/test_cnw_pack_attempts.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_pack_attempts.py.source",
+      "tested_worktree_sha256": "06fa5778edd7985520cc528bcf13fde7f3280e08e55d380c2b1b829ec38865aa",
+      "git_lf_sha256": "06fa5778edd7985520cc528bcf13fde7f3280e08e55d380c2b1b829ec38865aa"
+    },
+    "tests/test_cnw_pack_app.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_pack_app.py.source",
+      "tested_worktree_sha256": "08619d6b8341dcebf0877d9fb5895e38814e8f6b03e8de37c5be1b2e164eda5f",
+      "git_lf_sha256": "08619d6b8341dcebf0877d9fb5895e38814e8f6b03e8de37c5be1b2e164eda5f"
+    },
+    "tests/test_cnw_support_consumers.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_support_consumers.py.source",
+      "tested_worktree_sha256": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+      "git_lf_sha256": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809"
+    },
+    "tests/test_cnw_role_inputs.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_role_inputs.py.source",
+      "tested_worktree_sha256": "792ff20760c5562aefda600f5f764dfba071087fbda7de666f231f9a56d53eb3",
+      "git_lf_sha256": "792ff20760c5562aefda600f5f764dfba071087fbda7de666f231f9a56d53eb3"
+    },
+    "tests/test_cnw_runner.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_runner.py.source",
+      "tested_worktree_sha256": "0ed7acb7f8f1aaaf5b881102cd3684ea6cfe841758cab91db291425535840165",
+      "git_lf_sha256": "d5a85f6aaa07892e2dc3e833d9fb6fc960a6fc291c505c7a7f25a6432213a496"
+    },
+    "tests/test_cnw_adapters.py": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/tests/test_cnw_adapters.py.source",
+      "tested_worktree_sha256": "44f2f32ef0abf2884f33f20e53c35e5446dec421c0789c069fbc7f38c9b3cf51",
+      "git_lf_sha256": "44f2f32ef0abf2884f33f20e53c35e5446dec421c0789c069fbc7f38c9b3cf51"
+    },
+    "tests/test_cnw_native_rebinding.py": {
+      "archive": "evidence/atom06_routing_repair_20261013/source_bytes/tests/test_cnw_native_rebinding.py.source",
+      "tested_worktree_sha256": "afeb2bf90503cafa630763c01a0f86ff79aa7285e799695feee7da9e8455e62b",
+      "git_lf_sha256": "afeb2bf90503cafa630763c01a0f86ff79aa7285e799695feee7da9e8455e62b"
+    },
+    "tests/test_cnw_native_v1_consumer_compat.py": {
+      "archive": "evidence/atom06_routing_repair_20261013/source_bytes/tests/test_cnw_native_v1_consumer_compat.py.source",
+      "tested_worktree_sha256": "fc936951d1c5bede75780778fdd55fed54a90f1d2e18811ff41c99c24a3402b6",
+      "git_lf_sha256": "fc936951d1c5bede75780778fdd55fed54a90f1d2e18811ff41c99c24a3402b6"
+    },
+    "plans/MASTER_PLAN_GENERIC_APP_R5.md": {
+      "archive": "evidence/atom06_current_20261013/source_bytes/plans/MASTER_PLAN_GENERIC_APP_R5.md.source",
+      "tested_worktree_sha256": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d",
+      "git_lf_sha256": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d"
+    }
+  },
+  "records": [
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before.raw.txt",
+      "sha256": "4b7fb299450998ec3e08f27148ca3b702dc54c3db066bce6dcf2546ec7d32589",
+      "size": 28362
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before.check.json",
+      "sha256": "de68658465cdb1a62804d70dec111fed1abaa8fe4a17c87a5833be846eb60dfb",
+      "size": 6729
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before.roles.json",
+      "sha256": "243f79ee2cf95795db77ef5a0052b3a282fe054fdba22fd33bad8f3e19ae256c",
+      "size": 722
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before.test_source.py.source",
+      "sha256": "0110deb0d04b872feeca7ff990e7aef78ecac532cefc455450521bebc6eb3f54",
+      "size": 5001
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before_fixed_fixture.raw.txt",
+      "sha256": "05dac4075a73764af479f79e5e925be23f919e4aea7d1a98d46bf30a06ed431b",
+      "size": 37196
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before_fixed_fixture.check.json",
+      "sha256": "eb7f8a8610d019b917d585fed7aa0a7a6dccf8238c2c815d0eb195f5a499b208",
+      "size": 6743
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before_fixed_fixture.roles.json",
+      "sha256": "f275fe32cd723a9604a69bbdf5c1db399ba65404d4d27c560fb27ed97022ac8c",
+      "size": 39336
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_before_fixed_fixture.test_source.py.source",
+      "sha256": "afeb2bf90503cafa630763c01a0f86ff79aa7285e799695feee7da9e8455e62b",
+      "size": 6016
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_repair.raw.txt",
+      "sha256": "90270f0aac6611242889ebb0df7ec5633f2c4f55f7af5862fec4e6aa0b9d683e",
+      "size": 1257
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_repair.check.json",
+      "sha256": "5cefcd91eeeba889322fe258cab1ffc43042d10f3deea068bd2fcf62c90fdbd7",
+      "size": 6968
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_routing_repair.roles.json",
+      "sha256": "2b2d1963d74391d8b08440d76794d5e9d0e7309ae6821d58e2e325cef181c0e1",
+      "size": 3324
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers.raw.txt",
+      "sha256": "cb072ec3a4c042dc4a9f67cc4ccfaacbd4278a934906b218c0ad0e427e42d4da",
+      "size": 5336
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers.check.json",
+      "sha256": "7d55a7c7e1029023e634ad7ff589b863989cf66dc84246912120ac624e19048d",
+      "size": 7113
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers.test_source.py.source",
+      "sha256": "1ab28054c0428a5ae5746cc1d04e53026237f9ff69e312ab58c0cbc9ca07f179",
+      "size": 2946
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers_fixed.raw.txt",
+      "sha256": "d84b60e20e608e08df285ddd2b8b335d832d02aa480aa2e6e62333369696335a",
+      "size": 6443
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers_fixed.check.json",
+      "sha256": "21e28f5eb06032f250c3718c0d37c3e5f2f7b9572d3495842a437375b9f83e40",
+      "size": 7119
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers_fixed.test_source.py.source",
+      "sha256": "3fdf71f83dad62accb54ca8d14c65610d01acb54f69bc6dcdd5331f1e883438c",
+      "size": 3411
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers_fixed2.raw.txt",
+      "sha256": "57b1fe636b686618401bd481e09ff28f0196526242b0549bf93153714b6c6ed9",
+      "size": 712
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers_fixed2.check.json",
+      "sha256": "9505d696a2914190feb0d0fb9e909f6694efd5af290c52d2c478e814af6c55d4",
+      "size": 7120
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/native_old_v1_consumers_fixed2.roles.json",
+      "sha256": "101aa202973caec215724c0a36458970102e1e06d53766be9a968fafbe658224",
+      "size": 189973
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/python311_routing.raw.txt",
+      "sha256": "5fdd5577b86184b2b27fba3d097e31431d0c3c2b768070921245495c0cb71213",
+      "size": 320
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/python311_routing.check.json",
+      "sha256": "8bb6c214403afedcd4f244cc170b102bcc0888d04dc2e53dc631b551cca40e35",
+      "size": 7281
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/python311_routing.roles.json",
+      "sha256": "2ce9b5826c32948271fce28350766fbc764a9a039bfaacaa011d95921801da83",
+      "size": 2790
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/CONTROLLER_310f21e_RETURN_SOURCE.json",
+      "sha256": "9bd68e4ff6b8eac752229a3b60c0d895cd5fc2cb400f9843b90263a6b735ea9b",
+      "size": 571
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/CONTROLLER_310f21e_RETURN_VERBATIM.md",
+      "sha256": "e160e04f509349b1f8714590d30579bd6e80eb95cbc719d6a071facca4b535ba",
+      "size": 6050
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/source_bytes/tools/cnw_native_pack.py.source",
+      "sha256": "b5924239470531a5a50b25388525789f7b182584ab012eb8c6077ee29a477c38",
+      "size": 45793
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/source_bytes/tests/test_cnw_native_rebinding.py.source",
+      "sha256": "afeb2bf90503cafa630763c01a0f86ff79aa7285e799695feee7da9e8455e62b",
+      "size": 6016
+    },
+    {
+      "file": "evidence/atom06_routing_repair_20261013/source_bytes/tests/test_cnw_native_v1_consumer_compat.py.source",
+      "sha256": "fc936951d1c5bede75780778fdd55fed54a90f1d2e18811ff41c99c24a3402b6",
+      "size": 3818
+    }
+  ],
+  "test_exit_codes": {
+    "native_routing_before": 1,
+    "native_routing_before_fixed_fixture": 1,
+    "native_routing_repair": 0,
+    "native_old_v1_consumers": 1,
+    "native_old_v1_consumers_fixed": 1,
+    "native_old_v1_consumers_fixed2": 0,
+    "python311_routing": 0
+  },
+  "actual_old_v1_artifact_request_readback": [
+    {
+      "stage": "plot",
+      "sha256": "22eeaa571775fe40f0b95947f2494a09612628a410602db61bec55cf379c25e3"
+    },
+    {
+      "stage": "scene_cards",
+      "sha256": "d3e10cfcfab7535d9e5621eff7b24a6a7e0364bd51d55bf576bc1ae786634b65"
+    },
+    {
+      "stage": "writing_brief",
+      "sha256": "c837d086b56f51dcaa890b4e73e9dbb9cdf6a4c204d1c9d3ebf108860bed53af"
+    },
+    {
+      "stage": "prose",
+      "sha256": "b288a8b2c9a898d0776032d68ab6985b9f9d9a7c6f4463eabdeac875144c9aea"
+    },
+    {
+      "request_or_raw": "request_path_bytes_hex",
+      "sha256": "34e8689b275c9bd9a914c4686654ea6bdb15aaebce6b0eb0c57e0563efa55786"
+    },
+    {
+      "request_or_raw": "request_path_bytes_hex",
+      "sha256": "e68c3514136939714168b30607d426acb834da3c2b56a11cf2b3af21ab94ffac"
+    },
+    {
+      "request_or_raw": "request_path_bytes_hex",
+      "sha256": "8cd2af747e1fb5972e5d0a279bdfd77cb0bc8201aa30c83ede18ff463c22783d"
+    },
+    {
+      "request_or_raw": "request_path_bytes_hex",
+      "sha256": "a1caaadfeef90fee3c4a76be508f6864ff516a9490a9687942617e323947b25a"
+    }
+  ],
+  "repair_scope": "ORIGINAL_DECLARATION_DERIVED_NATIVE_ATTEMPT_LOCATORS_AND_ADAPTER_CHOICES",
+  "prior_reviewed_evidence": "ATOM06_CURRENT_CANDIDATE_MANIFEST_20261013.json",
+  "current_controller_accept": "PENDING_EXACT_C/T",
+  "provider": "NOT_RUN",
+  "full_input_pack_story_gate": "NOT_COMPLETED",
+  "cutover_blocked": true
+}
