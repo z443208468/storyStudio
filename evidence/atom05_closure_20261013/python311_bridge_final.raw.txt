@@ -1,0 +1,24 @@
+test_direct_bridge_rejects_registered_material_before_key_or_output (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_direct_bridge_rejects_registered_material_before_key_or_output) ... FAIL
+test_true_legacy_input_and_output_keep_actual_native_route (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_true_legacy_input_and_output_keep_actual_native_route) ... ok
+test_native_component_uses_real_shared_accounts_and_preserves_unknown (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown) ... ok
+test_legacy_output_cannot_downgrade_registered_input_or_critique (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_legacy_output_cannot_downgrade_registered_input_or_critique) ... ok
+
+======================================================================
+FAIL: test_direct_bridge_rejects_registered_material_before_key_or_output (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_direct_bridge_rejects_registered_material_before_key_or_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_critics_bridge_datahome.py", line 261, in test_direct_bridge_rejects_registered_material_before_key_or_output
+    self.assertIn(b'CRITICS_REGISTERED_INVOCATION_REQUIRED', result.stdout)
+AssertionError: b'CRITICS_REGISTERED_INVOCATION_REQUIRED' not found in b'CRITICS_BRIDGE_FAILED:ValueError:INPUT_MUST_BE_UNDER_PRIVATE_WORKSPACE_OR_REGISTERED_PROJECT\r\n'
+
+----------------------------------------------------------------------
+Ran 4 tests in 125.353s
+
+FAILED (failures=1)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-dy7o3529\\runs\\V1-NAMED\\modified_plot.md", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-dy7o3529\\runs\\V1-NAMED\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-dy7o3529\\runs\\V1-NAMED", "provider_call_count": 0, "provider_request_ids": [], "error_type": null}
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-dy7o3529\\runs\\V1-EXPLICIT\\modified_plot.md", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-dy7o3529\\runs\\V1-EXPLICIT\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-dy7o3529\\runs\\V1-EXPLICIT", "provider_call_count": 0, "provider_request_ids": [], "error_type": null}
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-vv0n0b48\\data\\projects\\ad404a21-9929-42e7-ba2e-b7e932f3e4a9\\runs\\NATIVE-COMPONENT\\modified_plot.md", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-vv0n0b48\\data\\projects\\ad404a21-9929-42e7-ba2e-b7e932f3e4a9\\runs\\NATIVE-COMPONENT\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-vv0n0b48\\data\\projects\\ad404a21-9929-42e7-ba2e-b7e932f3e4a9\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": ["MOCK-PROVIDER-A"], "error_type": null}
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-px2dgdh7\\data\\projects\\fefdc44e-4a26-41e3-969c-6602154f35fa\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": [null], "error_type": "RuntimeError"}

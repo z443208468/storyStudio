@@ -1,0 +1,73 @@
+F................................................ [ 94%]
+...                                                                   [100%]
+================================== FAILURES ===================================
+_ CriticsBridgeDataHomeTests.test_direct_bridge_rejects_registered_material_before_key_or_output _
+
+self = <tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests testMethod=test_direct_bridge_rejects_registered_material_before_key_or_output>
+
+    def test_direct_bridge_rejects_registered_material_before_key_or_output(self):
+        import subprocess
+        with tempfile.TemporaryDirectory(prefix='critics-direct-guard-') as temp_name:
+            temp = Path(temp_name).resolve()
+            data_home = temp / 'selected-data-home'
+            setup_data_home(data_home, pointer_path=temp / 'setup.json')
+            project = Path(create_project(project_id='DIRECT-BRIDGE', data_home=data_home)['project_root'])
+            (project / 'runs').mkdir()
+            source, critique = project / 'input.md', project / 'critique.json'
+            source.write_text('registered fictional text', encoding='utf-8')
+            critique.write_text('{}', encoding='utf-8')
+            target = project / 'runs/DIRECT'
+            repo = temp / 'legacy-repo'
+            (repo / 'workspace').mkdir(parents=True)
+            (repo / 'runs').mkdir()
+            legacy_source = repo / 'workspace/input.md'
+            legacy_source.write_text('legacy fictional text', encoding='utf-8')
+            legacy_target = repo / 'runs/DIRECT'
+            original = source.read_bytes(), critique.read_bytes(), legacy_source.read_bytes()
+            script = str(Path(critics_bridge.__file__).resolve())
+            cases = [
+                ['plan-critique', '--plot', str(source), '--run-dir', str(target)],
+                ['plan-critique', '--plot', str(source), '--run-dir', str(legacy_target)],
+                ['plan-critique', '--plot', str(legacy_source), '--run-dir', str(target)],
+                ['plan-revise', '--plot', str(legacy_source), '--critique', str(critique), '--run-dir', str(legacy_target)],
+                ['plan-revise', '--plot', str(source), '--critique', str(critique), '--run-dir', str(target)],
+                ['text-refine', '--excerpt', str(source), '--run-dir', str(target)],
+            ]
+            with patch.object(critics_bridge, 'ROOT', repo), \
+                 patch.object(critics_bridge, 'configure_provider') as key, \
+                 patch.object(critics_bridge, 'create_run_directory', wraps=critics_bridge.create_run_directory) as mkdir, \
+                 patch.object(p2_cost_guard, 'provider_slot') as slot, \
+                 patch.object(p2_cost_guard, 'command_reserve') as reserve:
+                for command in cases:
+                    with self.subTest(command=command):
+                        with self.assertRaisesRegex(ValueError, 'CRITICS_REGISTERED_INVOCATION_REQUIRED'):
+                            critics_bridge.main(command)
+                for forged in (True, {'accepted': True}):
+                    with self.assertRaisesRegex(ValueError, 'CRITICS_REGISTERED_INVOCATION_REQUIRED'):
+                        critics_bridge.main(cases[0], _registered_invocation=forged)
+                key.assert_not_called()
+                mkdir.assert_not_called()
+                slot.assert_not_called()
+                reserve.assert_not_called()
+            # Exercise the actual __main__ entry in a credential-free, network-denied child.
+            bootstrap = ("import sys,runpy\n"
+                "def deny(event,args):\n"
+                " if event in ('socket.connect','socket.sendto','socket.getaddrinfo'): raise RuntimeError('OFFLINE_NETWORK_DENIED')\n"
+                "sys.addaudithook(deny)\n"
+                + 'sys.argv=' + repr([script, *cases[0]]) + '\n'
+                + 'runpy.run_path(' + repr(script) + ',run_name="__main__")\n')
+            env = dict(os.environ)
+            for name in ('DEEPSEEK_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY'):
+                env.pop(name, None)
+            result = subprocess.run([sys.executable, '-c', bootstrap], env=env,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=90)
+            self.assertEqual(result.returncode, 2)
+>           self.assertIn(b'CRITICS_REGISTERED_INVOCATION_REQUIRED', result.stdout)
+E           AssertionError: b'CRITICS_REGISTERED_INVOCATION_REQUIRED' not found in b'CRITICS_BRIDGE_FAILED:ValueError:INPUT_MUST_BE_UNDER_PRIVATE_WORKSPACE_OR_REGISTERED_PROJECT\r\n'
+
+tests\test_critics_bridge_datahome.py:261: AssertionError
+---------------------------- Captured stdout call -----------------------------
+uuuuuu
+=========================== short test summary info ===========================
+FAILED tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_direct_bridge_rejects_registered_material_before_key_or_output
+1 failed, 51 passed, 26 subtests passed in 151.05s (0:02:31)

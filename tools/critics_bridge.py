@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from typing import NamedTuple
 import hashlib
 import json
 import os
@@ -12,6 +13,52 @@ ROOT = Path(__file__).resolve().parents[1]
 PATCH_INDEX = json.loads((ROOT / "patches" / "critics" / "PATCH_INDEX.json").read_text(encoding="utf-8"))
 BUILD = ROOT / "runtime" / "patched" / "CritiCS" / PATCH_INDEX["runtime_build_id"]
 CONFIG = ROOT / "config" / "production.example.json"
+
+
+class _RegisteredNativeInvocation(NamedTuple):
+    account: object
+    parent_run_dir: Path
+    run_dir: Path
+    input_path: Path
+    critique_path: Path | None
+    action: str
+    input_sha256: str
+    critique_sha256: str | None
+    accounted_send: object
+
+
+def _verify_registered_invocation(source: Path, critique: Path | None,
+                                 run_dir: Path, action: str, invocation) -> None:
+    owner = _registered_project_for_path(run_dir)
+    source_owner = _registered_project_for_path(source)
+    critique_owner = _registered_project_for_path(critique) if critique else None
+    if not (owner or source_owner or critique_owner):
+        if invocation is not None:
+            raise ValueError("CRITICS_REGISTERED_INVOCATION_INVALID")
+        return
+    if not isinstance(invocation, _RegisteredNativeInvocation):
+        raise ValueError("CRITICS_REGISTERED_INVOCATION_REQUIRED")
+    import httpx
+    try:
+        from . import cost_guard
+    except ImportError:
+        import cost_guard
+    parent = invocation.parent_run_dir
+    stage = "critics_text" if action == "text-refine" else "critics_plot"
+    account = invocation.account
+    if (not owner or source_owner != owner or (critique and critique_owner != owner)
+            or not isinstance(account, cost_guard.RunAccount)
+            or _registered_project_for_path(parent) != owner
+            or run_dir.parent != parent.parent or not source.is_relative_to(parent)
+            or invocation.run_dir != run_dir or invocation.input_path != source
+            or invocation.critique_path != critique or invocation.action != action
+            or account.run != parent or account.context.run_id != parent.name
+            or account.context.stage != stage
+            or account.context != cost_guard.for_run(parent, stage=stage, model="deepseek-flash").context
+            or invocation.accounted_send is not httpx.Client.send
+            or invocation.input_sha256 != sha256_file(source)
+            or invocation.critique_sha256 != (sha256_file(critique) if critique else None)):
+        raise ValueError("CRITICS_REGISTERED_INVOCATION_INVALID")
 
 
 def project_path(value: str, *, directory: bool = False) -> Path:
@@ -122,7 +169,7 @@ def configure_provider():
     os.environ["LANGSMITH_TRACING"] = "false"
 
 
-def main(argv=None) -> int:
+def main(argv=None, *, _registered_invocation=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action", required=True)
     p = sub.add_parser("plan-critique")
@@ -137,12 +184,17 @@ def main(argv=None) -> int:
     p.add_argument("--run-dir", required=True)
     args = parser.parse_args(argv)
 
-    if not BUILD.is_dir():
-        raise FileNotFoundError("CRITICS_BUILD_NOT_FOUND")
     input_arg = getattr(args, "plot", None) or getattr(args, "excerpt", None)
     source = project_path(input_arg)
     if not source.is_file():
         raise FileNotFoundError("INPUT_FILE_NOT_FOUND")
+    critique_path = project_path(args.critique) if args.action == "plan-revise" else None
+    if critique_path is not None and not critique_path.is_file():
+        raise FileNotFoundError("CRITIQUE_FILE_NOT_FOUND")
+    requested_run = project_path(args.run_dir, directory=True)
+    _verify_registered_invocation(source, critique_path, requested_run, args.action, _registered_invocation)
+    if not BUILD.is_dir():
+        raise FileNotFoundError("CRITICS_BUILD_NOT_FOUND")
     run_dir = create_run_directory(args.run_dir)
 
     configure_provider()
@@ -159,9 +211,6 @@ def main(argv=None) -> int:
         write_json(output_path, result, run_dir)
     elif args.action == "plan-revise":
         from critics.plan.plan import modifiedStoryline
-        critique_path = project_path(args.critique)
-        if not critique_path.is_file():
-            raise FileNotFoundError("CRITIQUE_FILE_NOT_FOUND")
         critique = read_json(critique_path)
         result = modifiedStoryline(text, critique)
         output_path = run_dir / "modified_plot.md"

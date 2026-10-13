@@ -1,0 +1,17 @@
+test_direct_bridge_rejects_registered_material_before_key_or_output (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_direct_bridge_rejects_registered_material_before_key_or_output) ... ok
+test_true_legacy_input_and_output_keep_actual_native_route (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_true_legacy_input_and_output_keep_actual_native_route) ... ok
+test_native_component_uses_real_shared_accounts_and_preserves_unknown (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown) ... ok
+test_legacy_output_cannot_downgrade_registered_input_or_critique (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_legacy_output_cannot_downgrade_registered_input_or_critique) ... ok
+test_bridge_keeps_existing_dynamic_import_without_module_registration (tests.test_critics_bridge_datahome.CriticsBridgeDataHomeTests.test_bridge_keeps_existing_dynamic_import_without_module_registration) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 66.242s
+
+OK
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-4y692837\\runs\\V1-NAMED\\modified_plot.md", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-4y692837\\runs\\V1-NAMED\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-4y692837\\runs\\V1-NAMED", "provider_call_count": 0, "provider_request_ids": [], "error_type": null}
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-4y692837\\runs\\V1-EXPLICIT\\modified_plot.md", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-4y692837\\runs\\V1-EXPLICIT\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\critics-legacy-compat-4y692837\\runs\\V1-EXPLICIT", "provider_call_count": 0, "provider_request_ids": [], "error_type": null}
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-n0hx65sr\\data\\projects\\b1388ad4-0dd1-43db-ab28-a3296a970939\\runs\\NATIVE-COMPONENT\\modified_plot.md", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-n0hx65sr\\data\\projects\\b1388ad4-0dd1-43db-ab28-a3296a970939\\runs\\NATIVE-COMPONENT\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-n0hx65sr\\data\\projects\\b1388ad4-0dd1-43db-ab28-a3296a970939\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": ["MOCK-PROVIDER-A"], "error_type": null}
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-va7bbson\\data\\projects\\09bf86f8-ddfa-412d-9c68-b0fa9a8850e8\\runs\\NATIVE-COMPONENT", "provider_call_count": 1, "provider_request_ids": [null], "error_type": "RuntimeError"}

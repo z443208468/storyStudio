@@ -8,6 +8,8 @@ import os
 import tempfile
 import unittest
 from types import SimpleNamespace
+from types import ModuleType
+import sys
 from unittest.mock import patch
 
 from tools import critics_bridge, cnw_w10_critics, p2_06_critics_run, p2_cost_guard
@@ -161,29 +163,115 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
             ledger_before = fees.ledger.read_bytes()
             consumed = []
 
-            def native_boundary(command):
-                target = Path(command[command.index("--run-dir") + 1])
-                actual_input = Path(command[command.index("--plot") + 1])
-                actual_critique = Path(command[command.index("--critique") + 1])
-                consumed.append((actual_input.read_bytes(), actual_critique.read_bytes()))
-                critics_bridge.create_run_directory(target)
-                (target / "fixture-output.md").write_bytes(actual_input.read_bytes())
-                return 0
+            def native_boundary(text, feedback):
+                consumed.append((text.encode('utf-8'), feedback))
+                return text
+
+            from unittest.mock import Mock
+            native = Mock(side_effect=native_boundary)
+            native_module = ModuleType('critics.plan.plan')
+            native_module.modifiedStoryline = native
+            build = repo / 'runtime/patched/CritiCS' / critics_bridge.PATCH_INDEX['runtime_build_id']
+            build.mkdir(parents=True)
 
             with patch.object(p2_06_critics_run, "ROOT", repo), \
                  patch.object(critics_bridge, "ROOT", repo), \
-                 patch.dict(os.environ, {"DEEPSEEK_API_KEY": "synthetic-offline-test-key"}), \
-                 patch.object(critics_bridge, "main", side_effect=native_boundary) as native:
+                 patch.object(critics_bridge, 'BUILD', build), \
+                 patch.dict(sys.modules, {'critics.plan.plan': native_module}), \
+                 patch.dict(os.environ, {"DEEPSEEK_API_KEY": "synthetic-offline-test-key",
+                     'STORYSTUDIO_MODEL': 'deepseek-flash', 'STORYSTUDIO_BASE_URL': 'https://api.deepseek.com/v1'}):
                 for output in (["--run-name", "V1-NAMED"], ["--run-dir", str(repo / "runs/V1-EXPLICIT")]):
-                    self.assertEqual(p2_06_critics_run.main(["--action", "plan-revise", "--input", str(source),
-                        "--critique", str(critique), *output]), 0)
+                    previous_cwd, previous_path = os.getcwd(), list(sys.path)
+                    try:
+                        result = p2_06_critics_run.main(["--action", "plan-revise", "--input", str(source),
+                            "--critique", str(critique), *output])
+                    finally:
+                        os.chdir(previous_cwd)
+                        sys.path[:] = previous_path
+                    self.assertEqual(result, 0)
                 self.assertEqual(native.call_count, 2)
-            self.assertEqual(consumed, [(source.read_bytes(), critique.read_bytes())] * 2)
+            self.assertEqual(consumed, [(source.read_bytes(), {})] * 2)
             self.assertEqual(fees.ledger.read_bytes(), ledger_before)
             for name in ("V1-NAMED", "V1-EXPLICIT"):
-                self.assertEqual((repo / "runs" / name / "fixture-output.md").read_bytes(), source.read_bytes())
+                self.assertEqual((repo / "runs" / name / "modified_plot.md").read_bytes(), source.read_bytes())
+                receipt_path = repo / 'runs' / name / 'run_receipt.json'
+                receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+                receipt.update(mode='MOCK_ONLY', simulation_status='SIMULATED', fixture_only=True)
+                receipt_path.write_text(json.dumps(receipt), encoding='utf-8')
                 self.assertEqual(json.loads((repo / "runs" / name / "provider-calls.json").read_text()), [])
                 self.assertEqual((repo / "runs" / name / "p2-cost-ledger.json").read_bytes(), ledger_before)
+
+    def test_direct_bridge_rejects_registered_material_before_key_or_output(self):
+        import subprocess
+        with tempfile.TemporaryDirectory(prefix='critics-direct-guard-') as temp_name:
+            temp = Path(temp_name).resolve()
+            data_home = temp / 'selected-data-home'
+            setup_data_home(data_home, pointer_path=temp / 'setup.json')
+            project = Path(create_project(project_id='DIRECT-BRIDGE', data_home=data_home)['project_root'])
+            (project / 'runs').mkdir()
+            source, critique = project / 'input.md', project / 'critique.json'
+            source.write_text('registered fictional text', encoding='utf-8')
+            critique.write_text('{}', encoding='utf-8')
+            target = project / 'runs/DIRECT'
+            repo = temp / 'legacy-repo'
+            (repo / 'workspace').mkdir(parents=True)
+            (repo / 'runs').mkdir()
+            legacy_source = repo / 'workspace/input.md'
+            legacy_source.write_text('legacy fictional text', encoding='utf-8')
+            legacy_target = repo / 'runs/DIRECT'
+            original = source.read_bytes(), critique.read_bytes(), legacy_source.read_bytes()
+            script = str(Path(critics_bridge.__file__).resolve())
+            cases = [
+                ['plan-critique', '--plot', str(source), '--run-dir', str(target)],
+                ['plan-critique', '--plot', str(source), '--run-dir', str(legacy_target)],
+                ['plan-critique', '--plot', str(legacy_source), '--run-dir', str(target)],
+                ['plan-revise', '--plot', str(legacy_source), '--critique', str(critique), '--run-dir', str(legacy_target)],
+                ['plan-revise', '--plot', str(source), '--critique', str(critique), '--run-dir', str(target)],
+                ['text-refine', '--excerpt', str(source), '--run-dir', str(target)],
+            ]
+            with patch.object(critics_bridge, 'ROOT', repo), \
+                 patch.object(critics_bridge, 'configure_provider') as key, \
+                 patch.object(critics_bridge, 'create_run_directory', wraps=critics_bridge.create_run_directory) as mkdir, \
+                 patch.object(p2_cost_guard, 'provider_slot') as slot, \
+                 patch.object(p2_cost_guard, 'command_reserve') as reserve:
+                for command in cases:
+                    with self.subTest(command=command):
+                        with self.assertRaisesRegex(ValueError, 'CRITICS_REGISTERED_INVOCATION_REQUIRED'):
+                            critics_bridge.main(command)
+                for forged in (True, {'accepted': True}):
+                    with self.assertRaisesRegex(ValueError, 'CRITICS_REGISTERED_INVOCATION_REQUIRED'):
+                        critics_bridge.main(cases[0], _registered_invocation=forged)
+                key.assert_not_called()
+                mkdir.assert_not_called()
+                slot.assert_not_called()
+                reserve.assert_not_called()
+            # Exercise the actual __main__ entry in a credential-free, network-denied child.
+            bootstrap = ("import sys,runpy\n"
+                "def deny(event,args):\n"
+                " if event in ('socket.connect','socket.sendto','socket.getaddrinfo'): raise RuntimeError('OFFLINE_NETWORK_DENIED')\n"
+                "sys.addaudithook(deny)\n"
+                + 'sys.path.insert(0,' + repr(str(Path(script).parent)) + ')\n'
+                + 'sys.argv=' + repr([script, *cases[0]]) + '\n'
+                + 'runpy.run_path(' + repr(script) + ',run_name="__main__")\n')
+            env = dict(os.environ)
+            for name in ('DEEPSEEK_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY'):
+                env.pop(name, None)
+            result = subprocess.run([sys.executable, '-c', bootstrap], env=env,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=90)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(b'CRITICS_REGISTERED_INVOCATION_REQUIRED', result.stdout)
+            self.assertFalse(target.exists())
+            self.assertFalse(legacy_target.exists())
+            self.assertEqual((source.read_bytes(), critique.read_bytes(), legacy_source.read_bytes()), original)
+
+    def test_bridge_keeps_existing_dynamic_import_without_module_registration(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('isolated_critics_bridge', critics_bridge.__file__)
+        module = importlib.util.module_from_spec(spec)
+        self.assertNotIn('isolated_critics_bridge', sys.modules)
+        spec.loader.exec_module(module)
+        self.assertTrue(callable(module.main))
+        self.assertEqual(module._RegisteredNativeInvocation._fields[0], 'account')
 
     def test_native_component_uses_real_shared_accounts_and_preserves_unknown(self):
         from tests.test_cnw_run_bindings import ExistingRunBindingTests
@@ -239,39 +327,43 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
                 'choices': [{'finish_reason': 'stop', 'message': {'content': 'Fictional revised choice.'}}],
                 'usage': {'prompt_tokens': 10, 'completion_tokens': 5}})
 
-        def native_transport(command):
-            target = critics_bridge.create_run_directory(command[command.index('--run-dir') + 1])
-            source = Path(command[command.index('--plot') + 1])
-            critique = Path(command[command.index('--critique') + 1])
+        def native_method(storyline, final_critic):
             template = cnw_critics_adapter.native_templates('storyline_template.py', {'applyQA'})['applyQA']
             messages = [{'role': 'user', 'content': template.format(
-                storyline=source.read_text(encoding='utf-8'),
-                final_critic=json.loads(critique.read_text(encoding='utf-8')))}]
+                storyline=storyline, final_critic=final_critic)}]
             request = p2_06_critics_run.httpx.Request('POST', 'https://api.deepseek.com/v1/chat/completions',
                 json={'model': 'deepseek-flash', 'messages': messages})
             with p2_06_critics_run.httpx.Client() as client:
                 response = client.send(request).json()
-            output = target / 'modified_plot.md'
-            output.write_text(response['choices'][0]['message']['content'], encoding='utf-8')
-            build = critics_bridge.PATCH_INDEX['runtime_build_id']
-            receipt = {'action': 'plan-revise', 'status': 'SUCCEEDED', 'model': 'deepseek-flash',
-                'base_url': 'https://api.deepseek.com/v1', 'build': f'runtime/patched/CritiCS/{build}',
-                'input_sha256': critics_bridge.sha256_file(source),
-                'output_sha256': critics_bridge.sha256_file(output),
-                'mode': 'MOCK_ONLY', 'simulation_status': 'SIMULATED', 'fixture_only': True}
-            (target / 'run_receipt.json').write_text(json.dumps(receipt), encoding='utf-8')
-            return 0
+            return response['choices'][0]['message']['content']
+
+        from unittest.mock import Mock
+        native = Mock(side_effect=native_method)
+        native_module = ModuleType('critics.plan.plan')
+        native_module.modifiedStoryline = native
 
         with patch.object(p2_cost_guard, 'provider_slot', new=observed_slot), \
              patch.object(p2_06_critics_run.httpx.Client, 'send', new=network_mock), \
-             patch.object(p2_06_critics_run.critics_bridge, 'main', side_effect=native_transport) as native:
+             patch.dict(sys.modules, {'critics.plan.plan': native_module}), \
+             patch.dict(os.environ, {'DEEPSEEK_API_KEY': 'synthetic-offline-test-key',
+                 'STORYSTUDIO_MODEL': 'deepseek-flash', 'STORYSTUDIO_BASE_URL': 'https://api.deepseek.com/v1'}):
             for index in range(2):
                 args = SimpleNamespace(action='plan-revise', input=str(inputs[index]),
                     critique=str(critiques[index]), ledger_run_id=parents[index].name,
                     parent_stage='critics_plot')
-                result = p2_06_critics_run._execute_native(args, children[index],
-                    account=accounts[index], parent_run_dir=parents[index])
+                previous_cwd, previous_path = os.getcwd(), list(sys.path)
+                try:
+                    result = p2_06_critics_run._execute_native(args, children[index],
+                        account=accounts[index], parent_run_dir=parents[index])
+                finally:
+                    os.chdir(previous_cwd)
+                    sys.path[:] = previous_path
                 self.assertEqual(result, 0 if index == 0 else 1)
+                if index == 0:
+                    receipt_path = children[index] / 'run_receipt.json'
+                    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+                    receipt.update(mode='MOCK_ONLY', simulation_status='SIMULATED', fixture_only=True)
+                    receipt_path.write_text(json.dumps(receipt), encoding='utf-8')
             ledger = p2_cost_guard.read_ledger_snapshot()
             self.assertEqual(len(ledger['requests']), 2)
             for index, row in enumerate(ledger['requests']):

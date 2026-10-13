@@ -233,7 +233,16 @@ def _execute_native(args, run_dir: Path, *, account=None, parent_run_dir: Path |
     httpx.Client.send = capture_send
     failure = None
     try:
-        result = critics_bridge.main(command)
+        if account:
+            invocation = critics_bridge._RegisteredNativeInvocation(
+                account=account, parent_run_dir=parent_run_dir, run_dir=run_dir,
+                input_path=input_path, critique_path=critique_path, action=args.action,
+                input_sha256=critics_bridge.sha256_file(input_path),
+                critique_sha256=critics_bridge.sha256_file(critique_path) if critique_path else None,
+                accounted_send=capture_send)
+            result = critics_bridge.main(command, _registered_invocation=invocation)
+        else:
+            result = critics_bridge.main(command)
     except BaseException as exc:
         result = 1
         failure = type(exc).__name__
