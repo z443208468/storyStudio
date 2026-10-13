@@ -169,6 +169,12 @@ def source_repository(home: Path, authority: dict, *, local: str | Path | None, 
 def import_package(input_file: str | Path, *, data_home: str | Path,
                    local_source: str | Path | None = None, offline: bool = False) -> dict:
     pack = read_input_pack(input_file)
+    if pack.get("format") == "native_v2":
+        try:
+            from .cnw_native_pack import import_native
+        except ImportError:
+            from cnw_native_pack import import_native
+        return import_native(pack, input_file, data_home=data_home, local_source=local_source, offline=offline)
     archive = Path(input_file).read_bytes()
     if _sha(archive) != pack["pack_sha256"]:
         raise ContractError("INPUT_PACK_CHANGED", "selected package changed during validation")
@@ -263,6 +269,34 @@ def _task_job_identity(row: dict) -> dict:
             "unit_id", "contract", "contract_sha256", "planned_run_id", "requested_max_visible_chars")}
 
 
+def _save_job_progress(record_path: Path, previous: bytes, report: dict) -> bytes:
+    """CAS persistence with original job bytes retained; caller owns job lock."""
+    import tempfile
+    _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
+    if record_path.read_bytes() != previous:
+        raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed during processing")
+    history = record_path.parent / "history"
+    _assert_no_reparse(history, code="INPUT_PACK_JOB_UNSAFE")
+    history.mkdir(exist_ok=True)
+    old = history / (_sha(previous) + ".json")
+    _assert_no_reparse(old, code="INPUT_PACK_JOB_UNSAFE")
+    if old.exists():
+        if old.read_bytes() != previous:
+            raise ContractError("INPUT_PACK_JOB_HISTORY_CHANGED", "prior job bytes changed")
+    else:
+        with old.open("xb") as stream:
+            stream.write(previous)
+    new = _bytes(report)
+    with tempfile.NamedTemporaryFile(mode="wb", dir=record_path.parent, delete=False, prefix=".result.") as stream:
+        stream.write(new); stream.flush(); os.fsync(stream.fileno())
+        pending = Path(stream.name)
+    _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
+    if record_path.read_bytes() != previous:
+        raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed before persistence; temporary bytes retained")
+    os.replace(pending, record_path)
+    return new
+
+
 def prepare_package_runs(job_record: str | Path, *, data_home: str | Path) -> dict:
     """Prepare/recheck this job's offline Runs without executing any stage.
 
@@ -270,7 +304,6 @@ def prepare_package_runs(job_record: str | Path, *, data_home: str | Path) -> di
     Progress and original inputs survive interruption; existing Runs are only
     checked, never overwritten or reset.
     """
-    import tempfile
     from types import SimpleNamespace
     try:
         from . import cnw_runner
@@ -287,12 +320,18 @@ def prepare_package_runs(job_record: str | Path, *, data_home: str | Path) -> di
     job = record_path.parent
     if record_path.name != "result.json" or job.parent != home / "shared/input_pack_jobs":
         raise ContractError("INPUT_PACK_JOB_UNSAFE", "select a job owned by this DataHome")
+    if _json(_safe_source_file(job, "result.json").read_bytes()).get("schema_version") == "cnw_input_pack_job_v2":
+        try:
+            from .cnw_native_pack import prepare_native_runs
+        except ImportError:
+            from cnw_native_pack import prepare_native_runs
+        return prepare_native_runs(record_path, data_home=home)
     with project_write_lock(job):
         _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
         raw = record_path.read_bytes()
         report = _json(raw)
         if (not isinstance(report, dict) or report.get("schema_version") != "cnw_input_pack_job_v1" or report.get("job_id") != job.name
-                or report.get("status") not in {"CONTRACTS_READY_FOR_PREFLIGHT", "INPUTS_PREPARED_WITH_CAPACITY_PENDING", "RUNS_PREPARED_PENDING_AUTHORIZATION", "RUNS_PREPARED_WITH_CAPACITY_PENDING"}
+                or report.get("status") not in {"CONTRACTS_READY_FOR_PREFLIGHT", "INPUTS_PREPARED_WITH_CAPACITY_PENDING", "RUNS_PREPARED_PENDING_AUTHORIZATION", "RUNS_PREPARED_WITH_CAPACITY_PENDING", "JOB_EXECUTION_INCOMPLETE", "JOB_AWAITING_AUTHOR", "MOCK_STORIES_EXPORTED", "MOCK_STORIES_EXPORTED_WITH_CAPACITY_PENDING"}
                 or not isinstance(report.get("tasks"), list) or not report["tasks"]):
             raise ContractError("INPUT_PACK_JOB_NOT_READY", "job inputs are incomplete or its identity differs")
         archive = _safe_source_file(job, "input.zip").read_bytes()
@@ -323,29 +362,7 @@ def prepare_package_runs(job_record: str | Path, *, data_home: str | Path) -> di
 
         def save_progress():
             nonlocal raw
-            _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
-            if record_path.read_bytes() != raw:
-                raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed during preparation")
-            history = job / "history"
-            _assert_no_reparse(history, code="INPUT_PACK_JOB_UNSAFE")
-            history.mkdir(exist_ok=True)
-            old = history / (_sha(raw) + ".json")
-            _assert_no_reparse(old, code="INPUT_PACK_JOB_UNSAFE")
-            if old.exists():
-                if old.read_bytes() != raw:
-                    raise ContractError("INPUT_PACK_JOB_HISTORY_CHANGED", "prior job bytes changed")
-            else:
-                with old.open("xb") as stream:
-                    stream.write(raw)
-            new = _bytes(report)
-            with tempfile.NamedTemporaryFile(mode="wb", dir=job, delete=False, prefix=".result.") as stream:
-                stream.write(new); stream.flush(); os.fsync(stream.fileno())
-                pending = Path(stream.name)
-            _assert_no_reparse(record_path, code="INPUT_PACK_JOB_UNSAFE")
-            if record_path.read_bytes() != raw:
-                raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed before progress persistence; temporary bytes were retained")
-            os.replace(pending, record_path)
-            raw = new
+            raw = _save_job_progress(record_path, raw, report)
 
         for row, root, contract_path, contract in checked:
             with project_write_lock(root):
@@ -372,16 +389,166 @@ def prepare_package_runs(job_record: str | Path, *, data_home: str | Path) -> di
                     "run_path": str(run), "identity_sha256": identity, "record": str(binding_path),
                     "record_sha256": _sha(binding_path.read_bytes()), "provider_call_authorized": False,
                     "controller_attestation_status": "ATTESTATION_PENDING", "live_authorization_status": "NOT_AUTHORIZED"}
-                row["status"] = "RUN_PREPARED_PENDING_AUTHORIZATION"
+                if not row.get("execution"):
+                    row["status"] = "RUN_PREPARED_PENDING_AUTHORIZATION"
             save_progress()
         capacity_pending = any(row.get("status") == "CAPACITY_PENDING" for row in report["tasks"])
-        report["status"] = ("RUNS_PREPARED_WITH_CAPACITY_PENDING" if checked else "INPUTS_PREPARED_WITH_CAPACITY_PENDING") if capacity_pending else "RUNS_PREPARED_PENDING_AUTHORIZATION"
+        if not any(row.get("execution") for row in report["tasks"]):
+            report["status"] = ("RUNS_PREPARED_WITH_CAPACITY_PENDING" if checked else "INPUTS_PREPARED_WITH_CAPACITY_PENDING") if capacity_pending else "RUNS_PREPARED_PENDING_AUTHORIZATION"
         report["production_status"] = "NOT_AUTHORIZED"
         save_progress()
         return report
 
 
-def main():
+def _offline_job_run(run: Path) -> dict:
+    try:
+        from . import cnw_runner
+    except ImportError:
+        import cnw_runner
+    state = cnw_runner.load_state(run)
+    if state.get("mode") != "offline" or state.get("fixture_only") is not False:
+        raise ContractError("INPUT_PACK_RUN_MODE_INVALID", "this job executor supports only normally validated offline Runs")
+    receipts = state.get("provider_requests", [])
+    if any(row.get("mode") != "MOCK_ONLY" or row.get("simulation_status") != "SIMULATED"
+           or row.get("fixture_only") is not True for row in receipts):
+        raise ContractError("INPUT_PACK_SIMULATION_RECEIPT_INVALID", "offline job cannot consume Live or unmarked receipts")
+    if len({row.get("request_id") for row in receipts}) != len(receipts):
+        raise ContractError("INPUT_PACK_SIMULATION_RECEIPT_INVALID", "receipt IDs must be unique within the actual Run")
+    return state
+
+
+def execute_package_job(job_record: str | Path, *, data_home: str | Path) -> dict:
+    """Application-owned fixed CNW chain and export, retaining interruption.
+
+    No transport or authorization switch is exposed here. The real Provider
+    boundary remains closed; R5 tests inject only its final model interface.
+    These offline candidates cannot grant Live, fees, promotion or cutover.
+    """
+    from types import SimpleNamespace
+    try:
+        from . import cnw_runner, cnw_recovery
+    except ImportError:
+        import cnw_runner, cnw_recovery
+    prepared = prepare_package_runs(job_record, data_home=data_home)
+    if prepared.get("status") == "JOB_PREPARATION_INCOMPLETE":
+        return prepared
+    home = Path(data_home).resolve(strict=True)
+    record = Path(job_record).resolve(strict=True)
+    with project_write_lock(record.parent):
+        raw = _safe_source_file(record.parent, record.name).read_bytes()
+        report = _json(raw)
+        if _bytes(report) != _bytes(prepared):
+            raise ContractError("INPUT_PACK_JOB_WRITE_CONFLICT", "job changed after identity validation")
+        def save():
+            nonlocal raw
+            raw = _save_job_progress(record, raw, report)
+        for row in report["tasks"]:
+            if row.get("status") == "CAPACITY_PENDING":
+                continue
+            if report.get("schema_version") == "cnw_input_pack_job_v2" and not row.get("run_preparation"):
+                try:
+                    from .cnw_native_pack import prepare_native_task, record_preparation_failure
+                except ImportError:
+                    from cnw_native_pack import prepare_native_task, record_preparation_failure
+                try:
+                    ready = prepare_native_task(report, row, record.parent, data_home=home)
+                except Exception as exc:
+                    record_preparation_failure(report, row, exc)
+                    save()
+                    return report
+                if not ready:
+                    save()
+                    continue
+                save()
+            root = Path(resolve_project(row["project_root"], data_home=home)["project_root"])
+            run = root / "runs" / row["planned_run_id"]
+            _assert_no_reparse(run, code="INPUT_PACK_RUN_UNSAFE")
+            execution = row.setdefault("execution", {"mode": "OFFLINE", "simulation_status": "NOT_EXECUTED", "stages": {}})
+            stage = "preflight"
+            try:
+                with project_write_lock(root), cnw_runner.locked_run(run, lock_name="execution.lock"):
+                    bindings = build_run_contract_preflight(root, row["contract"], run_id=row["planned_run_id"])
+                    if bindings["identity_sha256"] != row["run_preparation"]["identity_sha256"]:
+                        raise ContractError("INPUT_PACK_RUN_BINDINGS_CHANGED", "Run inputs differ from the prepared task")
+                    existing = _offline_job_run(run)
+                    review = existing["stages"]["re_review"]
+                    if review.get("status") == "REVISION_REQUIRED" and any(
+                            f.get("error_code") == "REREVIEW_REQUIRES_REVISION" for f in review.get("execution_failures", [])):
+                        stage = "re_review"
+                        raise ContractError("REREVIEW_REQUIRES_REVISION", "bounded revision exhausted; author decision required, existing candidates retained")
+                    for stage in cnw_runner.CNW_STAGES:
+                        result = cnw_recovery.execute_checked(run, stage)
+                        state = _offline_job_run(run)
+                        material = state["stages"][stage]
+                        if material.get("status") not in cnw_runner._MATERIALIZED:
+                            raise ContractError("INPUT_PACK_STAGE_NOT_COMPLETE", stage)
+                        text = cnw_runner._read_stage_text(run, state, stage)
+                        if not text.strip():
+                            raise ContractError("INPUT_PACK_STAGE_EMPTY", stage)
+                        execution["stages"][stage] = {"status": material["status"],
+                            "artifact": material["artifact"], "execution_identity": material["execution_identity"],
+                            "execution_input_identity": material["execution_input_identity"],
+                            "provider_request_ids": material.get("provider_request_ids", []),
+                            "last_result": result["status"] if "status" in result else "STAGE_EXECUTED"}
+                        row["status"] = "TASK_EXECUTING"
+                        save()
+                    stage = "export"
+                    state = _offline_job_run(run)
+                    cnw_recovery.verify_evidence(run, state)
+                    if not state.get("provider_requests"):
+                        raise ContractError("INPUT_PACK_SIMULATION_RECEIPT_INVALID", "a complete model chain needs actual simulated receipts")
+                    # Bounded Re-review may add Refine versions. The final Run
+                    # is authoritative, including those actual consumer effects.
+                    for name in cnw_runner.CNW_STAGES:
+                        material = state["stages"][name]
+                        if material.get("status") not in cnw_runner._MATERIALIZED:
+                            raise ContractError("INPUT_PACK_STAGE_NOT_COMPLETE", name)
+                        cnw_runner._read_stage_text(run, state, name)
+                        execution["stages"][name].update(artifact=material["artifact"],
+                            execution_identity=material["execution_identity"],
+                            execution_input_identity=material["execution_input_identity"],
+                            provider_request_ids=material.get("provider_request_ids", []))
+                    inputs_sha = _sha(_bytes({name: state["stages"][name]["artifact"] for name in cnw_runner.CNW_STAGES}))
+                    prior = execution.get("export")
+                    if prior and prior["inputs_sha256"] != inputs_sha:
+                        raise ContractError("INPUT_PACK_EXPORT_INPUT_CHANGED", "previous export retained; changed candidate requires explicit handling")
+                    output = cnw_runner.export_run(SimpleNamespace(project_root=str(root), run_id=row["planned_run_id"],
+                                                                  _export_job_id=report["job_id"]))
+                    target = root / "deliverables" / row["project_instance_id"] / row["planned_run_id"]
+                    _assert_no_reparse(target, code="INPUT_PACK_EXPORT_UNSAFE")
+                    if Path(output["deliverables"]) != target:
+                        raise ContractError("INPUT_PACK_EXPORT_BINDINGS_CHANGED", "export target differs from the actual task")
+                    file_hashes = {p.relative_to(root).as_posix(): _sha(_safe_source_file(root, p.relative_to(root).as_posix()).read_bytes())
+                                   for p in sorted(target.iterdir()) if p.is_file()}
+                    exported = {"inputs_sha256": inputs_sha, "result": output, "file_sha256": file_hashes}
+                    if prior and _bytes(prior) != _bytes(exported):
+                        raise ContractError("INPUT_PACK_EXPORT_BINDINGS_CHANGED", "cached export metadata differs from actual bound outputs")
+                    execution["export"] = exported
+                    execution.update(mode="MOCK_ONLY", simulation_status="SIMULATED")
+                    execution["status"] = "MOCK_STORY_EXPORTED"
+                    execution.pop("blocking_code", None)
+                    row["status"] = "MOCK_STORY_EXPORTED"
+                    save()
+            except Exception as exc:
+                code = getattr(exc, "code", "INPUT_PACK_STAGE_INTERRUPTED")
+                awaiting = code in {"REREVIEW_REQUIRES_REVISION", "AUTHOR_INPUT_CONFLICT", "INPUT_PACK_STAGE_NOT_COMPLETE"}
+                execution.update(status="AWAITING_AUTHOR" if awaiting else "EXECUTION_INCOMPLETE", blocking_code=code, interrupted_stage=stage)
+                execution.setdefault("interruptions", []).append({"stage": stage, "blocking_code": code, "error_type": type(exc).__name__, "detail": str(exc)[:2048]})
+                row["status"] = "TASK_AWAITING_AUTHOR" if awaiting else "TASK_EXECUTION_INCOMPLETE"
+                report.update(status="JOB_AWAITING_AUTHOR" if awaiting else "JOB_EXECUTION_INCOMPLETE", blocking_code=code)
+                if awaiting:
+                    report["action_required"] = "已保留稿件、审稿与未决问题；需要作者处置。重复启动不会重新授予修订次数。"
+                save()
+                return report
+        completed = any(r.get("status") == "MOCK_STORY_EXPORTED" for r in report["tasks"])
+        report["status"] = ("MOCK_STORIES_EXPORTED_WITH_PENDING_TASKS" if completed else "INPUTS_PREPARED_WITH_PENDING_TASKS") if any(r.get("status") == "WAITING_PREDECESSOR" for r in report["tasks"]) else ("MOCK_STORIES_EXPORTED_WITH_CAPACITY_PENDING" if completed else "INPUTS_PREPARED_WITH_CAPACITY_PENDING") if any(r.get("status") == "CAPACITY_PENDING" for r in report["tasks"]) else "MOCK_STORIES_EXPORTED"
+        report.update(simulation_status="SIMULATED" if completed else "NOT_EXECUTED", live_validation_status="NOT_LIVE_VALIDATED", production_status="NOT_AUTHORIZED")
+        report.pop("blocking_code", None)
+        save()
+        return report
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--input")
@@ -390,17 +557,21 @@ def main():
     parser.add_argument("--source-repository")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--prepare-runs", action="store_true")
-    args = parser.parse_args()
+    parser.add_argument("--execute-job", action="store_true")
+    args = parser.parse_args(argv)
     if args.job:
         if args.source_repository:
             parser.error("a stored job does not fetch or reimport sources")
-        result = prepare_package_runs(args.job, data_home=args.data_home)
+        result = execute_package_job(args.job, data_home=args.data_home) if args.execute_job else prepare_package_runs(args.job, data_home=args.data_home)
     else:
         result = import_package(args.input, data_home=args.data_home, local_source=args.source_repository, offline=args.offline)
-        if args.prepare_runs and result["status"] != "IMPORT_INCOMPLETE":
-            result = prepare_package_runs(result["job_record"], data_home=args.data_home)
+        if result["status"] not in {"IMPORT_INCOMPLETE", "JOB_PREPARATION_INCOMPLETE"}:
+            if args.execute_job:
+                result = execute_package_job(result["job_record"], data_home=args.data_home)
+            elif args.prepare_runs:
+                result = prepare_package_runs(result["job_record"], data_home=args.data_home)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 2 if result["status"] == "IMPORT_INCOMPLETE" else 0
+    return 2 if result["status"] in {"IMPORT_INCOMPLETE", "JOB_PREPARATION_INCOMPLETE", "JOB_EXECUTION_INCOMPLETE", "JOB_AWAITING_AUTHOR"} else 0
 
 
 if __name__ == "__main__":

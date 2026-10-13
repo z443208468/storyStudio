@@ -14,6 +14,7 @@ except ImportError:
 
 SCHEMA = "cnw_task_requirements_v1"
 RECIPE = "legacy_scene_requirements_v1"
+NATIVE_RECIPE = "native_writing_requirements_v1"
 
 # These are engine bindings or old input-review claims. They remain archived;
 # the writing model cannot use them as permissions or source-authority aliases.
@@ -179,6 +180,17 @@ def validate_derivation(context: dict, *, sources: dict[str, tuple[str, bytes]],
 
 
 def frozen_task_sources(project_root: Path, index: dict) -> dict[str, tuple[str, bytes]]:
+    if index.get("schema_version") == "cnw_native_input_binding_v1":
+        names = {"work_order": index["original_work_order"]}
+        if index.get("native_context_file"):
+            names["scene_packet"] = index["native_context_file"]
+        result = {}
+        for key, name in names.items():
+            raw = _safe_source_file(project_root, name).read_bytes()
+            if index["files"].get(name) != sha(raw):
+                raise ContractError("TASK_REQUIREMENTS_SOURCE_CHANGED", "native requirement source differs")
+            result[key] = (name, raw)
+        return result
     snapshot = f"_INBOX/input_packs/{index['pack_sha256']}"
     seed = f"{snapshot}/{index['scene_root']}/project_seed/"
     names = {"work_order": f"{snapshot}/{index['scene_root']}/work_order.draft.json",
@@ -201,14 +213,43 @@ def frozen_task_sources(project_root: Path, index: dict) -> dict[str, tuple[str,
     return result
 
 
+def derive_native_task_context(*, sources: dict, identity: dict, index: dict) -> dict:
+    order = decode(sources["work_order"][1])
+    packet = decode(sources["scene_packet"][1]) if "scene_packet" in sources else {}
+    for key in ("pov", "new_plot_pre_designed", "standalone_trial"):
+        if key in order and key in packet and order[key] is not None and packet[key] is not None:
+            if key == "pov" or type(order[key]) is bool and type(packet[key]) is bool:
+                _require_same_declaration(order[key], packet[key], field=key, work_id=index["unit_id"], sources=sources,
+                    left_category="work_order", left_pointer=_pointer(key), right_category="scene_packet",
+                    right_pointer=_pointer(key), code="TASK_REQUIREMENTS_DISCRETE_CONFLICT")
+    selected = {"work_order": {k: v for k,v in order.items() if k not in WORK_ORDER_TECHNICAL_FIELDS},
+                "scene_packet": {k: v for k,v in packet.items() if k not in PACKET_SOURCE_COPIES}}
+    provenance = []
+    for category, values in selected.items():
+        if category not in sources:
+            continue
+        path, raw = sources[category]
+        provenance += [{"task_pointer": f"/data/{category}{_pointer(k)}", "source_file": path,
+                        "source_sha256": sha(raw), "source_pointer": _pointer(k)} for k in values]
+    unknown = sorted(set(selected["work_order"]) - (KNOWN_WORK_ORDER_FIELDS | {"chapter_context", "scene_targets"}))
+    return {"schema_version": SCHEMA, "recipe_version": NATIVE_RECIPE,
+            **{k: identity[k] for k in ("project_id", "project_instance_id")},
+            "work_id": index["unit_id"], "original_project_id": identity["project_id"],
+            "scene_root": index["scene_root"], "pack_sha256": index["pack_sha256"],
+            "authority": "SCOPED_WRITING_TASK_DATA_NOT_CANON_OR_EXECUTION_PERMISSION",
+            "data": selected, "provenance": provenance, "opaque_work_order_fields": unknown,
+            "opaque_semantic_status": "UNPROVEN_EXTENSION" if unknown else "NO_OPAQUE_WORK_ORDER_FIELDS"}
+
+
 def verify_bound_task_context(project_root: Path, index: dict) -> tuple[str, dict] | None:
     descriptor = index.get("task_context")
     if descriptor is None:
         # Existing contracts/bindings retain their historical input semantics.
         return None
-    expected_name = f"_INBOX/input_packs/{index['pack_sha256']}/derived/task_requirements.v1.json"
+    native = index.get("schema_version") == "cnw_native_input_binding_v1"
+    expected_name = (f"_INBOX/input_packs/{index['pack_sha256']}/tasks/{index['task_alias']}" if native else f"_INBOX/input_packs/{index['pack_sha256']}") + "/derived/task_requirements.v1.json"
     if (not isinstance(descriptor, dict) or descriptor.get("schema_version") != SCHEMA or
-            descriptor.get("recipe_version") != RECIPE or descriptor.get("file") != expected_name or
+            descriptor.get("recipe_version") != (NATIVE_RECIPE if native else RECIPE) or descriptor.get("file") != expected_name or
             descriptor.get("sha256") != index["files"].get(expected_name)):
         raise ContractError("TASK_REQUIREMENTS_BINDING_INVALID", "task context must bind its declared recipe and private derived file")
     raw = _safe_source_file(project_root, expected_name).read_bytes()
@@ -216,8 +257,13 @@ def verify_bound_task_context(project_root: Path, index: dict) -> tuple[str, dic
         raise ContractError("TASK_REQUIREMENTS_DERIVATION_MISMATCH", "derived task file changed")
     context = decode(raw)
     identity = {key: index[key] for key in ("project_id", "project_instance_id")}
-    validate_derivation(context, sources=frozen_task_sources(project_root, index), identity=identity,
-                        scene_root=index["scene_root"], pack_sha256=index["pack_sha256"])
+    if native:
+        expected = derive_native_task_context(sources=frozen_task_sources(project_root, index), identity=identity, index=index)
+        if encode(context) != encode(expected):
+            raise ContractError("TASK_REQUIREMENTS_DERIVATION_MISMATCH", "native data or locators differ from their frozen declarations")
+    else:
+        validate_derivation(context, sources=frozen_task_sources(project_root, index), identity=identity,
+                            scene_root=index["scene_root"], pack_sha256=index["pack_sha256"])
     if raw != encode(context):
         raise ContractError("TASK_REQUIREMENTS_DERIVATION_MISMATCH", "derived file is not the exact recipe serialization")
     return expected_name, context
@@ -261,7 +307,7 @@ def lens_task_view(context: dict, lens_id: str) -> dict | None:
         selected = {name: value for name, value in data.items() if name == "temporal_envelope"}
         selected["work_order"] = {k: v for k, v in data["work_order"].items() if k == "fact_provenance"}
     pointers = {f"/data/{name}{_pointer(key)}" for name, values in selected.items() for key in values}
-    return {"schema_version": SCHEMA, "recipe_version": RECIPE, "lens_id": lens_id,
+    return {"schema_version": SCHEMA, "recipe_version": context["recipe_version"], "lens_id": lens_id,
             "project_instance_id": context["project_instance_id"], "work_id": context["work_id"],
             "authority": context["authority"], "data": selected,
             "provenance": [record for record in context["provenance"] if record["task_pointer"] in pointers]}

@@ -2481,7 +2481,8 @@ def export_run(args) -> dict:
         from .cnw_export import export_reading_package
     except ImportError:
         from cnw_export import export_reading_package
-    return export_reading_package(path, state, project_root=Path(getattr(args, "project_root", None) or ROOT))
+    return export_reading_package(path, state, project_root=Path(getattr(args, "project_root", None) or ROOT),
+                                  job_id=getattr(args, "_export_job_id", None))
 
 
 def sprint_run(args) -> dict:

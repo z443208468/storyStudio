@@ -4,6 +4,8 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import socket
+import threading
 import os
 import subprocess
 import sys
@@ -288,6 +290,8 @@ class InputPackTests(unittest.TestCase):
 
     def test_archived_inputs_and_old_pass_cannot_be_reimported_as_confirmed_facts(self):
         from tools import cnw_import_workflow as workflow
+        from tools import cnw_runner as runner
+        from tests.test_cnw_atom09_three_project_e2e import ThreeProjectOfflineE2E
         for kind in ("binding", "old_review"):
             with self.subTest(kind=kind):
                 root = self.project(kind)
@@ -300,6 +304,10 @@ class InputPackTests(unittest.TestCase):
                 prefix = index_file.removesuffix("binding.json")
                 ref = index_file if kind == "binding" else prefix + "scenes/A/project_seed/reviews/scene.json"
                 canon_before = (root / "90_canon/canon.md").read_bytes()
+                model = ThreeProjectOfflineE2E()
+                model._guard_lock = threading.Lock()
+                model._counter = 0
+                model.requests = []
                 def transport(run, *, messages, **kwargs):
                     payload = json.loads(messages[1]["content"])
                     self.assertEqual(set(payload["original_sources"]), set(inventory))
@@ -308,11 +316,23 @@ class InputPackTests(unittest.TestCase):
                                  for name in workflow.DOCUMENTS}
                     documents["90_canon/canon.md"] = [{"status": "CONFIRMED", "text": "ARCHIVE_ONLY_INVENTED_FACT",
                                                        "source_refs": [ref, "author:templates/CLAUDE.md"]}]
-                    return json.dumps({"documents": documents, "source_notes": {n: "Actual original." for n in inventory},
-                                       "conflicts": [], "next_action": "Review sources."}), {"execution_mode": "MOCK_ONLY"}
-                with patch.object(workflow, "cnw_live_call", side_effect=transport):
+                    content = json.dumps({"documents": documents, "source_notes": {n: "Actual original." for n in inventory},
+                                          "conflicts": [], "next_action": "Review sources."})
+                    return model._workflow_response(run, messages, content, stage=kwargs["stage"], role_id=kwargs["role_id"])
+                def denied(*args, **kwargs):
+                    raise AssertionError("REAL_PROVIDER_FEE_OR_NETWORK_FORBIDDEN")
+                with runner._isolated_operation_transport(self.temp, data_home=self.home, projects=[root], transport=transport), \
+                        patch.object(runner, "_p2_guard", side_effect=denied) as guard, \
+                        patch.object(runner.httpx, "post", side_effect=denied) as http, \
+                        patch.object(socket.socket, "connect", denied), \
+                        patch.dict(os.environ, {"DEEPSEEK_API_KEY": "", "OPENAI_API_KEY": ""}):
                     with self.assertRaisesRegex(ContractError, "IMPORT_CONFIRMED_FACT_SOURCE_REQUIRED"):
                         workflow.run_import(root)
+                guard.assert_not_called()
+                http.assert_not_called()
+                self.assertEqual(len(model.requests), 1)
+                self.assertEqual(model.requests[0]["receipt"]["mode"], "MOCK_ONLY")
+                self.assertEqual(model.requests[0]["receipt"]["simulation_status"], "SIMULATED")
                 self.assertEqual(canon_before, (root / "90_canon/canon.md").read_bytes())
                 text = "ARCHIVE_ONLY_INVENTED_FACT"
                 previous = {"claims": {"OLD": {"status": "CONFIRMED", "document": "90_canon/canon.md",

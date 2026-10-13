@@ -706,7 +706,15 @@ def _write_contract_draft_unlocked(project_root: str | Path, draft_path: str | P
     if output.exists():
         raise ContractError("CONTRACT_OUTPUT_COLLISION", output.name)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(contract, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    encoded_contract = json.dumps(contract, ensure_ascii=False, indent=2) + "\n"
+    if contract.get("input_pack", {}).get("schema_version") == "cnw_native_input_binding_v1":
+        try:
+            from .cnw_native_pack import _immutable
+        except ImportError:
+            from cnw_native_pack import _immutable
+        _immutable(output, encoded_contract.encode("utf-8"))
+    else:
+        output.write_text(encoded_contract, encoding="utf-8")
     return {"status": "CONTRACT_DRAFT_READY_FOR_HUMAN_PREFLIGHT", "project_id": contract["project_id"], "contract": str(output), "contract_sha256": sha(output.read_bytes()), "source_manifest_sha256": contract.get("source", {}).get("source_manifest_sha256"), "provider_call": "none"}
 
 

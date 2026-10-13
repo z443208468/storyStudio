@@ -252,6 +252,14 @@ def stage_identity(run_dir: Path, stage: str, *, project_root: Path | None = Non
                          task._require_same_declaration]
             if stage != "plot":
                 builders += [task.review_task_sources, task.lens_task_view]
+            bound = task.read_bound_task_context(project, contract)
+            if bound[1].get("recipe_version") == task.NATIVE_RECIPE:
+                try:
+                    from . import cnw_native_pack as native
+                except ImportError:
+                    import cnw_native_pack as native
+                builders += [task.derive_native_task_context, native.validate_binding, native.validate_draft,
+                             native._draft, native.validate_previous]
     value = {"version": 1, "stage": stage, "contract_sha256": state["contract_sha256"],
         "input_sha256": _digest(inputs),
         "input_hashes": {name: _digest(item) for name, item in sorted(inputs.items())},

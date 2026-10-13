@@ -50,6 +50,8 @@ def _bytes(value) -> bytes:
 
 
 def _safe_name(name: str) -> str:
+    if not isinstance(name, str):
+        raise ContractError("INPUT_PACK_PATH_UNSAFE", "archive path must be a string")
     parts = name.split("/")
     if (not name or "\\" in name or "\x00" in name or
             any(not p or p in {".", ".."} or re.search(r'[<>:"|?*\x00-\x1f]', p) or p.endswith((".", " ")) or
@@ -93,7 +95,7 @@ def read_input_pack(path: str | Path) -> dict:
         raise ContractError("INPUT_PACK_PATH_UNSAFE", "archive contains files outside its declared root")
     files = {n[len(prefix):]: raw for n, raw in files.items()}
     manifest = _json(files["PACK_MANIFEST.json"])
-    if not isinstance(manifest, dict) or manifest.get("schema") != "CQ_INPUT_PACK_MANIFEST_V5" or not isinstance(manifest.get("files"), dict):
+    if not isinstance(manifest, dict) or manifest.get("schema") not in {"CQ_INPUT_PACK_MANIFEST_V5", "STORYSTUDIO_INPUT_PACK_V2"} or not isinstance(manifest.get("files"), dict):
         raise ContractError("INPUT_PACK_FORMAT_UNSUPPORTED", "unsupported manifest declaration")
     declared = manifest["files"]
     if set(declared) != set(files) - {"PACK_MANIFEST.json"}:
@@ -106,6 +108,13 @@ def read_input_pack(path: str | Path) -> dict:
         if any(parent.as_posix() in files for parent in PurePosixPath(name).parents if parent.as_posix() != "."):
             raise ContractError("INPUT_PACK_PATH_UNSAFE", "archive file is also a parent directory")
     index = _json(files.get("workpack_index.json", b"{}"))
+    if manifest["schema"] == "STORYSTUDIO_INPUT_PACK_V2":
+        try:
+            from .cnw_native_pack import validate_declarations
+        except ImportError:
+            from cnw_native_pack import validate_declarations
+        declaration = validate_declarations(files, index)
+        return {"format": "native_v2", "pack_sha256": _sha(archive), "files": files, **declaration}
     if not isinstance(index, dict) or index.get("schema") != "cnw_workpack_index_v1" or not isinstance(index.get("workpacks"), list):
         raise ContractError("INPUT_PACK_INDEX_INVALID", "declared workpack index is missing")
     scenes = []
@@ -387,6 +396,12 @@ def prepare_scene_input(pack_path: str | Path, *, scene_root: str, project_root:
 
 
 def validate_input_pack_binding(project_root: Path, binding: dict, *, contract: dict | None = None) -> dict:
+    if isinstance(binding, dict) and binding.get("schema_version") == "cnw_native_input_binding_v1":
+        try:
+            from .cnw_native_pack import validate_binding
+        except ImportError:
+            from cnw_native_pack import validate_binding
+        return validate_binding(project_root, binding, contract=contract)
     if not isinstance(binding, dict) or binding.get("schema_version") != "cnw_input_pack_binding_v1":
         raise ContractError("INPUT_PACK_BINDING_INVALID", "unsupported binding schema")
     pack_sha = binding.get("pack_sha256")
@@ -433,6 +448,12 @@ def _original_order(project_root: Path, index: dict) -> dict:
 
 def validate_input_pack_draft(project_root: Path, draft: dict) -> None:
     index = validate_input_pack_binding(project_root, draft["input_pack"])
+    if index.get("schema_version") == "cnw_native_input_binding_v1":
+        try:
+            from .cnw_native_pack import validate_draft
+        except ImportError:
+            from cnw_native_pack import validate_draft
+        return validate_draft(project_root, index, draft)
     original = _original_order(project_root, index)
     if any(key not in draft or _bytes(draft[key]) != _bytes(value) for key, value in original.items()):
         raise ContractError("INPUT_PACK_REQUIREMENT_MISMATCH", "normalized draft changed an original requirement without an authorization diff")

@@ -18,6 +18,7 @@ param(
     [string]$SourceRepository,
     [switch]$Offline,
     [switch]$PrepareRuns,
+    [switch]$ExecuteJob,
     [ValidateSet('md','txt','json')][string]$Format,
     [string]$StepName,
     [string]$Candidate,
@@ -187,6 +188,7 @@ switch ($Command) {
         if ($SourceRepository) { $PackArgs += @('--source-repository',(Resolve-Path -LiteralPath $SourceRepository).Path) }
         if ($Offline) { $PackArgs += '--offline' }
         if ($PrepareRuns) { $PackArgs += '--prepare-runs' }
+        if ($ExecuteJob) { $PackArgs += '--execute-job' }
         & $Python @PackArgs
         if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_PACK_FAILED:$LASTEXITCODE" }
     }
