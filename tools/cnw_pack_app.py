@@ -417,13 +417,33 @@ def _offline_job_run(run: Path) -> dict:
     return state
 
 
-def execute_package_job(job_record: str | Path, *, data_home: str | Path) -> dict:
+def execute_package_job(job_record: str | Path, *, data_home: str | Path, execution_mode: str) -> dict:
     """Application-owned fixed CNW chain and export, retaining interruption.
 
-    No transport or authorization switch is exposed here. The real Provider
-    boundary remains closed; R5 tests inject only its final model interface.
-    These offline candidates cannot grant Live, fees, promotion or cutover.
+    Source acquisition and model execution are independent choices. Live is
+    carried explicitly to this boundary and fails closed until the reviewed
+    production grant/fee adapters are installed. R5 tests inject only the
+    final model interface for offline execution.
     """
+    if execution_mode not in {"offline", "live"}:
+        raise ContractError("INPUT_PACK_EXECUTION_MODE_INVALID", "execution mode must be explicit: offline or live")
+    if execution_mode == "live":
+        if not data_home or not Path(data_home).is_absolute():
+            raise ContractError("DATA_HOME_REQUIRED", "select an explicit registered DataHome")
+        home = Path(data_home).resolve(strict=True)
+        _data_home_identity(home, create=False)
+        supplied = Path(job_record).absolute()
+        _assert_no_reparse(supplied, code="INPUT_PACK_JOB_UNSAFE")
+        record = supplied.resolve(strict=True)
+        if record.name != "result.json" or record.parent.parent != home / "shared/input_pack_jobs":
+            raise ContractError("INPUT_PACK_JOB_UNSAFE", "select a job owned by this DataHome")
+        stored = _json(_safe_source_file(record.parent, "result.json").read_bytes())
+        return {"status": "LIVE_ROUTE_NOT_READY", "requested_execution_mode": "live",
+                "job_id": stored.get("job_id"), "job_record": str(record),
+                "pack_sha256": stored.get("pack_sha256"),
+                "provider_call": "none", "provider_request_count": 0, "fee_reservation_count": 0,
+                "production_status": "NOT_AUTHORIZED", "blocking_code": "LIVE_AUTHORIZATION_REQUIRED",
+                "detail": "generic package Live execution remains closed until project-bound trusted review and fee adapters are implemented"}
     from types import SimpleNamespace
     try:
         from . import cnw_runner, cnw_recovery
@@ -464,6 +484,12 @@ def execute_package_job(job_record: str | Path, *, data_home: str | Path) -> dic
             run = root / "runs" / row["planned_run_id"]
             _assert_no_reparse(run, code="INPUT_PACK_RUN_UNSAFE")
             execution = row.setdefault("execution", {"mode": "OFFLINE", "simulation_status": "NOT_EXECUTED", "stages": {}})
+            requested_mode = execution.get("requested_execution_mode")
+            if requested_mode not in {None, "offline"}:
+                raise ContractError("INPUT_PACK_EXECUTION_MODE_CHANGED", "offline executor cannot resume a job requested in another mode")
+            if execution.get("mode") not in {"offline", "OFFLINE", "MOCK_ONLY"}:
+                raise ContractError("INPUT_PACK_EXECUTION_MODE_CHANGED", "offline executor cannot resume a non-offline job")
+            execution["requested_execution_mode"] = "offline"
             stage = "preflight"
             try:
                 with project_write_lock(root), cnw_runner.locked_run(run, lock_name="execution.lock"):
@@ -542,7 +568,7 @@ def execute_package_job(job_record: str | Path, *, data_home: str | Path) -> dic
                 return report
         completed = any(r.get("status") == "MOCK_STORY_EXPORTED" for r in report["tasks"])
         report["status"] = ("MOCK_STORIES_EXPORTED_WITH_PENDING_TASKS" if completed else "INPUTS_PREPARED_WITH_PENDING_TASKS") if any(r.get("status") == "WAITING_PREDECESSOR" for r in report["tasks"]) else ("MOCK_STORIES_EXPORTED_WITH_CAPACITY_PENDING" if completed else "INPUTS_PREPARED_WITH_CAPACITY_PENDING") if any(r.get("status") == "CAPACITY_PENDING" for r in report["tasks"]) else "MOCK_STORIES_EXPORTED"
-        report.update(simulation_status="SIMULATED" if completed else "NOT_EXECUTED", live_validation_status="NOT_LIVE_VALIDATED", production_status="NOT_AUTHORIZED")
+        report.update(execution_mode="offline", simulation_status="SIMULATED" if completed else "NOT_EXECUTED", live_validation_status="NOT_LIVE_VALIDATED", production_status="NOT_AUTHORIZED")
         report.pop("blocking_code", None)
         save()
         return report
@@ -558,20 +584,25 @@ def main(argv=None):
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--prepare-runs", action="store_true")
     parser.add_argument("--execute-job", action="store_true")
+    parser.add_argument("--execution-mode", choices=("offline", "live"))
     args = parser.parse_args(argv)
+    if args.execute_job and not args.execution_mode:
+        parser.error("--execute-job requires an explicit --execution-mode offline|live")
+    if args.execution_mode and not args.execute_job:
+        parser.error("--execution-mode is valid only with --execute-job")
     if args.job:
         if args.source_repository:
             parser.error("a stored job does not fetch or reimport sources")
-        result = execute_package_job(args.job, data_home=args.data_home) if args.execute_job else prepare_package_runs(args.job, data_home=args.data_home)
+        result = execute_package_job(args.job, data_home=args.data_home, execution_mode=args.execution_mode) if args.execute_job else prepare_package_runs(args.job, data_home=args.data_home)
     else:
         result = import_package(args.input, data_home=args.data_home, local_source=args.source_repository, offline=args.offline)
         if result["status"] not in {"IMPORT_INCOMPLETE", "JOB_PREPARATION_INCOMPLETE"}:
             if args.execute_job:
-                result = execute_package_job(result["job_record"], data_home=args.data_home)
+                result = execute_package_job(result["job_record"], data_home=args.data_home, execution_mode=args.execution_mode)
             elif args.prepare_runs:
                 result = prepare_package_runs(result["job_record"], data_home=args.data_home)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 2 if result["status"] in {"IMPORT_INCOMPLETE", "JOB_PREPARATION_INCOMPLETE", "JOB_EXECUTION_INCOMPLETE", "JOB_AWAITING_AUTHOR"} else 0
+    return 2 if result["status"] in {"IMPORT_INCOMPLETE", "JOB_PREPARATION_INCOMPLETE", "JOB_EXECUTION_INCOMPLETE", "JOB_AWAITING_AUTHOR", "LIVE_ROUTE_NOT_READY"} else 0
 
 
 if __name__ == "__main__":

@@ -224,7 +224,7 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
             "$DataHome = '<启动本任务时所选 DataHome>'\n"
             f"$JobFile = Join-Path $DataHome 'shared/input_pack_jobs/{job_id}/result.json'\n"
             "tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile -Offline -PrepareRuns\n"
-            "tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile -Offline -ExecuteJob\n"
+            "tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile -Offline -Mode offline -ExecuteJob\n"
             "```\n\n"
             "应用保留同一任务的合同、Run、阶段产物和失败历史，核验身份后恢复；"
             "无需手填合同、WorkId 或 RunId。已经完成的任务核验并复用现有成果。\n"

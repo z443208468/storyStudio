@@ -169,7 +169,7 @@ class PackageJobTests(unittest.TestCase):
             yield
 
     def entry(self, *, job=None, transport=True):
-        args = ["--data-home", str(self.f.home), "--offline", "--execute-job"]
+        args = ["--data-home", str(self.f.home), "--offline", "--execute-job", "--execution-mode", "offline"]
         args += ["--job", job] if job else ["--input", str(self.f.pack), "--source-repository", str(self.f.repo)]
         stdout = io.StringIO()
         boundary = patch.object(runner, "cnw_live_call", side_effect=self.transport) if transport else contextlib.nullcontext()

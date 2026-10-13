@@ -10,6 +10,19 @@ formal package entry and processes all declared tasks in separate instances.
 .\tools\studio.ps1 project-pack -InputFile <ZIP> -DataHome <absolute-path>
 ```
 
+`-Offline` selects source acquisition behavior only; it does not select model
+execution. To execute the prepared package job, pass an explicit execution mode:
+
+```powershell
+.\tools\studio.ps1 project-pack -JobFile <job-record> -DataHome <absolute-path> -Offline -Mode offline -ExecuteJob
+```
+
+`-Mode offline` runs the deterministic mock path and its results remain marked
+`SIMULATED`/`MOCK_ONLY`. `-Mode live` preserves Live intent and currently returns
+`LIVE_ROUTE_NOT_READY`; it does not silently fall back to offline, call a
+Provider, or reserve fees. Live becomes available only after its project-bound
+trusted-review, authorization and fee adapters pass their own gates.
+
 Use `-SourceRepository <local-Git-repository> -Offline` for a local source.
 Without a local repository the app uses a private DataHome cache for the exact
 declared GitHub commit. `-Offline` forbids network fallback, including implicit

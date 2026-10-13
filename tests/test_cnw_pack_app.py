@@ -92,6 +92,24 @@ class PackApplicationTests(unittest.TestCase):
             Path(target).write_bytes(encoded({"execution": "FICTIONAL_OFFLINE_NO_PROVIDER", "first": result, "repeat": repeated,
                                              "source_repo_unchanged": True, "global_pointer_unchanged": True}))
 
+    def test_execute_job_requires_explicit_model_mode_not_source_offline_switch(self):
+        result = self.invoke("-SourceRepository", str(self.fixture.repo), "-Offline", "-ExecuteJob")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("PROJECT_PACK_EXECUTE_JOB_REQUIRES_MODE_OFFLINE_OR_LIVE", result.stderr + result.stdout)
+        self.assertFalse((self.fixture.home / "projects").exists())
+
+    def test_live_model_intent_is_not_downgraded_to_offline_or_sent(self):
+        result = self.invoke("-SourceRepository", str(self.fixture.repo), "-Offline", "-Mode", "live", "-ExecuteJob")
+        self.assertNotEqual(result.returncode, 0, result.stderr + result.stdout)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["status"], "LIVE_ROUTE_NOT_READY")
+        self.assertEqual(report["requested_execution_mode"], "live")
+        self.assertTrue(report["job_record"].endswith("result.json"))
+        self.assertEqual(report["blocking_code"], "LIVE_AUTHORIZATION_REQUIRED")
+        self.assertEqual(report["provider_request_count"], 0)
+        self.assertEqual(report["fee_reservation_count"], 0)
+        self.assertEqual(report["provider_call"], "none")
+
     def set_bounds(self, maximum):
         for label in ("A", "B", "C"):
             name = f"scenes/{label}/work_order.draft.json"

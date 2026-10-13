@@ -182,13 +182,15 @@ switch ($Command) {
     'project-pack' {
         if (-not $DataHome -or ((-not $InputFile) -and (-not $JobFile))) { throw 'PROJECT_PACK_REQUIRES_DATA_HOME_AND_INPUT_OR_JOB' }
         if ($InputFile -and $JobFile) { throw 'PROJECT_PACK_INPUT_AND_JOB_ARE_EXCLUSIVE' }
+        if ($ExecuteJob -and -not $Mode) { throw 'PROJECT_PACK_EXECUTE_JOB_REQUIRES_MODE_OFFLINE_OR_LIVE' }
+        if ($Mode -and -not $ExecuteJob) { throw 'PROJECT_PACK_MODE_REQUIRES_EXECUTE_JOB' }
         $PackArgs=@((Join-Path $Root 'tools/cnw_pack_app.py'),'--data-home',$DataHome)
         if ($JobFile) { $PackArgs += @('--job',(Resolve-Path -LiteralPath $JobFile).Path) }
         else { $PackArgs += @('--input',(Resolve-Path -LiteralPath $InputFile).Path) }
         if ($SourceRepository) { $PackArgs += @('--source-repository',(Resolve-Path -LiteralPath $SourceRepository).Path) }
         if ($Offline) { $PackArgs += '--offline' }
         if ($PrepareRuns) { $PackArgs += '--prepare-runs' }
-        if ($ExecuteJob) { $PackArgs += '--execute-job' }
+        if ($ExecuteJob) { $PackArgs += @('--execute-job','--execution-mode',$Mode) }
         & $Python @PackArgs
         if ($LASTEXITCODE -ne 0) { throw "CNW_PROJECT_PACK_FAILED:$LASTEXITCODE" }
     }

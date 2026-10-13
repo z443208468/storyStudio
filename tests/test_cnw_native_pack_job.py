@@ -167,7 +167,7 @@ class NativePackageTests(unittest.TestCase):
         args = ["--data-home", str(self.f.home), "--offline"]
         args += ["--job", job] if job else ["--input", str(self.package)]
         if execute:
-            args.append("--execute-job")
+            args += ["--execute-job", "--execution-mode", "offline"]
         stream = io.StringIO()
         boundary = patch.object(runner, "cnw_live_call", side_effect=self.transport) if transport else contextlib.nullcontext()
         with self.owner.disconnected(), boundary, contextlib.redirect_stdout(stream):
