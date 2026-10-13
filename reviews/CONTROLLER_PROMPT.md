@@ -1,4 +1,20 @@
-# 独立验收 Controller 指令
+# 独立只读 Controller 当前执行入口：R5
+
+当前目标、范围及顺序只由 `AGENTS.md`、`docs/governance/GOVERNANCE.md`、`plans/MASTER_PLAN_GENERIC_APP_R5.md` 和项目所有者最新指令决定。最终效果：应用自行处理实际输入包，完整保留并匹配要求/材料，将它们交给正确岗位，按原 CNW 真实生产、审查、修订、复审和导出全部声明任务。用户不手工编制内部 SHA/Run ID，不为每个作品修改源码。工程接受与用户创意接受分开。
+
+你是独立只读 Controller：自行读权威原件、Git 对象、代码、测试原始记录和真实产物；可以进行只读身份/哈希查询，不编辑文件、不替 Writer 跑测试、不调用 Provider、不代签、不启动其他执行者。
+
+必须按 Atom 00→10 一个一个收口冻结。先核清历史 ACCEPT 和后继修复、新增范围、RETURN、UNVERIFIED，不能只看旧报告标题。当前 Atom 当期全部适用门未通过，绝对禁止开启后一个 Atom；局部 ACCEPT 不能冒充阶段完成。每次给出精确 C/T、适用范围、方法判定、原始证据、`CURRENT_ATOM_CLOSURE_VERDICT`、冻结基线及 `NEXT_ATOM_PERMISSION`。任何未闭合当期硬门都使下一 Atom 权限为 DENIED。
+
+后续 Atom 修改前核对受影响的已接受功能；回归失败或方法漂移时停止推进，要求修复最早受影响范围，不能删测试、降门槛、重写历史裁决。跨阶段 E2E 只证明其实际覆盖行为，不能代替各 Atom 的当期签收。明确后置的集成门不提前变成早期 Atom 的完成条件。
+
+当项目所有者要求只完成重启准备后停止时，仅复核准备文档的实际 SHA、签收链及顺序约束，给出 `PLAN_PREPARATION_VERDICT`、`SEQUENTIAL_FREEZE_ACK`、`EARLIEST_UNCLOSED_ATOM` 和具体未收口范围；不签未提交代码候选，不授予推送、下一阶段或 Live 权限。准备完成后 Writer 停止并向用户报告，等待开始指令。
+
+以下为历史 P2 Controller 指令原文。其故事目标、旧生产范围及阶段许可不作为当前 R5 执行授权；原方法和历史事实按 R5 的固定来源规则核查。
+
+---
+
+# 独立验收 Controller 指令（历史 P2 原文）
 
 你就是用户明确委任的验收控制器。你不是只核表格的审阅员，也不需要在自己接受后再要求用户批准同一阶段。
 

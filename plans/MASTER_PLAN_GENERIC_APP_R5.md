@@ -198,6 +198,20 @@
 
 ---
 
+### 0.3b 最终效果硬门与重新收口准备（项目所有者 2026-10-13 指令）
+
+最终验收对象是可重复使用的应用。用户提供实际输入包并从正式应用入口启动；应用自行处理包格式、来源和内部身份，将材料与要求逐项匹配，经过原 CNW 生产、审查、必要修订、复审与导出。更换项目、作品名或任务数不得要求修改生产源码。包内历史脚本、PASS 和施工指令只作为输入证据，不能改变应用工作流或取得执行权限。
+
+`INPUT_PACK_TO_STORY_GATE=ACCEPT` 必须同时具有以下实证：
+
+1. 用户提供的实际输入包按 manifest/index 声明的全部任务进入正式应用入口；应用自行建立合同、项目实例、Run、来源身份及阶段衔接，用户不手填内部 SHA/Run ID，不手工预写阶段产物，不逐阶段拼装流程。
+2. 每项原要求和材料都有可核对的保留位置、合法岗位消费者及相应验收结果。未映射字段、篇幅不支持、冲突、失败或遗漏须明确报告；不得默默舍弃、降低要求或只完成其中部分任务后宣称整包完成。
+3. 真实生产执行既有 CNW 职责链，保留 M01–M16，特别四角色读集、两层 Lint、五 Lens、逐 Finding 三反证及 2/3 门槛、Completeness→Refine→修订稿 Re-review、Canon 与正式晋升边界。阶段名称、单测数或模拟文件不能替代真实消费者证据。
+4. 全部声明任务分别产生非空、可读、满足各自约束且经过审查/必要修订的导出，绑定真实请求回执、实际消费的输入输出 SHA 和费用证据；模拟不得通过 Live 门。按 0.3a 已获授权的必要真实调用须在工程与执行门通过后进行。
+5. 冻结旧 StoryStudio `26b72cea` 和固定原作者 CNW `97ad71fe` 继续作为回归与方法参考；已接受功能不得发生未解释的退化。工程签收不能代替用户亲自阅读后的创意接受。
+
+以上是最终交付门，不把依赖后续 Atom 的完整成果强塞入早期 Atom；各 Atom 当期门仍按 §1.2 和各节验收条款逐项完成。用户要求此次只完成计划完善、签收链核对、Controller 顺序约束与重启准备；准备好后停止并报告，等待用户明确开始，不自动进入源码施工、生产或后续 Atom。
+
 ## 1. 总体施工纪律（所有 Atom 均适用）
 
 1. **一个 Atom 的“当期独立完成门”通过、独立 Controller ACCEPT 后，再进入下一个 Atom。** 不得把必须依赖**后续 Atom** 才能实现的集成测试提前当作当前 Atom 前置门；整体总验仍统一要求 Atom-09 的全部真实模拟成果。Writer 只负责施工和提供候选、原始证据；Controller 只读，不修改产物。对涉及源码的 Atom：**Writer 先在本地 main 正常提交，获得真实 C/T；Controller 只读审该 C/T 和未提交保护清单；ACCEPT 后 Writer 正常推送；Controller/Writer 分别做远端回读。** RETURN 用追加修复提交产生新 C/T 再复审。归档清点而无源码变动的 Atom，可按归档 manifest SHA 验收，无须制造空提交。
@@ -276,6 +290,16 @@ NEXT_ACTION: <该 Atom 可进入下一步或必须停留>
 ```
 
 **机械问题不无限扯皮**：RETURN 必须具体指出文件/行/可复现偏差和修正目标，不以“多写文档、多加用例”代替实际效果；连续两次同根因 RETURN 应回到输入、调用图与真实消费者定位，不随机重试模型。已经核过且哈希未变的证据不重复付费。**不能因为当前 Atom 功能尚在后续 Atom 才可实现而提前索取完整11阶段证据**；当前阶段验当前闭环，总体完整方法由 Atom-09/10 终验。
+
+### 1.1 逐 Atom 收口、冻结与开启许可（项目所有者 2026-10-13 指令）
+
+- 同一时刻只有一个当前施工 Atom。按 00→01→02→03→04→05→06→07→08→09→10 核对其当期全部适用完成门和所有者已批准补充范围；前一个未收口，绝对禁止开始后一个 Atom 的实现、该 Atom 的验收施工或借其名义夹带改动。Writer 不得自行认定阶段许可。
+- Controller 必须自行读取原始裁决及后继修复，区分历史 ACCEPT、当前新增范围、尚未解除的 RETURN 和缺证 UNVERIFIED。旧 RETURN/WIP 页头不能推翻后继精确 ACCEPT；缺原消息也不能伪造 ACCEPT 或直接断言存在功能缺陷。
+- 收口须保存真实候选 C/T、适用计划身份、已接受范围、方法不变量、源码/输入/产物/原始验证记录的 SHA、原始独立裁决，以及按计划需要的正常推送/远端回读。局部 `LIMITED_ACCEPT` 只关闭它明确列出的范围，不能关闭同 Atom 仍未满足的当期硬门或最终产品门。
+- 每次开启下一 Atom，Controller 明确给出 `CURRENT_ATOM_CLOSURE_VERDICT`、已冻结基线及范围、尚存门禁、`NEXT_ATOM_PERMISSION`。当期门存在 RETURN/UNVERIFIED 或未核清依赖时，`NEXT_ATOM_PERMISSION=DENIED`；历史消息中的 NEXT_ACTION 不自动授权当前变更范围。
+- 冻结指可追溯保存已接受的代码/证据身份与功能基线。后续 Atom 必须先核对受影响的已接受功能；必要共享接口修改只可在当前授权范围内实施并通过相应回归及独立复核。功能退化、方法漂移或证据失效时，停止阶段推进，回到最早受影响范围修复；禁止通过删测试、降 oracle 或修改历史票据保持绿灯。
+- 已授权的 EARLY E2E 和当前 Atom 必需的跨阶段回归可以核证现有行为，但不授予任何后续 Atom 施工或签收权限。旧迁移、TS 恢复、Live/费用及默认入口切换仍分别遵守原门禁；不得用本条补造历史推送授权。
+- 已存在的越阶段 WIP 逐路径记录原始字节 SHA 并保留，不能混入当前 Atom 候选，也不能清理、丢弃或假称已经签收。既有远端历史只记事实，不 reset、强推或改写。
 
 ### 1.2 每个 Atom 的方法保护关注点与 Controller 签收门
 
@@ -1035,7 +1059,7 @@ resume_and_export_without_network()
 - `METHOD_FIDELITY_DIFF` 最终版将 M01–M16 每一行绑定固定上游路径+blob、实际代码/Prompt/配置、规范期待、已执行测试、实际请求/产物/消费者及 Controller 原始判定。所有适用 P0 为 PASS；确实非适用必须给出功能/来源理由，不能把缺证写成 N/A。
 - Controller 回查每个 Atom 的**原消息**、精确候选 C/T、远端正常读回身份、已复用证据哈希和所有 RETURN 修复历史；遇到某 Atom 的活动代码已被后续变更影响，必须沿依赖链检查最终行为而不是只指先前 ACCEPT。
 - R5 M01–M16 与旧合法显式 CLI 方法入口完成双路回归且接受后，**才**使新通用入口成为默认，并将旧 J19 变为仅显式只读访问；旧资料的完整迁移和费用唯一写入器仍须已通过 Atom-05/08 门。不能用 new README 代替真实 final cutover。
-- 由一名真实独立只读子智能体终审；Controller 不可用、任何方法漂移、原数据改动或预期功能实物缺失时终态是 `RETURN/BLOCKED`，不能报告 `GENERIC_OFFLINE_FUNCTIONAL_VERIFIED`。本轮没有一次新的真实 Provider Live，因此文学效果独立 `NOT_VALIDATED`。
+- 由一名真实独立只读子智能体终审；Controller 不可用、任何方法漂移、原数据改动或预期功能实物缺失时终态是 `RETURN/BLOCKED`，不能报告 `GENERIC_OFFLINE_FUNCTIONAL_VERIFIED`。离线工程门没有真实 Provider Live，不能证明文学效果；其后的 §0.3a/0.3b 实际输入包验收必须报告真实调用、审查和导出结果，仍不得代签用户创意接受。
 
 ### 10.2 最终清洁验证
 
@@ -1159,11 +1183,11 @@ NK_CRITICS_STATUS=<通用依赖/适配情况>
 SOURCE_HASH_POLICY=<旧 run 兼容验证情况>
 COST_LEDGER_BEFORE_SHA=<...>
 COST_LEDGER_AFTER_SHA=<...>
-NEW_PROVIDER_REQUESTS=0
-LIVE_AFTER_REFACTOR=NOT_RUN
+NEW_PROVIDER_REQUESTS=<实际新请求数量；离线工程阶段为0，真实输入包验收后按原始回执填写>
+LIVE_AFTER_REFACTOR=<实际NOT_RUN或本轮实际输入包验收的运行状态与证据>
 GENERIC_OFFLINE_FUNCTIONAL_VERIFIED=<仅网络隔离模拟的实物产出>
-GENERIC_LIVE_PRODUCTION=NOT_RUN
-REAL_PROVIDER_OUTPUT_QUALITY=NOT_VALIDATED
+GENERIC_LIVE_PRODUCTION=<未运行时NOT_RUN；运行后只报告已核验的输入包任务范围及证据>
+REAL_PROVIDER_OUTPUT_QUALITY=<未运行时NOT_VALIDATED；运行后报告实际约束/审稿结果，不代签用户创意接受>
 USER_CREATIVE_ACCEPTED=PENDING_USER_READING
 
 SOURCE_PATH_IDENTITY_V2=<new run source/manifest path-freeze test>
@@ -1184,12 +1208,12 @@ PROJECT_INSTANCE_ID_ISOLATION=<distinct same-name projects and A/B receipts>
 ORIGINAL_EP001_FULL_SIMULATED_CHAIN=<all 11 stages + export; source-less>
 ENGLISH_ACTUAL_PROMPT_LANGUAGE=<initial/continuation/export evidence>
 GIT_HEAD_CLEAN_NOT_HISTORY_SCRUBBED=<GitHub current HEAD vs historical visibility>
-MODEL_WRITING_QUALITY=<NOT_VALIDATED_THIS_ROUND>
+MODEL_WRITING_QUALITY=<实际验证范围及审查结果；无真实产物时NOT_VALIDATED>
 GENERIC_APP_README=<实际路径>
 CONFIG_TEMPLATE=<实际路径>
 CLEAN_CLONE_OFFLINE_TESTS=<命令、结果及产物>
 CONTROLLER_VERDICT=<真实独立结果>
-NEXT_ACTION=等待用户另行指示挂载 v5 TS/DL/RH 并正式创作
+NEXT_ACTION=<当前未闭合门的下一步；实际输入包全部任务验收完成后停止并交用户阅读，不自动启动TS/DL/RH>
 ```
 
 ### 最终硬停止边界
