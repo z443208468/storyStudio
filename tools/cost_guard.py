@@ -233,17 +233,20 @@ def verify_cached_operation_receipt(run, receipt, *, stage, role_id, output_cap,
     account = for_run(run, stage=stage, model=runner.MODEL)
     if not isinstance(account, RunAccount):
         raise ContractError("COST_OPERATION_CONTEXT_NOT_READY", "registered operation has no frozen account")
+    value = json.loads(_operation_file(Path(run), "artifacts/cost_operation.json").read_text(encoding="utf-8"))
+    if (value.get("stage") != stage or value.get("role_id") != role_id
+            or value.get("output_cap") != output_cap or value.get("extra") != extra):
+        raise ContractError("COST_OPERATION_REQUEST_MISMATCH", "cached operation differs from requested cost bindings")
     if runner._OPERATION_SIMULATION.get() is not None:
         runner._verify_operation_simulated_receipt(run, receipt, stage=stage, role_id=role_id,
-            output_cap=output_cap, extra=extra)
+            messages=value["messages"], output_cap=output_cap, extra=extra)
         return account
     if receipt.get("mode") == "MOCK_ONLY":
         runner._verify_operation_simulated_receipt(run, receipt, stage=stage, role_id=role_id,
-            output_cap=output_cap, extra=extra)
+            messages=value["messages"], output_cap=output_cap, extra=extra)
         return account
     if receipt.get("mode") != "LIVE" or receipt.get("fixture_only") is not False:
         raise ContractError("COST_RECEIPT_BINDING_MISMATCH", "cached operation mode is not an authenticated Live receipt")
-    value = json.loads(_operation_file(Path(run), "artifacts/cost_operation.json").read_text(encoding="utf-8"))
     if (receipt.get("stage") != stage or receipt.get("role_id") != role_id
             or receipt.get("request_fingerprint") != value.get("request_fingerprint")):
         raise ContractError("COST_RECEIPT_BINDING_MISMATCH", "cached receipt differs from frozen operation request")

@@ -1,0 +1,9 @@
+{
+  "command": "python -m pytest -q tests/test_cnw_operation_authorization.py tests/test_cost_operation_context.py tests/test_cost_context.py",
+  "exit_code": 0,
+  "stdout_stderr_sha256": "04286ae8d09dc216ca7336da671c5e5669281fcac20f30ac979f667c5c284e60",
+  "source_sha256": {
+    "tools/cost_guard.py": "46ccf58f03233ab66e8ecc0ea293815318001b7bdb7634e4c9e34fecb7ecb055",
+    "tests/test_cnw_operation_authorization.py": "7c90b1e10ac6b2a11c5bcc090d516f0b0857c1a158ab0f5d48e54cb5e32ec957"
+  }
+}

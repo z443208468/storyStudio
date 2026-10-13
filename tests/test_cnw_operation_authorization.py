@@ -306,6 +306,43 @@ class OperationAuthorizationTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 1)
         self._assert_no_real_transport()
 
+    def test_import_recovery_rejects_rebound_simulation_cost_snapshot(self):
+        original_replace = Path.replace
+        def interrupted(path, target):
+            if path.name.endswith(".import-tmp"):
+                raise OSError("INTERRUPTED_OPERATION_FIXTURE")
+            return original_replace(path, target)
+        with self._session(), patch.object(Path, "replace", interrupted):
+            with self.assertRaisesRegex(OSError, "INTERRUPTED_OPERATION_FIXTURE"):
+                imports.run_import(self.root)
+
+        pending = self.root / imports.PENDING
+        journal = self.root / json.loads(pending.read_text(encoding="utf-8"))["journal"]
+        run = journal.parent
+        canon_path = self.root / "90_canon/canon.md"
+        canon_before = canon_path.read_bytes()
+        cost_path = run / "artifacts/cost_operation.json"
+        frozen = json.loads(cost_path.read_text(encoding="utf-8"))
+        frozen["messages"][-1]["content"] += "\nTampered cost binding fixture."
+        frame = {"stage": frozen["stage"], "role_id": frozen["role_id"],
+            "messages": frozen["messages"], "output_cap": frozen["output_cap"],
+            "model": frozen["model"], "url": frozen["api_url"], "extra": frozen["extra"]}
+        frozen["request_fingerprint"] = runner.sha(json.dumps(frame,
+            ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        cost_raw = json.dumps(frozen, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")
+        cost_path.write_bytes(cost_raw)
+        state = runner.load_state(run)
+        state["cost_operation_sha256"] = runner.sha(cost_raw)
+        runner.save_state(run, state)
+
+        with self._session(), self.assertRaisesRegex(ContractError, "OPERATION_SIMULATION_REQUEST_MISMATCH"):
+            imports.run_import(self.root)
+        self.assertTrue(pending.is_file())
+        self.assertEqual(canon_path.read_bytes(), canon_before)
+        self.assertEqual(len(self.calls), 1)
+        self._assert_no_real_transport()
+
     def test_maintenance_recovery_rejects_method_and_consumer_drift(self):
         original_replace = Path.replace
         def interrupted(path, target):
