@@ -169,7 +169,12 @@ def _reconsume_bookkeeping_response(run, stage, messages):
             continue
         registration = runner._require_project_operation_authorization(run.parents[2])
         if registration is not None:
-            runner._verify_operation_simulated_receipt(run, row, stage=stage, role_id="project_organization", output_cap=IMPORT_OUTPUT_CAP, extra=None)
+            try:
+                from .cost_guard import verify_cached_operation_receipt
+            except ImportError:
+                from cost_guard import verify_cached_operation_receipt
+            verify_cached_operation_receipt(run, row, stage=stage, role_id="project_organization",
+                output_cap=IMPORT_OUTPUT_CAP, extra=None)
         content = runner._receipt_content(run, row)
         old_body = json.loads(assert_output_within_root(run, row["request_path"]).read_text(encoding="utf-8"))
         old_messages = old_body.get("messages", [])
@@ -205,7 +210,12 @@ def _verify_cached_operation(root, run, journal):
             if row.get("request_id") == journal.get("operation_request_id")]
     if len(rows) != 1 or journal.get("operation_stage") not in {"project_import", "project_update"}:
         raise ContractError("IMPORT_SIMULATION_CACHE_BINDING_INVALID", "cached import does not identify its actual model receipt")
-    runner._verify_operation_simulated_receipt(run, rows[0], stage=journal["operation_stage"], role_id="project_organization", output_cap=IMPORT_OUTPUT_CAP, extra=None)
+    try:
+        from .cost_guard import verify_cached_operation_receipt
+    except ImportError:
+        from cost_guard import verify_cached_operation_receipt
+    verify_cached_operation_receipt(run, rows[0], stage=journal["operation_stage"],
+        role_id="project_organization", output_cap=IMPORT_OUTPUT_CAP, extra=None)
 
 
 def _run_import(root: Path, *, incremental: bool) -> dict:
@@ -312,6 +322,15 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     )
     _record_classification(run_dir, "import_request", {"messages": messages, "sources": {
         name: {key: value for key, value in row.items() if key != "text"} for name, row in source_bindings.items()}})
+    try:
+        from .cost_guard import freeze_operation_account
+    except ImportError:
+        from cost_guard import freeze_operation_account
+    frozen = [row["path"] for row in runner.load_state(run_dir).get("import_artifacts", [])
+              if row["kind"] == "import_request"]
+    frozen.extend(path.relative_to(run_dir).as_posix() for path in snapshots.glob("*.bin"))
+    freeze_operation_account(run_dir, stage=stage, role_id="project_organization",
+                             messages=messages, output_cap=IMPORT_OUTPUT_CAP, snapshots=frozen)
     reused_response = _reconsume_bookkeeping_response(run_dir, stage, messages)
     content, model_receipt = reused_response or cnw_live_call(run_dir, stage=stage, role_id="project_organization", messages=messages, output_cap=IMPORT_OUTPUT_CAP)
     organized = _json(content)

@@ -1,0 +1,28 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_cost_operation_context.py"
+  ],
+  "exit_code": 0,
+  "source_before": {
+    "tools/cost_guard.py": "cbf65dc414e78d3b5955abc59231497e58e3388449dd03dc2db4d93010d80a05",
+    "tools/cnw_runner.py": "7aa1b89b6f49d4a51d9a830c684e2709d958f5040006158c829eade322f47731",
+    "tools/cnw_import_workflow.py": "0d3c42b829e3ed89f5699c2cba267ec8c22dcc3e1424c4f0f70787632f8fa3d1",
+    "tools/cnw_maintenance.py": "ea998307d9bebddf7fdb9e0c332ad218cbc2a408c87523caaeb7ad5bc3b2f548",
+    "tests/test_cost_operation_context.py": "e8578dfdc44a670e9d9ddfc149c8700ed2a78145922c46d16f4cc9ab37dd7b00"
+  },
+  "source_after": {
+    "tools/cost_guard.py": "cbf65dc414e78d3b5955abc59231497e58e3388449dd03dc2db4d93010d80a05",
+    "tools/cnw_runner.py": "7aa1b89b6f49d4a51d9a830c684e2709d958f5040006158c829eade322f47731",
+    "tools/cnw_import_workflow.py": "0d3c42b829e3ed89f5699c2cba267ec8c22dcc3e1424c4f0f70787632f8fa3d1",
+    "tools/cnw_maintenance.py": "ea998307d9bebddf7fdb9e0c332ad218cbc2a408c87523caaeb7ad5bc3b2f548",
+    "tests/test_cost_operation_context.py": "e8578dfdc44a670e9d9ddfc149c8700ed2a78145922c46d16f4cc9ab37dd7b00"
+  },
+  "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gMTEzLjY4cyAoMDowMTo1MykNCg==",
+  "stderr_base64": "",
+  "stdout_sha256": "3c9fcf0039eb230489374c07db1c66203895c1868d46a74d480b04d1b21649e0",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

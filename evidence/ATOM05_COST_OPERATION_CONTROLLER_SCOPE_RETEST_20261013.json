@@ -1,0 +1,21 @@
+{
+  "evidence_id": "ATOM05_COST_OPERATION_CONTROLLER_SCOPE_RETEST_20261013",
+  "command": "python -m pytest -q tests/test_cnw_operation_authorization.py tests/test_cost_operation_context.py tests/test_cost_context.py",
+  "exit_code": 0,
+  "raw_output_file": "ATOM05_COST_OPERATION_CONTROLLER_SCOPE_RETEST_20261013.txt",
+  "raw_output_sha256": "27451339d04eaf7290da8136cf17bfffc8e74694dbb52bfe04d5a78253426e83",
+  "source_sha256_at_run": {
+    "tools/cost_guard.py": "09660d63d91921556584c6f260980e739a07822cfd69317ec228f348b1b6b750",
+    "tools/cnw_runner.py": "7761781846f9426130c9379227c529c849140e61c25f42ef570cc7331d282e9a",
+    "tools/cnw_import_workflow.py": "c7d822a83b1e80d9f79134c863d0f8097c95b80269f4fc7f8e47af5bc9616510",
+    "tools/cnw_maintenance.py": "d29d3a1a83004c3d620926a039125a01f6be72063abb2877152ca249d2278ad9",
+    "tests/test_cnw_operation_authorization.py": "fe464543f73affac2e65a9748202d716021062a1cd3d17e5f6d59a8fce0866f4",
+    "tests/test_cost_operation_context.py": "911eee924fe41a712769ea02c95b677001bb94198ce3959f5aa3c6b6ce858995",
+    "tests/test_cost_context.py": "bd75d92e17b9447c54ac44a47f6853ea81dfda1f6284ed5c31c8338b750103cd"
+  },
+  "result": {
+    "passed": 16,
+    "subtests_passed": 42
+  },
+  "scope": "offline fictional projects; deterministic simulated transport; no Provider request or real ledger write"
+}

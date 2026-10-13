@@ -47,7 +47,11 @@ def _verify_receipt(run, journal):
     registration = runner._require_project_operation_authorization(run.parents[2])
     if registration is not None:
         operation = journal["options"]["operation"]
-        runner._verify_operation_simulated_receipt(run, receipt, stage="project_" + operation,
+        try:
+            from .cost_guard import verify_cached_operation_receipt
+        except ImportError:
+            from cost_guard import verify_cached_operation_receipt
+        verify_cached_operation_receipt(run, receipt, stage="project_" + operation,
             role_id="project_" + operation, output_cap=OUTPUT_CAPS[operation], extra=None)
     runner._receipt_content(run, receipt)
 
@@ -328,6 +332,13 @@ def _run(root, options):
         if snapshot.exists() and snapshot.read_bytes() != data:
             raise ContractError("MAINTENANCE_SNAPSHOT_CHANGED", identity)
         snapshot.write_bytes(data)
+        try:
+            from .cost_guard import freeze_operation_account
+        except ImportError:
+            from cost_guard import freeze_operation_account
+        freeze_operation_account(run, stage="project_" + options["operation"],
+            role_id="project_" + options["operation"], messages=messages,
+            output_cap=OUTPUT_CAPS[options["operation"]], snapshots=["artifacts/source_snapshot.json"])
         content, receipt = runner.cnw_live_call(run, stage="project_" + options["operation"], role_id="project_" + options["operation"],
             messages=messages, output_cap=OUTPUT_CAPS[options["operation"]])
         value = _json(content)

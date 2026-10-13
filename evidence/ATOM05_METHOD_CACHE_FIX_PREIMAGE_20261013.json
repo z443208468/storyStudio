@@ -1,0 +1,12 @@
+{
+  "evidence_id": "ATOM05_METHOD_CACHE_FIX_PREIMAGE_20261013",
+  "base_commit": "4efa7776f4636a4e2a4a92efdf0ba757a57dfd72",
+  "current_pre_edit_sha256": {
+    "tools/cost_guard.py": "57fc6141539a35c849378dcabea2e2093a3769bfc5deda97e06928a6cd312718",
+    "tools/cnw_import_workflow.py": "0d3c42b829e3ed89f5699c2cba267ec8c22dcc3e1424c4f0f70787632f8fa3d1",
+    "tools/cnw_maintenance.py": "ea998307d9bebddf7fdb9e0c332ad218cbc2a408c87523caaeb7ad5bc3b2f548",
+    "tests/test_cnw_operation_authorization.py": "3fd34a484f5605039481c87ec23fd18359f4933c5c72c6dd9aa00a3a51c9ca7b"
+  },
+  "failing_test_pre_edit_git_base_sha256": "7eaef4acc07992332c793c380511c969409315fc07934fbc00d22ded410c65e4",
+  "note": "Only current uncommitted WIP files; no private project or ledger data read."
+}

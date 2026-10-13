@@ -873,5 +873,33 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(post.call_count, 1)
 
 
+    def test_ledger_publish_failure_never_sends_provider_request(self):
+        from tools import p2_cost_guard as guard
+        run_dir = self.base / "runs/FICT_SCENE_A"
+        config = self.base / "config/production.example.json"
+        config.write_text(json.dumps({"provider": {"max_in_flight": 1}}), encoding="utf-8")
+        ledger = self.base / "publish-failure-ledger.json"
+        pricing = json.loads((ROOT / "config/p2_cost_pricing_2026-10-10.json").read_text(encoding="utf-8-sig"))
+        refusal = PermissionError("SIMULATED publish failure")
+        refusal.winerror = 5
+        with patch.object(guard, "CONFIG", config), patch.object(guard, "LEDGER", ledger), \
+                patch.object(guard, "load_config", return_value=({"model": cnw_runner.MODEL,
+                    "scope": "MOCK_ONLY", "currency": "CNY", "estimated_campaign_limit": 10}, pricing)), \
+                patch.object(guard, "command_reserve", wraps=guard.command_reserve) as reserve, \
+                patch.object(guard, "command_settle", wraps=guard.command_settle) as settle, \
+                patch.object(guard.os, "replace", side_effect=refusal) as publish, \
+                patch.object(cnw_runner.httpx, "post") as post, \
+                patch.dict(cnw_runner.os.environ, {"DEEPSEEK_API_KEY": "MOCK_ONLY_NOT_A_REAL_KEY_12345"}):
+            with self.assertRaises(PermissionError):
+                cnw_runner.cnw_live_call(run_dir, stage="plot", role_id=None, messages=[{"role": "user", "content": "MOCK_ONLY"}], output_cap=100)
+        self.assertEqual(reserve.call_count, 1)
+        self.assertEqual(publish.call_count, 3)
+        settle.assert_not_called()
+        post.assert_not_called()
+        self.assertFalse(ledger.exists())
+        self.assertEqual(len(list(self.base.glob("publish-failure-ledger.json.tmp-*"))), 1)
+        self.assertEqual(cnw_runner.load_state(run_dir)["provider_requests"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

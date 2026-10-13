@@ -1,0 +1,41 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_p2_cost_guard.py",
+    "tests/test_cost_context.py",
+    "tests/test_cnw_runner.py",
+    "tests/test_cnw_live_provider.py",
+    "tests/test_cnw_recovery.py",
+    "tests/test_cnw_v2_preflight.py",
+    "tests/test_cnw_pre_r5_role_compat.py"
+  ],
+  "exit_code": 0,
+  "source_before": {
+    "tools/p2_cost_guard.py": "5b6f2d3fe7749c78d66b970524be1f1d32910e8e9be11e5dc147cb6b972f9569",
+    "tools/cost_guard.py": "81ac3df738ee3fb55b62fcf6c557cc8e6a07fc959bf356c68092ce5a0c5d8c79",
+    "tools/cnw_recovery.py": "8278a83600353f887f3133cb49422805087be3ab6c67c3b60d94c2bc899e062e",
+    "tools/cnw_review.py": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+    "tests/test_p2_cost_guard.py": "84c10b0d3ace10a6a1e54745f3a7feba5c1f3afd58cdc90e1a2960fcd9290d5b",
+    "tools/cnw_runner.py": "32be514563f151e056f764d34298e4508a228faf08e736ccd0ae002146300d66",
+    "tools/cnw_live_provider.py": "64d98c19ab47bc1042e4fefc0eac56f856696e99f6349b3b318ba2afa34190db",
+    "tests/test_cost_context.py": "6b95c5b078d89d97fe4ad710576c60df811f1869a354ce2c4994d15d3b334bb8"
+  },
+  "source_after": {
+    "tools/p2_cost_guard.py": "5b6f2d3fe7749c78d66b970524be1f1d32910e8e9be11e5dc147cb6b972f9569",
+    "tools/cost_guard.py": "81ac3df738ee3fb55b62fcf6c557cc8e6a07fc959bf356c68092ce5a0c5d8c79",
+    "tools/cnw_recovery.py": "8278a83600353f887f3133cb49422805087be3ab6c67c3b60d94c2bc899e062e",
+    "tools/cnw_review.py": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+    "tests/test_p2_cost_guard.py": "84c10b0d3ace10a6a1e54745f3a7feba5c1f3afd58cdc90e1a2960fcd9290d5b",
+    "tools/cnw_runner.py": "32be514563f151e056f764d34298e4508a228faf08e736ccd0ae002146300d66",
+    "tools/cnw_live_provider.py": "64d98c19ab47bc1042e4fefc0eac56f856696e99f6349b3b318ba2afa34190db",
+    "tests/test_cost_context.py": "6b95c5b078d89d97fe4ad710576c60df811f1869a354ce2c4994d15d3b334bb8"
+  },
+  "stdout_base64": "Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLiBbIDY4JV0NCi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgWzEwMCVdDQo4MCBwYXNzZWQsIDMxIHN1YnRlc3RzIHBhc3NlZCBpbiAxMTUuODlzICgwOjAxOjU1KQ0K",
+  "stderr_base64": "",
+  "stdout_sha256": "dffcdc166fb34b93226f395a9177163e0a17debf82f6bfdc0c203e606865ff1c",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "scope": "MOCK_ONLY temporary ledger; no Provider"
+}

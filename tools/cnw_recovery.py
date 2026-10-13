@@ -269,6 +269,16 @@ def stage_identity(run_dir: Path, stage: str, *, project_root: Path | None = Non
         "api_url": r.API_URL, "transport_sha256": _code(r._cnw_live_call_in_slot)}
     if contract.get("schema_version") == "cnw_work_unit_v2":
         value["authorization_boundary_sha256"] = r._operation_transport_identity()
+        try:
+            from . import cost_guard, p2_cost_guard
+        except ImportError:
+            import cost_guard, p2_cost_guard
+        value["cost_boundary_sha256"] = _code(cost_guard.for_run, cost_guard.RunAccount,
+            cost_guard.verify_row, p2_cost_guard.CostContext, p2_cost_guard.command_reserve,
+            p2_cost_guard.command_settle, p2_cost_guard._config_snapshot,
+            p2_cost_guard._ledger_lock, p2_cost_guard.locked_ledger,
+            p2_cost_guard.read_ledger_snapshot, p2_cost_guard.read_ledger_bytes,
+            p2_cost_guard._publish_ledger)
     return {**value, "sha256": _digest(value)}
 
 

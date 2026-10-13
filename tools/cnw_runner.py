@@ -461,6 +461,27 @@ def _p2_guard():
     return p2_cost_guard
 
 
+def _cost_account(run_dir, stage):
+    try:
+        from .cost_guard import for_run, RunAccount
+    except ImportError:
+        from cost_guard import for_run, RunAccount
+    account = for_run(run_dir, stage=stage, model=MODEL, legacy_root=ROOT)
+    return account if isinstance(account, RunAccount) else None
+
+
+def _verify_cost_receipt(run_dir, receipt, ledger):
+    """Reconsume fees using the actual Run ownership, never receipt self-claims."""
+    account = _cost_account(run_dir, receipt["stage"])
+    if account is not None:
+        account.verify_receipt(receipt, ledger=ledger)
+    else:
+        rows = [row for row in ledger.get("requests", [])
+                if row.get("request_id") == receipt["request_id"]]
+        if len(rows) == 1 and rows[0].get("cost_context") is not None:
+            raise ContractError("COST_RECEIPT_BINDING_MISMATCH", "bound charge cannot prove a legacy Run")
+
+
 def _estimate_input_tokens(messages: list[dict]) -> int:
     raw = json.dumps(messages, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     # Conservative upper bound: one token per UTF-8 char is never below the
@@ -667,7 +688,15 @@ def _operation_simulation_call(run_dir, *, stage, role_id, messages, output_cap,
 
 def _operation_transport_identity():
     import inspect
-    return sha("\n".join(inspect.getsource(value) for value in _OPERATION_TRANSPORT_CODE).encode())
+    try:
+        from . import cost_guard
+    except ImportError:
+        import cost_guard
+    accounting_code = (cost_guard.freeze_operation_account, cost_guard._operation_account, cost_guard._operation_environment,
+                       cost_guard._publish_operation_snapshot,
+                       cost_guard._operation_file, cost_guard.for_run, cost_guard.RunAccount,
+                       cost_guard.verify_cached_operation_receipt)
+    return sha("\n".join(inspect.getsource(value) for value in (*_OPERATION_TRANSPORT_CODE, *accounting_code)).encode())
 
 
 def _require_generic_provider_authorization(run_dir: Path, *, stage: str, allow_operation_simulation=False) -> dict | None:
@@ -712,7 +741,10 @@ def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: l
     if operation_binding is not None:
         return _operation_simulation_call(run_dir, stage=stage, role_id=role_id, messages=messages,
                                           output_cap=output_cap, extra=extra)
-    with _p2_guard().provider_slot():
+    account = _cost_account(run_dir, stage)
+    if account is not None:
+        account.verify_request(messages=messages, role_id=role_id, output_cap=output_cap, extra=extra)
+    with (account or _p2_guard()).provider_slot():
         return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
 
 
@@ -731,16 +763,21 @@ def reactivate_receipt(run_dir: Path, receipt: dict) -> None:
 
 def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
     _require_generic_provider_authorization(run_dir, stage=stage, allow_operation_simulation=False)
+    account = _cost_account(run_dir, stage)
+    if account is not None:
+        account.verify_request(messages=messages, role_id=role_id, output_cap=output_cap, extra=extra)
     if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "project_decompose", "project_extract_canon", "project_jet_diagnostic", "project_character_os", "project_revision_plan", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
     for previous in cached_receipts(load_state(run_dir)):
         if previous.get("request_fingerprint") == fingerprint and previous.get("status") == "SUCCEEDED":
+            if account is not None:
+                account.verify_receipt(previous)
             content = _receipt_content(run_dir, previous)
             reactivate_receipt(run_dir, previous)
             return content, previous
-    guard = _p2_guard()
+    guard = account or _p2_guard()
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key or len(key.strip()) < 20:
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", stage)
@@ -787,8 +824,11 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
     if (payload.get("model") != MODEL or choice.get("finish_reason") != "stop" or not isinstance(content, str) or not content.strip()
             or not all(isinstance(usage.get(k), int) and usage[k] > 0 for k in ("prompt_tokens", "completion_tokens"))):
         raise ContractError("LIVE_PROVIDER_RESPONSE_INVALID", f"{stage}: model/finish/content/usage invalid")
-    _, pricing = guard.load_config()
-    cost = guard.estimate(usage["prompt_tokens"], usage["completion_tokens"], pricing)
+    if settlement.get("cost_context") is not None:
+        cost = Decimal(settlement["estimated_request_cny"])
+    else:
+        _, pricing = guard.load_config()
+        cost = guard.estimate(usage["prompt_tokens"], usage["completion_tokens"], pricing)
     receipt = {
         "stage": stage, "role_id": role_id, "request_id": request_id,
         "request_fingerprint": fingerprint,
@@ -1490,6 +1530,7 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
 
 
 def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
+    _require_generic_provider_authorization(run_dir, stage="writing_brief")
     import socket
     import shutil
     import subprocess
@@ -2254,6 +2295,7 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         evidence = {"status": "DISABLED", "provider_call": "none"}
         _record_hook(run_dir, "critics_plot" if stage == "plot" else "critics_text", evidence)
         return evidence
+    _require_generic_provider_authorization(run_dir, stage=stage)
     import subprocess
     try:
         from .cnw_critics_adapter import read_native_result
@@ -2842,10 +2884,11 @@ def verify_live(args) -> dict:
                 raise ContractError("LIVE_REREVIEW_NOT_CLEAN", finding_id)
     # Each provider receipt is authenticated against its raw response and ledger.
     required = {"stage", "request_id", "provider_request_id", "model", "status", "http_status", "finish_reason", "usage", "input_sha256", "output_sha256", "raw_response_path", "raw_response_sha256", "cost_cny", "ledger_settlement"}
-    ledger_path = ROOT / "runtime/private/p2-cost-ledger.json"
+    guard = _p2_guard()
+    ledger_path = guard.LEDGER
     if ledger_path.is_symlink() or not ledger_path.is_file():
         raise ContractError("LIVE_COST_LEDGER_MISSING", str(ledger_path))
-    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    ledger = guard.read_ledger_snapshot()
     seen_provider_ids = set()
     seen_request_ids = set()
     for index, receipt in enumerate(state["provider_requests"], 1):
@@ -2880,6 +2923,7 @@ def verify_live(args) -> dict:
         if len(rows) != 1:
             raise ContractError("LIVE_COST_LEDGER_ROW_MISSING", receipt["request_id"])
         row = rows[0]
+        _verify_cost_receipt(run_root, receipt, ledger)
         usage_matches = row.get("usage") == {"input_tokens": usage["prompt_tokens"], "output_tokens": usage["completion_tokens"]}
         try:
             settled_cost = Decimal(str(row.get("estimated_actual_cny")))

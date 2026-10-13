@@ -128,7 +128,7 @@ def main(argv=None) -> int:
             call["http_status"] = response.status_code
             call["estimated_cost_cny"] = next(
                 row.get("estimated_actual_cny", row.get("reserved_cny"))
-                for row in json.loads(p2_cost_guard.LEDGER.read_text(encoding="utf-8"))["requests"]
+                for row in p2_cost_guard.read_ledger_snapshot()["requests"]
                 if row["request_id"] == request_id
             )
             calls.append(call)
@@ -164,7 +164,7 @@ def main(argv=None) -> int:
     if not run_dir.is_dir():
         raise RuntimeError("CRITICS_RUN_DIRECTORY_MISSING")
     (run_dir / "provider-calls.json").write_text(json.dumps(calls, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    ledger_copy = p2_cost_guard.LEDGER.read_bytes()
+    ledger_copy = p2_cost_guard.read_ledger_bytes()
     (run_dir / "p2-cost-ledger.json").write_bytes(ledger_copy)
     if failure:
         (run_dir / "runner-error.json").write_text(json.dumps({"status": "FAILED_OR_UNKNOWN", "error_type": failure}, indent=2) + "\n", encoding="utf-8")

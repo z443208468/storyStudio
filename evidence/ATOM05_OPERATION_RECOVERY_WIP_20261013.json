@@ -1,0 +1,25 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_cost_operation_context.py::OperationCostTests::test_uppercase_namespace_and_state_save_failure_recover"
+  ],
+  "pythonpath": "D:\\CangqiStudio\\StoryStudio\\tests;D:\\CangqiStudio\\StoryStudio",
+  "exit_code": 0,
+  "source_before": {
+    "tools/cost_guard.py": "830f0d0e3c0196c6257bc705412607e1c8a8fdadfe424339a005893400086d11",
+    "tools/cnw_runner.py": "90281761d56873dfb6e01145e976e9d384f3fa1441b434ef0a94f2e4634b7938",
+    "tests/test_cost_operation_context.py": "3333958a4e95f85f02aaffab2cf0f56cee9d9dbb81b65d5ea35ae54edfa27cd0"
+  },
+  "source_after": {
+    "tools/cost_guard.py": "830f0d0e3c0196c6257bc705412607e1c8a8fdadfe424339a005893400086d11",
+    "tools/cnw_runner.py": "90281761d56873dfb6e01145e976e9d384f3fa1441b434ef0a94f2e4634b7938",
+    "tests/test_cost_operation_context.py": "3333958a4e95f85f02aaffab2cf0f56cee9d9dbb81b65d5ea35ae54edfa27cd0"
+  },
+  "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gNy40M3MNCg==",
+  "stderr_base64": "",
+  "stdout_sha256": "2907f16fe60a588e4779bd820ae33f794249fc3118f030686f463f4048dce4ac",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

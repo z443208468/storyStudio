@@ -1,0 +1,19 @@
+{
+  "evidence_id": "ATOM05_OPERATION_AUTHORIZATION_RETEST_20261013",
+  "command": "python -m pytest -q tests/test_cnw_operation_authorization.py",
+  "exit_code": 0,
+  "raw_output_file": "ATOM05_OPERATION_AUTHORIZATION_RETEST_20261013.txt",
+  "raw_output_sha256": "e126d59074d1f9b15dc9eb4b541ab2b9c8ff93c41ee4f54ce56bbbaed304b8ca",
+  "source_sha256_at_run": {
+    "tools/cost_guard.py": "57fc6141539a35c849378dcabea2e2093a3769bfc5deda97e06928a6cd312718",
+    "tools/cnw_runner.py": "90281761d56873dfb6e01145e976e9d384f3fa1441b434ef0a94f2e4634b7938",
+    "tools/cnw_import_workflow.py": "0d3c42b829e3ed89f5699c2cba267ec8c22dcc3e1424c4f0f70787632f8fa3d1",
+    "tools/cnw_maintenance.py": "ea998307d9bebddf7fdb9e0c332ad218cbc2a408c87523caaeb7ad5bc3b2f548",
+    "tests/test_cnw_operation_authorization.py": "3fd34a484f5605039481c87ec23fd18359f4933c5c72c6dd9aa00a3a51c9ca7b"
+  },
+  "result": {
+    "passed": 8,
+    "subtests_passed": 37
+  },
+  "scope": "offline fictional registered projects; simulated transport; no Provider request"
+}

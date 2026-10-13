@@ -197,17 +197,21 @@ def build_segment_request(base_request: dict, segment_id: str, completed_segment
 
 
 def assemble_segment_outputs(contract: dict, base_request: dict, outputs: list[dict], *, cost_ledger_path: str | Path | None = None, beat_evidence: dict[str, str], dialogue_evidence: list[str], action_evidence: list[str], start_state_evidence: str, end_state_evidence: str) -> dict:
+    try:
+        from . import p2_cost_guard
+    except ImportError:
+        import p2_cost_guard
     expected = base_request["segments"]
     if len(outputs) != len(expected) or any(output.get("segment_id") != segment["segment_id"] for output, segment in zip(outputs, expected)):
         raise ContractError("SEGMENT_SEQUENCE_INVALID", "all planned segments must be supplied in order")
     if any(output.get("finish_reason") != "stop" or not output.get("text", "").strip() for output in outputs):
         raise ContractError("SEGMENT_INCOMPLETE", "each segment must be nonempty and completed")
     request_ids, provider_ids = set(), set()
-    ledger_path = Path(cost_ledger_path) if cost_ledger_path else ROOT / "runtime/private/p2-cost-ledger.json"
+    ledger_path = Path(cost_ledger_path) if cost_ledger_path else p2_cost_guard.LEDGER
     if ledger_path.is_symlink() or not ledger_path.is_file():
         raise ContractError("SEGMENT_COST_LEDGER_MISSING", str(ledger_path))
     try:
-        ledger_bytes = ledger_path.read_bytes()
+        ledger_bytes = ledger_path.read_bytes() if cost_ledger_path else p2_cost_guard.read_ledger_bytes()
         cost_ledger = json.loads(ledger_bytes.decode("utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ContractError("SEGMENT_COST_LEDGER_INVALID", str(exc)) from exc

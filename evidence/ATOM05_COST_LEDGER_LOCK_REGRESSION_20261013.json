@@ -1,0 +1,33 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_p2_cost_guard.py",
+    "tests/test_cnw_runner.py",
+    "tests/test_cnw_live_provider.py"
+  ],
+  "exit_code": 0,
+  "source_before": {
+    "tools/p2_cost_guard.py": "5b6f2d3fe7749c78d66b970524be1f1d32910e8e9be11e5dc147cb6b972f9569",
+    "tools/cost_guard.py": "81ac3df738ee3fb55b62fcf6c557cc8e6a07fc959bf356c68092ce5a0c5d8c79",
+    "tools/cnw_recovery.py": "8278a83600353f887f3133cb49422805087be3ab6c67c3b60d94c2bc899e062e",
+    "tests/test_p2_cost_guard.py": "84c10b0d3ace10a6a1e54745f3a7feba5c1f3afd58cdc90e1a2960fcd9290d5b",
+    "tools/cnw_runner.py": "32be514563f151e056f764d34298e4508a228faf08e736ccd0ae002146300d66",
+    "tools/cnw_live_provider.py": "6569df2b2c8c4893dfcb7d1849d54cf0925b19a0942134684ce07a17b3329e18"
+  },
+  "source_after": {
+    "tools/p2_cost_guard.py": "5b6f2d3fe7749c78d66b970524be1f1d32910e8e9be11e5dc147cb6b972f9569",
+    "tools/cost_guard.py": "81ac3df738ee3fb55b62fcf6c557cc8e6a07fc959bf356c68092ce5a0c5d8c79",
+    "tools/cnw_recovery.py": "8278a83600353f887f3133cb49422805087be3ab6c67c3b60d94c2bc899e062e",
+    "tests/test_p2_cost_guard.py": "84c10b0d3ace10a6a1e54745f3a7feba5c1f3afd58cdc90e1a2960fcd9290d5b",
+    "tools/cnw_runner.py": "32be514563f151e056f764d34298e4508a228faf08e736ccd0ae002146300d66",
+    "tools/cnw_live_provider.py": "6569df2b2c8c4893dfcb7d1849d54cf0925b19a0942134684ce07a17b3329e18"
+  },
+  "stdout_base64": "Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLiBbIDkzJV0NCi4uLi4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBbMTAwJV0NCjU5IHBhc3NlZCwgMTcgc3VidGVzdHMgcGFzc2VkIGluIDkuMjFzDQo=",
+  "stderr_base64": "",
+  "stdout_sha256": "8b619ebee6d6bbd17df256a99b9faf7cfac694a6d242e3eef5d6566826975e1e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "scope": "MOCK_ONLY temporary ledger; no Provider"
+}

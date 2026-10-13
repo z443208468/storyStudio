@@ -69,7 +69,7 @@ def dry_run_cost_reservation(tasks: list[dict]) -> dict:
     except ImportError:
         import p2_cost_guard as guard
     policy, pricing = guard.load_config()
-    ledger = json.loads(guard.LEDGER.read_text(encoding="utf-8-sig")) if guard.LEDGER.is_file() else {"requests": [], "limit": policy["estimated_campaign_limit"]}
+    ledger = guard.read_ledger_snapshot() if guard.LEDGER.is_file() else {"requests": [], "limit": policy["estimated_campaign_limit"]}
     committed = guard.amounts(ledger)
     reserved = []
     for task in tasks:

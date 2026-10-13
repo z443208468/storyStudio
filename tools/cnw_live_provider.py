@@ -6,11 +6,9 @@ input first and persist the returned receipt before advancing the run.
 from __future__ import annotations
 
 import argparse
-from contextlib import redirect_stdout
 from datetime import datetime, timezone
 import hashlib
 import httpx
-import io
 import json
 import os
 from pathlib import Path
@@ -127,20 +125,17 @@ def _load_live_state(run: Path, stage: str) -> dict:
     return state
 
 
-def _reserve(request_id: str, run_id: str, stage: str, input_cap: int, output_cap: int) -> dict:
+def _reserve(request_id: str, run_id: str, stage: str, input_cap: int, output_cap: int, *, account=None) -> dict:
     args = argparse.Namespace(request_id=request_id, run_id=run_id,
                               purpose=f"P3 W10 CNW stage {stage}",
                               input_token_cap=input_cap, output_token_cap=output_cap)
-    capture = io.StringIO()
-    with redirect_stdout(capture):
-        p2_cost_guard.command_reserve(args)
-    result = json.loads(capture.getvalue())
+    result = (account or p2_cost_guard).command_reserve(args, emit=False)
     if result.get("status") != "RESERVED":
         raise ContractError("LIVE_COST_RESERVATION_FAILED", stage)
     return result
 
 
-def _settle(request_id: str, payload: dict | None) -> dict:
+def _settle(request_id: str, payload: dict | None, *, account=None) -> dict:
     choices = (payload or {}).get("choices") or []
     usage = (payload or {}).get("usage") or {}
     choice = choices[0] if choices and isinstance(choices[0], dict) else {}
@@ -148,10 +143,7 @@ def _settle(request_id: str, payload: dict | None) -> dict:
         provider_request_id=(payload or {}).get("id"), returned_model=(payload or {}).get("model"),
         finish_reason=choice.get("finish_reason"), input_tokens=usage.get("prompt_tokens"),
         output_tokens=usage.get("completion_tokens"))
-    capture = io.StringIO()
-    with redirect_stdout(capture):
-        p2_cost_guard.command_settle(args)
-    result = json.loads(capture.getvalue())
+    result = (account or p2_cost_guard).command_settle(args, emit=False)
     if result.get("status") not in {"SETTLED", "UNKNOWN_NOT_ZERO", "SETTLED_OVER_BUDGET"}:
         raise ContractError("LIVE_COST_SETTLEMENT_FAILED", request_id)
     return result
@@ -173,6 +165,27 @@ def _record_failed_attempt(run: Path, attempt: dict) -> None:
 def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha256: str,
              input_token_cap: int, output_token_cap: int, role_id: str | None = None,
              transport=None) -> tuple[str, dict]:
+    """Authorize before joining the single shared Provider concurrency pool."""
+    run = safe_run(run_dir)
+    if stage == "pov":
+        raise ContractError("NK_ADAPTER_REQUIRED", "POV must execute through the pinned local NK service")
+    if stage not in {"plot", "cards", "brief", "draft", "lens5", "verifier3", "completeness", "refine", "re-review"}:
+        raise ContractError("LIVE_STAGE_INVALID", stage)
+    _load_live_state(run, stage)
+    try:
+        from .cost_guard import for_run
+    except ImportError:
+        from cost_guard import for_run
+    account = for_run(run, stage=stage, model=MODEL, legacy_root=ROOT)
+    with account.provider_slot():
+        return _complete_in_slot(run, stage=stage, messages=messages, input_sha256=input_sha256,
+            input_token_cap=input_token_cap, output_token_cap=output_token_cap, role_id=role_id,
+            transport=transport, account=account)
+
+
+def _complete_in_slot(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha256: str,
+                      input_token_cap: int, output_token_cap: int, role_id: str | None = None,
+                      transport=None, account=None) -> tuple[str, dict]:
     """Make exactly one live request; transport injection exists only for tests."""
     run = safe_run(run_dir)
     state_path = run / "run_state.json"
@@ -193,6 +206,14 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
             or not isinstance(output_token_cap, int) or output_token_cap <= 0):
         raise ContractError("LIVE_REQUEST_INVALID", stage)
     state = _load_live_state(run, stage)
+    try:
+        from .cost_guard import for_run
+    except ImportError:
+        from cost_guard import for_run
+    derived_account = for_run(run, stage=stage, model=MODEL, legacy_root=ROOT)
+    if account is not None and account != derived_account:
+        raise ContractError("COST_BINDINGS_CHANGED", "transport account differs from current Run")
+    account = derived_account
     failed_attempts = [row for row in state.get("provider_attempts", [])
                        if row.get("stage") == stage and row.get("status") != "INVALIDATED_AFTER_INPUT_CHANGE"]
     if failed_attempts:
@@ -206,7 +227,7 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
     if not key or len(key.strip()) < 20:
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", stage)
     request_id = f"p3-{run.name}-{stage}-{uuid.uuid4().hex}"
-    reservation = _reserve(request_id, run.name, stage, input_token_cap, output_token_cap)
+    reservation = _reserve(request_id, run.name, stage, input_token_cap, output_token_cap, account=account)
     body = {"model": MODEL, "messages": messages, "max_tokens": output_token_cap,
             "stream": False, "thinking": {"type": "disabled"}}
     safe_request = {**body, "request_id": request_id, "input_sha256": input_sha256,
@@ -237,7 +258,7 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
     except Exception as exc:
         raw_path.write_text(json.dumps({"transport_error_type": type(exc).__name__,
             "request_id": request_id}, indent=2) + "\n", encoding="utf-8")
-        settlement = _settle(request_id, None)
+        settlement = _settle(request_id, None, account=account)
         _record_failed_attempt(run, {"stage": stage, "request_id": request_id,
             "status": "OUTCOME_UNKNOWN", "input_sha256": input_sha256,
             "raw_response_path": raw_path.relative_to(run).as_posix(),
@@ -250,7 +271,7 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
     choices = response_payload.get("choices") if isinstance(response_payload, dict) else None
     choice = choices[0] if isinstance(choices, list) and choices and isinstance(choices[0], dict) else {}
     finish = choice.get("finish_reason")
-    settlement = _settle(request_id, response_payload)
+    settlement = _settle(request_id, response_payload, account=account)
     if settlement.get("status") == "SETTLED_OVER_BUDGET":
         _record_failed_attempt(run, {"stage": stage, "request_id": request_id,
             "provider_request_id": provider_id, "status": "SETTLED_OVER_BUDGET",
@@ -279,9 +300,12 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
             "raw_response_sha256": sha(raw_path.read_bytes()), "ledger_settlement": settlement,
             "created_at": utc_now()})
         raise ContractError("LIVE_PROVIDER_RESPONSE_INVALID", f"{stage}: model, finish, content or usage invalid")
-    _, pricing = p2_cost_guard.load_config()
     from decimal import Decimal, ROUND_CEILING
-    actual_cost = p2_cost_guard.estimate(usage["prompt_tokens"], usage["completion_tokens"], pricing)
+    if settlement.get("cost_context") is not None:
+        actual_cost = Decimal(settlement["estimated_request_cny"])
+    else:
+        _, pricing = p2_cost_guard.load_config()
+        actual_cost = p2_cost_guard.estimate(usage["prompt_tokens"], usage["completion_tokens"], pricing)
     simulated = transport is not None
     receipt = {"stage": stage, "request_id": request_id, "provider_request_id": provider_id,
         "model": returned_model, "status": "SUCCEEDED", "http_status": status_code,
@@ -451,11 +475,21 @@ def record_nk_pov_receipt(run_dir: str | Path, receipt: dict) -> dict:
         ledger_path = p2_cost_guard.LEDGER
         if ledger_path.is_symlink() or not ledger_path.is_file():
             raise ContractError("LIVE_COST_LEDGER_MISSING", str(ledger_path))
-        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        ledger = p2_cost_guard.read_ledger_snapshot()
         rows = [row for row in ledger.get("requests", []) if row.get("request_id") == receipt["request_id"]]
         if len(rows) != 1:
             raise ContractError("LIVE_COST_LEDGER_ROW_MISSING", receipt["request_id"])
         row = rows[0]
+        try:
+            from .cost_guard import for_run, RunAccount, verify_row
+        except ImportError:
+            from cost_guard import for_run, RunAccount, verify_row
+        account = for_run(run, stage="pov", model=MODEL, legacy_root=ROOT)
+        if isinstance(account, RunAccount):
+            account.verify_receipt(receipt, ledger=ledger)
+        else:
+            verify_row(row, account, request_id=receipt["request_id"],
+                       provider_request_id=receipt["provider_request_id"])
         expected_usage = {"input_tokens": receipt["usage"]["prompt_tokens"],
                           "output_tokens": receipt["usage"]["completion_tokens"]}
         try:

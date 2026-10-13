@@ -91,7 +91,7 @@ def run_action(run_dir: str | Path, action: str, *, preflight_path: str | Path |
     if (any(not isinstance(value, str) or not value for value in request_ids + provider_ids)
             or len(set(request_ids)) != len(request_ids) or len(set(provider_ids)) != len(provider_ids)):
         raise ContractError("W10_CRITICS_PROVIDER_IDS_INVALID", action)
-    ledger = json.loads(p2_cost_guard.LEDGER.read_text(encoding="utf-8"))
+    ledger = p2_cost_guard.read_ledger_snapshot()
     rows = [row for row in ledger.get("requests", []) if row.get("request_id") in request_ids]
     if len(rows) != len(request_ids) or any(row.get("run_id") != run.name or row.get("status") != "SETTLED" for row in rows):
         raise ContractError("W10_CRITICS_COST_SETTLEMENT_INVALID", action)

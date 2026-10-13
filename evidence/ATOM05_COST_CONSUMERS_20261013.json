@@ -1,0 +1,38 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_cost_context.py",
+    "tests/test_cnw_runner.py",
+    "tests/test_cnw_live_provider.py",
+    "tests/test_p2_cost_guard.py"
+  ],
+  "exit_code": 0,
+  "source_before": {
+    "tools/p2_cost_guard.py": "5b6f2d3fe7749c78d66b970524be1f1d32910e8e9be11e5dc147cb6b972f9569",
+    "tools/cost_guard.py": "fc6330d69f0d541fecf94b85f07887ca1a36d61a1fe522234b5528ff9473aaa4",
+    "tools/cnw_recovery.py": "8278a83600353f887f3133cb49422805087be3ab6c67c3b60d94c2bc899e062e",
+    "tools/cnw_review.py": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+    "tests/test_p2_cost_guard.py": "84c10b0d3ace10a6a1e54745f3a7feba5c1f3afd58cdc90e1a2960fcd9290d5b",
+    "tools/cnw_runner.py": "14b36011bf24a1164d6a3a5fbbce3ce6d5c631515e4d48094aa0035c8d2eb5f1",
+    "tools/cnw_live_provider.py": "daed6de3d28a256b78068ca4395a633b43341d23769903e049a1a992c902d966",
+    "tests/test_cost_context.py": "bd75d92e17b9447c54ac44a47f6853ea81dfda1f6284ed5c31c8338b750103cd"
+  },
+  "source_after": {
+    "tools/p2_cost_guard.py": "5b6f2d3fe7749c78d66b970524be1f1d32910e8e9be11e5dc147cb6b972f9569",
+    "tools/cost_guard.py": "fc6330d69f0d541fecf94b85f07887ca1a36d61a1fe522234b5528ff9473aaa4",
+    "tools/cnw_recovery.py": "8278a83600353f887f3133cb49422805087be3ab6c67c3b60d94c2bc899e062e",
+    "tools/cnw_review.py": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+    "tests/test_p2_cost_guard.py": "84c10b0d3ace10a6a1e54745f3a7feba5c1f3afd58cdc90e1a2960fcd9290d5b",
+    "tools/cnw_runner.py": "14b36011bf24a1164d6a3a5fbbce3ce6d5c631515e4d48094aa0035c8d2eb5f1",
+    "tools/cnw_live_provider.py": "daed6de3d28a256b78068ca4395a633b43341d23769903e049a1a992c902d966",
+    "tests/test_cost_context.py": "bd75d92e17b9447c54ac44a47f6853ea81dfda1f6284ed5c31c8338b750103cd"
+  },
+  "stdout_base64": "Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgWzEwMCVdDQo2MiBwYXNzZWQsIDIyIHN1YnRlc3RzIHBhc3NlZCBpbiA1Mi42MnMNCg==",
+  "stderr_base64": "",
+  "stdout_sha256": "15775ee400f6437e92d329140b6766d41c5eb8bc32b3f51dea02b605f1ddb5a4",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "scope": "MOCK_ONLY temporary ledger; no Provider"
+}

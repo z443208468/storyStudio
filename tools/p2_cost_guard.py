@@ -6,11 +6,14 @@ The ledger is shared across run IDs. Missing usage keeps the full reservation he
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict, dataclass
+import hashlib
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_CEILING
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import time
@@ -21,6 +24,25 @@ CONFIG = ROOT / "config" / "production.example.json"
 PRICING = ROOT / "config" / "p2_cost_pricing_2026-10-10.json"
 LEDGER = ROOT / "runtime" / "private" / "p2-cost-ledger.json"
 MICRO = Decimal("0.000001")
+
+
+@dataclass(frozen=True)
+class CostContext:
+    """Accounting attribution only; never a Provider or spending grant."""
+    project_instance_id: str
+    project_id: str
+    run_id: str
+    stage: str
+    binding_sha256: str
+
+    def record(self):
+        result = asdict(self)
+        for name in ("project_instance_id", "project_id", "run_id", "stage"):
+            if not isinstance(result[name], str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,159}", result[name]):
+                raise ValueError("COST_CONTEXT_INVALID")
+        if not isinstance(self.binding_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", self.binding_sha256):
+            raise ValueError("COST_CONTEXT_INVALID")
+        return result
 
 
 def now():
@@ -96,8 +118,14 @@ def provider_slot():
 
 
 def load_config():
-    cfg = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
-    pricing = json.loads(PRICING.read_text(encoding="utf-8-sig"))
+    guard, pricing, _ = _config_snapshot()
+    return guard, pricing
+
+
+def _config_snapshot():
+    config_raw, pricing_raw = CONFIG.read_bytes(), PRICING.read_bytes()
+    cfg = json.loads(config_raw.decode("utf-8-sig"))
+    pricing = json.loads(pricing_raw.decode("utf-8-sig"))
     guard = cfg["cost_guard"]
     campaign_limit(guard["estimated_campaign_limit"])
     if guard.get("currency") != "CNY" or guard.get("persist_across_run_ids") is not True:
@@ -105,15 +133,18 @@ def load_config():
     if pricing.get("requested_model") != cfg["provider"]["model"] or pricing.get("currency") != guard["currency"]:
         raise ValueError("PRICING_CONFIG_MISMATCH")
     guard = dict(guard, model=cfg["provider"]["model"])
-    return guard, pricing
+    return guard, pricing, {"config_sha256": hashlib.sha256(config_raw).hexdigest(),
+                            "pricing_sha256": hashlib.sha256(pricing_raw).hexdigest()}
 
 
 @contextmanager
-def locked_ledger():
+def _ledger_lock():
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     if LEDGER.parent.is_symlink() or (LEDGER.exists() and LEDGER.is_symlink()):
         raise ValueError("COST_LEDGER_SYMLINK_REJECTED")
     lock_path = LEDGER.with_suffix(".lock")
+    if lock_path.is_symlink():
+        raise ValueError("COST_LEDGER_SYMLINK_REJECTED")
     stream = open(lock_path, "a+b")
     try:
         deadline = time.monotonic() + 15
@@ -132,24 +163,7 @@ def locked_ledger():
                     raise TimeoutError("COST_LEDGER_LOCK_TIMEOUT")
                 time.sleep(0.05)
         try:
-            if LEDGER.exists():
-                ledger = json.loads(LEDGER.read_text(encoding="utf-8"))
-            else:
-                guard, pricing = load_config()
-                ledger = {
-                    "schema": 1,
-                    "campaign_id": guard["scope"],
-                    "currency": guard["currency"],
-                    "limit": (str(campaign_limit(guard["estimated_campaign_limit"]))
-                              if guard["estimated_campaign_limit"] is not None else None),
-                    "pricing_snapshot": pricing,
-                    "created_at": now(),
-                    "requests": [],
-                }
-            yield ledger
-            tmp = LEDGER.with_name(LEDGER.name + ".tmp-" + uuid.uuid4().hex)
-            tmp.write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-            os.replace(tmp, LEDGER)
+            yield
         finally:
             if os.name == "nt":
                 import msvcrt
@@ -160,6 +174,60 @@ def locked_ledger():
                 fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
     finally:
         stream.close()
+
+
+def read_ledger_snapshot():
+    """Read under the writer lock without republishing or creating a ledger."""
+    return json.loads(read_ledger_bytes().decode("utf-8"))
+
+
+def read_ledger_bytes():
+    """Retain the exact ledger representation for evidence copies."""
+    with _ledger_lock():
+        return LEDGER.read_bytes()
+
+
+def _publish_ledger(tmp, preimage, payload):
+    """Retry only the same atomic publish, while the caller retains the lock."""
+    for attempt in range(3):
+        if tmp.read_bytes() != payload:
+            raise ValueError("COST_LEDGER_TEMP_CHANGED")
+        current = LEDGER.read_bytes() if LEDGER.exists() else None
+        if current != preimage:
+            raise ValueError("COST_LEDGER_PREIMAGE_CHANGED")
+        try:
+            os.replace(tmp, LEDGER)
+            return
+        except PermissionError as exc:
+            if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 2:
+                raise
+            time.sleep(0.05)
+
+
+@contextmanager
+def locked_ledger():
+    with _ledger_lock():
+        preimage = LEDGER.read_bytes() if LEDGER.exists() else None
+        if preimage is not None:
+            ledger = json.loads(preimage.decode("utf-8"))
+        else:
+            guard, pricing = load_config()
+            ledger = {
+                "schema": 1,
+                "campaign_id": guard["scope"],
+                "currency": guard["currency"],
+                "limit": (str(campaign_limit(guard["estimated_campaign_limit"]))
+                          if guard["estimated_campaign_limit"] is not None else None),
+                "pricing_snapshot": pricing,
+                "created_at": now(),
+                "requests": [],
+            }
+        yield ledger
+        tmp = LEDGER.with_name(LEDGER.name + ".tmp-" + uuid.uuid4().hex)
+        # Preserve the existing platform newline representation.
+        payload = (json.dumps(ledger, ensure_ascii=False, indent=2) + "\n").replace("\n", os.linesep).encode("utf-8")
+        tmp.write_bytes(payload)
+        _publish_ledger(tmp, preimage, payload)
 
 
 def estimate(input_tokens: int, output_tokens: int, pricing) -> Decimal:
@@ -178,13 +246,24 @@ def amounts(ledger):
     return committed
 
 
-def command_reserve(args, *, emit=True):
+def command_reserve(args, *, emit=True, context: CostContext | None = None, expected_model=None):
+    binding = context.record() if isinstance(context, CostContext) else None
+    if context is not None and binding is None:
+        raise ValueError("COST_CONTEXT_INVALID")
+    if binding is not None and args.run_id != binding["run_id"]:
+        raise ValueError("COST_CONTEXT_RUN_MISMATCH")
     if args.input_token_cap <= 0 or args.output_token_cap <= 0:
         raise ValueError("TOKEN_CAPS_MUST_BE_POSITIVE")
     with locked_ledger() as ledger:
         if any(row["request_id"] == args.request_id for row in ledger["requests"]):
             raise ValueError("REQUEST_ID_ALREADY_RECORDED")
-        guard, pricing = load_config()
+        if binding is None:
+            guard, pricing = load_config()
+            snapshot = None
+        else:
+            guard, pricing, snapshot = _config_snapshot()
+        if expected_model is not None and guard["model"] != expected_model:
+            raise ValueError("COST_PROVIDER_MODEL_MISMATCH")
         reserve = estimate(args.input_token_cap, args.output_token_cap, pricing)
         committed = amounts(ledger)
         limit = campaign_limit(ledger["limit"])
@@ -201,21 +280,32 @@ def command_reserve(args, *, emit=True):
             "status": "PENDING",
             "reserved_at": now(),
         }
+        if binding is not None:
+            row["cost_context"] = binding
+            row["cost_policy_snapshot"] = snapshot
+            row["cost_pricing_snapshot"] = pricing
         ledger["requests"].append(row)
         result = {"status": "RESERVED", "request_id": args.request_id,
                           "reserved_cny": row["reserved_cny"],
                           "campaign_committed_cny": money(committed + reserve), "limit_cny": ledger["limit"]}
+        if binding is not None:
+            result["cost_context"] = binding
     if emit:
         print(json.dumps(result))
     return result
 
 
-def command_settle(args, *, emit=True):
+def command_settle(args, *, emit=True, context: CostContext | None = None):
+    binding = context.record() if isinstance(context, CostContext) else None
+    if context is not None and binding is None:
+        raise ValueError("COST_CONTEXT_INVALID")
     with locked_ledger() as ledger:
         matches = [row for row in ledger["requests"] if row["request_id"] == args.request_id]
         if len(matches) != 1:
             raise ValueError("REQUEST_ID_NOT_FOUND")
         row = matches[0]
+        if row.get("cost_context") != binding:
+            raise ValueError("COST_CONTEXT_SETTLEMENT_MISMATCH")
         if row["status"] != "PENDING":
             raise ValueError("REQUEST_NOT_PENDING")
         row["provider_request_id"] = args.provider_request_id
@@ -229,7 +319,10 @@ def command_settle(args, *, emit=True):
         else:
             if args.input_tokens < 0 or args.output_tokens < 0:
                 raise ValueError("USAGE_TOKENS_MUST_BE_NONNEGATIVE")
-            _, pricing = load_config()
+            if binding is None:
+                _, pricing = load_config()
+            else:
+                pricing = row["cost_pricing_snapshot"]
             charge = estimate(args.input_tokens, args.output_tokens, pricing)
             over_caps = (args.input_tokens > row["reserved_input_token_cap"]
                          or args.output_tokens > row["reserved_output_token_cap"])
@@ -249,6 +342,8 @@ def command_settle(args, *, emit=True):
         result = {"status": row["status"], "request_id": args.request_id,
                           "estimated_request_cny": money(charge),
                           "campaign_committed_cny": money(committed), "limit_cny": ledger["limit"]}
+        if binding is not None:
+            result["cost_context"] = binding
     if emit:
         print(json.dumps(result))
     return result

@@ -1,0 +1,19 @@
+{
+  "evidence_id": "ATOM05_COST_CONTEXT_PENDING_TESTS_20261013",
+  "command": "python -m pytest -q tests/test_cost_operation_context.py tests/test_cost_context.py",
+  "exit_code": 0,
+  "raw_output_utf8": ".                                                              [100%]\r\n6 passed, 5 subtests passed in 130.21s (0:02:10)\r\n",
+  "raw_output_sha256": "b74e59c06f1dcaaae964cb176f152245e036158375f09b3814b59023deea3c85",
+  "source_sha256_at_run": {
+    "tools/cost_guard.py": "57fc6141539a35c849378dcabea2e2093a3769bfc5deda97e06928a6cd312718",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/cnw_runner.py": "90281761d56873dfb6e01145e976e9d384f3fa1441b434ef0a94f2e4634b7938",
+    "tests/test_cost_operation_context.py": "911eee924fe41a712769ea02c95b677001bb94198ce3959f5aa3c6b6ce858995",
+    "tests/test_cost_context.py": "bd75d92e17b9447c54ac44a47f6853ea81dfda1f6284ed5c31c8338b750103cd"
+  },
+  "result": {
+    "passed": 6,
+    "subtests_passed": 5
+  },
+  "scope": "offline fictional tests; no Provider request"
+}

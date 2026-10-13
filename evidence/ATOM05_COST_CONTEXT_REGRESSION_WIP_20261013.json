@@ -1,0 +1,38 @@
+{
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/test_p2_cost_guard.py",
+    "tests/test_cost_context.py",
+    "tests/test_cnw_runner.py",
+    "tests/test_cnw_live_provider.py",
+    "tests/test_cnw_recovery.py",
+    "tests/test_cnw_v2_preflight.py",
+    "tests/test_cnw_pre_r5_role_compat.py",
+    "-q"
+  ],
+  "exit_code": 2,
+  "source_before": {
+    "tools/p2_cost_guard.py": "07be50dce4e199335dfa99c5aaf81c42134e9b163afbb4ded9bbb3a14e3997ba",
+    "tools/cost_guard.py": "13513c3c64103cb24827d694b4dac3e00affaf3afd14745e3e8c7118c14f4b0d",
+    "tools/cnw_runner.py": "32be514563f151e056f764d34298e4508a228faf08e736ccd0ae002146300d66",
+    "tools/cnw_live_provider.py": "6569df2b2c8c4893dfcb7d1849d54cf0925b19a0942134684ce07a17b3329e18",
+    "tools/cnw_recovery.py": "8af1a9c5e04d6636625944412bb1a3cf4cfb044577a27aea21da2e45efe604e5",
+    "tests/test_p2_cost_guard.py": "fa79578e47a42b3a9b36c1df7f4d4e4cf8e260db74509707fccbebef26e58eb2",
+    "tests/test_cost_context.py": "6b95c5b078d89d97fe4ad710576c60df811f1869a354ce2c4994d15d3b334bb8"
+  },
+  "source_after": {
+    "tools/p2_cost_guard.py": "07be50dce4e199335dfa99c5aaf81c42134e9b163afbb4ded9bbb3a14e3997ba",
+    "tools/cost_guard.py": "13513c3c64103cb24827d694b4dac3e00affaf3afd14745e3e8c7118c14f4b0d",
+    "tools/cnw_runner.py": "32be514563f151e056f764d34298e4508a228faf08e736ccd0ae002146300d66",
+    "tools/cnw_live_provider.py": "6569df2b2c8c4893dfcb7d1849d54cf0925b19a0942134684ce07a17b3329e18",
+    "tools/cnw_recovery.py": "8af1a9c5e04d6636625944412bb1a3cf4cfb044577a27aea21da2e45efe604e5",
+    "tests/test_p2_cost_guard.py": "fa79578e47a42b3a9b36c1df7f4d4e4cf8e260db74509707fccbebef26e58eb2",
+    "tests/test_cost_context.py": "6b95c5b078d89d97fe4ad710576c60df811f1869a354ce2c4994d15d3b334bb8"
+  },
+  "stdout_base64": "DQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PSBFUlJPUlMgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQpfX19fX19fX19fX19fX19fXyBFUlJPUiBjb2xsZWN0aW5nIHRlc3RzL3Rlc3RfY253X3JlY292ZXJ5LnB5IF9fX19fX19fX19fX19fX19fDQpJbXBvcnRFcnJvciB3aGlsZSBpbXBvcnRpbmcgdGVzdCBtb2R1bGUgJ0Q6XENhbmdxaVN0dWRpb1xTdG9yeVN0dWRpb1x0ZXN0c1x0ZXN0X2Nud19yZWNvdmVyeS5weScuDQpIaW50OiBtYWtlIHN1cmUgeW91ciB0ZXN0IG1vZHVsZXMvcGFja2FnZXMgaGF2ZSB2YWxpZCBQeXRob24gbmFtZXMuDQpUcmFjZWJhY2s6DQpDOlxQcm9ncmFtIEZpbGVzXFB5dGhvbjMxM1xMaWJcaW1wb3J0bGliXF9faW5pdF9fLnB5Ojg4OiBpbiBpbXBvcnRfbW9kdWxlDQogICAgcmV0dXJuIF9ib290c3RyYXAuX2djZF9pbXBvcnQobmFtZVtsZXZlbDpdLCBwYWNrYWdlLCBsZXZlbCkNCiAgICAgICAgICAgXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXg0KdGVzdHNcdGVzdF9jbndfcmVjb3ZlcnkucHk6MTQ6IGluIDxtb2R1bGU+DQogICAgZnJvbSBzeW50aGV0aWNfY253X2ZpeHR1cmVzIGltcG9ydCBzeW50aGV0aWNfd29ya191bml0DQpFICAgTW9kdWxlTm90Rm91bmRFcnJvcjogTm8gbW9kdWxlIG5hbWVkICdzeW50aGV0aWNfY253X2ZpeHR1cmVzJw0KPT09PT09PT09PT09PT09PT09PT09PT09PT09IHNob3J0IHRlc3Qgc3VtbWFyeSBpbmZvID09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KRVJST1IgdGVzdHMvdGVzdF9jbndfcmVjb3ZlcnkucHkNCiEhISEhISEhISEhISEhISEhISEgSW50ZXJydXB0ZWQ6IDEgZXJyb3IgZHVyaW5nIGNvbGxlY3Rpb24gISEhISEhISEhISEhISEhISEhISENCjEgZXJyb3IgaW4gMC4yNnMNCg==",
+  "stderr_base64": "",
+  "stdout_sha256": "5c994feb09f96b2a1a8be1b50adceb1acfd4dab189bc3f3a44e1c9d2881ba7e8",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

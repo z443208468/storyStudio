@@ -1,0 +1,53 @@
+{
+  "purpose": "bounded reproduction of intermittent atomic ledger replace failure; no acceptance by rerun",
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/test_cnw_runner.py::RunnerTests::test_parallel_transport_keeps_all_receipts_and_shared_budget",
+    "-q"
+  ],
+  "guard_sha256": "07be50dce4e199335dfa99c5aaf81c42134e9b163afbb4ded9bbb3a14e3997ba",
+  "attempts": [
+    {
+      "attempt": 1,
+      "exit_code": 0,
+      "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gMC4zOXMNCg==",
+      "stderr_base64": "",
+      "stdout_sha256": "7148718990d7ea797310a566f73839afc086a66a233d8b87a51420dbd3998814",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "attempt": 2,
+      "exit_code": 0,
+      "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gMC40OHMNCg==",
+      "stderr_base64": "",
+      "stdout_sha256": "76ad25bb0c6892d58334160d4e79d70c2c1c4841fa039be300479d3dedd5912e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "attempt": 3,
+      "exit_code": 0,
+      "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gMC40OXMNCg==",
+      "stderr_base64": "",
+      "stdout_sha256": "42ea3949fc47db6a2069ae9f26b294613863586c675e74fbe85e077531b25a22",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "attempt": 4,
+      "exit_code": 0,
+      "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gMC40OXMNCg==",
+      "stderr_base64": "",
+      "stdout_sha256": "42ea3949fc47db6a2069ae9f26b294613863586c675e74fbe85e077531b25a22",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "attempt": 5,
+      "exit_code": 0,
+      "stdout_base64": "LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsxMDAlXQ0KMSBwYXNzZWQgaW4gMC40OXMNCg==",
+      "stderr_base64": "",
+      "stdout_sha256": "42ea3949fc47db6a2069ae9f26b294613863586c675e74fbe85e077531b25a22",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

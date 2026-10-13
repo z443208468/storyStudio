@@ -313,6 +313,17 @@ class CnwGenerationTests(unittest.TestCase):
                 dialogue_evidence=self.dialogue, action_evidence=self.action,
                 start_state_evidence="她推开门。", end_state_evidence="他收起信。")
         self.assertEqual(result["status"], "DRAFT_CONTENT_AND_COST_VALIDATED")
+        from tools import p2_cost_guard
+        ledger = repo / "runtime/private/p2-cost-ledger.json"
+        before = ledger.read_bytes()
+        with patch.object(cnw_generate, "ROOT", repo), patch.object(p2_cost_guard, "LEDGER", ledger), \
+                patch.object(p2_cost_guard, "read_ledger_bytes", wraps=p2_cost_guard.read_ledger_bytes) as snapshot:
+            active = assemble_segment_outputs(self.contract, base, [first, second],
+                beat_evidence=self.evidence, dialogue_evidence=self.dialogue, action_evidence=self.action,
+                start_state_evidence="她推开门。", end_state_evidence="他收起信。")
+        snapshot.assert_called_once_with()
+        self.assertEqual(active, result)
+        self.assertEqual(ledger.read_bytes(), before)
         self.assertEqual(result["segment_response_ids"], ["P1", "P2"])
         self.assertEqual(result["validation"]["validation_scope"], "CONTENT_ONLY_NO_COST_OR_PROVIDER_AUTHENTICATION")
         with patch.object(cnw_generate, "ROOT", repo), self.assertRaisesRegex(ContractError, "SEGMENT_COST_SETTLEMENT_MISMATCH"):

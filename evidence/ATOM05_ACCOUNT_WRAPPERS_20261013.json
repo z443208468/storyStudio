@@ -1,0 +1,33 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_p2_cost_guard.py",
+    "tests/test_cnw_live_provider.py",
+    "tests/test_cnw_w10_optional_integrations.py",
+    "tests/test_cnw_runner.py"
+  ],
+  "exit_code": 0,
+  "source_before": {
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/cnw_live_provider.py": "6a645512c84a941b9f71308cd633957913ea8be0c1603ac555fc737dd1f875f7",
+    "tools/p2_06_critics_run.py": "9943cc41b6d241ca904ece3569080b4f47df7d9c3179133f0b66b4e136a54c20",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tests/test_p2_cost_guard.py": "e0042860375719924278ac7c6128df92b1a15e0d77c877a6154ba2aa077d8aba",
+    "tests/test_cnw_runner.py": "f278923bf93f25684ba27b1d3e57da875346a7dc66e3a3219013edbabe2e21d6"
+  },
+  "source_after": {
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tools/cnw_live_provider.py": "6a645512c84a941b9f71308cd633957913ea8be0c1603ac555fc737dd1f875f7",
+    "tools/p2_06_critics_run.py": "9943cc41b6d241ca904ece3569080b4f47df7d9c3179133f0b66b4e136a54c20",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tests/test_p2_cost_guard.py": "e0042860375719924278ac7c6128df92b1a15e0d77c877a6154ba2aa077d8aba",
+    "tests/test_cnw_runner.py": "f278923bf93f25684ba27b1d3e57da875346a7dc66e3a3219013edbabe2e21d6"
+  },
+  "stdout_base64": "Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4gWyA3MiVdDQouLi4uLi4uLi4uLi4uLi4uLi4uLiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgWzEwMCVdDQo3MyBwYXNzZWQsIDE5IHN1YnRlc3RzIHBhc3NlZCBpbiAyOC40NnMNCg==",
+  "stderr_base64": "",
+  "stdout_sha256": "1422223b007b7749e093db5b31e82aea68ae8c121b0706817fd7930c688ad96c",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

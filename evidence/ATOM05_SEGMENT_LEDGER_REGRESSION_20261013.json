@@ -1,0 +1,24 @@
+{
+  "command": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_cnw_generation.py"
+  ],
+  "exit_code": 2,
+  "source_before": {
+    "tools/cnw_generate.py": "6da9f92d43212b7fc7d464cc3a22a128ff061faf8f5f3b4477d66f4adef1da77",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tests/test_cnw_generation.py": "92d68f9214a4e32ef40e7add49dd02b78efb54c030fbcba35ea5c9adfbf93798"
+  },
+  "source_after": {
+    "tools/cnw_generate.py": "6da9f92d43212b7fc7d464cc3a22a128ff061faf8f5f3b4477d66f4adef1da77",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tests/test_cnw_generation.py": "92d68f9214a4e32ef40e7add49dd02b78efb54c030fbcba35ea5c9adfbf93798"
+  },
+  "stdout_base64": "DQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PSBFUlJPUlMgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQpfX19fX19fX19fX19fX19fIEVSUk9SIGNvbGxlY3RpbmcgdGVzdHMvdGVzdF9jbndfZ2VuZXJhdGlvbi5weSBfX19fX19fX19fX19fX19fDQpJbXBvcnRFcnJvciB3aGlsZSBpbXBvcnRpbmcgdGVzdCBtb2R1bGUgJ0Q6XENhbmdxaVN0dWRpb1xTdG9yeVN0dWRpb1x0ZXN0c1x0ZXN0X2Nud19nZW5lcmF0aW9uLnB5Jy4NCkhpbnQ6IG1ha2Ugc3VyZSB5b3VyIHRlc3QgbW9kdWxlcy9wYWNrYWdlcyBoYXZlIHZhbGlkIFB5dGhvbiBuYW1lcy4NClRyYWNlYmFjazoNCkM6XFByb2dyYW0gRmlsZXNcUHl0aG9uMzEzXExpYlxpbXBvcnRsaWJcX19pbml0X18ucHk6ODg6IGluIGltcG9ydF9tb2R1bGUNCiAgICByZXR1cm4gX2Jvb3RzdHJhcC5fZ2NkX2ltcG9ydChuYW1lW2xldmVsOl0sIHBhY2thZ2UsIGxldmVsKQ0KICAgICAgICAgICBeXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eDQp0ZXN0c1x0ZXN0X2Nud19nZW5lcmF0aW9uLnB5OjE5OiBpbiA8bW9kdWxlPg0KICAgIGZyb20gc3ludGhldGljX2Nud19maXh0dXJlcyBpbXBvcnQgc3ludGhldGljX3dvcmtfdW5pdA0KRSAgIE1vZHVsZU5vdEZvdW5kRXJyb3I6IE5vIG1vZHVsZSBuYW1lZCAnc3ludGhldGljX2Nud19maXh0dXJlcycNCj09PT09PT09PT09PT09PT09PT09PT09PT09PSBzaG9ydCB0ZXN0IHN1bW1hcnkgaW5mbyA9PT09PT09PT09PT09PT09PT09PT09PT09PT0NCkVSUk9SIHRlc3RzL3Rlc3RfY253X2dlbmVyYXRpb24ucHkNCiEhISEhISEhISEhISEhISEhISEgSW50ZXJydXB0ZWQ6IDEgZXJyb3IgZHVyaW5nIGNvbGxlY3Rpb24gISEhISEhISEhISEhISEhISEhISENCjEgZXJyb3IgaW4gMC4yMHMNCg==",
+  "stderr_base64": "",
+  "stdout_sha256": "9d56a1a17daacff750fa5c912980d3b849541b5145db9ce6346cb43cac12307f",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

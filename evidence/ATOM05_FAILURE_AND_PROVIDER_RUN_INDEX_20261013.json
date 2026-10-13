@@ -1,0 +1,38 @@
+{
+  "evidence_id": "ATOM05_FAILURE_AND_PROVIDER_RUN_INDEX_20261013",
+  "runs": [
+    {
+      "raw_output_file": "ATOM05_OPERATION_ENCODING_FAILURE_20261013.txt",
+      "raw_output_sha256": "d5a2b99e802419c70988b1008bbd89357ed2aef26f06cfb7c8d866924459b69a",
+      "exit_code": 1,
+      "command": "python -m pytest -q tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_interrupted_import_preserves_receipt_then_requires_session_for_recovery"
+    },
+    {
+      "raw_output_file": "ATOM05_RUNNER_PROVIDER_COLLECTION_FAILURE_20261013.txt",
+      "raw_output_sha256": "9d56a1a17daacff750fa5c912980d3b849541b5145db9ce6346cb43cac12307f",
+      "exit_code": 2,
+      "command": "python -m pytest -q tests/test_cnw_generation.py tests/test_cnw_runner.py tests/test_p2_cost_guard.py tests/test_cnw_live_provider.py"
+    },
+    {
+      "raw_output_file": "ATOM05_RUNNER_PROVIDER_COST_RETEST_20261013.txt",
+      "raw_output_sha256": "45ef788f5c1ab6054b7c81862ff19994e589c78df39c924462fc77d790088036",
+      "exit_code": 0,
+      "command": "$env:PYTHONPATH='tests'; python -m pytest -q tests/test_cnw_generation.py tests/test_cnw_runner.py tests/test_p2_cost_guard.py tests/test_cnw_live_provider.py"
+    }
+  ],
+  "source_sha256_after_retest": {
+    "tools/cost_guard.py": "09660d63d91921556584c6f260980e739a07822cfd69317ec228f348b1b6b750",
+    "tools/cnw_runner.py": "7761781846f9426130c9379227c529c849140e61c25f42ef570cc7331d282e9a",
+    "tools/cnw_live_provider.py": "6a645512c84a941b9f71308cd633957913ea8be0c1603ac555fc737dd1f875f7",
+    "tools/p2_cost_guard.py": "82b9cc91a963fb948169a4b1c2fff347bdb5ddce9564d8ff1571426676b3bc06",
+    "tests/test_cnw_generation.py": "92d68f9214a4e32ef40e7add49dd02b78efb54c030fbcba35ea5c9adfbf93798"
+  },
+  "passing_result": {
+    "passed": 86,
+    "subtests_passed": 17
+  },
+  "failure_causes": [
+    "test fixture omitted explicit UTF-8 decoding on Windows; corrected and full operation authorization suite later passed",
+    "initial pytest collection omitted tests from PYTHONPATH; rerun with PYTHONPATH=tests passed"
+  ]
+}

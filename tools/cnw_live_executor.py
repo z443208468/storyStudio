@@ -598,7 +598,7 @@ def execute_local_lint(run_dir: str | Path, *, stage: str) -> dict:
 
 def record_nk_budget_failure(run_dir: str | Path, request_id: str) -> dict:
     run = safe_run(run_dir)
-    ledger = json.loads(p2_cost_guard.LEDGER.read_text(encoding="utf-8"))
+    ledger = p2_cost_guard.read_ledger_snapshot()
     rows = [row for row in ledger.get("requests", []) if row.get("request_id") == request_id and row.get("run_id") == run.name]
     if len(rows) != 1 or rows[0].get("status") != "SETTLED_OVER_BUDGET":
         raise ContractError("NK_OVER_BUDGET_LEDGER_ROW_INVALID", request_id)

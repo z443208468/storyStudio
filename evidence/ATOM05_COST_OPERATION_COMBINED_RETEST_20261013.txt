@@ -1,0 +1,33 @@
+...............                [100%]
+================================== FAILURES ===================================
+_ OperationAuthorizationTests.test_cached_receipt_mutation_refuses_recovery_and_preserves_outputs (kind='LIVE') _
+tools.cnw_contract.ContractError: COST_RECEIPT_BINDING_MISMATCH: cached operation mode is not an authenticated Live receipt
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_cnw_operation_authorization.OperationAuthorizationTests testMethod=test_cached_receipt_mutation_refuses_recovery_and_preserves_outputs>
+
+    def test_cached_receipt_mutation_refuses_recovery_and_preserves_outputs(self):
+        with self._session():
+            maintenance.run_maintenance(self.root, "audit")
+        latest = json.loads((self.root / "00_meta/maintenance_audit_state.json").read_text())
+        run = (self.root / latest["journal"]).parent
+        original = runner.load_state(run)
+        before = (self.root / "08_review/continuity_audit.md").read_bytes()
+        for kind in ("LIVE", "changed_extra"):
+            state = copy.deepcopy(original)
+            if kind == "LIVE":
+                state["provider_requests"][0]["mode"] = "LIVE"
+                expected = "OPERATION_SIMULATION_RECEIPT_INVALID"
+            else:
+                self._change_extra(state["provider_requests"][0])
+                expected = "OPERATION_SIMULATION_RECEIPT_BINDING_INVALID"
+            runner.save_state(run, state)
+>           with self.subTest(kind=kind), self._session(), self.assertRaisesRegex(ContractError, expected):
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: "OPERATION_SIMULATION_RECEIPT_INVALID" does not match "COST_RECEIPT_BINDING_MISMATCH: cached operation mode is not an authenticated Live receipt"
+
+tests\test_cnw_operation_authorization.py:404: AssertionError
+=========================== short test summary info ===========================
+SUBFAILED(kind='LIVE') tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_cached_receipt_mutation_refuses_recovery_and_preserves_outputs
+1 failed, 15 passed, 41 subtests passed in 249.67s (0:04:09)

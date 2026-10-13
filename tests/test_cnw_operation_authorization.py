@@ -220,7 +220,7 @@ class OperationAuthorizationTests(unittest.TestCase):
         corrupt = runner.load_state(run)
         self._change_extra(corrupt["provider_requests"][0])
         runner.save_state(run, corrupt)
-        request = json.loads((run / corrupt["provider_requests"][0]["request_path"]).read_text())
+        request = json.loads((run / corrupt["provider_requests"][0]["request_path"]).read_text(encoding="utf-8"))
         with self._session():
             with self.assertRaisesRegex(ContractError, "OPERATION_SIMULATION_RECEIPT_BINDING_INVALID"):
                 imports.run_import(self.root)
@@ -265,6 +265,76 @@ class OperationAuthorizationTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "LIVE_AUTHORIZATION_REQUIRED"):
             maintenance.run_maintenance(self.root, "audit")
         self.assertEqual((self.root / "08_review/continuity_audit.md").read_bytes(), snapshot)
+        self.assertEqual(len(self.calls), 1)
+        self._assert_no_real_transport()
+
+    def test_import_recovery_rejects_method_endpoint_and_account_snapshot_drift(self):
+        original_replace = Path.replace
+        def interrupted(path, target):
+            if path.name.endswith(".import-tmp"):
+                raise OSError("INTERRUPTED_OPERATION_FIXTURE")
+            return original_replace(path, target)
+        with self._session(), patch.object(Path, "replace", interrupted):
+            with self.assertRaisesRegex(OSError, "INTERRUPTED_OPERATION_FIXTURE"):
+                imports.run_import(self.root)
+        pending = self.root / imports.PENDING
+        journal = self.root / json.loads(pending.read_text(encoding="utf-8"))["journal"]
+        run = journal.parent
+        canon_before = (self.root / "90_canon/canon.md").read_bytes()
+        state_before = (run / "run_state.json").read_bytes()
+        cost_path = run / "artifacts/cost_operation.json"
+        cost_before = cost_path.read_bytes()
+        original = imports._pinned_upstream
+        def changed_method(name):
+            text, blob = original(name)
+            return text + "\nMETHOD_DRIFT_FIXTURE\n", blob
+        with self._session(), patch.object(imports, "_pinned_upstream", side_effect=changed_method):
+            with self.assertRaisesRegex(ContractError, "COST_OPERATION_BINDINGS_MISMATCH"):
+                imports.run_import(self.root)
+        with self._session(), patch.object(runner, "API_URL", runner.API_URL + "/changed-fixture"):
+            with self.assertRaisesRegex(ContractError, "COST_OPERATION_BINDINGS_MISMATCH"):
+                imports.run_import(self.root)
+        cost_path.write_bytes(cost_before + b" ")
+        with self._session(), self.assertRaisesRegex(ContractError, "COST_OPERATION_BINDINGS_MISMATCH"):
+            imports.run_import(self.root)
+        cost_path.write_bytes(cost_before)
+        self.assertEqual((run / "run_state.json").read_bytes(), state_before)
+        self.assertEqual((self.root / "90_canon/canon.md").read_bytes(), canon_before)
+        self.assertTrue(pending.is_file())
+        with self._session():
+            self.assertEqual(imports.run_import(self.root)["status"], "INITIAL_IMPORT_COMPLETE")
+        self.assertEqual(len(self.calls), 1)
+        self._assert_no_real_transport()
+
+    def test_maintenance_recovery_rejects_method_and_consumer_drift(self):
+        original_replace = Path.replace
+        def interrupted(path, target):
+            if path.name.endswith(".maintenance-tmp"):
+                raise OSError("INTERRUPTED_MAINTENANCE_FIXTURE")
+            return original_replace(path, target)
+        with self._session(), patch.object(Path, "replace", interrupted):
+            with self.assertRaisesRegex(OSError, "INTERRUPTED_MAINTENANCE_FIXTURE"):
+                maintenance.run_maintenance(self.root, "audit")
+        pending = self.root / maintenance.PENDING
+        pointer = json.loads(pending.read_text(encoding="utf-8"))
+        run = (self.root / pointer["journal"]).parent
+        before_report = (self.root / "08_review/continuity_audit.md").read_bytes() if (self.root / "08_review/continuity_audit.md").exists() else None
+        original = maintenance._pinned_upstream
+        def changed_method(name):
+            text, blob = original(name)
+            return text + "\nMETHOD_DRIFT_FIXTURE\n", blob
+        with self._session(), patch.object(maintenance, "_pinned_upstream", side_effect=changed_method):
+            with self.assertRaisesRegex(ContractError, "COST_OPERATION_BINDINGS_MISMATCH"):
+                maintenance.run_maintenance(self.root, "audit")
+        def changed_apply(*args, **kwargs):
+            return None
+        with self._session(), patch.object(maintenance, "_apply", changed_apply):
+            with self.assertRaisesRegex(ContractError, "COST_OPERATION_BINDINGS_MISMATCH"):
+                maintenance.run_maintenance(self.root, "audit")
+        self.assertTrue(pending.is_file())
+        self.assertEqual((self.root / "08_review/continuity_audit.md").read_bytes() if (self.root / "08_review/continuity_audit.md").exists() else None, before_report)
+        with self._session():
+            self.assertTrue(maintenance.run_maintenance(self.root, "audit")["recovered"])
         self.assertEqual(len(self.calls), 1)
         self._assert_no_real_transport()
 
