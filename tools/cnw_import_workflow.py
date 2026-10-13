@@ -116,7 +116,11 @@ def _record_classification(run_dir: Path, kind: str, data: dict) -> None:
     if path.exists() and path.read_bytes() != raw:
         raise ContractError("IMPORT_CLASSIFICATION_CHANGED", relative)
     if not path.exists():
-        path.write_bytes(raw)
+        try:
+            from .cnw_native_pack import _immutable
+        except ImportError:
+            from cnw_native_pack import _immutable
+        _immutable(path, raw)
     state = json.loads((run_dir / "run_state.json").read_text(encoding="utf-8"))
     row = {"kind": kind, "path": relative, "sha256": digest}
     if row not in state.setdefault("import_artifacts", []):
@@ -144,7 +148,7 @@ def _apply(root: Path, run_dir: Path, journal: dict) -> None:
     (run_dir / "COMMITTED").write_text("Import transaction committed.\n", encoding="utf-8")
 
 
-def run_import(project_root: str | Path, *, incremental: bool = False) -> dict:
+def run_import(project_root: str | Path, *, incremental: bool = False, prepare_only=False) -> dict:
     runner._operation_project_registration(Path(project_root))
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((ROOT / "workspace").resolve()):
@@ -158,7 +162,7 @@ def run_import(project_root: str | Path, *, incremental: bool = False) -> dict:
     except ImportError:
         from project_transactions import project_write_lock
     with project_write_lock(root):
-        return _run_import(root, incremental=incremental)
+        return _run_import(root, incremental=incremental, prepare_only=prepare_only)
 
 
 def _reconsume_bookkeeping_response(run, stage, messages):
@@ -167,7 +171,7 @@ def _reconsume_bookkeeping_response(run, stage, messages):
     for row in runner.cached_receipts(runner.load_state(run)):
         if row.get("status") != "SUCCEEDED" or row.get("stage") != stage or row.get("role_id") != "project_organization" or not row.get("request_path"):
             continue
-        registration = runner._require_project_operation_authorization(run.parents[2])
+        registration = runner._require_project_operation_authorization(run.parents[2], run_dir=run)
         if registration is not None:
             try:
                 from .cost_guard import verify_cached_operation_receipt
@@ -202,7 +206,7 @@ def _reconsume_bookkeeping_response(run, stage, messages):
 
 
 def _verify_cached_operation(root, run, journal):
-    if runner._require_project_operation_authorization(root) is None:
+    if runner._require_project_operation_authorization(root, run_dir=run) is None:
         return
     if journal.get("operation_transport_sha256") != runner._operation_transport_identity():
         raise ContractError("IMPORT_OPERATION_ADAPTER_CHANGED", "cached operation requires an explicitly compatible simulation boundary")
@@ -218,20 +222,7 @@ def _verify_cached_operation(root, run, journal):
         role_id="project_organization", output_cap=IMPORT_OUTPUT_CAP, extra=None)
 
 
-def _run_import(root: Path, *, incremental: bool) -> dict:
-    runner._require_project_operation_authorization(root)
-    pending = assert_output_within_root(root, PENDING)
-    pending.parent.mkdir(parents=True, exist_ok=True)
-    if pending.exists():
-        pointer = _json(pending.read_text(encoding="utf-8"))
-        journal_path = assert_output_within_root(root, pointer["journal"])
-        journal = _json(journal_path.read_text(encoding="utf-8"))
-        _verify_cached_operation(root, journal_path.parent, journal)
-        if {k: v["sha256"] for k, v in _inventory(root).items()} != journal["source_hashes"]:
-            raise ContractError("IMPORT_SOURCE_CHANGED", "cannot recover against changed sources")
-        _apply(root, journal_path.parent, journal)
-        pending.unlink()
-        return journal["result"]
+def _describe_import(root, *, incremental):
     state_path = assert_output_within_root(root, STATE)
     previous = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
     if incremental and not previous:
@@ -242,7 +233,7 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     selected = {name: item for name, item in inventory.items()
                 if previous.get("sources", {}).get(name) != item["sha256"]}
     if not selected:
-        return {"status": "NO_NEW_OR_CHANGED_SOURCES", "provider_call": "none"}
+        return None
     existing = {}
     existing_names = set((*DOCUMENTS, "90_canon/unresolved_questions.md", "00_meta/source_log.md", "00_meta/ai_work_log.md"))
     folders = UPDATE_FOLDERS if incremental else DESIGN_FOLDERS
@@ -255,28 +246,6 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     identity = sha(json.dumps({"sources": {k: v["sha256"] for k, v in selected.items()},
         "previous": previous, "existing": existing, "incremental": incremental}, ensure_ascii=False, sort_keys=True).encode())
     run_dir = assert_output_within_root(root, "94_runtime/imports/" + identity[:24])
-    run_dir.mkdir(parents=True, exist_ok=True)
-    journal_path = run_dir / "transaction.json"
-    if journal_path.exists():
-        journal = _json(journal_path.read_text(encoding="utf-8"))
-        _verify_cached_operation(root, run_dir, journal)
-        pending.write_text(json.dumps({"journal": journal_path.relative_to(root).as_posix()}), encoding="utf-8")
-        _apply(root, run_dir, journal)
-        pending.unlink()
-        return journal["result"]
-    if not (run_dir / "run_state.json").exists():
-        save_state(run_dir, {"run_id": run_dir.name, "schema_version": "cnw_import_run_v1", "provider_requests": []})
-    snapshots = run_dir / "artifacts/source_snapshots"
-    snapshots.mkdir(parents=True, exist_ok=True)
-    for name, item in selected.items():
-        raw = assert_output_within_root(root, name).read_bytes()
-        if sha(raw) != item["sha256"]:
-            raise ContractError("IMPORT_SOURCE_CHANGED", name)
-        snapshot = snapshots / (item["sha256"] + ".bin")
-        if snapshot.exists() and sha(snapshot.read_bytes()) != item["sha256"]:
-            raise ContractError("IMPORT_SOURCE_SNAPSHOT_CHANGED", name)
-        if not snapshot.exists():
-            snapshot.write_bytes(raw)
     method = "02_incremental_update" if incremental else "01_first_import"
     workflow_path = f"templates/_workflows/{method}.md"
     upstream, _ = _pinned_upstream(workflow_path)
@@ -320,6 +289,61 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
         "but must have source_role=method_metadata and be written only outside 90_canon. "
         "Operating templates or project instructions never confirm story facts."
     )
+    return locals()
+
+
+def _run_import(root: Path, *, incremental: bool, prepare_only=False) -> dict:
+    runner._operation_project_registration(root)
+    pending = assert_output_within_root(root, PENDING)
+    pending.parent.mkdir(parents=True, exist_ok=True)
+    if pending.exists():
+        if prepare_only:
+            raise ContractError("IMPORT_PENDING_OPERATION", "resume the original pending Run before preparing another")
+        pointer = _json(pending.read_text(encoding="utf-8"))
+        journal_path = assert_output_within_root(root, pointer["journal"])
+        journal = _json(journal_path.read_text(encoding="utf-8"))
+        _verify_cached_operation(root, journal_path.parent, journal)
+        if {k: v["sha256"] for k, v in _inventory(root).items()} != journal["source_hashes"]:
+            raise ContractError("IMPORT_SOURCE_CHANGED", "cannot recover against changed sources")
+        _apply(root, journal_path.parent, journal)
+        pending.unlink()
+        return journal["result"]
+    description = _describe_import(root, incremental=incremental)
+    if description is None:
+        return {"status": "NO_NEW_OR_CHANGED_SOURCES", "provider_call": "none"}
+    state_path, previous, inventory, selected, existing, identity, run_dir = (description[key] for key in
+        ("state_path", "previous", "inventory", "selected", "existing", "identity", "run_dir"))
+    runner._require_project_operation_authorization(root, run_dir=run_dir) if not prepare_only else None
+    run_dir.mkdir(parents=True, exist_ok=True)
+    journal_path = run_dir / "transaction.json"
+    if journal_path.exists():
+        if prepare_only:
+            raise ContractError("IMPORT_PENDING_OPERATION", "prepared transaction requires explicit recovery, never prepare-only publication")
+        journal = _json(journal_path.read_text(encoding="utf-8"))
+        _verify_cached_operation(root, run_dir, journal)
+        pending.write_text(json.dumps({"journal": journal_path.relative_to(root).as_posix()}), encoding="utf-8")
+        _apply(root, run_dir, journal)
+        pending.unlink()
+        return journal["result"]
+    if not (run_dir / "run_state.json").exists():
+        save_state(run_dir, {"run_id": run_dir.name, "schema_version": "cnw_import_run_v1", "provider_requests": []})
+    snapshots = run_dir / "artifacts/source_snapshots"
+    snapshots.mkdir(parents=True, exist_ok=True)
+    for name, item in selected.items():
+        raw = assert_output_within_root(root, name).read_bytes()
+        if sha(raw) != item["sha256"]:
+            raise ContractError("IMPORT_SOURCE_CHANGED", name)
+        snapshot = snapshots / (item["sha256"] + ".bin")
+        if snapshot.exists() and sha(snapshot.read_bytes()) != item["sha256"]:
+            raise ContractError("IMPORT_SOURCE_SNAPSHOT_CHANGED", name)
+        if not snapshot.exists():
+            try:
+                from .cnw_native_pack import _immutable
+            except ImportError:
+                from cnw_native_pack import _immutable
+            _immutable(snapshot, raw)
+    method, stage, source_bindings, messages = (description[key] for key in
+        ("method", "stage", "source_bindings", "messages"))
     _record_classification(run_dir, "import_request", {"messages": messages, "sources": {
         name: {key: value for key, value in row.items() if key != "text"} for name, row in source_bindings.items()}})
     try:
@@ -331,6 +355,12 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     frozen.extend(path.relative_to(run_dir).as_posix() for path in snapshots.glob("*.bin"))
     freeze_operation_account(run_dir, stage=stage, role_id="project_organization",
                              messages=messages, output_cap=IMPORT_OUTPUT_CAP, snapshots=frozen)
+    if prepare_only:
+        try:
+            from .cnw_operation_authorization import publish_request
+        except ImportError:
+            from cnw_operation_authorization import publish_request
+        return publish_request(run_dir)
     reused_response = _reconsume_bookkeeping_response(run_dir, stage, messages)
     content, model_receipt = reused_response or cnw_live_call(run_dir, stage=stage, role_id="project_organization", messages=messages, output_cap=IMPORT_OUTPUT_CAP)
     organized = _json(content)
@@ -452,7 +482,7 @@ def _run_import(root: Path, *, incremental: bool) -> dict:
     if reused_response:
         result.update(provider_call="reconsumed_existing_response", original_provider_request_id=reused_response[1]["provider_request_id"])
     journal = {"writes": writes, "result": result, "source_hashes": {k: v["sha256"] for k, v in inventory.items()}}
-    if runner._require_project_operation_authorization(root) is not None:
+    if runner._require_project_operation_authorization(root, run_dir=run_dir) is not None:
         journal.update(operation_request_id=model_receipt["request_id"], operation_stage=stage,
                        operation_transport_sha256=runner._operation_transport_identity())
     journal_path.write_text(json.dumps(journal, ensure_ascii=False, indent=2), encoding="utf-8")

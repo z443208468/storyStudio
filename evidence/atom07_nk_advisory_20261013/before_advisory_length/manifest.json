@@ -1,0 +1,13 @@
+{
+  "tools/cnw_contract.py": "378195c7455a70ffc1a5b4714c7957b1983c6a75b324d900df16e8939ea5eb7f",
+  "tools/cnw_project.py": "30ba0e6465833735d4590d77b0fb9a2aac04d28f4e3e20a2b70f15266d08ccfe",
+  "tools/cnw_runner.py": "bc48ecc3b2a72bfadc3c4ac1dfaeac669259f23e70cf05afdde97626f5f94879",
+  "tools/cnw_roles.py": "7c4fe61499ecf3e78e7e1c99cffe4312592a3a06b1b4d6eb1592527a6166a206",
+  "tools/cnw_request_identity.py": "449e6a414a537100dabc8083a0c7c4aa4b706cbf0e3afe23d09f1797529df9a0",
+  "tools/cnw_generate.py": "6da9f92d43212b7fc7d464cc3a22a128ff061faf8f5f3b4477d66f4adef1da77",
+  "tools/policy_snapshots.py": "1d62a4e33c0a0c48e5393dd49532be0e7deb5650c453fab0494e8a4aefd8e956",
+  "tools/cnw_native_pack.py": "9d8cf924ae31a7413d42f98d3b8f55cad8db97395063650c88bd16e6c77f9e2f",
+  "AGENTS.md": "767d10977dfb29b6828cf6f80a177492327e0716ab1902dad29844d53cbe4236",
+  "plans/MASTER_PLAN_GENERIC_APP_R5.md": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d",
+  "tests/test_cnw_authorized_length_variants.py": "66df94c794aa0f5fb29bc3f1fe0b68bf45c5f74fabc622ccbb8e3c8c9b2d79d7"
+}

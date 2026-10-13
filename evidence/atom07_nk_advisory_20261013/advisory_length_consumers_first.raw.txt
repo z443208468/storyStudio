@@ -1,0 +1,33 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_cnw_authorized_length_variants.py::AuthorizedLengthVariantTests::test_advisory_overlimit_keeps_original_without_rewrite PASSED [ 33%]
+tests/test_cnw_authorized_length_variants.py::AuthorizedLengthVariantTests::test_advisory_refine_uses_finding_not_length_and_no_change_zero_calls FAILED [ 66%]
+tests/test_cnw_authorized_length_variants.py::AuthorizedLengthVariantTests::test_advisory_underlength_keeps_original_without_continuation PASSED [100%]
+
+================================== FAILURES ===================================
+_ AuthorizedLengthVariantTests.test_advisory_refine_uses_finding_not_length_and_no_change_zero_calls _
+tests\test_cnw_authorized_length_variants.py:118: in test_advisory_refine_uses_finding_not_length_and_no_change_zero_calls
+    result = r.execute_refine(self.run)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:2266: in execute_refine
+    content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=output_cap, extra={"revision_number": revision_number})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:756: in cnw_live_call
+    account.verify_request(messages=messages, role_id=role_id, output_cap=output_cap, extra=extra)
+tools\cost_guard.py:200: in verify_request
+    verify_request(self.run, stage=self.context.stage, role_id=role_id,
+tools\cnw_live_authorization.py:236: in verify_request
+    runner._read_stage_text(Path(run), state, predecessor)
+tools\cnw_runner.py:1323: in _read_stage_text
+    path = assert_output_within_root(run_dir, record["artifact"]["path"])
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_authorized_length_variants.py::AuthorizedLengthVariantTests::test_advisory_refine_uses_finding_not_length_and_no_change_zero_calls - TypeError: 'NoneType' object is not subscriptable
+=================== 1 failed, 2 passed in 159.85s (0:02:39) ===================

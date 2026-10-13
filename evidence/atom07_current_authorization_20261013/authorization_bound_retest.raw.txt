@@ -1,0 +1,14 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_unsigned_request_partial_write_recovers_without_overwriting_failed_attempt PASSED [ 25%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_grant_changed_after_reservation_blocks_http_and_preserves_original_charge PASSED [ 50%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signature_for_other_implementation_cannot_create_run PASSED [ 75%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [100%]
+
+======================== 4 passed in 96.07s (0:01:36) =========================

@@ -1,0 +1,14 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 17 items / 14 deselected / 3 selected
+
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_revision_descriptor_rechecks_real_author_decision 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_revision_descriptor_rechecks_real_author_decision PASSED [ 33%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_unrelated_or_duplicate_success_never_skips_current_constructor PASSED [ 66%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_archived_simulated_receipt_cannot_escape_owned_context PASSED [100%]
+
+============ 3 passed, 14 deselected, 2 subtests passed in 26.89s =============

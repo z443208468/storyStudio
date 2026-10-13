@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_cnw_early_e2e.py::EarlyCNWE2EGateTests::test_early_cnw_e2e_gate_real_11_stage_chain_recovery_review_and_export PASSED [ 50%]
+tests/test_cnw_early_e2e.py::EarlyCNWE2EGateTests::test_enabled_nk_unavailable_fails_closed PASSED [100%]
+
+============================= 2 passed in 18.53s ==============================

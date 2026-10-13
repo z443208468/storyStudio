@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signed_multistage_request_consumers_recovery_and_simulated_live_rejection PASSED [ 50%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [100%]
+
+======================= 2 passed in 1332.59s (0:22:12) ========================

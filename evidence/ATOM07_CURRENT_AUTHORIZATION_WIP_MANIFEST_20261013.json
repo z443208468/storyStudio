@@ -1,0 +1,77 @@
+{
+  "status": "ATOM07_WIP_NOT_ACCEPTED",
+  "base_commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+  "records": [
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_first.raw.txt",
+      "sha256": "50e643d417e119844dcdf43b2b3a472d4f020e03e940a9f7ddab03b62ba0bbb8"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_first.check.json",
+      "sha256": "65dc37e859698d6ac58c339f7292e17c0801b11d492caee3dfad6f2ead618625"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_plot_retest.raw.txt",
+      "sha256": "087a0e48ec077139d6d459a4fe51cc231bbd675e5a4aebcc68c682272d393cb1"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_plot_retest.check.json",
+      "sha256": "ddddc16e662b198b0eac3d00af5845b0d8f11fa2ccaa96ee0e2f12d6fd336410"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_simulated_retest.raw.txt",
+      "sha256": "9de02f114d8e6e16c90dc24ee096a116283281940335964092e66db3a8f576d4"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_simulated_retest.check.json",
+      "sha256": "e07dde7398d73d946ade5249eca8bd9461aca524989825f19099cb1566ae4dbb"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_simulated_retest.consumers.json",
+      "sha256": "ce1c655c651396ea29241a0f5c053351508379fae22e266d51c36393afbf7ad2"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_scoped.raw.txt",
+      "sha256": "b9898bd3c31f39002731c45b92bbfadc83f3db2226e6ede43f4e17ccbbd63116"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_scoped.check.json",
+      "sha256": "b1901901579b6d1aaeeeabdf2fad8fe8176cd7e2ee08b6fba1da2d1b99b77682"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_scoped.consumers.json",
+      "sha256": "2072e6635622c1d1f78744914b40b50cad62e826c6658259be92d2ccced8a495"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_bound_retest.raw.txt",
+      "sha256": "cefdc6e7418f3b7dafe9b9eaa79998605bfe13e8f62681ccc9f3ce725d0b9044"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_bound_retest.check.json",
+      "sha256": "90fee7af59b75999d25d8345dca12121146fef09e0842411f54cf6551b4008c6"
+    },
+    {
+      "path": "evidence/atom07_current_authorization_20261013/authorization_bound_retest.consumers.json",
+      "sha256": "340114cbcc11212bf5327d5fd653de83a4cb9753fff32bf631e1015fb7d5fbd7"
+    }
+  ],
+  "source_current": {
+    "tools/cnw_live_authorization.py": "daa587470437d49616aa3d443e9949041b629d5d5f67e09b45599e933004c047",
+    "tools/cnw_runner.py": "44fda9be44c08a1bb45e1dadd107f4c8931b32e67fac52c68fe3c07fa5222b47",
+    "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+    "tools/cnw_native_pack.py": "9d8cf924ae31a7413d42f98d3b8f55cad8db97395063650c88bd16e6c77f9e2f",
+    "tools/cnw_live_provider.py": "624cd2fa86753778425c1eb767696bd3150864d59854100a2a19ec919d4882ee",
+    "tools/cost_guard.py": "d4ad49928ad170b5d3a5ae4aa6283ebac383e921a4e980b9d5f43e68e97bf339",
+    "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+    "tests/test_cnw_live_authorization.py": "6252c414a46d5f7120590487bf170ab5a7cdeaea461c626209283df24996ac08",
+    "plans/MASTER_PLAN_GENERIC_APP_R5.md": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d"
+  },
+  "actual_captured_files_checked": 3,
+  "protected_ledger_sha256": "c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b",
+  "protected_ts_state_sha256": "3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d",
+  "scope": "V2 chapter authorization first component; not full ATOM07, not Live deployment or production",
+  "next_atom_permission": "WITHHELD",
+  "git_push_authorization": "NONE"
+}

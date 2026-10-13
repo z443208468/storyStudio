@@ -1,0 +1,59 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_actual_brief_builder_consumes_matching_native_response PASSED [ 25%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_current_cards_cannot_rebind_old_nk_payload FAILED [ 50%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected PASSED [ 75%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response FAILED [100%]
+
+================================== FAILURES ===================================
+___ NKRequestIdentityTests.test_current_cards_cannot_rebind_old_nk_payload ____
+tests\test_cnw_nk_request_identity.py:84: in test_current_cards_cannot_rebind_old_nk_payload
+    with self.assertRaises(ContractError): self.request()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+_ NKRequestIdentityTests.test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected (case='duplicate') _
+tests\test_cnw_nk_request_identity.py:96: in test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected
+    with self.subTest(case=case), self.assertRaises(ContractError): self.request()
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+_ NKRequestIdentityTests.test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected (case='mapping') _
+tests\test_cnw_nk_request_identity.py:96: in test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected
+    with self.subTest(case=case), self.assertRaises(ContractError): self.request()
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+_ NKRequestIdentityTests.test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected (case='hook_provider') _
+tests\test_cnw_nk_request_identity.py:96: in test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected
+    with self.subTest(case=case), self.assertRaises(ContractError): self.request()
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+_ NKRequestIdentityTests.test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected (case='receipt_provider') _
+tests\test_cnw_nk_request_identity.py:96: in test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected
+    with self.subTest(case=case), self.assertRaises(ContractError): self.request()
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+_ NKRequestIdentityTests.test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected (case='request_format') _
+tests\test_cnw_nk_request_identity.py:96: in test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected
+    with self.subTest(case=case), self.assertRaises(ContractError): self.request()
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+_ NKRequestIdentityTests.test_self_rehashed_reflection_cannot_replace_actual_response _
+tests\test_cnw_nk_request_identity.py:80: in test_self_rehashed_reflection_cannot_replace_actual_response
+    with self.assertRaises(ContractError): self.request()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: ContractError not raised
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_current_cards_cannot_rebind_old_nk_payload - AssertionError: ContractError not raised
+SUBFAILED(case='duplicate') tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected - AssertionError: ContractError not raised
+SUBFAILED(case='mapping') tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected - AssertionError: ContractError not raised
+SUBFAILED(case='hook_provider') tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected - AssertionError: ContractError not raised
+SUBFAILED(case='receipt_provider') tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected - AssertionError: ContractError not raised
+SUBFAILED(case='request_format') tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected - AssertionError: ContractError not raised
+FAILED tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response - AssertionError: ContractError not raised
+========================= 7 failed, 2 passed in 0.20s =========================

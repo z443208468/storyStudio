@@ -16,3 +16,11 @@ evidence/atom06_current_20261013/*.raw.txt binary
 evidence/ATOM06_CONTROLLER_RETURN_310f21e_20261013.md -text whitespace=-blank-at-eol
 evidence/atom06_routing_repair_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
 evidence/atom06_routing_repair_20261013/*.raw.txt binary
+
+# Keep Atom-07 original run logs, request captures, and source preimages byte exact.
+evidence/ATOM07_* -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom07_current_authorization_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom07_nk_advisory_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom07_request_consumers_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom07_signed_operations_20261014/** -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom07_w10_v2_20261013/** -text whitespace=cr-at-eol,-blank-at-eol

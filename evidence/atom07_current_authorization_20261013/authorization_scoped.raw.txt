@@ -1,0 +1,47 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 29 items
+
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [  3%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run 
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run PASSED [  6%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_pending_unknown_budget_and_renewal_do_not_reset_spending PASSED [ 10%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_real_high_and_low_request_consumers_reject_changed_messages_role_or_tokens 
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_real_high_and_low_request_consumers_reject_changed_messages_role_or_tokens PASSED [ 13%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signed_pre_run_and_real_existing_run_have_same_identity_without_provider PASSED [ 17%]
+tests/test_cnw_v2_preflight.py::GenericRunPreflightTests::test_offline_or_mode_changed_v2_rejects_before_slot_reserve_and_http 
+tests/test_cnw_v2_preflight.py::GenericRunPreflightTests::test_offline_or_mode_changed_v2_rejects_before_slot_reserve_and_http PASSED [ 20%]
+tests/test_cnw_v2_preflight.py::GenericRunPreflightTests::test_real_v2_report_passes_identity_but_self_accept_never_grants_authority PASSED [ 24%]
+tests/test_cnw_v2_preflight.py::GenericRunPreflightTests::test_simulated_signed_review_is_attested_with_provider_flag_still_false PASSED [ 27%]
+tests/test_cnw_v2_preflight.py::GenericRunPreflightTests::test_wrong_run_project_policy_source_and_legacy_schema_replay_reject 
+tests/test_cnw_v2_preflight.py::GenericRunPreflightTests::test_wrong_run_project_policy_source_and_legacy_schema_replay_reject PASSED [ 31%]
+tests/test_cost_context.py::RunCostContextTests::test_changed_contract_cannot_reserve_but_incurred_charge_can_still_settle PASSED [ 34%]
+tests/test_cost_context.py::RunCostContextTests::test_real_registration_and_frozen_contract_define_context_without_spend PASSED [ 37%]
+tests/test_cost_context.py::RunCostContextTests::test_receipt_replay_from_another_instance_is_rejected 
+tests/test_cost_context.py::RunCostContextTests::test_receipt_replay_from_another_instance_is_rejected PASSED [ 41%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_atomic_publish_retries_same_reservation_once PASSED [ 44%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_bound_model_drift_refuses_without_mutating_ledger PASSED [ 48%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_bound_projects_share_one_finite_budget PASSED [ 51%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_bound_settlement_uses_reserved_pricing_and_preserves_legacy_rows PASSED [ 55%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_dry_run_unlimited_keeps_ledger_unchanged PASSED [ 58%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_existing_finite_ledger_is_not_silently_changed_by_default PASSED [ 62%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_explicit_unlimited_change_preserves_unknown_and_charge_history PASSED [ 65%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_invalid_context_or_wrong_run_refuses_before_ledger_creation 
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_invalid_context_or_wrong_run_refuses_before_ledger_creation PASSED [ 68%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_invalid_limits_and_missing_change_reason_are_rejected 
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_invalid_limits_and_missing_change_reason_are_rejected PASSED [ 72%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_new_unlimited_ledger_reserves_and_settles_without_money_cap PASSED [ 75%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_persistent_publish_refusal_preserves_original_and_pending_file PASSED [ 79%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_provider_fee_wrappers_keep_parallel_results_separate PASSED [ 82%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_publish_refuses_changed_preimage_and_temp PASSED [ 86%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_raw_snapshot_preserves_exact_original_bytes PASSED [ 89%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_readonly_snapshot_waits_for_writer_without_republish PASSED [ 93%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_same_run_across_instances_cannot_settle_another_reservation 
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_same_run_across_instances_cannot_settle_another_reservation PASSED [ 96%]
+tests/test_p2_cost_guard.py::CampaignLimitTests::test_unlimited_does_not_disable_token_cap_or_duplicate_request_checks PASSED [100%]
+
+============= 29 passed, 40 subtests passed in 288.79s (0:04:48) ==============

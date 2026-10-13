@@ -1,0 +1,367 @@
+{
+  "scope": "ACTUAL_BOUNDED_EXECUTOR_WITH_UNIT_PREDECESSORS",
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "requests": [
+    {
+      "body": {
+        "model": "deepseek-flash",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary.\n[project_language_contract]\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\n[project_length_policy]\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count."
+          },
+          {
+            "role": "user",
+            "content": "{\"writing_brief\": \"## Quick Header\\nSynthetic project constraints.\\n\\n## Active Canon\\nSynthetic project constraints.\\n\\n## Scene-by-Scene Instructions\\nOne scene; 100–250 visible characters; preserve B01.\\n\\n## Voice References\\nMira: direct question. Keeper: brief practical offer.\\n\\n## Hard Constraints\\nSynthetic project constraints.\\n\\n## Style Targets\\nSynthetic project constraints.\\n\\n## What NOT to include in the prose\\nSynthetic project constraints.\", \"voice_samples\": \"\"}"
+          }
+        ],
+        "max_tokens": 4096,
+        "stream": false,
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "request_id": "cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6"
+    }
+  ],
+  "run_state": {
+    "schema_version": "cnw_run_state_v1",
+    "run_id": "SIGNED-ADAPT-RUN",
+    "work_id": "ADAPT-HINGE-01",
+    "unit_kind": "scene",
+    "project_id": "TIDELINE",
+    "contract_path": "contracts/ADAPT-HINGE-01.json",
+    "contract_sha256": "a2e61dd0c751fb47ce06ff2c43b9624d3f716e3a9125b143e4ca2d37660da20b",
+    "source_identity": {
+      "source_origin": "IMPORTED_PROJECT",
+      "project_instance_id": "ff9b91d0-1789-457d-b272-406e3baee0b2",
+      "source_id": "61f61b74038ace77",
+      "source_revision_id": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "source_file_sha256": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "manifest_file": "_INBOX/revisions/manifests/e9c2e2956118a1779d59e954dce9f1341c55741b9da3f8823f8405e2dca54eb2.json",
+      "source_manifest_sha256": "e9c2e2956118a1779d59e954dce9f1341c55741b9da3f8823f8405e2dca54eb2",
+      "manifest_revision_sha256": "e9c2e2956118a1779d59e954dce9f1341c55741b9da3f8823f8405e2dca54eb2",
+      "source_index_file": "_INBOX/revisions/indexes/6dc3d494be66ff0250253426606ace602d6bda35cf23eada132d75d2bb39efa7.json",
+      "source_index_sha256": "6dc3d494be66ff0250253426606ace602d6bda35cf23eada132d75d2bb39efa7"
+    },
+    "fixture_only": false,
+    "created_at": "2026-10-13T13:34:07Z",
+    "updated_at": "2026-10-13T13:34:49Z",
+    "status": "RUNNING",
+    "mode": "live",
+    "workflow_template_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+    "cnw_method_source": {
+      "commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+      "workflow_blob": "146ea01a484cc0578cf290478b3941599ad7fb15"
+    },
+    "cnw_stages": [
+      "plot",
+      "scene_cards",
+      "writing_brief",
+      "prose",
+      "lint_layer1",
+      "lint_layer2",
+      "multi_lens_review",
+      "adversarial_verify",
+      "completeness_critic",
+      "refine",
+      "re_review"
+    ],
+    "support_hooks": {},
+    "next_stage": "lint_layer1",
+    "provider_requests": [
+      {
+        "stage": "prose",
+        "role_id": "prose_agent_1",
+        "request_id": "cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6",
+        "request_fingerprint": "07b92d20f61ee372b019273ecd4b4731d0437123810fb235aef60d10526e1fbf",
+        "provider_request_id": "SIMULATED-LENGTH-1",
+        "model": "deepseek-flash",
+        "status": "SUCCEEDED",
+        "http_status": 200,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 10,
+          "completion_tokens": 10
+        },
+        "input_sha256": "d4f15e4d779f8fe96f19a0faefc695e9bde65ce6164e2c710603ed3dde07fdf0",
+        "request_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6.request.json",
+        "request_sha256": "778d363ddf726d27caf26d00be0900938be72ace6c426b22510593313232e9ab",
+        "output_sha256": "87bc15638540621224fcbd0f2fd0a73267465418b9b2897ea2fe5b977b990c35",
+        "raw_response_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6.json",
+        "raw_response_sha256": "413e963675bd69e42968725624efd92a6f4e92bd4cef95faefa5124ce5bfd8af",
+        "cost_cny": 3e-05,
+        "ledger_settlement": {
+          "status": "SETTLED",
+          "request_id": "cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6",
+          "estimated_request_cny": "0.000030",
+          "campaign_committed_cny": "0.000030",
+          "limit_cny": null,
+          "cost_context": {
+            "project_instance_id": "ff9b91d0-1789-457d-b272-406e3baee0b2",
+            "project_id": "TIDELINE",
+            "run_id": "SIGNED-ADAPT-RUN",
+            "stage": "prose",
+            "binding_sha256": "777510e46bac384712daf4559d94a26fd048ba6e826c7918ce5e06cf785cde5a"
+          }
+        },
+        "mode": "MOCK_ONLY",
+        "fixture_only": true,
+        "simulation_status": "SIMULATED"
+      }
+    ],
+    "stages": {
+      "plot": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [],
+        "artifact": {
+          "path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+          "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd"
+        },
+        "role_ids": []
+      },
+      "scene_cards": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [
+          "plot"
+        ],
+        "artifact": {
+          "path": "artifacts/candidates/scene_cards/2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf.md",
+          "sha256": "2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf"
+        },
+        "role_ids": []
+      },
+      "writing_brief": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [
+          "plot",
+          "scene_cards"
+        ],
+        "artifact": {
+          "path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
+          "sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963"
+        },
+        "role_ids": []
+      },
+      "prose": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief"
+        ],
+        "artifact": {
+          "path": "artifacts/candidates/prose/87bc15638540621224fcbd0f2fd0a73267465418b9b2897ea2fe5b977b990c35.md",
+          "sha256": "87bc15638540621224fcbd0f2fd0a73267465418b9b2897ea2fe5b977b990c35"
+        },
+        "role_ids": [
+          "prose_agent"
+        ],
+        "provider_request_ids": [
+          "cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6"
+        ],
+        "validation": {
+          "actual_visible_chars": 400
+        }
+      },
+      "lint_layer1": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose"
+        ],
+        "artifact": null
+      },
+      "lint_layer2": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1"
+        ],
+        "artifact": null
+      },
+      "multi_lens_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2"
+        ],
+        "artifact": null
+      },
+      "adversarial_verify": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review"
+        ],
+        "artifact": null
+      },
+      "completeness_critic": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify"
+        ],
+        "artifact": null
+      },
+      "refine": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic"
+        ],
+        "artifact": null
+      },
+      "re_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic",
+          "refine"
+        ],
+        "artifact": null
+      }
+    },
+    "max_in_flight": 5,
+    "literary_source_hashes": {
+      "project:94_runtime/current_state.md": "8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73",
+      "project:07_draft/manuscript_index.md": "6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73",
+      "project:04_chapter_design/arc_01.md": "666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea",
+      "project:04_chapter_design/arc_01_episode_details.md": "73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5",
+      "project:92_style_engine/character_voice_samples.md": "c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2",
+      "project:90_canon/character_bible.md": "dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29",
+      "project:selected_source_excerpt": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "project:selected_source_identity": "f99fffce5cf01b36b58b5866a1e9f6df7e2bc532e1360d080acae092868e0180",
+      "project:04_chapter_design/arc_index.md": "fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84",
+      "preparation:identity": "b8966502762aca5d0ef7b5084bc358d1060c59672f299f54455b0d5a1a9712f2"
+    },
+    "literary_source_freeze_version": "literary_source_freeze_v2",
+    "provider_config_sha256": "3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519",
+    "cost_guard_runner_sha256": null,
+    "state_migrations": [
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases"
+    ]
+  },
+  "files": {
+    "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md": {
+      "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "utf8": "## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context."
+    },
+    "artifacts/candidates/scene_cards/2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf.md": {
+      "sha256": "2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf",
+      "utf8": "### Identity\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Cast\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Start state\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### End state\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Required beats\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Forbidden items for this scene\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Sensory anchor\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Tone / pacing\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Connection to next scene\nB01 Mira asks; the keeper responds with a screwdriver."
+    },
+    "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md": {
+      "sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "utf8": "## Quick Header\nSynthetic project constraints.\n\n## Active Canon\nSynthetic project constraints.\n\n## Scene-by-Scene Instructions\nOne scene; 100–250 visible characters; preserve B01.\n\n## Voice References\nMira: direct question. Keeper: brief practical offer.\n\n## Hard Constraints\nSynthetic project constraints.\n\n## Style Targets\nSynthetic project constraints.\n\n## What NOT to include in the prose\nSynthetic project constraints."
+    },
+    "artifacts/candidates/prose/87bc15638540621224fcbd0f2fd0a73267465418b9b2897ea2fe5b977b990c35.md": {
+      "sha256": "87bc15638540621224fcbd0f2fd0a73267465418b9b2897ea2fe5b977b990c35",
+      "utf8": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    }
+  },
+  "ledger": {
+    "schema": 1,
+    "campaign_id": "MOCK_ONLY",
+    "currency": "CNY",
+    "limit": null,
+    "pricing_snapshot": {
+      "requested_model": "deepseek-flash",
+      "currency": "CNY",
+      "input_cache_miss_usd_per_million_peak": 1,
+      "output_usd_per_million_peak": 2,
+      "usd_to_cny_estimate": 1
+    },
+    "created_at": "2026-10-13T13:34:07Z",
+    "requests": [
+      {
+        "request_id": "cnw-SIGNED-ADAPT-RUN-prose-75b9fcdedc64438b95e027dd1342fee6",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 CNW prose/prose_agent_1",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 1502,
+        "reserved_output_token_cap": 4096,
+        "reserved_cny": "0.009694",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T13:34:44Z",
+        "cost_context": {
+          "project_instance_id": "ff9b91d0-1789-457d-b272-406e3baee0b2",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "prose",
+          "binding_sha256": "777510e46bac384712daf4559d94a26fd048ba6e826c7918ce5e06cf785cde5a"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "3245e4309f61d518f4bc39d6bd7af1106e965bf3c2607d55128304eda24b5e36",
+          "owner_grant_sha256": "9e52bc8db367677429b6383dec0ddef144055f32fe6fd7724b8a4a8d7b22c205",
+          "identity_sha256": "777510e46bac384712daf4559d94a26fd048ba6e826c7918ce5e06cf785cde5a"
+        },
+        "provider_request_id": "SIMULATED-LENGTH-1",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T13:34:49Z",
+        "usage": {
+          "input_tokens": 10,
+          "output_tokens": 10
+        },
+        "estimated_actual_cny": "0.000030",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      }
+    ]
+  }
+}

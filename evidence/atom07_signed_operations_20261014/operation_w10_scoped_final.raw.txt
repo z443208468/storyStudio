@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 9 items / 5 deselected / 4 selected
+
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_actual_cli_prepares_executes_checked_plot_and_reuses_same_identity PASSED [ 25%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_actual_high_entry_calls_shared_transport_and_reuses_exact_receipt PASSED [ 50%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_actual_low_entry_calls_shared_transport_and_reuses_exact_receipt PASSED [ 75%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_both_entries_reject_wrong_request_before_slot_fee_or_http 
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_both_entries_reject_wrong_request_before_slot_fee_or_http PASSED [100%]
+
+======= 4 passed, 5 deselected, 18 subtests passed in 466.12s (0:07:46) =======

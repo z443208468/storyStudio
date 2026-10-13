@@ -473,6 +473,12 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
         raise ContractError("WORK_UNIT_KIND_INVALID", str(kind))
     locale = _required_text(draft.get("language_locale"), "language.locale")
     target, minimum, maximum = (draft.get("target_visible_chars"), draft.get("min_visible_chars"), draft.get("max_visible_chars"))
+    # Owner instruction: target length is guidance, never an automatic rewrite gate.
+    # Preserve any supplied old range as provenance; a new draft needs no bounds.
+    minimum = target if minimum is None else minimum
+    maximum = target if maximum is None else maximum
+    if draft.get('length_policy', 'ADVISORY') != 'ADVISORY':
+        raise ContractError('LENGTH_POLICY_INVALID', 'new V2 drafts use ADVISORY length guidance')
     if not all(isinstance(v, int) and not isinstance(v, bool) for v in (target, minimum, maximum)) or not (1 <= minimum <= target <= maximum):
         raise ContractError("SCENE_BUDGET_INVALID", "visible-character minimum, target, and maximum must be explicit and ordered")
     root_source: dict
@@ -622,6 +628,7 @@ def build_work_contract_v2(project_root: str | Path, draft: dict, *, registered_
                  "length_semantics": "NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.",
                  "pov": _required_text(draft.get("pov"), "unit.pov"), "target_visible_chars": target,
                  "min_visible_chars": minimum, "max_visible_chars": maximum,
+                 "length_policy": "ADVISORY",
                  "policy_sha256": sha(policy_path.read_bytes())},
         "integrations": integrations,
         "story": {**story_source_fields,

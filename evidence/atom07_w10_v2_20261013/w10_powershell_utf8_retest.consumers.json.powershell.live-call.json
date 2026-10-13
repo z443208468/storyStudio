@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "C:\\Users\\Administrator\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    "D:\\CangqiStudio\\StoryStudio\\tools\\studio.ps1",
+    "live-call",
+    "-ProjectRoot",
+    "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-0kssz6bl\\ExplicitTestDataHome\\projects\\497a2989-4e17-4c4f-90c2-cad7b2358308",
+    "-RunId",
+    "SIGNED-ADAPT-RUN",
+    "-Stage",
+    "plot"
+  ],
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "CNW_LIVE_EXECUTION_FAILED:W10_ATTESTATION_PENDING: deployment objects could not be held against replacement\r\nException: D:\\CangqiStudio\\StoryStudio\\tools\\studio.ps1:292\r\nLine |\r\n 292 |  …  ($LASTEXITCODE -ne 0) { throw \"CNW_LIVE_CALL_FAILED:$LASTEXITCODE\" }\r\n     |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | CNW_LIVE_CALL_FAILED:2\r\n",
+  "stdout_bytes_hex": "",
+  "stderr_bytes_hex": "434e575f4c4956455f455845435554494f4e5f4641494c45443a5731305f4154544553544154494f4e5f50454e44494e473a206465706c6f796d656e74206f626a6563747320636f756c64206e6f742062652068656c6420616761696e7374207265706c6163656d656e740d0a457863657074696f6e3a20443a5c43616e67716953747564696f5c53746f727953747564696f5c746f6f6c735c73747564696f2e7073313a3239320d0a4c696e65207c0d0a20323932207c2020e280a6202028244c41535445584954434f4445202d6e65203029207b207468726f772022434e575f4c4956455f43414c4c5f4641494c45443a244c41535445584954434f444522207d0d0a20202020207c20202020202020202020202020202020202020202020202020202020207e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e0d0a20202020207c20434e575f4c4956455f43414c4c5f4641494c45443a320d0a"
+}

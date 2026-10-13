@@ -373,7 +373,7 @@ def build_prose_input_view(contract: dict[str, Any], brief: str, voice_samples: 
     """Return only the brief, relevant voices, and minimum execution bounds."""
     unit = contract["unit"]
     voice_samples = brief_voice_samples(brief, voice_samples)
-    return {
+    result = {
         "execution_contract": {
             "unit_id": unit["id"],
             "language": unit["language"],
@@ -385,6 +385,11 @@ def build_prose_input_view(contract: dict[str, Any], brief: str, voice_samples: 
         },
         "inputs": {"brief": brief, "voice_samples": voice_samples},
     }
+    if _advisory_length(contract):
+        result['execution_contract'].pop('min_visible_chars')
+        result['execution_contract'].pop('max_visible_chars')
+        result['execution_contract']['length_policy'] = 'ADVISORY'
+    return result
 
 
 def role_metadata(role: str, contract: dict[str, Any]) -> dict[str, Any]:
@@ -428,9 +433,29 @@ def creative_assignment(contract: dict[str, Any]) -> dict[str, Any]:
     """Separate literary requirements from historical execution allocations."""
     assignment = json.loads(json.dumps({k: contract[k] for k in ("project_id", "unit", "story") if k in contract}))
     assignment["unit"].pop("scenes", None)
+    if _advisory_length(contract):
+        assignment['unit'].pop('min_visible_chars', None)
+        assignment['unit'].pop('max_visible_chars', None)
     for beat in assignment["story"].get("required_beats", []):
         beat.pop("budget_visible_chars", None)
     return assignment
+
+
+def _advisory_length(contract):
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    return uses_advisory_length(contract)
+
+
+def _length_guidance(contract):
+    if not _advisory_length(contract):
+        return ''
+    return ('[project_length_policy]\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；'
+            '不得为了凑字数、压字数而重复、删减或重写。'
+            'Length figures are creative guidance, not minimum/maximum acceptance gates. '
+            'Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.')
 
 
 def _project_language_instruction(contract: dict[str, Any]) -> str:
@@ -453,6 +478,7 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
     if role not in ROLE_TO_AUTHOR_TEMPLATE:
         raise ContractError("ROLE_UNKNOWN", role)
     language_instruction = _project_language_instruction(contract)
+    length_instruction = _length_guidance(contract)
     if role == "prose":
         brief_key, voice_key = AUTHOR_ROLE_READS["prose"]
         brief = materials[brief_key]
@@ -460,7 +486,7 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
         # Canon, plot, contract.story, and review rules must reach prose only
         # through the Brief. The orchestrator retains validation metadata.
         return [
-            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary." + ("\n" + language_instruction if language_instruction else "")},
+            {"role": "system", "content": "Write the complete story prose specified by the Writing Brief, using the voice samples selected by its Voice References. Output only the prose, without planning notes or commentary." + ("\n" + language_instruction if language_instruction else "") + ("\n" + length_instruction if length_instruction else "")},
             {"role": "user", "content": json.dumps({"writing_brief": brief, "voice_samples": voices}, ensure_ascii=False)},
         ]
     template_text, blob = _pinned_upstream(ROLE_TO_AUTHOR_TEMPLATE[role])
@@ -469,6 +495,8 @@ def build_author_role_messages(role: str, contract: dict[str, Any], materials: d
     system = header + template_text + "\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n" + reads_text
     if language_instruction:
         system += "\n\n" + language_instruction + "\n"
+    if length_instruction:
+        system += '\n\n' + length_instruction + '\n'
     for source in AUTHOR_TEMPLATE_READ_SOURCES.get(role, ()):
         text, source_blob = _pinned_upstream(source)
         system += f"\n\n[pinned_author_supplementary_reading: {source} blob={source_blob}]\n{text}"

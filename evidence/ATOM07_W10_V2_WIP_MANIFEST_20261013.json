@@ -1,0 +1,784 @@
+{
+  "status": "CURRENT_ATOM07_WIP_NOT_ACCEPTED",
+  "base_commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+  "records": {
+    "w10_v2_first": {
+      "label": "w10_v2_first",
+      "command_argv": [
+        "C:\\Program Files\\Python313\\python.exe",
+        "-c",
+        "import sys,runpy,os\nsys.path.insert(0, os.path.join(os.getcwd(), \"tests\"))\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+        "tests/test_cnw_w10_v2_consumers.py",
+        "-vv",
+        "--tb=short"
+      ],
+      "exit_code": 0,
+      "source_before": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "cf7abae455661e3bab2b571e2861edcc3425c36519cb946f46be3219726234a2",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "8b2a1c6457fa40232bf886f829380189c2ae22bb61f41fbd2acaf3baaf5a8fbf",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5dd8eaed2d4f25ce480b8c05952eb3289c485f3ad1a6ef0f511f823ae288992a"
+      },
+      "source_after": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "cf7abae455661e3bab2b571e2861edcc3425c36519cb946f46be3219726234a2",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "8b2a1c6457fa40232bf886f829380189c2ae22bb61f41fbd2acaf3baaf5a8fbf",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5dd8eaed2d4f25ce480b8c05952eb3289c485f3ad1a6ef0f511f823ae288992a"
+      },
+      "raw_sha256": "a3f37b2cdbda715f491707b281565db8b5fd72567d608ee3a75276192a7e1946",
+      "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\w10_v2_first.raw.txt",
+      "simulation_status": "SIMULATED",
+      "real_provider_calls": 0,
+      "source_unchanged": true
+    },
+    "w10_legacy_isolated_first": {
+      "label": "w10_legacy_isolated_first",
+      "command_argv": [
+        "C:\\Program Files\\Python313\\python.exe",
+        "-c",
+        "import sys,runpy,os\nsys.path.insert(0, os.path.join(os.getcwd(), \"tests\"))\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+        "tests/test_cnw_w10_legacy_isolated.py",
+        "-vv",
+        "--tb=short"
+      ],
+      "exit_code": 0,
+      "source_before": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "cf7abae455661e3bab2b571e2861edcc3425c36519cb946f46be3219726234a2",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "8b2a1c6457fa40232bf886f829380189c2ae22bb61f41fbd2acaf3baaf5a8fbf",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5dd8eaed2d4f25ce480b8c05952eb3289c485f3ad1a6ef0f511f823ae288992a"
+      },
+      "source_after": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "cf7abae455661e3bab2b571e2861edcc3425c36519cb946f46be3219726234a2",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "8b2a1c6457fa40232bf886f829380189c2ae22bb61f41fbd2acaf3baaf5a8fbf",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5dd8eaed2d4f25ce480b8c05952eb3289c485f3ad1a6ef0f511f823ae288992a"
+      },
+      "raw_sha256": "aecda087064b7e05d7283f72a476b0a920e340872eaa83bb6600f01e0469a6e1",
+      "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\w10_legacy_isolated_first.raw.txt",
+      "simulation_status": "SIMULATED",
+      "real_provider_calls": 0,
+      "source_unchanged": true
+    },
+    "w10_lock_snapshot_retest": {
+      "label": "w10_lock_snapshot_retest",
+      "command_argv": [
+        "C:\\Program Files\\Python313\\python.exe",
+        "-c",
+        "import sys,runpy,os\nsys.path.insert(0, os.path.join(os.getcwd(), \"tests\"))\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+        "tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_v2_snapshot_missing_or_relabelled_cannot_enter_legacy_acceptance",
+        "tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_stage_packet_rechecked_inside_the_existing_execution_lock",
+        "tests/test_cnw_w10_legacy_isolated.py",
+        "-vv",
+        "--tb=short"
+      ],
+      "exit_code": 0,
+      "source_before": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "314731de6c00df5e66cc7d7ad1631b9cb6029c428449a1623af1f02d1c1e3bce",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250"
+      },
+      "source_after": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "314731de6c00df5e66cc7d7ad1631b9cb6029c428449a1623af1f02d1c1e3bce",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250"
+      },
+      "raw_sha256": "a05b6a1584b6033a403ba33f31acb46ab31d1e88d4e6ecf4bf6fafc3f5f9c816",
+      "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\w10_lock_snapshot_retest.raw.txt",
+      "simulation_status": "SIMULATED",
+      "real_provider_calls": 0,
+      "source_unchanged": true
+    },
+    "w10_predecessor_pool_retest": {
+      "label": "w10_predecessor_pool_retest",
+      "command_argv": [
+        "C:\\Program Files\\Python313\\python.exe",
+        "-c",
+        "import sys,runpy,os\nsys.path.insert(0, os.path.join(os.getcwd(), \"tests\"))\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+        "tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_changed_real_predecessor_rejects_old_packet_and_new_packet_reads_new_artifact",
+        "tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_direct_low_entry_cannot_skip_an_exhausted_shared_slot",
+        "-vv",
+        "--tb=short"
+      ],
+      "exit_code": 0,
+      "source_before": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250"
+      },
+      "source_after": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250"
+      },
+      "raw_sha256": "135d63da747dd6576c7810c6fb62c125f464f0c4c3137f78be757b3685ce960e",
+      "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\w10_predecessor_pool_retest.raw.txt",
+      "simulation_status": "SIMULATED",
+      "real_provider_calls": 0,
+      "source_unchanged": true
+    },
+    "w10_powershell_boundary": {
+      "label": "w10_powershell_boundary",
+      "command_argv": [
+        "C:\\Program Files\\Python313\\python.exe",
+        "-c",
+        "import sys,runpy,os\nsys.path.insert(0, os.path.join(os.getcwd(), \"tests\"))\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+        "tests/test_cnw_w10_powershell.py",
+        "-vv",
+        "--tb=short"
+      ],
+      "exit_code": 1,
+      "source_before": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250",
+        "tests/test_cnw_w10_powershell.py": "6d2520d5d2412f0bb3542f83c3b09f714a75fb495b594ec2e4015105963da58b"
+      },
+      "source_after": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250",
+        "tests/test_cnw_w10_powershell.py": "6d2520d5d2412f0bb3542f83c3b09f714a75fb495b594ec2e4015105963da58b"
+      },
+      "raw_sha256": "4e20c7d5311e644e121940e1d2d67aac2426940bf14f5d0abcbfb599075ac34e",
+      "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\w10_powershell_boundary.raw.txt",
+      "simulation_status": "SIMULATED",
+      "real_provider_calls": 0,
+      "source_unchanged": true
+    },
+    "w10_powershell_utf8_retest": {
+      "label": "w10_powershell_utf8_retest",
+      "command_argv": [
+        "C:\\Program Files\\Python313\\python.exe",
+        "-c",
+        "import sys,runpy,os\nsys.path.insert(0, os.path.join(os.getcwd(), \"tests\"))\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+        "tests/test_cnw_w10_powershell.py",
+        "-vv",
+        "--tb=short"
+      ],
+      "exit_code": 0,
+      "source_before": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250",
+        "tests/test_cnw_w10_powershell.py": "cf852b8146cc66e4f3cf6420a28fb05ca612ebf2074b07d3de4fdccfb17176fc"
+      },
+      "source_after": {
+        "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+        "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+        "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+        "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+        "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+        "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+        "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+        "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+        "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+        "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+        "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+        "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+        "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+        "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+        "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+        "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+        "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+        "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+        "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+        "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+        "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+        "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+        "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+        "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+        "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+        "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+        "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+        "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+        "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+        "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+        "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250",
+        "tests/test_cnw_w10_powershell.py": "cf852b8146cc66e4f3cf6420a28fb05ca612ebf2074b07d3de4fdccfb17176fc"
+      },
+      "raw_sha256": "a714c017cf643d315228db97d2806bfd0d5ef8fd98a08c802ca49e66604dad3b",
+      "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\w10_powershell_utf8_retest.raw.txt",
+      "simulation_status": "SIMULATED",
+      "real_provider_calls": 0,
+      "source_unchanged": true
+    }
+  },
+  "files": {
+    "w10_v2_first.raw.txt": {
+      "sha256": "a3f37b2cdbda715f491707b281565db8b5fd72567d608ee3a75276192a7e1946",
+      "bytes": 1361
+    },
+    "w10_v2_first.check.json": {
+      "sha256": "da4709f825b89dbb02e0c42248b5f91ce8ce3a02c162f7784ddafbdbc2613dae",
+      "bytes": 7057
+    },
+    "w10_v2_first.consumers.json.cli_plot.json": {
+      "sha256": "441e32f6258f20521bd59217a091cb0412a9ff9b28c5fd47c329f9d40f42d264",
+      "bytes": 40971
+    },
+    "w10_v2_first.consumers.json.high.json": {
+      "sha256": "994b352bd4c08062fcb9daf3fcf7c3ab46b2e3721d1b4bb2fe25d0df371828a8",
+      "bytes": 37462
+    },
+    "w10_v2_first.consumers.json.low.json": {
+      "sha256": "89ebf0188fd87e5fd2d4c589ff24ca22c3beba3923d70c73f7d82551182d6d87",
+      "bytes": 37462
+    },
+    "w10_legacy_isolated_first.raw.txt": {
+      "sha256": "aecda087064b7e05d7283f72a476b0a920e340872eaa83bb6600f01e0469a6e1",
+      "bytes": 2682
+    },
+    "w10_legacy_isolated_first.check.json": {
+      "sha256": "6adaacfdf3d1d988b4798384008bbbf5ea76aaf1291f87585ada640c06f467cb",
+      "bytes": 7086
+    },
+    "w10_lock_snapshot_retest.raw.txt": {
+      "sha256": "a05b6a1584b6033a403ba33f31acb46ab31d1e88d4e6ecf4bf6fafc3f5f9c816",
+      "bytes": 3085
+    },
+    "w10_lock_snapshot_retest.check.json": {
+      "sha256": "7a2c32b114fb4f5d8895edd92c44e193f5b25c3bf968da8a311d9d6f3a295567",
+      "bytes": 7789
+    },
+    "w10_predecessor_pool_retest.raw.txt": {
+      "sha256": "135d63da747dd6576c7810c6fb62c125f464f0c4c3137f78be757b3685ce960e",
+      "bytes": 824
+    },
+    "w10_predecessor_pool_retest.check.json": {
+      "sha256": "4b4afd197a125ba62bb02577da41eaf5c26d274eae4cbb5e621ae35359f3cdbc",
+      "bytes": 7758
+    },
+    "w10_predecessor_pool_retest.consumers.json.changed_predecessor.json": {
+      "sha256": "c001bb960f6d51d15f7aeb7bc0efe8f4fd46555455334e8a713784c9d4bd1ec6",
+      "bytes": 66938
+    },
+    "w10_powershell_boundary.raw.txt": {
+      "sha256": "4e20c7d5311e644e121940e1d2d67aac2426940bf14f5d0abcbfb599075ac34e",
+      "bytes": 2729
+    },
+    "w10_powershell_boundary.check.json": {
+      "sha256": "e68fb05876d60dcb6a9de132ee31b5c0c582e3f62a765889c5d6a13e65e4f84e",
+      "bytes": 7739
+    },
+    "w10_powershell_utf8_retest.raw.txt": {
+      "sha256": "a714c017cf643d315228db97d2806bfd0d5ef8fd98a08c802ca49e66604dad3b",
+      "bytes": 691
+    },
+    "w10_powershell_utf8_retest.check.json": {
+      "sha256": "ac9be7af475cfaa2fc748a6eba8f415d0cab83fd5e1c080103dc80c42ca53dce",
+      "bytes": 7745
+    },
+    "w10_powershell_utf8_retest.consumers.json.powershell.live-call.json": {
+      "sha256": "48ed17bd3c240ab38358018d48181fc6a74517b1b7d308c3212f43b8189d3b32",
+      "bytes": 1821
+    },
+    "w10_powershell_utf8_retest.consumers.json.powershell.prepare-live.json": {
+      "sha256": "754d68bc22a24cc68a91aa0ad159e55ef9c3c17baf7249ccd1a3af8a0a5896d2",
+      "bytes": 1833
+    },
+    "source_bytes/tools/cnw_live_authorization.py.source": {
+      "sha256": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+      "bytes": 17888
+    },
+    "source_bytes/tools/cnw_runner.py.source": {
+      "sha256": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+      "bytes": 194689
+    },
+    "source_bytes/tools/cnw_pack_app.py.source": {
+      "sha256": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+      "bytes": 57940
+    },
+    "source_bytes/tools/cnw_native_pack.py.source": {
+      "sha256": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+      "bytes": 46246
+    },
+    "source_bytes/tools/cnw_live_provider.py.source": {
+      "sha256": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+      "bytes": 35447
+    },
+    "source_bytes/tools/cost_guard.py.source": {
+      "sha256": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+      "bytes": 19064
+    },
+    "source_bytes/tools/p2_cost_guard.py.source": {
+      "sha256": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+      "bytes": 18046
+    },
+    "source_bytes/tools/cnw_recovery.py.source": {
+      "sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+      "bytes": 33695
+    },
+    "source_bytes/tools/cnw_w10_policy.py.source": {
+      "sha256": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+      "bytes": 25308
+    },
+    "source_bytes/tools/cnw_request_identity.py.source": {
+      "sha256": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+      "bytes": 18220
+    },
+    "source_bytes/tools/cnw_test_live_transport.py.source": {
+      "sha256": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+      "bytes": 6897
+    },
+    "source_bytes/tests/test_cnw_live_authorization.py.source": {
+      "sha256": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+      "bytes": 24179
+    },
+    "source_bytes/plans/MASTER_PLAN_GENERIC_APP_R5.md.source": {
+      "sha256": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+      "bytes": 185010
+    },
+    "source_bytes/tests/test_cnw_nk_request_identity.py.source": {
+      "sha256": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+      "bytes": 7602
+    },
+    "source_bytes/tools/cnw_nk_adapter.py.source": {
+      "sha256": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+      "bytes": 6410
+    },
+    "source_bytes/tests/test_cnw_support_consumers.py.source": {
+      "sha256": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+      "bytes": 6589
+    },
+    "source_bytes/tests/test_cnw_authorized_length_variants.py.source": {
+      "sha256": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+      "bytes": 8169
+    },
+    "source_bytes/tools/cnw_contract.py.source": {
+      "sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+      "bytes": 33870
+    },
+    "source_bytes/tools/cnw_roles.py.source": {
+      "sha256": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+      "bytes": 46794
+    },
+    "source_bytes/tools/cnw_project.py.source": {
+      "sha256": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+      "bytes": 80872
+    },
+    "source_bytes/tools/policy_snapshots.py.source": {
+      "sha256": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+      "bytes": 27698
+    },
+    "source_bytes/tools/cnw_generate.py.source": {
+      "sha256": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+      "bytes": 31171
+    },
+    "source_bytes/tools/cnw_export.py.source": {
+      "sha256": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+      "bytes": 18918
+    },
+    "source_bytes/tests/test_cnw_advisory_length.py.source": {
+      "sha256": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+      "bytes": 8548
+    },
+    "source_bytes/AGENTS.md.source": {
+      "sha256": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+      "bytes": 4037
+    },
+    "source_bytes/tools/cnw_review.py.source": {
+      "sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+      "bytes": 19992
+    },
+    "source_bytes/tools/cnw_revision.py.source": {
+      "sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+      "bytes": 37797
+    },
+    "source_bytes/tools/cnw_live_executor.py.source": {
+      "sha256": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+      "bytes": 50955
+    },
+    "source_bytes/tools/studio.ps1.source": {
+      "sha256": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+      "bytes": 29241
+    },
+    "source_bytes/tests/test_cnw_w10_v2_consumers.py.source": {
+      "sha256": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+      "bytes": 15271
+    },
+    "source_bytes/tests/test_cnw_w10_legacy_isolated.py.source": {
+      "sha256": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+      "bytes": 1120
+    },
+    "source_bytes/tests/test_cnw_live_provider.py.source": {
+      "sha256": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250",
+      "bytes": 14861
+    },
+    "source_bytes/tests/test_cnw_w10_powershell.py.source": {
+      "sha256": "cf852b8146cc66e4f3cf6420a28fb05ca612ebf2074b07d3de4fdccfb17176fc",
+      "bytes": 2996
+    },
+    "before_w10_adapter/manifest.json": {
+      "sha256": "97b9c6c26a0dd616757a788e372ab6f93a4e028fbb397c58bf96d9f8605f2d06",
+      "bytes": 402
+    },
+    "before_w10_adapter/tools/cnw_live_authorization.py.source": {
+      "sha256": "a72d4c108680644319386e50341c6b83218e6a182f949462841d2d4c39d22197",
+      "bytes": 17800
+    },
+    "before_w10_adapter/tools/cnw_live_executor.py.source": {
+      "sha256": "318a043b9e4346265bc8b231acac58e3d8ce309bceb0762cf186318de776162c",
+      "bytes": 42457
+    },
+    "before_w10_adapter/tools/cnw_live_provider.py.source": {
+      "sha256": "624cd2fa86753778425c1eb767696bd3150864d59854100a2a19ec919d4882ee",
+      "bytes": 31051
+    },
+    "before_w10_adapter/tools/studio.ps1.source": {
+      "sha256": "32440d0198c67632416a8928921eb7bbc5514268db9038482c4cf26f77e5a836",
+      "bytes": 28310
+    }
+  },
+  "current_sources": {
+    "tools/cnw_live_authorization.py": "382c9b067ed0ba0ca8852a2f487a1d0db5212a32d077954b06ddfc266d8464a3",
+    "tools/cnw_runner.py": "f37983af36337015938f07fb0242ee6b4caf756215638a7b7eec77e1f697a26f",
+    "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+    "tools/cnw_native_pack.py": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+    "tools/cnw_live_provider.py": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+    "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+    "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+    "tools/cnw_request_identity.py": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+    "tools/cnw_test_live_transport.py": "eb87701c8aa433b3686605fd172e23ce5a6932b48991e5eb2555aff011a1bf2a",
+    "tests/test_cnw_live_authorization.py": "f30c85e5ca283ec45869d3d996fedcf21e6b4391667e278f4b6b4494daea2ffd",
+    "plans/MASTER_PLAN_GENERIC_APP_R5.md": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+    "tests/test_cnw_nk_request_identity.py": "b1f985a284a018fce42d2b4fd7124dbad1eaeccce6fe77c946e54b87f92ae8e5",
+    "tools/cnw_nk_adapter.py": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+    "tests/test_cnw_support_consumers.py": "9070b01f4a65185e0243cde99e6063189bd924afd1de017cffc7f4faa3d01809",
+    "tests/test_cnw_authorized_length_variants.py": "73d3496dfd6773903665711eb71ea5b6b6adc1822d7628d3b2bb00178d340f3c",
+    "tools/cnw_contract.py": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+    "tools/cnw_roles.py": "0c00bf5ba394a22b9c4adf2d6e5ae5adf779f2207459429bb7decba3d5dd460e",
+    "tools/cnw_project.py": "99c9fa7116b0aeddba992930378bd9c09f21b0d00d9c211d9596fe82473fcbad",
+    "tools/policy_snapshots.py": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+    "tools/cnw_generate.py": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+    "tools/cnw_export.py": "affbd68a412b179ed598117300e7cf2313f4e61bcec117c91fd5d1854f63e7fd",
+    "tests/test_cnw_advisory_length.py": "a721fe5607266d23157b3d1a9cd1dace1532780bbb7c015d22b5744624b1c66e",
+    "AGENTS.md": "69ba2ea176e60016cc933ab4a4542413c6c08b615b64d74cd36cb4ac229e6e1f",
+    "tools/cnw_review.py": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+    "tools/cnw_revision.py": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+    "tools/cnw_live_executor.py": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+    "tools/studio.ps1": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+    "tests/test_cnw_w10_v2_consumers.py": "5d0ecc1e97b6b8d043c1838c2da2225d63fbd8faa91ee1b373cbddae8b17234d",
+    "tests/test_cnw_w10_legacy_isolated.py": "d68adb418f5ed599297b8ccd6d69dbec54b0594683a0ceddbd2ef2d0f3de65b2",
+    "tests/test_cnw_live_provider.py": "6c3d34c7eb0702d5d7c015d125f71883e5fde67b6d60d10785c4d8a14fc84250",
+    "tests/test_cnw_w10_powershell.py": "cf852b8146cc66e4f3cf6420a28fb05ca612ebf2074b07d3de4fdccfb17176fc"
+  },
+  "scope": "W10 V2 delegation and original V1 compatibility; not full Atom07 or Live",
+  "powershell_scope": "Real native routing reaches and rejects unavailable production attestation; positive model execution belongs to owned Python CLI fixture only",
+  "candidate_commit": null,
+  "push_authorization": "NONE",
+  "next_atom_permission": "WITHHELD",
+  "real_provider_calls": 0,
+  "real_account_reservations": 0,
+  "cutover_blocked": true
+}

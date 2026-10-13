@@ -246,7 +246,8 @@ def amounts(ledger):
     return committed
 
 
-def command_reserve(args, *, emit=True, context: CostContext | None = None, expected_model=None):
+def command_reserve(args, *, emit=True, context: CostContext | None = None, expected_model=None,
+                    authorization_check=None):
     binding = context.record() if isinstance(context, CostContext) else None
     if context is not None and binding is None:
         raise ValueError("COST_CONTEXT_INVALID")
@@ -269,6 +270,8 @@ def command_reserve(args, *, emit=True, context: CostContext | None = None, expe
         limit = campaign_limit(ledger["limit"])
         if limit is not None and committed + reserve > limit:
             raise ValueError("CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED")
+        live_grant = (authorization_check(ledger=ledger, args=args, reserve=reserve, cost_snapshot=snapshot)
+                      if authorization_check is not None else None)
         row = {
             "request_id": args.request_id,
             "run_id": args.run_id,
@@ -284,6 +287,8 @@ def command_reserve(args, *, emit=True, context: CostContext | None = None, expe
             row["cost_context"] = binding
             row["cost_policy_snapshot"] = snapshot
             row["cost_pricing_snapshot"] = pricing
+        if live_grant is not None:
+            row["live_authorization"] = live_grant
         ledger["requests"].append(row)
         result = {"status": "RESERVED", "request_id": args.request_id,
                           "reserved_cny": row["reserved_cny"],

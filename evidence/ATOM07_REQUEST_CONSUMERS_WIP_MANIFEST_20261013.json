@@ -1,0 +1,50 @@
+{
+  "status": "ATOM07_WIP_NOT_ACCEPTED",
+  "records": [
+    {
+      "path": "evidence/atom07_request_consumers_20261013/request_consumers_first.raw.txt",
+      "sha256": "c701950eb6ec8139b89671b8fa0ac487f992dfbf1c2e0c93601f56bb24c84ec1"
+    },
+    {
+      "path": "evidence/atom07_request_consumers_20261013/request_consumers_first.check.json",
+      "sha256": "a9f4d8f772d3b67eed88615e91c53652ecc74dbddab14fed3a03b068645790e8"
+    },
+    {
+      "path": "evidence/atom07_request_consumers_20261013/request_consumers_history_retest.raw.txt",
+      "sha256": "479c2549569d17938b58f3a68b3ea560432f9320caaa9cbfaa46474474cba8bc"
+    },
+    {
+      "path": "evidence/atom07_request_consumers_20261013/request_consumers_history_retest.check.json",
+      "sha256": "092a62063adf3a63028558671a421cc9af387cfab07749ceb5ce0318b1f62d92"
+    },
+    {
+      "path": "evidence/atom07_request_consumers_20261013/request_consumers_history_retest.consumers.json",
+      "sha256": "6e44ea4b8a784cd5699d2b5bba4dcb77200d39d80322bdb0408763af8234a02c"
+    },
+    {
+      "path": "evidence/atom07_request_consumers_20261013/request_consumers_history_retest.consumers.json.multistage.json",
+      "sha256": "f9d3609c24f2d67ff8c96ff166685bb9565666870ba987748aca0006d7ef7ea7"
+    }
+  ],
+  "source_current": {
+    "tools/cnw_live_authorization.py": "ac04e94bf332efcbac5720de64e5161b66a09126bdf0c956c97907e6470b3b9a",
+    "tools/cnw_runner.py": "454c83b5d73b17c0afd261c7c942a4d41572406195719c8751c323b59f0993cf",
+    "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+    "tools/cnw_native_pack.py": "9d8cf924ae31a7413d42f98d3b8f55cad8db97395063650c88bd16e6c77f9e2f",
+    "tools/cnw_live_provider.py": "624cd2fa86753778425c1eb767696bd3150864d59854100a2a19ec919d4882ee",
+    "tools/cost_guard.py": "969f385cdf3bc29c1b9c20f9a168faa109ecb93dcbb5c5cd41f6c67b02d951a5",
+    "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+    "tools/cnw_request_identity.py": "0a7ae7c0598325c395e65220ec0417679efd8275ef43d6f24630a5d604435813",
+    "tools/cnw_test_live_transport.py": "d22202fa2565c4c70fb49902a8eafd1f930941993516308147334d33c7f39632",
+    "tests/test_cnw_live_authorization.py": "99d31a0d2c8dcf4eb0491d01856016dd56ec0d6db58487a7fd7c2c320f295349",
+    "plans/MASTER_PLAN_GENERIC_APP_R5.md": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d"
+  },
+  "stages": 11,
+  "simulated_requests": 16,
+  "checked_captured_files": 43,
+  "scope": "signed chapter interface actual consumer chain; not complete ATOM07 or Live acceptance",
+  "git_push_authorization": "NONE",
+  "next_atom_permission": "WITHHELD"
+}

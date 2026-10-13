@@ -589,7 +589,7 @@ def _isolated_operation_transport(owner, *, data_home, projects, transport):
         _OPERATION_SIMULATION.reset(token)
 
 
-def _require_project_operation_authorization(project_root: Path, *, allow_simulated=True) -> dict | None:
+def _require_project_operation_authorization(project_root: Path, *, allow_simulated=True, run_dir=None, stage=None) -> dict | None:
     registration = _operation_project_registration(project_root)
     session = _OPERATION_SIMULATION.get()
     if registration is None:
@@ -598,7 +598,19 @@ def _require_project_operation_authorization(project_root: Path, *, allow_simula
         return None
     if allow_simulated and session is not None:
         return session.validate(registration)
-    raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "registered project operations have no production Live/fee grant adapter")
+    if run_dir is None or not Path(run_dir).is_dir():
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "prepare the actual operation before independent preflight and Owner authorization")
+    if not (Path(run_dir) / "artifacts/cost_operation.json").is_file():
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "operation request has not been frozen")
+    if _operation_owner(Path(run_dir), load_state(Path(run_dir))) != Path(registration["project_root"]):
+        raise ContractError("OPERATION_RUN_PATH_INVALID", "grant must belong to this exact registered operation owner")
+    if not (Path(run_dir) / "artifacts/live_authorization.json").is_file():
+        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "independent preflight and Owner operation grant are required")
+    try:
+        from .cnw_operation_authorization import require_authorization
+    except ImportError:
+        from cnw_operation_authorization import require_authorization
+    return require_authorization(run_dir, stage=stage)
 
 
 def _operation_simulation_request_binding(run_dir: Path, *, stage, role_id, messages) -> dict | None:
@@ -696,7 +708,15 @@ def _operation_transport_identity():
                        cost_guard._publish_operation_snapshot,
                        cost_guard._operation_file, cost_guard.for_run, cost_guard.RunAccount,
                        cost_guard.verify_cached_operation_receipt)
-    return sha("\n".join(inspect.getsource(value) for value in (*_OPERATION_TRANSPORT_CODE, *accounting_code)).encode())
+    try:
+        from . import cnw_live_authorization, cnw_operation_authorization
+    except ImportError:
+        import cnw_live_authorization
+        import cnw_operation_authorization
+    boundary_source = Path(cnw_live_authorization.__file__).read_bytes()
+    boundary_source += Path(cnw_operation_authorization.__file__).read_bytes()
+    return sha("\n".join(inspect.getsource(value) for value in (*_OPERATION_TRANSPORT_CODE, *accounting_code)).encode()
+               + boundary_source)
 
 
 def _require_generic_provider_authorization(run_dir: Path, *, stage: str, allow_operation_simulation=False) -> dict | None:
@@ -706,12 +726,11 @@ def _require_generic_provider_authorization(run_dir: Path, *, stage: str, allow_
     No production grant adapter is deployed in this Atom. Historical V1 routing
     remains unchanged; changing a V2 Run's mode cannot grant it legacy authority.
     """
-    if stage == "project_revision_apply" and not allow_operation_simulation:
-        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "creative approval does not grant Provider or fee permission")
     state = load_state(run_dir)
     operation_owner = _operation_owner(run_dir, state)
     if operation_owner is not None:
-        return _require_project_operation_authorization(operation_owner, allow_simulated=allow_operation_simulation)
+        return _require_project_operation_authorization(operation_owner, allow_simulated=allow_operation_simulation,
+                                                        run_dir=run_dir, stage=stage)
     if stage == "project_revision_apply":
         raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "creative approval does not grant Provider or fee permission")
     snapshot = run_dir / "artifacts/contract.json"
@@ -728,17 +747,16 @@ def _require_generic_provider_authorization(run_dir: Path, *, stage: str, allow_
     if is_v2:
         if state.get("mode") == "offline":
             raise ContractError("OFFLINE_PROVIDER_FORBIDDEN", "generic offline execution requires an isolated simulated transport")
-        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "generic production requires independent review plus separate user Live and fee grants; no production grant adapter is deployed")
+        try:
+            from .cnw_live_authorization import require_run_authorization
+        except ImportError:
+            from cnw_live_authorization import require_run_authorization
+        require_run_authorization(run_dir, stage=stage)
 
 
 def cnw_live_call(run_dir: Path, *, stage: str, role_id: str | None, messages: list[dict], output_cap: int, extra: dict | None = None) -> tuple[str, dict]:
-    if stage == "project_revision_apply" and _OPERATION_SIMULATION.get() is None:
-        # Workflow03 creative approval grants no Provider/fee permission.
-        # Production project authorization is not integrated for this new path;
-        # keep it closed before even acquiring/reserving a Provider slot.
-        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "Workflow03 author approval is not Provider authorization; this path is verified only with isolated simulated transport")
     operation_binding = _require_generic_provider_authorization(run_dir, stage=stage, allow_operation_simulation=True)
-    if operation_binding is not None:
+    if operation_binding is not None and operation_binding.get("authorization_route") != "SIGNED_OPERATION_LIVE":
         return _operation_simulation_call(run_dir, stage=stage, role_id=role_id, messages=messages,
                                           output_cap=output_cap, extra=extra)
     account = _cost_account(run_dir, stage)
@@ -766,7 +784,7 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
     account = _cost_account(run_dir, stage)
     if account is not None:
         account.verify_request(messages=messages, role_id=role_id, output_cap=output_cap, extra=extra)
-    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "project_decompose", "project_extract_canon", "project_jet_diagnostic", "project_character_os", "project_revision_plan", "sprint_review", "sprint_handoff"}:
+    if stage not in PROVIDER_STAGES | {"project_import", "project_update", "project_audit", "project_handoff", "project_arc_review", "project_decompose", "project_extract_canon", "project_jet_diagnostic", "project_character_os", "project_revision_plan", "project_revision_apply", "sprint_review", "sprint_handoff"}:
         raise ContractError("LIVE_STAGE_INVALID", stage)
     fingerprint = sha(json.dumps({"stage": stage, "role_id": role_id, "messages": messages,
         "output_cap": output_cap, "model": MODEL, "url": API_URL, "extra": extra}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
@@ -797,9 +815,27 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
     request_path.write_text(json.dumps(body, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     payload = None
     status_code = None
+    if account is not None:
+        try:
+            account.verify_request(messages=messages, role_id=role_id, output_cap=output_cap, extra=extra)
+        except Exception as exc:
+            raw_path.write_text(json.dumps({"request_id": request_id, "status": "NOT_SENT",
+                "authorization_error_code": getattr(exc, "code", None),
+                "authorization_error_type": type(exc).__name__}, sort_keys=True) + "\n", encoding="utf-8")
+            guard.command_settle(argparse.Namespace(request_id=request_id, provider_request_id=None,
+                returned_model=None, finish_reason=None, input_tokens=None, output_tokens=None), emit=False)
+            raise
     try:
-        response = httpx.post(API_URL, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "X-Client-Request-Id": request_id},
-            json=body, timeout=httpx.Timeout(180.0, connect=20.0), follow_redirects=False)
+        try:
+            from .cnw_test_live_transport import current_session
+        except ImportError:
+            from cnw_test_live_transport import current_session
+        test_session = current_session()
+        if test_session is not None:
+            response = test_session.response(run_dir, url=API_URL, body=body, request_id=request_id)
+        else:
+            response = httpx.post(API_URL, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "X-Client-Request-Id": request_id},
+                json=body, timeout=httpx.Timeout(180.0, connect=20.0), follow_redirects=False)
         status_code = int(response.status_code)
         try:
             payload = response.json()
@@ -844,6 +880,10 @@ def _cnw_live_call_in_slot(run_dir: Path, *, stage: str, role_id: str | None, me
     }
     if extra:
         receipt.update(extra)
+    if payload.get("simulation_status") == "SIMULATED" or payload.get("fixture_only") is True:
+        # Transport fixtures identify their actual raw responses. Such evidence
+        # stays simulated even when exercising real production consumers.
+        receipt.update(mode="MOCK_ONLY", simulation_status="SIMULATED", fixture_only=True)
     with locked_run(run_dir):
         current = load_state(run_dir)
         if any(row.get("request_id") == request_id or row.get("provider_request_id") == receipt["provider_request_id"] for row in current.get("provider_requests", [])):
@@ -879,6 +919,10 @@ def _receipt_content(run_dir: Path, receipt: dict) -> str:
             raise ContractError("LIVE_REQUEST_IDENTITY_MISMATCH", receipt["request_id"])
     raw = json.loads(path.read_text(encoding="utf-8"))
     body = raw.get("response", raw)
+    if ((body.get("simulation_status") == "SIMULATED" or body.get("fixture_only") is True)
+            and (receipt.get("mode") != "MOCK_ONLY" or receipt.get("fixture_only") is not True
+                 or receipt.get("simulation_status") != "SIMULATED")):
+        raise ContractError("MOCK_RECEIPT_CANNOT_PROVE_LIVE", receipt["request_id"])
     content = body["choices"][0]["message"]["content"]
     if not isinstance(content, str) or sha(content.encode("utf-8")) != receipt["output_sha256"]:
         raise ContractError("LIVE_RESPONSE_CONTENT_CHANGED", receipt["request_id"])
@@ -891,6 +935,8 @@ def _validate_raw_live_response(raw_path: Path, receipt: dict, usage: dict, inde
         body = payload.get("response", payload) if isinstance(payload, dict) else None
         choices = body.get("choices") if isinstance(body, dict) else None
         raw_usage = body.get("usage") if isinstance(body, dict) else None
+        if isinstance(body, dict) and (body.get("simulation_status") == "SIMULATED" or body.get("fixture_only") is True):
+            raise ValueError("simulated raw response cannot prove Live")
         if not choices or not isinstance(choices[0], dict) or not isinstance(raw_usage, dict):
             raise ValueError("missing response fields")
         outer_status = payload.get("status") if isinstance(payload, dict) else None
@@ -1026,7 +1072,11 @@ def produce(args) -> dict:
     if args.mode == "live" and contract.get("schema_version") == "cnw_work_unit_v2":
         # Keep the existing closed production gate ahead of optional services,
         # which can inspect credentials. Planning does not grant Provider access.
-        raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "generic v2 live execution remains closed until project authorization is integrated")
+        try:
+            from .cnw_live_authorization import require_authorization
+        except ImportError:
+            from cnw_live_authorization import require_authorization
+        require_authorization(project_root, contract_file, run_id=run_id)
     if args.mode == "live":
         _assert_support_components_available(contract)
     production_config = ROOT / "config/production.example.json"
@@ -1498,6 +1548,14 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
     cards_text = _read_stage_text(run_dir, state, "scene_cards")
     payload = build_nk_payload(contract, cards_text, _role_meta("cards", contract))
     existing = state.get("support_hooks", {}).get("nk_pov", {})
+    if contract.get("schema_version") == "cnw_work_unit_v2" and existing.get("status") == "MATERIALIZED":
+        try:
+            from .cnw_request_identity import verified_nk_reflection
+        except ImportError:
+            from cnw_request_identity import verified_nk_reflection
+        verified_nk_reflection(run_dir, state, contract)
+        return {"status": "MATERIALIZED", "path": existing["artifact"]["path"],
+                "mapping": existing["mapping"], "provider_call": "reused"}
     receipt = next((item for item in state.get("provider_requests", [])
                     if item.get("request_id") == existing.get("request_id")
                     and item.get("role_id") == "nk_pov" and item.get("status") == "SUCCEEDED"), None)
@@ -1512,6 +1570,14 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
     nk_result = _invoke_nk_service(run_dir, payload)
     reflection_response = nk_result["response"]
     receipt = nk_result["receipt"]
+    if contract.get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_request_identity import nk_response_from_receipt
+        except ImportError:
+            from cnw_request_identity import nk_response_from_receipt
+        native_response = nk_response_from_receipt(run_dir, receipt, expected_payload=payload)
+        if native_response != reflection_response:
+            raise ContractError("NK_NATIVE_RESPONSE_MISMATCH", "native route and actual Provider response differ")
     mapped, mapping = map_reflection_to_brief("", reflection_response, {
         "status": "LIVE_ACCEPTED", "request_id": receipt["request_id"], "provider_request_id": receipt["provider_request_id"],
         "model": receipt["model"], "finish_reason": receipt["finish_reason"], "usage": receipt["usage"],
@@ -1684,12 +1750,30 @@ def execute_writing_brief(run_dir: Path) -> dict:
     return {"stage": "writing_brief", "nk_request": nk["mapping"].get("provider_request_id"), "receipt": receipt["request_id"]}
 
 
-def execute_prose(run_dir: Path) -> dict:
-    state = load_state(run_dir)
-    contract = _contract_for(run_dir)
-    project_root = _run_dir_base(run_dir)
-    materials = _role_sources("prose", run_dir, state, contract, project_root)
-    base_messages = _author_messages("prose", contract, materials)
+def strip_prose_envelope(text: str) -> str:
+    if text.lstrip().startswith("{"):
+        try:
+            parsed = json.loads(text)
+            return parsed.get("prose", text)
+        except json.JSONDecodeError:
+            return text
+    return text
+
+def prose_attempt_messages(contract: dict, base_messages: list[dict], *, attempt: int,
+                           parts: list[str], over_limit=None) -> list[dict]:
+    """Original initial/continuation/length-recovery messages, without transport."""
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    if uses_advisory_length(contract):
+        if attempt != 0:
+            raise ContractError('LENGTH_RETRY_DISABLED', 'length guidance cannot authorize a continuation or rewrite')
+        return base_messages
+    try:
+        from .cnw_contract import count_visible_chars
+    except ImportError:
+        from cnw_contract import count_visible_chars
     # Legacy v1 runs predate locale contracts and have always used the pinned
     # Chinese continuation/recovery prompts. Preserve that behavior instead of
     # inferring English from an absent locale or a legacy display-language field.
@@ -1714,20 +1798,38 @@ def execute_prose(run_dir: Path) -> dict:
                                f"visible-character range. {scenes}")
         continuation_instruction = "Continue only; do not repeat earlier text."
         over_limit_instruction = "The prior output exceeded the Writing Brief visible-character maximum. Rewrite the complete prose within its target/minimum/maximum; do not append to, refer to, or repeat the previous attempt. This is length recovery only."
-    output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
-    try:
-        from .cnw_contract import validate_output_length, count_visible_chars
-    except ImportError:
-        from cnw_contract import validate_output_length, count_visible_chars
+    if attempt == 0:
+        messages = base_messages
+    elif over_limit is not None:
+        messages = [dict(message) for message in base_messages]
+        messages[0]["content"] += f"\n{over_limit_instruction} (actual={over_limit}; max={contract['unit']['max_visible_chars']})."
+    else:
+        already = "\n".join(parts)
+        remaining = contract["unit"]["min_visible_chars"] - count_visible_chars(already)
+        messages = [
+            {"role": "system", "content": continuation_system},
+            {"role": "user", "content": json.dumps({
+                "brief": base_messages[1]["content"],
+                "already_written_tail": already[-1500:],
+                "still_needed_visible_chars": max(remaining, 0),
+                "instruction": continuation_instruction,
+            }, ensure_ascii=False, sort_keys=True)},
+        ]
+    return messages
 
-    def strip_envelope(text: str) -> str:
-        if text.lstrip().startswith("{"):
-            try:
-                parsed = json.loads(text)
-                return parsed.get("prose", text)
-            except json.JSONDecodeError:
-                return text
-        return text
+
+def execute_prose(run_dir: Path) -> dict:
+    state = load_state(run_dir)
+    contract = _contract_for(run_dir)
+    project_root = _run_dir_base(run_dir)
+    materials = _role_sources("prose", run_dir, state, contract, project_root)
+    base_messages = _author_messages("prose", contract, materials)
+    try:
+        from .cnw_contract import validate_output_length, count_visible_chars, uses_advisory_length, prose_output_cap
+    except ImportError:
+        from cnw_contract import validate_output_length, count_visible_chars, uses_advisory_length, prose_output_cap
+    output_cap = prose_output_cap(contract)
+    advisory = uses_advisory_length(contract)
 
     parts: list[str] = []
     receipt_ids: list[str] = []
@@ -1735,30 +1837,18 @@ def execute_prose(run_dir: Path) -> dict:
     over_limit = None
     # Local recovery for the project's hard length contract, not a CNW stage.
     # Initial write and any continuation/full regeneration share three calls.
-    for attempt in range(3):
-        if attempt == 0:
-            messages = base_messages
-        elif over_limit is not None:
-            messages = [dict(message) for message in base_messages]
-            messages[0]["content"] += f"\n{over_limit_instruction} (actual={over_limit}; max={contract['unit']['max_visible_chars']})."
+    for attempt in range(1 if advisory else 3):
+        messages = prose_attempt_messages(contract, base_messages, attempt=attempt, parts=parts, over_limit=over_limit)
+        if attempt > 0 and over_limit is not None:
             parts = []
             over_limit = None
-        else:
-            already = "\n".join(parts)
-            remaining = contract["unit"]["min_visible_chars"] - count_visible_chars(already)
-            messages = [
-                {"role": "system", "content": continuation_system},
-                {"role": "user", "content": json.dumps({
-                    "brief": base_messages[1]["content"],
-                    "already_written_tail": already[-1500:],
-                    "still_needed_visible_chars": max(remaining, 0),
-                    "instruction": continuation_instruction,
-                }, ensure_ascii=False, sort_keys=True)},
-            ]
         content, receipt = cnw_live_call(run_dir, stage="prose", role_id=f"prose_agent_{attempt + 1}", messages=messages, output_cap=output_cap)
         receipt_ids.append(receipt["request_id"])
-        parts.append(strip_envelope(content).strip())
+        parts.append(strip_prose_envelope(content).strip())
         merged = "\n\n".join(part for part in parts if part)
+        if advisory:
+            validation = validate_output_length(contract, merged)
+            break
         if count_visible_chars(merged) >= contract["unit"]["min_visible_chars"]:
             try:
                 validation = validate_output_length(contract, merged)
@@ -1826,6 +1916,13 @@ def _review_sources(run_dir: Path, state: dict, contract: dict, project_root: Pa
         except ImportError:
             from cnw_task_requirements import review_task_sources
         sources.update(review_task_sources(project_root, contract))
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    if uses_advisory_length(contract):
+        sources['effective_length_policy'] = {'mode': 'ADVISORY',
+            'target_visible_chars': contract['unit']['target_visible_chars']}
     for lens_id in LENS_IDS:
         feedback = project_root / "08_review/lens_feedback" / f"{lens_id}.json"
         if feedback.is_file():
@@ -1864,7 +1961,8 @@ def _parallel_provider_calls(run_dir: Path, calls: list[dict]) -> list[tuple[str
     if not calls:
         return []
     with ThreadPoolExecutor(max_workers=min(limit, len(calls))) as pool:
-        futures = [pool.submit(cnw_live_call, run_dir, **call) for call in calls]
+        from contextvars import copy_context
+        futures = [pool.submit(copy_context().run, cnw_live_call, run_dir, **call) for call in calls]
         try:
             return [future.result() for future in futures]
         except BaseException:
@@ -2063,9 +2161,16 @@ def _confirmed_findings(run_dir: Path, state: dict) -> list[dict]:
     return [f for f in findings if verdicts.get(f.get("finding_id"), {}).get("status") == "CONFIRMED"]
 
 
-def execute_refine(run_dir: Path) -> dict:
-    state = load_state(run_dir)
-    contract = _contract_for(run_dir)
+def refine_attempt_messages(contract: dict, v0: str, feedback: dict, brief: str, *,
+                            attempt: int, content: str = "") -> list[dict]:
+    """Original revision and bounded restoration messages, without transport."""
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    advisory = uses_advisory_length(contract)
+    if advisory and attempt != 0:
+        raise ContractError('LENGTH_RETRY_DISABLED', 'Refine needs literary issues, not a count-restoration request')
     # v1 has no locale contract; retain its historical Chinese Refine behavior.
     is_chinese = (contract.get("schema_version") != "cnw_work_unit_v2"
                   or contract["unit"].get("language_locale", contract["unit"].get("language")) == "zh-CN")
@@ -2079,7 +2184,45 @@ def execute_refine(run_dir: Path) -> dict:
         whole = "the complete chapter" if contract["unit"]["kind"] == "episode" else "the complete scene"
         scenes = "Preserve the Writing Brief's scene order and content; do not collapse multiple scenes into one." if contract["unit"]["kind"] == "episode" else "Keep the same scene scope."
         language_instruction = "Revise in English (en-US); measure length in visible Unicode code points, not words."
-    output_cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
+    if is_chinese:
+        system = (f"你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订{whole}正文，保留有效戏剧内容与所有必需节拍，{scenes}{language_instruction} "
+                  "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
+                  "CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。"
+                  "拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。")
+    else:
+        system = (f"You are the CNW Refine Agent. Based on confirmed findings and Completeness candidates, revise {whole}, preserving effective dramatic content and required beats. {scenes} {language_instruction} "
+                  "Do not remove required actions, introduce new Canon, or cross the reader-knowledge boundary. Output only the complete revised prose in Markdown, with no explanation, evaluation, or JSON wrapper. "
+                  "CritiCS suggestions are unaccepted alternative wording, not CNW review decisions; use them only to address listed findings. "
+                  "Reject suggestions that add scenes not approved by the Brief, reveal new secrets, change the story route, or violate the Brief; never treat support suggestions as new facts.")
+    user = json.dumps({"v0": v0, "confirmed_findings": feedback, "brief_constraints": brief}, ensure_ascii=False, sort_keys=True)
+    if advisory:
+        system += ('\n字数仅为创作目标，不是最低或最高验收线；只为所列情节问题修订，不为凑字数或压字数重写。'
+                   ' Length is guidance only; revise the listed literary issues, not a character-count deviation.')
+    base_messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    if attempt == 0:
+        messages = base_messages
+    else:
+        restore_system = (
+            f"上一次修订删得过短。请在保留已采纳修改的前提下，把{whole}正文补回完整篇幅：恢复被删掉的必需动作、回应、对白与结尾，{scenes}不得新增 Canon、不得越过知识边界、不得使用标题或说明。只输出补全后的完整正文 Markdown。"
+            if is_chinese else
+            f"The previous revision was too short. Preserve accepted changes and restore the {whole} to a complete length by restoring removed required actions, responses, dialogue, and ending. {scenes} Do not add Canon, cross knowledge boundaries, or add headings/commentary. Output only the complete restored prose in Markdown."
+        )
+        messages = [
+            {"role": "system", "content": restore_system},
+            {"role": "user", "content": json.dumps({"under_length_draft": content, "revision_base": v0, "brief_constraints": brief, "target_visible_chars": contract["unit"]["target_visible_chars"], "min_visible_chars": contract["unit"]["min_visible_chars"], "confirmed_findings": feedback}, ensure_ascii=False, sort_keys=True)},
+        ]
+    return messages
+
+
+def execute_refine(run_dir: Path) -> dict:
+    state = load_state(run_dir)
+    contract = _contract_for(run_dir)
+    try:
+        from .cnw_contract import uses_advisory_length, prose_output_cap
+    except ImportError:
+        from cnw_contract import uses_advisory_length, prose_output_cap
+    advisory = uses_advisory_length(contract)
+    output_cap = prose_output_cap(contract)
     previous_revision = state["stages"]["refine"]
     pending = previous_revision.get("pending_findings")
     v0 = _read_stage_text(run_dir, state, "refine" if pending else "prose")
@@ -2127,42 +2270,19 @@ def execute_refine(run_dir: Path) -> dict:
     plan_path = run_dir / f"artifacts/revisions/revision-{revision_number}.plan.json"
     plan_path.parent.mkdir(parents=True, exist_ok=True)
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    if is_chinese:
-        system = (f"你是 CNW Refine Agent。根据已确认 finding 与 Completeness 候选，修订{whole}正文，保留有效戏剧内容与所有必需节拍，{scenes}{language_instruction} "
-                  "不得删除必需动作、不得引入新 Canon、不得越过读者知识边界。只输出修订后的完整正文 Markdown，不要解释、不要评价、不要输出 JSON。"
-                  "CritiCS 补充结果只是尚未采纳的候选表达，不是 CNW 审稿结论；只可用于解决已列出的 finding。"
-                  "拒用其中增加 Brief 未批准场景、新秘密、路线变化或违背 Brief 的建议；不得把补充建议自动当成新事实。")
-    else:
-        system = (f"You are the CNW Refine Agent. Based on confirmed findings and Completeness candidates, revise {whole}, preserving effective dramatic content and required beats. {scenes} {language_instruction} "
-                  "Do not remove required actions, introduce new Canon, or cross the reader-knowledge boundary. Output only the complete revised prose in Markdown, with no explanation, evaluation, or JSON wrapper. "
-                  "CritiCS suggestions are unaccepted alternative wording, not CNW review decisions; use them only to address listed findings. "
-                  "Reject suggestions that add scenes not approved by the Brief, reveal new secrets, change the story route, or violate the Brief; never treat support suggestions as new facts.")
-    user = json.dumps({"v0": v0, "confirmed_findings": feedback, "brief_constraints": brief}, ensure_ascii=False, sort_keys=True)
     try:
         from .cnw_contract import count_visible_chars, validate_output_length
     except ImportError:
         from cnw_contract import count_visible_chars, validate_output_length
-    base_messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
     receipt_ids: list[str] = []
     content = ""
-    for attempt in range(3):
-        if attempt == 0:
-            messages = base_messages
-        else:
-            restore_system = (
-                f"上一次修订删得过短。请在保留已采纳修改的前提下，把{whole}正文补回完整篇幅：恢复被删掉的必需动作、回应、对白与结尾，{scenes}不得新增 Canon、不得越过知识边界、不得使用标题或说明。只输出补全后的完整正文 Markdown。"
-                if is_chinese else
-                f"The previous revision was too short. Preserve accepted changes and restore the {whole} to a complete length by restoring removed required actions, responses, dialogue, and ending. {scenes} Do not add Canon, cross knowledge boundaries, or add headings/commentary. Output only the complete restored prose in Markdown."
-            )
-            messages = [
-                {"role": "system", "content": restore_system},
-                {"role": "user", "content": json.dumps({"under_length_draft": content, "revision_base": v0, "brief_constraints": brief, "target_visible_chars": contract["unit"]["target_visible_chars"], "min_visible_chars": contract["unit"]["min_visible_chars"], "confirmed_findings": feedback}, ensure_ascii=False, sort_keys=True)},
-            ]
+    for attempt in range(1 if advisory else 3):
+        messages = refine_attempt_messages(contract, v0, feedback, brief, attempt=attempt, content=content)
         content, receipt = cnw_live_call(run_dir, stage="refine", role_id="refine", messages=messages, output_cap=output_cap, extra={"revision_number": revision_number})
         receipt_ids.append(receipt["request_id"])
-        if count_visible_chars(content) >= contract["unit"]["min_visible_chars"]:
+        if advisory or count_visible_chars(content) >= contract["unit"]["min_visible_chars"]:
             break
-    if count_visible_chars(content) < contract["unit"]["min_visible_chars"]:
+    if not advisory and count_visible_chars(content) < contract["unit"]["min_visible_chars"]:
         raise ContractError("REVISION_REGRESSION", f"v1 underproduced after bounded restoration: {count_visible_chars(content)}")
     validate_output_length(contract, content)
     diff = {"v0_sha256": sha(v0.encode("utf-8")), "v1_sha256": sha(content.encode("utf-8")), "v0_visible_chars": count_visible_chars(v0), "v1_visible_chars": count_visible_chars(content)}

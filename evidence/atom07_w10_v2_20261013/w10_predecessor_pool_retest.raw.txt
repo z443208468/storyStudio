@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_changed_real_predecessor_rejects_old_packet_and_new_packet_reads_new_artifact PASSED [ 50%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_direct_low_entry_cannot_skip_an_exhausted_shared_slot PASSED [100%]
+
+======================== 2 passed in 269.29s (0:04:29) ========================

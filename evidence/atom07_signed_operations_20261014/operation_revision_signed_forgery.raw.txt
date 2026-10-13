@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 7 items / 6 deselected / 1 selected
+
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_high_low_revision_forgery_rejected_before_slot_or_fee 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_high_low_revision_forgery_rejected_before_slot_or_fee PASSED [100%]
+
+============= 1 passed, 6 deselected, 4 subtests passed in 13.68s =============

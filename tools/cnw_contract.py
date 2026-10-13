@@ -447,6 +447,7 @@ def validate_episode_budget(episode: dict[str, Any]) -> None:
 def validate_work_unit(contract: dict[str, Any]) -> None:
     """Validate scope and length without requiring Plot's design in advance."""
     unit = contract["unit"]
+    advisory = uses_advisory_length(contract)
     if unit.get("planning_mode") not in (None, "author_plot", "legacy_frozen"):
         raise ContractError("PLANNING_MODE_INVALID", str(unit["planning_mode"]))
     if unit.get("kind") == "scene":
@@ -465,7 +466,7 @@ def validate_work_unit(contract: dict[str, Any]) -> None:
             raise ContractError("LOCALE_CONFIGURATION_MISMATCH", "unit.language and unit.language_locale must identify the same locale")
         if unit.get("length_metric") != SUPPORTED_LOCALE_MATRIX[locale]["length_unit"]:
             raise ContractError("LENGTH_METRIC_UNSUPPORTED", str(unit.get("length_metric")))
-        if unit.get("max_visible_chars", MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT + 1) > MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT:
+        if not advisory and unit.get("max_visible_chars", MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT + 1) > MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT:
             raise ContractError("UNIT_CAPACITY_UNVALIDATED", f"maximum supported work-unit length is {MAX_VALIDATED_VISIBLE_CHARS_PER_UNIT} visible characters")
         integrations = contract.get("integrations", {"nk": "DISABLED", "critics": "DISABLED"})
         if not isinstance(integrations, dict):
@@ -515,6 +516,24 @@ def count_visible_chars(text: str) -> int:
     return int(visible_char_metrics(text)["visible_chars"])
 
 
+def uses_advisory_length(contract: dict[str, Any]) -> bool:
+    """Only newly frozen V2 policy changes length semantics; old bytes retain theirs."""
+    unit = contract.get('unit', {})
+    if contract.get('schema_version') != 'cnw_work_unit_v2' or 'length_policy' not in unit:
+        return False
+    if unit['length_policy'] != 'ADVISORY':
+        raise ContractError('LENGTH_POLICY_INVALID', 'new V2 length policy must be ADVISORY')
+    return True
+
+
+def prose_output_cap(contract: dict[str, Any]) -> int:
+    """Transport capacity estimate, independent of an output-character acceptance gate."""
+    import math
+    unit = contract['unit']
+    estimate = unit['target_visible_chars'] if uses_advisory_length(contract) else unit['max_visible_chars']
+    return max(4096, math.ceil(estimate * 1.2) + 512)
+
+
 def validate_output_length(contract: dict[str, Any], text: str) -> dict[str, Any]:
     metrics = visible_char_metrics(text)
     unit = contract.get("unit", {})
@@ -523,6 +542,12 @@ def validate_output_length(contract: dict[str, Any], text: str) -> dict[str, Any
     if not isinstance(minimum, int) or not isinstance(maximum, int):
         raise ContractError("PREFLIGHT_TARGET_MISSING", "min/max visible character range is required")
     actual = int(metrics["visible_chars"])
+    if uses_advisory_length(contract):
+        if not text.strip():
+            raise ContractError('PROSE_OUTPUT_EMPTY', 'prose must be nonempty')
+        return {**metrics, 'length_policy': 'ADVISORY', 'target_visible_chars': unit['target_visible_chars'],
+                'length_reference_status': 'BELOW_REFERENCE' if actual < minimum else
+                                           'ABOVE_REFERENCE' if actual > maximum else 'WITHIN_REFERENCE'}
     if actual < minimum:
         raise ContractError("RETURN_UNDERPRODUCED", f"{actual} visible characters is below minimum {minimum}")
     if actual > maximum:

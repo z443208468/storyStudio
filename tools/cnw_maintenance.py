@@ -44,7 +44,7 @@ def _verify_receipt(run, journal):
                     if row.get("request_id") == journal["request_id"] and row.get("status") == "SUCCEEDED"), None)
     if not receipt or not receipt.get("request_path"):
         raise ContractError("MAINTENANCE_RECEIPT_MISSING", run.name)
-    registration = runner._require_project_operation_authorization(run.parents[2])
+    registration = runner._require_project_operation_authorization(run.parents[2], run_dir=run)
     if registration is not None:
         operation = journal["options"]["operation"]
         try:
@@ -244,7 +244,7 @@ def _apply(root, run, journal):
 
 
 def run_maintenance(project_root, operation, *, scope="full", chapters=(), target=None, pipeline=False,
-                    sources=(), candidate_drafts=None, revision_approval=None):
+                    sources=(), candidate_drafts=None, revision_approval=None, prepare_only=False):
     runner._operation_project_registration(Path(project_root))
     root = Path(project_root).resolve(strict=True)
     if not root.is_relative_to((runner.ROOT / "workspace").resolve()):
@@ -278,14 +278,36 @@ def run_maintenance(project_root, operation, *, scope="full", chapters=(), targe
             options["revision_approval"] = operations.revision_approval(root, options["sources"], revision_approval)
         elif revision_approval is not None:
             raise ContractError("REVISION_USER_APPROVAL_INVALID", "approval selection is only for revision_apply")
-        return _run(root, options)
+        return _run(root, options, prepare_only=prepare_only)
 
 
-def _run(root, options):
-    runner._require_project_operation_authorization(root)
+def _describe_operation(root, options):
+    if options["operation"] == "revision_apply":
+        # The low-level signed Provider route must consume the same actual
+        # author decision as run_maintenance, not a binding copied into options.
+        claimed = options["revision_approval"]
+        actual = operations.revision_approval(root, options["sources"], claimed["approval_file"])
+        if claimed != actual:
+            raise ContractError("REVISION_USER_APPROVAL_BINDING_MISMATCH",
+                                "operation options differ from the selected author decision")
+    inventory = _inventory(root, options)
+    operations.validate_revision_snapshot(inventory, options)
+    references, method_hash = _method(root, options["operation"])
+    adapter_identity = _adapter_identity(options["operation"])
+    current_hashes = _hashes(inventory)
+    messages = _messages(inventory, references, options)
+    identity = runner.sha(json.dumps(messages, ensure_ascii=False, sort_keys=True).encode())
+    run = assert_output_within_root(root, "94_runtime/maintenance/" + identity[:24])
+    return locals()
+
+
+def _run(root, options, *, prepare_only=False):
+    runner._operation_project_registration(root)
     pending = assert_output_within_root(root, PENDING)
     latest_path = assert_output_within_root(root, f"00_meta/maintenance_{options['operation']}_state.json")
     if pending.exists():
+        if prepare_only:
+            raise ContractError("MAINTENANCE_PENDING_OPERATION", "resume the original pending Run first")
         pointer = _json(pending.read_text(encoding="utf-8"))
         journal_path = assert_output_within_root(root, pointer["journal"])
         journal = _json(journal_path.read_text(encoding="utf-8"))
@@ -296,11 +318,9 @@ def _run(root, options):
         _apply(root, run, journal)
         result = {**journal["result"], "provider_call": "reused", "recovered": True}
     else:
-        inventory = _inventory(root, options)
-        operations.validate_revision_snapshot(inventory, options)
-        references, method_hash = _method(root, options["operation"])
-        adapter_identity = _adapter_identity(options["operation"])
-        current_hashes = _hashes(inventory)
+        description = _describe_operation(root, options)
+        inventory, references, method_hash, adapter_identity, current_hashes, messages, identity, run = (description[key] for key in
+            ("inventory", "references", "method_hash", "adapter_identity", "current_hashes", "messages", "identity", "run"))
         latest = _json(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else None
         if latest and latest["options"] == options and latest["method_hash"] == method_hash and latest["adapter_identity"] == adapter_identity and latest["source_after_hashes"] == current_hashes:
             journal = _json(assert_output_within_root(root, latest["journal"]).read_text(encoding="utf-8"))
@@ -315,14 +335,12 @@ def _run(root, options):
                         continue
                     raise ContractError("MAINTENANCE_COMMITTED_OUTPUT_CHANGED", name)
             return {**journal["result"], "provider_call": "reused"}
-        messages = _messages(inventory, references, options)
         target_name = (f"08_review/{options['operation']}_report.md" if options["operation"] in operations.OPERATIONS else
             "08_review/continuity_audit.md" if options["operation"] == "audit" else
             f"08_review/{Path(options['target']).stem}_review.md" if options["operation"] == "arc_review" else "93_exports/handoff_brief.md")
         target_path = assert_output_within_root(root, target_name)
         target_before = runner.sha(target_path.read_bytes()) if target_path.exists() else None
-        identity = runner.sha(json.dumps(messages, ensure_ascii=False, sort_keys=True).encode())
-        run = assert_output_within_root(root, "94_runtime/maintenance/" + identity[:24])
+        runner._require_project_operation_authorization(root, run_dir=run) if not prepare_only else None
         run.mkdir(parents=True, exist_ok=True)
         if not (run / "run_state.json").exists():
             runner.save_state(run, {"run_id": run.name, "schema_version": "cnw_maintenance_run_v1", "provider_requests": []})
@@ -331,7 +349,12 @@ def _run(root, options):
         data = json.dumps({"sources": inventory, "method": references}, ensure_ascii=False, sort_keys=True).encode()
         if snapshot.exists() and snapshot.read_bytes() != data:
             raise ContractError("MAINTENANCE_SNAPSHOT_CHANGED", identity)
-        snapshot.write_bytes(data)
+        if not snapshot.exists():
+            try:
+                from .cnw_native_pack import _immutable
+            except ImportError:
+                from cnw_native_pack import _immutable
+            _immutable(snapshot, data)
         try:
             from .cost_guard import freeze_operation_account
         except ImportError:
@@ -339,6 +362,12 @@ def _run(root, options):
         freeze_operation_account(run, stage="project_" + options["operation"],
             role_id="project_" + options["operation"], messages=messages,
             output_cap=OUTPUT_CAPS[options["operation"]], snapshots=["artifacts/source_snapshot.json"])
+        if prepare_only:
+            try:
+                from .cnw_operation_authorization import publish_request
+            except ImportError:
+                from cnw_operation_authorization import publish_request
+            return publish_request(run)
         content, receipt = runner.cnw_live_call(run, stage="project_" + options["operation"], role_id="project_" + options["operation"],
             messages=messages, output_cap=OUTPUT_CAPS[options["operation"]])
         value = _json(content)

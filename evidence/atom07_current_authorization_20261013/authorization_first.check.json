@@ -1,0 +1,43 @@
+{
+  "label": "authorization_first",
+  "command_argv": [
+    "C:\\Program Files\\Python313\\python.exe",
+    "-c",
+    "import sys,runpy\ndef audit(name,args):\n    if name in {\"socket.connect\", \"socket.sendto\", \"socket.getaddrinfo\"}:\n        raise RuntimeError(\"OFFLINE_VERIFICATION_NETWORK_FORBIDDEN\")\nsys.addaudithook(audit)\nsys.argv=[\"pytest\", *sys.argv[1:]]\nrunpy.run_module(\"pytest\",run_name=\"__main__\")\n",
+    "tests/test_cnw_live_authorization.py",
+    "-vv",
+    "--tb=short"
+  ],
+  "exit_code": 1,
+  "source_before": {
+    "tools/cnw_live_authorization.py": "419ab83eea704bbd89ca126a7e2309888902dab19f470f671075c597690563f5",
+    "tools/cnw_runner.py": "7c28f080a966d985138cb00029420a093733f60bfcdc3e920863f22b88470057",
+    "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+    "tools/cnw_native_pack.py": "9d8cf924ae31a7413d42f98d3b8f55cad8db97395063650c88bd16e6c77f9e2f",
+    "tools/cnw_live_provider.py": "624cd2fa86753778425c1eb767696bd3150864d59854100a2a19ec919d4882ee",
+    "tools/cost_guard.py": "c1c36c60c2651bc3073ee743206d79f435516bf01bf507007efbdb671658a32c",
+    "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+    "tests/test_cnw_live_authorization.py": "9589c5e9da5e2b803ba51a71d577100fd2ce726fd8b648b288bba0e109990580",
+    "plans/MASTER_PLAN_GENERIC_APP_R5.md": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d"
+  },
+  "source_after": {
+    "tools/cnw_live_authorization.py": "419ab83eea704bbd89ca126a7e2309888902dab19f470f671075c597690563f5",
+    "tools/cnw_runner.py": "7c28f080a966d985138cb00029420a093733f60bfcdc3e920863f22b88470057",
+    "tools/cnw_pack_app.py": "a0a22e091070583501b39e36cb31b6e6f022803a1b94eafed3cf01544d4529fe",
+    "tools/cnw_native_pack.py": "9d8cf924ae31a7413d42f98d3b8f55cad8db97395063650c88bd16e6c77f9e2f",
+    "tools/cnw_live_provider.py": "624cd2fa86753778425c1eb767696bd3150864d59854100a2a19ec919d4882ee",
+    "tools/cost_guard.py": "c1c36c60c2651bc3073ee743206d79f435516bf01bf507007efbdb671658a32c",
+    "tools/p2_cost_guard.py": "16376f100e3b9fb9bf86c159422cf1aa508f61ed39b3e754d3adee299633a19d",
+    "tools/cnw_recovery.py": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+    "tools/cnw_w10_policy.py": "ac587a5d421bc38e16dd4d73f6bfccc25aa45ef33fe19cb4d950a0881337010f",
+    "tests/test_cnw_live_authorization.py": "9589c5e9da5e2b803ba51a71d577100fd2ce726fd8b648b288bba0e109990580",
+    "plans/MASTER_PLAN_GENERIC_APP_R5.md": "59459d839780c8b5d729af81f3805cbfa63e6582f283ec7d725d48c36fdbff3d"
+  },
+  "raw_sha256": "50e643d417e119844dcdf43b2b3a472d4f020e03e940a9f7ddab03b62ba0bbb8",
+  "raw_path": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\authorization_first.raw.txt",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "source_unchanged": true
+}

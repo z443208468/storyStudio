@@ -156,6 +156,13 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     execution = {"pipeline_status": state.get("status", "UNKNOWN"),
                  "re_review_status": review_record.get("status", "NOT_RUN"),
                  "candidate_status": candidate_status, "user_creative_accepted": False}
+    try:
+        from .cnw_contract import uses_advisory_length, validate_output_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length, validate_output_length
+    if uses_advisory_length(contract):
+        execution.update(length_policy='ADVISORY', target_visible_chars=unit['target_visible_chars'],
+                         actual_visible_chars=validate_output_length(contract, v1)['visible_chars'])
     if state.get("mode") == "offline" and contract.get("schema_version") == "cnw_work_unit_v2":
         receipts = state.get("provider_requests", [])
         simulated = bool(receipts) and all(row.get("mode") == "MOCK_ONLY" and row.get("simulation_status") == "SIMULATED"

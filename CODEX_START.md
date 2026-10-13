@@ -1,6 +1,6 @@
 # StoryStudio 当前 Codex 执行入口
 
-开始或恢复任务前，先读取 `AGENTS.md`、`docs/governance/GOVERNANCE.md` 与唯一活动计划 `plans/MASTER_PLAN_GENERIC_APP_R5.md`（原批准源 SHA256 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`；当前补充版 SHA256 `59459D839780C8B5D729AF81F3805CBFA63E6582F283EC7D725D48C36FDBFF3D`），然后读取该 Atom 指定的来源、实现和验收材料。只做当前 Atom 授权的工作。
+开始或恢复任务前，先读取 `AGENTS.md`、`docs/governance/GOVERNANCE.md` 与唯一活动计划 `plans/MASTER_PLAN_GENERIC_APP_R5.md`（原批准源 SHA256 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`；当前补充版 SHA256 `408864DEFBE39C7CCD6A113C53614378688B18FD2EB48AC0A58ED6D246B6A247`），然后读取该 Atom 指定的来源、实现和验收材料。只做当前 Atom 授权的工作。
 
 当前目标是把 StoryStudio 建成能隔离承载多类写作要求的通用应用，并保留 CNW 原始方法及其读集、审稿、Canon 和 Sprint 职责。J19/Cangqi、P2、P3、P3.1 内容均为历史，不是默认项目或当前生产任务。
 

@@ -21,24 +21,29 @@ except ImportError:  # direct script execution
 
 
 def validate_revision(contract: dict, v0: str, v1: str, *, finish_reason: str, v0_beat_evidence: dict[str, str], v1_beat_evidence: dict[str, str], v1_dialogue_evidence: list[str], v1_action_evidence: list[str], start_state_evidence: str, end_state_evidence: str, shortening_reason: str = "") -> dict:
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    advisory = uses_advisory_length(contract)
     before = count_visible_chars(v0)
     after = validate_generated_scene(contract, v1, finish_reason=finish_reason, beat_evidence=v1_beat_evidence, dialogue_evidence=v1_dialogue_evidence, action_evidence=v1_action_evidence, start_state_evidence=start_state_evidence, end_state_evidence=end_state_evidence)
-    regression = after["actual_visible_chars"] < contract["unit"]["min_visible_chars"]
+    regression = not advisory and after["actual_visible_chars"] < contract["unit"]["min_visible_chars"]
     dropped_beats = [beat_id for beat_id, evidence in v0_beat_evidence.items() if evidence and evidence in v0 and not (v1_beat_evidence.get(beat_id) and v1_beat_evidence[beat_id] in v1)]
     if dropped_beats:
         after["failure_codes"].append("REVISION_REGRESSION")
         after["dropped_beat_ids"] = dropped_beats
         regression = True
-    if after["actual_visible_chars"] < contract["unit"]["min_visible_chars"]:
+    if not advisory and after["actual_visible_chars"] < contract["unit"]["min_visible_chars"]:
         after["failure_codes"].append("REVISION_REGRESSION")
         regression = True
     after["failure_codes"] = list(dict.fromkeys(after["failure_codes"]))
     after["v0_visible_chars"] = before
     after["v1_visible_chars"] = after["actual_visible_chars"]
-    if before and after["actual_visible_chars"] < before * 0.75 and not shortening_reason.strip():
+    if not advisory and before and after["actual_visible_chars"] < before * 0.75 and not shortening_reason.strip():
         after["failure_codes"].append("REVISION_SHRINK_OVER_25_PERCENT_REQUIRES_REASON")
         after["status"] = "CONTENT_RETURN"
-    elif before and after["actual_visible_chars"] < before * 0.75:
+    elif not advisory and before and after["actual_visible_chars"] < before * 0.75:
         after["shortening_reason"] = shortening_reason.strip()
     after["status"] = "CONTENT_RETURN" if regression or after["failure_codes"] else "CONTENT_VALID"
     # A shorter edit is allowed when it remains in range and preserves required beats.

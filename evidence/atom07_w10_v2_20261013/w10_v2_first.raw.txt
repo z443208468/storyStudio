@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_actual_cli_prepares_executes_checked_plot_and_reuses_same_identity PASSED [ 20%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_actual_high_entry_calls_shared_transport_and_reuses_exact_receipt PASSED [ 40%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_actual_low_entry_calls_shared_transport_and_reuses_exact_receipt PASSED [ 60%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_both_entries_reject_wrong_request_before_slot_fee_or_http 
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_both_entries_reject_wrong_request_before_slot_fee_or_http PASSED [ 80%]
+tests/test_cnw_w10_v2_consumers.py::W10V2ConsumerTests::test_v2_legacy_manual_acceptance_and_pov_paths_reject_without_writes PASSED [100%]
+
+============== 5 passed, 18 subtests passed in 441.15s (0:07:21) ==============

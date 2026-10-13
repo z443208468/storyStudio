@@ -82,17 +82,21 @@ class OperationCostTests(unittest.TestCase):
             ledger['limit'] = str(cost.accounting.amounts(ledger) + Decimal('0.000300'))
         pending = SimpleNamespace(request_id='pending-after-publish', run_id=first.run.name,
             purpose='MOCK_ONLY', input_token_cap=100, output_token_cap=100)
-        first.command_reserve(pending, emit=False)
+        # The current operation gate scopes new reservations to an active owned
+        # fixture session; the original shared-ledger assertions stay intact.
+        with fixture._session(projects=fixture.projects):
+            first.command_reserve(pending, emit=False)
         before = self.fees.ledger.read_bytes()
         with self.assertRaisesRegex(ValueError, 'COST_CONTEXT_SETTLEMENT_MISMATCH'):
             foreign.command_settle(SimpleNamespace(request_id=pending.request_id,
                 provider_request_id=None, returned_model=None, finish_reason=None,
                 input_tokens=None, output_tokens=None), emit=False)
         self.assertEqual(before, self.fees.ledger.read_bytes())
-        with self.assertRaisesRegex(ValueError, 'CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED'):
-            foreign.command_reserve(SimpleNamespace(request_id='other-project-over-budget',
-                run_id=foreign.run.name, purpose='MOCK_ONLY', input_token_cap=100,
-                output_token_cap=100), emit=False)
+        with fixture._session(projects=fixture.projects):
+            with self.assertRaisesRegex(ValueError, 'CAMPAIGN_ESTIMATE_LIMIT_WOULD_BE_EXCEEDED'):
+                foreign.command_reserve(SimpleNamespace(request_id='other-project-over-budget',
+                    run_id=foreign.run.name, purpose='MOCK_ONLY', input_token_cap=100,
+                    output_token_cap=100), emit=False)
         self.assertEqual(before, self.fees.ledger.read_bytes())
         # max_in_flight=1 belongs to the shared account, even across projects.
         from concurrent.futures import ThreadPoolExecutor, TimeoutError

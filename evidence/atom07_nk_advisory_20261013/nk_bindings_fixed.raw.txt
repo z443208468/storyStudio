@@ -1,0 +1,117 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_actual_brief_builder_consumes_matching_native_response FAILED [ 20%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_current_cards_cannot_rebind_old_nk_payload PASSED [ 40%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected PASSED [ 60%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response FAILED [ 80%]
+tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering PASSED [100%]
+
+================================== FAILURES ===================================
+_ NKRequestIdentityTests.test_actual_brief_builder_consumes_matching_native_response _
+tests\test_cnw_nk_request_identity.py:71: in test_actual_brief_builder_consumes_matching_native_response
+    request = self.request()
+              ^^^^^^^^^^^^^^
+tests\test_cnw_nk_request_identity.py:67: in request
+    return identity.expected_requests(self.run, stage='writing_brief', role_id='brief_agent')[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:242: in expected_requests
+    extra = {"nk_perspective_reflection_support_only": verified_nk_reflection(run, state, contract)}
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:97: in verified_nk_reflection
+    response = nk_response_from_receipt(run, receipt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:48: in nk_response_from_receipt
+    content = _content(run, receipt)
+              ^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:42: in _content
+    r._verify_cost_receipt(run, row, p2_cost_guard.read_ledger_snapshot())
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\p2_cost_guard.py:181: in read_ledger_snapshot
+    return json.loads(read_ledger_bytes().decode("utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^
+tools\p2_cost_guard.py:187: in read_ledger_bytes
+    return LEDGER.read_bytes()
+           ^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\cnw-runner-l9hkeb7y\\fictional-ledger.json'
+_ NKRequestIdentityTests.test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected (case='mapping') _
+tests\test_cnw_nk_request_identity.py:96: in test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected
+    with self.subTest(case=case), self.assertRaises(ContractError): self.request()
+                                                                    ^^^^^^^^^^^^^^
+tests\test_cnw_nk_request_identity.py:67: in request
+    return identity.expected_requests(self.run, stage='writing_brief', role_id='brief_agent')[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:242: in expected_requests
+    extra = {"nk_perspective_reflection_support_only": verified_nk_reflection(run, state, contract)}
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:97: in verified_nk_reflection
+    response = nk_response_from_receipt(run, receipt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:48: in nk_response_from_receipt
+    content = _content(run, receipt)
+              ^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:42: in _content
+    r._verify_cost_receipt(run, row, p2_cost_guard.read_ledger_snapshot())
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\p2_cost_guard.py:181: in read_ledger_snapshot
+    return json.loads(read_ledger_bytes().decode("utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^
+tools\p2_cost_guard.py:187: in read_ledger_bytes
+    return LEDGER.read_bytes()
+           ^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\cnw-runner-_wfxeqw7\\fictional-ledger.json'
+_ NKRequestIdentityTests.test_self_rehashed_reflection_cannot_replace_actual_response _
+tests\test_cnw_nk_request_identity.py:80: in test_self_rehashed_reflection_cannot_replace_actual_response
+    with self.assertRaises(ContractError): self.request()
+                                           ^^^^^^^^^^^^^^
+tests\test_cnw_nk_request_identity.py:67: in request
+    return identity.expected_requests(self.run, stage='writing_brief', role_id='brief_agent')[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:242: in expected_requests
+    extra = {"nk_perspective_reflection_support_only": verified_nk_reflection(run, state, contract)}
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:97: in verified_nk_reflection
+    response = nk_response_from_receipt(run, receipt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:48: in nk_response_from_receipt
+    content = _content(run, receipt)
+              ^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_request_identity.py:42: in _content
+    r._verify_cost_receipt(run, row, p2_cost_guard.read_ledger_snapshot())
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\p2_cost_guard.py:181: in read_ledger_snapshot
+    return json.loads(read_ledger_bytes().decode("utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^
+tools\p2_cost_guard.py:187: in read_ledger_bytes
+    return LEDGER.read_bytes()
+           ^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\cnw-runner-njg3zr4o\\fictional-ledger.json'
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_actual_brief_builder_consumes_matching_native_response - FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\cnw-runner-l9hkeb7y\\fictional-ledger.json'
+SUBFAILED(case='mapping') tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected - FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\cnw-runner-_wfxeqw7\\fictional-ledger.json'
+FAILED tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response - FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\cnw-runner-njg3zr4o\\fictional-ledger.json'
+=============== 3 failed, 3 passed, 4 subtests passed in 0.39s ================

@@ -2,7 +2,7 @@
 
 ## 1. 当前权威与状态
 
-唯一活动计划为 [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](../../plans/MASTER_PLAN_GENERIC_APP_R5.md)：原批准源文件 SHA256 为 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`，加入项目所有者补充条款后的当前文件 SHA256 为 `59459D839780C8B5D729AF81F3805CBFA63E6582F283EC7D725D48C36FDBFF3D`。当前目标是让应用消费真实写作输入包、完整保留其要求/材料、映射给正确岗位并按原 CNW 生产、审查和导出，同时支持彼此隔离的多类写作项目。计划逐 Atom 推进；实现状态只由实际候选、验证、独立 Controller verdict 与远端回读证明。P2/P3/P3.1、J19/Cangqi 计划、实现与签收均为历史事实，不能作为本目标的活动范围或完成证据；历史原字节不得删除。
+唯一活动计划为 [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](../../plans/MASTER_PLAN_GENERIC_APP_R5.md)：原批准源文件 SHA256 为 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`，加入项目所有者补充条款后的当前文件 SHA256 为 `408864DEFBE39C7CCD6A113C53614378688B18FD2EB48AC0A58ED6D246B6A247`。当前目标是让应用消费真实写作输入包、完整保留其要求/材料、映射给正确岗位并按原 CNW 生产、审查和导出，同时支持彼此隔离的多类写作项目。计划逐 Atom 推进；实现状态只由实际候选、验证、独立 Controller verdict 与远端回读证明。P2/P3/P3.1、J19/Cangqi 计划、实现与签收均为历史事实，不能作为本目标的活动范围或完成证据；历史原字节不得删除。
 
 ## 2. Writer 与独立只读 Controller
 

@@ -1,0 +1,66 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 44 items
+
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_actual_review_builders_carry_policy_and_export_observes_over_one_char FAILED [  2%]
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_new_real_v2_builder_defaults_advisory_and_no_character_capacity_gate PASSED [  4%]
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_old_v1_and_v2_without_field_keep_original_length_oracle 
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_old_v1_and_v2_without_field_keep_original_length_oracle PASSED [  6%]
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_over_one_character_far_over_and_under_are_only_observations 
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_over_one_character_far_over_and_under_are_only_observations PASSED [  9%]
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_revision_count_decrease_is_not_regression_but_dropped_beat_still_is PASSED [ 11%]
+tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_unknown_policy_rejected_and_creative_view_preserves_target PASSED [ 13%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_c01_short_stop_is_underproduced PASSED [ 15%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_c02_missing_beat_is_returned PASSED [ 18%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_c03_dialogue_action_and_end_state_are_explicit PASSED [ 20%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_c04_revision_cannot_collapse_scene PASSED [ 22%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_c05_shorter_revision_can_pass_in_range PASSED [ 25%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_c06_episode_assembly_requires_every_scene PASSED [ 27%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_capacity_reference_requires_raw_response_and_ledger_alignment PASSED [ 29%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_continuation_limit_is_fixed_at_two PASSED [ 31%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_generation_cli_builds_private_request_from_verified_historical_run PASSED [ 34%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_generation_cli_rejects_inputs_outside_private_project PASSED [ 36%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_insufficient_cap_segments_on_beat_boundaries PASSED [ 38%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_persisted_continuation_limit_cannot_reset_by_repassing_empty_attempts PASSED [ 40%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_promotion_requires_external_hash_bound_review_and_archives_old_copy PASSED [ 43%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_prose_request_refuses_unbound_brief_or_voice_sample PASSED [ 45%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_real_receipt_supports_frozen_1500_character_target PASSED [ 47%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_rereview_only_builds_affected_lenses_with_fresh_full_text PASSED [ 50%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_revision_plan_cli_writes_into_private_project PASSED [ 52%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_revision_plan_requires_source_and_acceptance_per_issue PASSED [ 54%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_revision_record_preserves_v0_and_records_diff_and_shrink_reason PASSED [ 56%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_revision_shrink_over_25_percent_needs_reason PASSED [ 59%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_segment_requests_carry_prior_context_and_assembly_is_ordered PASSED [ 61%]
+tests/test_cnw_generation.py::CnwGenerationTests::test_short_synthetic_candidate_is_not_mistaken_for_full_scene PASSED [ 63%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_arbitrary_frozen_bytes_are_returned_with_the_original_sha PASSED [ 65%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_committed_snapshot_index_binds_current_active_bytes_and_known_legacy_bytes PASSED [ 68%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_content_sha_resolves_legacy_policy_configurations_without_rewriting PASSED [ 70%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_current_shadow_bundle_matches_the_committed_method_and_contains_no_example_story PASSED [ 72%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_fixed_method_constants_cannot_be_weakened_in_app_policy PASSED [ 75%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_known_missing_legacy_hash_returns_migration_required PASSED [ 77%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_legacy_active_consumers_can_read_the_same_config_without_side_effects PASSED [ 79%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_legacy_campaign_null_is_read_only_and_does_not_authorize_project PASSED [ 81%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_mutated_snapshot_is_rejected_without_repair PASSED [ 84%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_only_implemented_provider_adapter_is_accepted PASSED [ 86%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_project_policy_cannot_override_method_or_enable_unbounded_live_use PASSED [ 88%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_provider_policy_cannot_override_author_method PASSED [ 90%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_registered_snapshot_bytes_must_match_declared_identity PASSED [ 93%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_two_distinct_project_policies_resolve_and_compose_by_sha PASSED [ 95%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_unfilled_project_template_returns_specific_missing_inputs_and_keeps_live_closed PASSED [ 97%]
+tests/test_policy_snapshots.py::PolicySnapshotTests::test_unregistered_and_malformed_hashes_fail_closed PASSED [100%]
+
+================================== FAILURES ===================================
+_ AdvisoryLengthTests.test_actual_review_builders_carry_policy_and_export_observes_over_one_char _
+tests\test_cnw_advisory_length.py:123: in test_actual_review_builders_carry_policy_and_export_observes_over_one_char
+    package = cnw_export.export_reading_package(run, state, project_root=owner.project)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_export.py:194: in export_reading_package
+    raise ContractError("SOURCE_SELECTION_INVALID", "ADAPT export requires the frozen selected source excerpt")
+E   tools.cnw_contract.ContractError: SOURCE_SELECTION_INVALID: ADAPT export requires the frozen selected source excerpt
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_advisory_length.py::AdvisoryLengthTests::test_actual_review_builders_carry_policy_and_export_observes_over_one_char - tools.cnw_contract.ContractError: SOURCE_SELECTION_INVALID: ADAPT export requires the frozen selected source excerpt
+============== 1 failed, 43 passed, 5 subtests passed in 42.23s ===============

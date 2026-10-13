@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_actual_brief_builder_consumes_matching_native_response PASSED [ 20%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_current_cards_cannot_rebind_old_nk_payload PASSED [ 40%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected PASSED [ 60%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response PASSED [ 80%]
+tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering PASSED [100%]
+
+==================== 5 passed, 5 subtests passed in 0.21s =====================

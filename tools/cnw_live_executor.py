@@ -43,6 +43,105 @@ def verify_preflight_only(run_dir: str | Path, *, preflight_path: str | Path | N
 
 
 ROLE_STAGE = {"plot": "plot", "cards": "cards", "brief": "brief", "prose": "draft"}
+V2_STAGE_REQUEST_SCHEMA = 'cnw_v2_checked_stage_request_v1'
+
+
+def _v2_modules():
+    try:
+        from . import cnw_runner as runner, cnw_recovery as recovery
+        from .cnw_live_authorization import require_run_authorization
+        from .cnw_live_provider import _is_v2_run
+    except ImportError:
+        import cnw_runner as runner, cnw_recovery as recovery
+        from cnw_live_authorization import require_run_authorization
+        from cnw_live_provider import _is_v2_run
+    return runner, recovery, require_run_authorization, _is_v2_run
+
+
+def build_v2_stage_request(run_dir, *, stage):
+    """Freeze a real stage operation; its model requests are built by CNW itself."""
+    run = safe_run(run_dir)
+    runner, recovery, require_authorization, is_v2 = _v2_modules()
+    if not is_v2(run):
+        raise ContractError('V2_RUN_REQUIRED', 'the automatic stage route requires a frozen V2 contract')
+    canonical = runner.normalize_stage(stage)
+    grant = require_authorization(run, stage=canonical if canonical in runner.PROVIDER_STAGES else None)
+    state = runner.load_state(run)
+    recovery.verify_contract(run, state)
+    for predecessor in runner.stage_predecessors(canonical):
+        record = state['stages'][predecessor]
+        if record.get('status') not in runner._MATERIALIZED or not record.get('artifact'):
+            raise ContractError('STAGE_DEPENDENCY_NOT_ACCEPTED', predecessor)
+        if record.get('execution_identity') != recovery.stage_identity(run, predecessor):
+            raise ContractError('STAGE_DEPENDENCY_INPUT_CHANGED', predecessor)
+        runner._read_stage_text(run, state, predecessor)
+    bindings = grant['bindings']
+    return {'schema_version': V2_STAGE_REQUEST_SCHEMA, 'builder_id': 'cnw_recovery.stage_identity.v1',
+        'project_id': bindings['project_id'], 'project_instance_id': bindings['project_instance_id'],
+        'run_id': run.name, 'run_path': str(run.resolve(strict=True)),
+        'contract_sha256': state['contract_sha256'], 'stage': canonical,
+        'stage_identity': recovery.stage_identity(run, canonical),
+        'authorization_identity_sha256': grant['identity_sha256'], 'self_authorization': False}
+
+
+def prepare_v2_stage(run_dir, *, stage):
+    run = safe_run(run_dir)
+    packet = build_v2_stage_request(run, stage=stage)
+    raw = (json.dumps(packet, ensure_ascii=False, sort_keys=True) + '\n').encode('utf-8')
+    try:
+        from .cnw_native_pack import _immutable
+        from .project_paths import _assert_no_reparse
+    except ImportError:
+        from cnw_native_pack import _immutable
+        from project_paths import _assert_no_reparse
+    directory = run/'artifacts/requests'
+    _assert_no_reparse(directory.absolute(), code='LIVE_STAGE_PACKET_COLLISION')
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / (packet['stage']+'-'+digest(raw)+'.v2-stage.json')
+    _immutable(path, raw)
+    return {'status': 'V2_STAGE_PREPARED_NOT_AUTHORIZATION', 'stage': packet['stage'],
+            'packet': path.relative_to(run).as_posix(), 'packet_sha256': digest(raw), 'provider_call': 'none'}
+
+
+def execute_v2_stage(run_dir, *, stage, packet_path=None):
+    run = safe_run(run_dir)
+    runner, _, _, _ = _v2_modules()
+    with runner.locked_run(run, lock_name='execution.lock'):
+        return _execute_v2_stage_locked(run, stage=stage, packet_path=packet_path)
+
+
+def _execute_v2_stage_locked(run_dir, *, stage, packet_path=None):
+    run = safe_run(run_dir)
+    runner, recovery, _, _ = _v2_modules()
+    # Revalidate authorization on every entry, including reuse and local Lint.
+    expected = build_v2_stage_request(run, stage=stage)
+    if packet_path is None:
+        prepared = prepare_v2_stage(run, stage=stage)
+        packet_path = prepared['packet']
+    value = Path(packet_path)
+    path = safe_run_input(value if value.is_absolute() else run/value, run)
+    packet = json.loads(path.read_bytes())
+    canonical = expected['stage']
+    state = runner.load_state(run)
+    record = state['stages'][canonical]
+    # Brief support and iterative Re-review legitimately change the final
+    # stage identity. Reconsume the original input only when the final current
+    # identity matches the original executor's own completed receipt.
+    if (record.get('status') in runner._MATERIALIZED
+            and record.get('execution_identity') == expected['stage_identity']
+            and packet.get('stage_identity') == record.get('execution_input_identity')):
+        expected = {**expected, 'stage_identity': record['execution_input_identity']}
+    if json.dumps(packet, ensure_ascii=False, sort_keys=True) != json.dumps(expected, ensure_ascii=False, sort_keys=True):
+        raise ContractError('LIVE_STAGE_PACKET_STALE', 'prepared operation differs from the actual Run and current stage')
+    before = len(state.get('provider_requests', []))
+    result = runner._execute_cnw_stage_locked(run, canonical)
+    current = runner.load_state(run)
+    return {**result, 'stage': canonical, 'run_id': run.name,
+        'status': result.get('status', current['stages'][canonical]['status']),
+        'provider_requests_added': len(current.get('provider_requests', [])) - before,
+        'self_acceptance': False}
+
+
 REVIEW_ROLES = {
     "lens5": ("style", "character", "plot", "canon", "story_specific"),
     "verifier3": ("verifier_1", "verifier_2", "verifier_3"),
@@ -75,6 +174,13 @@ def prepare_role_request(run_dir: str | Path, project_root: str | Path, *, role:
     run = safe_run(run_dir)
     if role not in ROLE_STAGE:
         raise ContractError("LIVE_ROLE_INVALID", role)
+    runner, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        if inputs or preflight_path:
+            raise ContractError('V2_ROLE_INPUT_OVERRIDE_FORBIDDEN', 'V2 reads its own frozen contract and registered authorization')
+        if Path(project_root).resolve(strict=True) != runner._run_dir_base(run).resolve(strict=True):
+            raise ContractError('PROJECT_INSTANCE_IDENTITY_MISMATCH', 'W10 project differs from its actual Run')
+        return prepare_v2_stage(run, stage=ROLE_STAGE[role])
     project = Path(project_root).resolve(strict=True)
     state = load_state(run)
     contract_path = (project / state["contract_path"]).resolve(strict=True)
@@ -165,6 +271,11 @@ def prepare_role_request(run_dir: str | Path, project_root: str | Path, *, role:
 
 
 def build_review_request(run: Path, stage: str, role_id: str | None) -> dict:
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        if role_id is not None:
+            raise ContractError('V2_WHOLE_STAGE_REQUIRED', 'CNW owns all independent Lens and Verifier requests')
+        return build_v2_stage_request(run, stage=stage)
     """Build a deterministic, run-bound packet for review and revision roles."""
     state = load_state(run)
     validate_literary_source_freeze(state, run.parent.parent)
@@ -296,6 +407,11 @@ def build_review_request(run: Path, stage: str, role_id: str | None) -> dict:
 
 def prepare_review_request(run_dir: str | Path, *, stage: str, role_id: str | None) -> dict:
     run = safe_run(run_dir)
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        if role_id is not None:
+            raise ContractError('V2_WHOLE_STAGE_REQUIRED', 'V2 prepares the complete original CNW stage')
+        return prepare_v2_stage(run, stage=stage)
     packet = build_review_request(run, stage, role_id)
     target = run / "artifacts/requests" / f"{stage}-{role_id or 'default'}-{packet['stage_fingerprint'][:12]}.json"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -360,9 +476,14 @@ def _validate(stage: str, role_id: str | None, contract: dict, content: str) -> 
 
 
 def execute(run_dir: str | Path, *, stage: str, packet_path: str | Path,
-            input_token_cap: int, output_token_cap: int, role_id: str | None = None,
+            input_token_cap: int | None = None, output_token_cap: int | None = None, role_id: str | None = None,
             transport=None) -> dict:
     run = safe_run(run_dir)
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        if role_id is not None or transport is not None or input_token_cap is not None or output_token_cap is not None:
+            raise ContractError('V2_WHOLE_STAGE_REQUIRED', 'V2 uses CNW roles and its owned last-boundary fixture')
+        return execute_v2_stage(run, stage=stage, packet_path=packet_path)
     packet_value = Path(packet_path)
     packet_file = safe_run_input(packet_value if packet_value.is_absolute() else run / packet_value, run)
     try:
@@ -454,6 +575,9 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
     if stage not in {"plot", "cards", "brief", "draft"}:
         raise ContractError("CONTROLLER_ACCEPTANCE_ARGUMENT_INVALID", stage)
     run = safe_run(run_dir)
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        raise ContractError('V2_LEGACY_STAGE_ACCEPTANCE_FORBIDDEN', 'V2 keeps literary review and independent engineering signatures separate')
     state = load_state(run)
     pending = state.get("pending_role_outputs", {}).get(stage)
     if not isinstance(pending, dict):
@@ -548,6 +672,9 @@ def accept_controller_role_output(run_dir: str | Path, *, stage: str, evidence_p
 
 def bind_nk_receipt(run_dir: str | Path, receipt_path: str | Path) -> dict:
     run = safe_run(run_dir)
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        raise ContractError('V2_LEGACY_POV_STAGE_FORBIDDEN', 'NK must be consumed through the original V2 Brief hook')
     receipt_value = Path(receipt_path)
     receipt_file = safe_run_input(receipt_value if receipt_value.is_absolute() else run / receipt_value, run)
     receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
@@ -567,9 +694,14 @@ def bind_nk_receipt(run_dir: str | Path, receipt_path: str | Path) -> dict:
 
 def execute_local_lint(run_dir: str | Path, *, stage: str) -> dict:
     """Run the deterministic lint layer and close it through the live-stage gate."""
+    run = safe_run(run_dir)
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        if stage not in {'lint1', 'lint2', 'lint_layer1', 'lint_layer2'}:
+            raise ContractError('LIVE_LOCAL_STAGE_INVALID', stage)
+        return execute_v2_stage(run, stage=stage)
     if stage not in {"lint1", "lint2"}:
         raise ContractError("LIVE_LOCAL_STAGE_INVALID", stage)
-    run = safe_run(run_dir)
     state = load_state(run)
     stage_record = state.get("stages", {}).get(stage, {})
     if state.get("mode") != "live" or stage_record.get("status") != "READY_FOR_EXECUTION":
@@ -598,6 +730,9 @@ def execute_local_lint(run_dir: str | Path, *, stage: str) -> dict:
 
 def record_nk_budget_failure(run_dir: str | Path, request_id: str) -> dict:
     run = safe_run(run_dir)
+    _, _, _, is_v2 = _v2_modules()
+    if is_v2(run):
+        raise ContractError('V2_LEGACY_POV_STAGE_FORBIDDEN', 'V2 preserves failures through its original support-hook accounting')
     ledger = p2_cost_guard.read_ledger_snapshot()
     rows = [row for row in ledger.get("requests", []) if row.get("request_id") == request_id and row.get("run_id") == run.name]
     if len(rows) != 1 or rows[0].get("status") != "SETTLED_OVER_BUDGET":
@@ -632,16 +767,31 @@ def main(argv=None) -> int:
     parser.add_argument("--inputs-json")
     parser.add_argument("--preflight")
     parser.add_argument("--verify-preflight-only", action="store_true")
+    parser.add_argument('--prepare-generic-stage')
+    parser.add_argument('--execute-generic-stage', action='store_true')
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--stage", choices=("plot", "cards", "brief", "draft", "lint1", "lint2", "lens5", "verifier3", "completeness", "refine", "re-review"))
+    parser.add_argument("--stage", choices=tuple(dict.fromkeys((*_v2_modules()[0].CNW_STAGES,
+        "cards", "brief", "draft", "lint1", "lint2", "lens5", "verifier3", "completeness", "re-review"))))
     parser.add_argument("--packet")
     parser.add_argument("--role-id")
     parser.add_argument("--input-token-cap", type=int)
     parser.add_argument("--output-token-cap", type=int)
     args = parser.parse_args(argv)
+    if args.prepare_generic_stage or args.execute_generic_stage:
+        if (args.role_id or args.inputs_json or args.preflight or args.input_token_cap is not None
+                or args.output_token_cap is not None):
+            raise ContractError('V2_REQUEST_OVERRIDES_FORBIDDEN', 'CNW derives its own roles, inputs, signed preflight and transport bounds')
     if args.preflight:
         os.environ["STORYSTUDIO_W10_PREFLIGHT_PATH"] = str(Path(args.preflight).resolve(strict=True))
-    if args.verify_preflight_only:
+    if args.prepare_generic_stage:
+        if args.execute_generic_stage or args.packet:
+            raise ContractError('LIVE_EXECUTION_ARGUMENTS_REQUIRED', 'prepare and execute are separate operations')
+        result = prepare_v2_stage(args.run_dir, stage=args.prepare_generic_stage)
+    elif args.execute_generic_stage:
+        if not args.stage:
+            raise ContractError('LIVE_EXECUTION_ARGUMENTS_REQUIRED', 'execution requires the actual CNW stage')
+        result = execute_v2_stage(args.run_dir, stage=args.stage, packet_path=args.packet)
+    elif args.verify_preflight_only:
         result = verify_preflight_only(args.run_dir, preflight_path=args.preflight)
     elif args.bind_nk_receipt:
         result = bind_nk_receipt(args.run_dir, args.bind_nk_receipt)

@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 11 items
+
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [  9%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_archived_simulated_receipt_cannot_escape_owned_context PASSED [ 18%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run 
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run PASSED [ 27%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_grant_changed_after_reservation_blocks_http_and_preserves_original_charge PASSED [ 36%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_owned_context_rejects_duplicate_foreign_or_relabelled_history_and_account_paths PASSED [ 45%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_pending_unknown_budget_and_renewal_do_not_reset_spending PASSED [ 54%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_real_high_and_low_request_consumers_reject_changed_messages_role_or_tokens 

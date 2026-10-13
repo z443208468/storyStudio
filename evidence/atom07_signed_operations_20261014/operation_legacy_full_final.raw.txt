@@ -1,0 +1,37 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 24 items
+
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_actual_import_incremental_and_maintenance_consume_simulated_receipts PASSED [  4%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_bound_session_cannot_reach_foreign_instance_low_http_or_outlive_its_scope PASSED [  8%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_cached_receipt_mutation_refuses_recovery_and_preserves_outputs 
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_cached_receipt_mutation_refuses_recovery_and_preserves_outputs PASSED [ 12%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_fixture_must_own_data_home_and_invalid_registry_never_falls_back PASSED [ 16%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_front_high_low_and_schema_relabel_refuse_before_cost_or_publication 
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_front_high_low_and_schema_relabel_refuse_before_cost_or_publication PASSED [ 20%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_import_recovery_rejects_method_endpoint_and_account_snapshot_drift PASSED [ 25%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_import_recovery_rejects_rebound_simulation_cost_snapshot PASSED [ 29%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_interrupted_import_preserves_receipt_then_requires_session_for_recovery PASSED [ 33%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_maintenance_pending_and_latest_cache_never_publish_without_session PASSED [ 37%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_maintenance_recovery_rejects_method_and_consumer_drift PASSED [ 41%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_strict_markers_bindings_and_unique_record_reject_invalid_model_receipts 
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_strict_markers_bindings_and_unique_record_reject_invalid_model_receipts PASSED [ 45%]
+tests/test_cost_operation_context.py::OperationCostTests::test_real_import_update_and_maintenance_bind_frozen_requests PASSED [ 50%]
+tests/test_cost_operation_context.py::OperationCostTests::test_uppercase_namespace_and_state_save_failure_recover PASSED [ 54%]
+tests/test_cost_operation_context.py::SnapshotPublicationTests::test_partial_write_preserved_and_retry_publishes_complete_snapshot PASSED [ 58%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_cached_receipt_tamper_is_reported_without_new_call PASSED [ 62%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_changed_sources_or_outputs_block_recovery_and_invalid_raw PASSED [ 66%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_completed_result_not_reused_after_output_configuration_change PASSED [ 70%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_full_audit_real_materials_method_and_canon_protection PASSED [ 75%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_handoff_eight_sections_statistics_archive_and_reuse PASSED [ 79%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_invalid_transport_does_not_publish PASSED [ 83%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_light_targeted_select_sources_without_hiding_baselines PASSED [ 87%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_pending_half_publication_recovers_without_new_call PASSED [ 91%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_pending_request_adapter_change_blocks_recovery PASSED [ 95%]
+tests/test_cnw_maintenance.py::MaintenanceTests::test_zero_findings_does_not_create_questions_or_repay PASSED [100%]
+
+============= 24 passed, 37 subtests passed in 591.88s (0:09:51) ==============

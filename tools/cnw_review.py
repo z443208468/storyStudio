@@ -206,6 +206,8 @@ def build_lens_input(lens_id: str, full_draft: str, sources: dict[str, str]) -> 
     feedback = sources.get(f"lens_feedback:{lens_id}")
     if feedback:
         packet["additional_review_instructions"] = feedback
+    if 'effective_length_policy' in sources:
+        packet['effective_length_policy'] = sources['effective_length_policy']
     packet["input_sha256"] = digest(json.dumps(packet, ensure_ascii=False, sort_keys=True))
     return packet
 
@@ -228,6 +230,8 @@ def verifier_sources(finding: dict, sources: dict[str, str], *, rereview: bool =
             for name in ("fifth_lens_id", "fifth_lens_responsibility"):
                 if name in sources:
                     evidence[name] = sources[name]
+    if 'effective_length_policy' in sources:
+        evidence['effective_length_policy'] = sources['effective_length_policy']
     return evidence
 
 
@@ -235,7 +239,21 @@ def completeness_sources(sources: dict[str, str]) -> dict[str, str]:
     selected = {name: sources[name] for name in ("scene_cards", "writing_brief", "project_specific_canon")}
     if "task_requirements" in sources:
         selected["task_requirements"] = sources["task_requirements"]
+    if 'effective_length_policy' in sources:
+        selected['effective_length_policy'] = sources['effective_length_policy']
     return selected
+
+
+def _length_policy_instruction(policy):
+    if policy is None:
+        return ''
+    if not isinstance(policy, dict) or policy.get('mode') != 'ADVISORY':
+        raise ValueError('LENGTH_POLICY_INVALID')
+    return ('\n[effective_length_policy=ADVISORY] 原任务快照、Brief或过去反馈中的字数/范围仅为创作参考。'
+            '不得仅因字数不足、超限或篇幅变化产生 Finding、遗漏或修订要求；反证须驳回仅以字数偏差为依据的 claim。'
+            '继续核查真实情节遗漏、动作、回应、对白、因果和知识边界，字数偏差不能代替这些证据。'
+            ' Character counts are guidance only: do not request revision solely for a length deviation; '
+            'refute a claim supported only by a character count. Continue reviewing actual missing story content.')
 
 
 def lens_messages(packet: dict) -> list[dict]:
@@ -246,6 +264,7 @@ def lens_messages(packet: dict) -> list[dict]:
         "无问题时 findings 为空。不要读取其他 Lens 的结论，不要泛泛评价。"
         "如有 additional_review_instructions，执行其中本岗位从过去遗漏总结的检查项；仍必须以当前 draft 和 sources 为证据。"
     )
+    system += _length_policy_instruction(packet.get('effective_length_policy'))
     user = json.dumps({k: v for k, v in packet.items() if k != "input_sha256"}, ensure_ascii=False, sort_keys=True)
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
@@ -272,6 +291,8 @@ def verifier_messages(packet: dict) -> list[dict]:
         '{"verifier_id":"<id>","votes":[{"finding_id":"<id>","verdict":"not_refuted|refuted|uncertain","evidence":"理由"}]}。'
         "不得新增 finding，不得参考其他 verifier 结论。"
     )
+    system += _length_policy_instruction(packet.get('counter_evidence', {}).get('effective_length_policy')
+        if isinstance(packet.get('counter_evidence'), dict) else None)
     user = json.dumps({k: v for k, v in packet.items() if k != "execution_mode"}, ensure_ascii=False, sort_keys=True)
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
@@ -299,6 +320,7 @@ def completeness_messages(packet: dict) -> list[dict]:
         system += ("任务快照是有来源定位的写作约束，不是 Canon 晋升或执行权限。"
                    "角色私有/未知/误信与 POV 和读者已知须分开；未决时间和试验固定假定不自动成为确认事实。"
                    "发现遗漏或不兼容要求应报告其来源，不得自行补造或覆盖输入。")
+    system += _length_policy_instruction(packet['source_materials'].get('effective_length_policy'))
     user = json.dumps({k: v for k, v in packet.items() if k != "input_sha256"}, ensure_ascii=False, sort_keys=True)
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 

@@ -1,0 +1,22 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting FAILED [ 25%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run 
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run PASSED [ 50%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_pending_unknown_budget_and_renewal_do_not_reset_spending PASSED [ 75%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signed_pre_run_and_real_existing_run_have_same_identity_without_provider PASSED [100%]
+
+================================== FAILURES ===================================
+_ LiveAuthorizationTests.test_actual_checked_plot_consumes_signed_b_and_records_original_accounting _
+tests\test_cnw_live_authorization.py:104: in test_actual_checked_plot_consumes_signed_b_and_records_original_accounting
+    recovery.execute_checked(self.run, "plot", runner.execute_plot)
+E   TypeError: execute_checked() takes 2 positional arguments but 3 were given
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting - TypeError: execute_checked() takes 2 positional arguments but 3 were given
+========== 1 failed, 3 passed, 5 subtests passed in 89.29s (0:01:29) ==========

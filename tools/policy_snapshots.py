@@ -422,6 +422,14 @@ def resolve_contract_app_policy(contract: dict[str, Any], *, store: str | os.Pat
         raise PolicySnapshotError("POLICY_IDENTITY_MISSING", "contract must bind an immutable application policy")
     resolved = resolve_policy_by_sha(digest.lower(), store=store, expected_kind="app_policy")
     maximum = unit.get("max_visible_chars")
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    if uses_advisory_length(contract):
+        # The frozen capacity matrix is evidence of tested capacity, not a
+        # character-count rejection rule for the new owner-selected policy.
+        return resolved
     capacity = resolved["document"]["execution_compatibility"]["maximum_validated_visible_characters_per_unit"]
     if type(maximum) is not int or maximum < 1:
         raise PolicySnapshotError("SCENE_BUDGET_INVALID", "contract must have an explicit positive maximum")

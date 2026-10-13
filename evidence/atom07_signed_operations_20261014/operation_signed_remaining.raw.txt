@@ -1,0 +1,64 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6 items / 4 deselected / 2 selected
+
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_pending_and_transaction_without_pointer_never_publish_in_prepare FAILED [ 50%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_renewal_keeps_unknown_and_original_context_settlement PASSED [100%]
+
+================================== FAILURES ===================================
+_ SignedOperationTests.test_pending_and_transaction_without_pointer_never_publish_in_prepare _
+tests\test_cnw_signed_operations.py:221: in test_pending_and_transaction_without_pointer_never_publish_in_prepare
+    with self.assertRaises(OSError): imports.run_import(self.root)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_import_workflow.py:165: in run_import
+    return _run_import(root, incremental=incremental, prepare_only=prepare_only)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_import_workflow.py:316: in _run_import
+    runner._require_project_operation_authorization(root, run_dir=run_dir) if not prepare_only else None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:613: in _require_project_operation_authorization
+    return require_authorization(run_dir, stage=stage)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_operation_authorization.py:167: in require_authorization
+    request = build_request(run, _locked_ledger=_locked_ledger)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_operation_authorization.py:120: in build_request
+    run, root, state, value, raw, account = _frozen(run, ledger=_locked_ledger)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_operation_authorization.py:31: in _frozen
+    account = cost_guard.for_run(run, stage=value["stage"], model=runner.MODEL)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:326: in for_run
+    return _operation_account(run, state, registration, stage=stage, model=model)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:159: in _operation_account
+    "environment": _operation_environment(Path(registration["project_root"]), kind, stage)}
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:71: in _operation_environment
+    consumer_source = "\n".join(inspect.getsource(value) for value in consumers)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cost_guard.py:71: in <genexpr>
+    consumer_source = "\n".join(inspect.getsource(value) for value in consumers)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:1256: in getsource
+    lines, lnum = getsourcelines(object)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:1238: in getsourcelines
+    lines, lnum = findsource(object)
+                  ^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:1060: in findsource
+    file = getsourcefile(object)
+           ^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:963: in getsourcefile
+    filename = getfile(object)
+               ^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\inspect.py:943: in getfile
+    raise TypeError('module, class, method, function, traceback, frame, or '
+E   TypeError: module, class, method, function, traceback, frame, or code object was expected, got MagicMock
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_signed_operations.py::SignedOperationTests::test_pending_and_transaction_without_pointer_never_publish_in_prepare - TypeError: module, class, method, function, traceback, frame, or code object was expected, got MagicMock
+================= 1 failed, 1 passed, 4 deselected in 27.00s ==================

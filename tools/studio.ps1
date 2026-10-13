@@ -59,6 +59,12 @@ function Assert-ProjectSelected {
 $ProjectCommands = @('import-source','source-list','project-contract','project-incremental','canon-audit','handoff','arc-review','standard-operation','support-workflow','scene','legacy-scene','resume','refresh-references','produce','step','prepare-live','live-call','accept-role','w10-nk-live','w10-critics-live','review','promote','export','show-run','verify-history','verify-live','sprint')
 if ($Command -in $ProjectCommands -or ($Command -eq 'verify' -and $Mode -eq 'live')) { Assert-ProjectSelected }
 function Read-Json([string]$Path) { Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json }
+function Test-CnwV2Run([string]$RunPath) {
+    $Snapshot = Join-Path $RunPath 'artifacts/contract.json'
+    if (-not (Test-Path -LiteralPath $Snapshot -PathType Leaf)) { return $false }
+    $FrozenContract = Read-Json $Snapshot
+    return $FrozenContract.schema_version -eq 'cnw_work_unit_v2'
+}
 function Assert-Hash([string]$Path,[string]$Expected,[string]$Name) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "MISSING_FILE:$Name" }
     $Actual=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
@@ -246,7 +252,10 @@ switch ($Command) {
         if (-not $RunId -or -not $Stage) { throw 'PREPARE_LIVE_REQUIRES_RUN_AND_STAGE' }
         $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
         $Executor = Join-Path $Root 'tools/cnw_live_executor.py'
-        if ($Stage -in @('lens5','verifier3','completeness','refine','re-review')) {
+        if (Test-CnwV2Run $RunPath) {
+            if ($InputFile -or $W10Preflight -or $RoleId -or $InputTokenCap -gt 0 -or $OutputTokenCap -gt 0) { throw 'V2_REQUEST_OVERRIDES_FORBIDDEN' }
+            $PrepareArgs = @($Executor,'--run-dir',$RunPath,'--prepare-generic-stage',$Stage)
+        } elseif ($Stage -in @('lens5','verifier3','completeness','refine','re-review')) {
             $PrepareArgs = @($Executor,'--run-dir',$RunPath,'--prepare-stage',$Stage)
             if ($RoleId) { $PrepareArgs += @('--role-id',$RoleId) }
         } else {
@@ -267,7 +276,11 @@ switch ($Command) {
         if (-not $RunId -or -not $Stage) { throw 'LIVE_CALL_REQUIRES_RUN_AND_STAGE' }
         $RunPath = Join-Path $ProjectRootPath ("runs\" + $RunId)
         $Executor = Join-Path $Root 'tools/cnw_live_executor.py'
-        if ($Stage -in @('lint1','lint2')) {
+        if (Test-CnwV2Run $RunPath) {
+            if ($W10Preflight -or $RoleId -or $InputTokenCap -gt 0 -or $OutputTokenCap -gt 0) { throw 'V2_REQUEST_OVERRIDES_FORBIDDEN' }
+            $LiveArgs = @($Executor,'--run-dir',$RunPath,'--stage',$Stage,'--execute-generic-stage')
+            if ($InputFile) { $LiveArgs += @('--packet',$InputFile) }
+        } elseif ($Stage -in @('lint1','lint2')) {
             if ($InputFile -or $RoleId -or $InputTokenCap -gt 0 -or $OutputTokenCap -gt 0) { throw 'LOCAL_LINT_TAKES_NO_PACKET_OR_PROVIDER_CAPS' }
             $LiveArgs = @($Executor,'--run-dir',$RunPath,'--stage',$Stage)
         } else {

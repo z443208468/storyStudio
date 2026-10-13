@@ -428,6 +428,8 @@ def validate_binding(root: Path, binding: dict, *, contract=None) -> dict:
             if _bytes(a) != _bytes(b):
                 raise ContractError("INPUT_PACK_REQUIREMENT_MISMATCH", "native contract no longer represents its original task")
         equal(contract["work_intent"], expected["work_intent"])
+        if 'length_policy' in unit:
+            equal(unit['length_policy'], 'ADVISORY')
         for field in ("kind", "language_locale", "pov", "target_visible_chars", "min_visible_chars", "max_visible_chars"):
             value = expected[field]; equal(unit[field], value.strip() if isinstance(value, str) else value)
         equal(unit["id"], expected["unit_id"])
@@ -621,6 +623,12 @@ def prepare_native_task(report: dict, row: dict, job: Path, *, data_home) -> boo
         contract = _json(_safe_source_file(root, str(Path(row["contract"]).relative_to(root))).read_bytes())
         if not run.exists():
             projects.build_contract_preflight(root, row["contract"], run_id=row["planned_run_id"])
+            if report.get("execution_attempt"):
+                try:
+                    from .cnw_live_authorization import publish_request
+                except ImportError:
+                    from cnw_live_authorization import publish_request
+                row["authorization_request"] = publish_request(root, row["contract"], run_id=row["planned_run_id"])
             runner.produce(SimpleNamespace(mode="live" if report.get("execution_attempt") else "offline", unit=contract["unit"]["kind"], work_id=row["unit_id"],
                 contract=row["contract"], project_root=str(root), run_id=row["planned_run_id"], create_only=True))
         if report.get("execution_attempt"):

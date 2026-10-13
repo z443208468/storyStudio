@@ -1,0 +1,273 @@
+"""Recompute authorized CNW requests from real, hash-checked Run consumers.
+
+This adds no literary duty or signature stage. The same pure message builders
+used by the original executors determine legal requests and bounded variants.
+"""
+from __future__ import annotations
+import difflib
+import json
+import math
+import re
+from pathlib import Path
+
+try:
+    from . import cnw_runner as r, cnw_review as review
+    from .cnw_contract import ContractError, count_visible_chars, validate_output_length
+except ImportError:
+    import cnw_runner as r
+    import cnw_review as review
+    from cnw_contract import ContractError, count_visible_chars, validate_output_length
+
+
+def _call(stage, role, messages, cap, extra=None):
+    return {"stage": stage, "role_id": role, "messages": messages, "output_cap": cap, "extra": extra}
+
+
+def _prior(run, state, stage, *, extra=None, role=None):
+    rows = [row for row in state.get("provider_requests", []) if row.get("stage") == stage
+            and row.get("status") == "SUCCEEDED" and (role is None or row.get("role_id") == role)
+            and (extra is None or all(type(row.get(k)) is type(v) and row.get(k) == v for k, v in extra.items()))]
+    if len({row.get("request_id") for row in rows}) != len(rows):
+        raise ContractError("LIVE_REQUEST_HISTORY_AMBIGUOUS", stage)
+    return rows
+
+
+def _content(run, row):
+    # Read actual raw and request bytes; new-project receipts also have to
+    # match their unique original reservation in the shared accounting core.
+    try:
+        from . import p2_cost_guard
+    except ImportError:
+        import p2_cost_guard
+    r._verify_cost_receipt(run, row, p2_cost_guard.read_ledger_snapshot())
+    return r._receipt_content(run, row)
+
+
+def nk_response_from_receipt(run, receipt):
+    """Recover the native route's validated object from its actual paid reply."""
+    content = _content(run, receipt)
+    raw = json.loads(r.assert_output_within_root(run, receipt['raw_response_path']).read_bytes())
+    body = raw.get('response', raw)
+    choices = body.get('choices', [])
+    if (raw.get('request_id') != receipt.get('request_id') or raw.get('status') != 200
+            or raw.get('requested_model') != receipt.get('model')
+            or body.get('id') != receipt.get('provider_request_id')
+            or body.get('model') != receipt.get('model')
+            or body.get('usage') != receipt.get('usage')
+            or len(choices) != 1 or choices[0].get('finish_reason') != receipt.get('finish_reason')):
+        raise ContractError('NK_RAW_RECEIPT_MISMATCH', 'native Provider fields differ from the receipt')
+    try:
+        parsed = json.loads(content)
+        perspectives = parsed['perspectives']
+        if (not isinstance(perspectives, list) or len(perspectives) != 1
+                or not isinstance(perspectives[0], dict)
+                or not isinstance(perspectives[0].get('reflection'), str)
+                or not perspectives[0]['reflection'].strip()):
+            raise ValueError('expected one nonempty reflection')
+    except (ValueError, KeyError, TypeError) as exc:
+        raise ContractError('NK_RESPONSE_INVALID', 'Provider reply does not satisfy the native response schema') from exc
+    # The pinned native Zod schema strips unknown keys; preserve its projection.
+    return {'perspectives': [{'reflection': perspectives[0]['reflection']}]}
+
+
+def verified_nk_reflection(run, state, contract):
+    """Bind current Cards -> native payload -> unique receipt -> mapped section."""
+    try:
+        from .cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
+    except ImportError:
+        from cnw_nk_adapter import build_nk_payload, map_reflection_to_brief
+    hook = state.get('support_hooks', {}).get('nk_pov', {})
+    rows = [row for row in state.get('provider_requests', [])
+            if row.get('request_id') == hook.get('request_id')]
+    if hook.get('status') != 'MATERIALIZED' or len(rows) != 1:
+        raise ContractError('NK_RECEIPT_IDENTITY_INVALID', 'one materialized hook and unique receipt are required')
+    receipt = rows[0]
+    if (not receipt.get('request_id') or not receipt.get('provider_request_id')
+            or receipt.get('stage') != 'support_hook' or receipt.get('role_id') != 'nk_pov'
+            or receipt.get('status') != 'SUCCEEDED' or receipt.get('request_format') != 'native_nk_payload'
+            or hook.get('provider_request_id') != receipt.get('provider_request_id')
+            or sum(row.get('provider_request_id') == receipt['provider_request_id']
+                   for row in state.get('provider_requests', [])) != 1):
+        raise ContractError('NK_RECEIPT_IDENTITY_INVALID', 'the hook does not identify its actual native request')
+    cards = r._read_stage_text(run, state, 'scene_cards')
+    payload = build_nk_payload(contract, cards, r._role_meta('cards', contract))
+    expected_hash = r.sha(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode('utf-8'))
+    if receipt.get('input_sha256') != expected_hash:
+        raise ContractError('NK_CURRENT_CARDS_MISMATCH', 'the cached request was made for different Cards')
+    response = nk_response_from_receipt(run, receipt)
+    section, mapping = map_reflection_to_brief('', response, {**receipt, 'status': 'LIVE_ACCEPTED',
+        'validated_response_sha256': r.sha(json.dumps(response, ensure_ascii=False, sort_keys=True).encode('utf-8'))})
+    artifact = hook.get('artifact', {})
+    path = r.assert_output_within_root(run, artifact.get('path', ''))
+    if not path.is_file() or r.sha(path.read_bytes()) != artifact.get('sha256'):
+        raise ContractError('NK_REFLECTION_HASH_MISMATCH', 'the cached reflection bytes changed')
+    if (path.read_text(encoding='utf-8') != section
+            or json.dumps(hook.get('mapping'), sort_keys=True, ensure_ascii=False) !=
+               json.dumps(mapping, sort_keys=True, ensure_ascii=False)):
+        raise ContractError('NK_REFLECTION_RESPONSE_MISMATCH', 'the reflection is not the actual native response mapping')
+    return section
+
+
+def _prose(run, state, contract, materials, role):
+    match = re.fullmatch(r"prose_agent_([123])", role or "")
+    if not match:
+        raise ContractError("LIVE_REQUEST_ROLE_INVALID", "Prose needs its actual bounded attempt ID")
+    number = int(match[1]) - 1
+    base = r._author_messages("prose", contract, materials)
+    parts, over = [], None
+    for attempt in range(number):
+        rows = _prior(run, state, "prose", role=f"prose_agent_{attempt + 1}")
+        if len(rows) != 1:
+            raise ContractError("LIVE_REQUEST_HISTORY_AMBIGUOUS", "continuation needs one actual prior attempt")
+        if attempt > 0 and over is not None:
+            parts, over = [], None
+        parts.append(r.strip_prose_envelope(_content(run, rows[0])).strip())
+        merged = "\n\n".join(parts)
+        if count_visible_chars(merged) >= contract["unit"]["min_visible_chars"]:
+            try:
+                validate_output_length(contract, merged)
+            except ContractError as exc:
+                if exc.code != "RETURN_OVER_LIMIT": raise
+                over = count_visible_chars(merged)
+            else:
+                raise ContractError("LIVE_REQUEST_UNNECESSARY_CONTINUATION", "the prior complete prose needs no further call")
+    messages = r.prose_attempt_messages(contract, base, attempt=number, parts=parts, over_limit=over)
+    cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
+    return [_call("prose", role, messages, cap)]
+
+
+def _revision(run, state, contract):
+    record = state["stages"]["refine"]
+    pending = record.get("pending_findings")
+    v0 = r._read_stage_text(run, state, "refine" if pending else "prose")
+    completeness = json.loads(r._read_stage_text(run, state, "completeness_critic"))
+    confirmed = pending if pending else r._confirmed_findings(run, state)
+    candidates = [] if pending else list(completeness.get("candidate_findings", []))
+    feedback = {"confirmed": confirmed, "completeness_candidates": candidates}
+    if not confirmed and not candidates:
+        raise ContractError("LIVE_REQUEST_NO_REVISION_ISSUES", "NO_CHANGE must not send a Refine request")
+    if not pending and r._support_integration_mode(contract, "critics") == "ENABLED":
+        hook = state.get("support_hooks", {}).get("critics_text", {})
+        if hook.get("status") != "SUCCEEDED":
+            raise ContractError("ENABLED_BUT_UNAVAILABLE", "Refine needs its real enabled CritiCS result")
+        artifact = hook.get("input_artifact", {})
+        path = r.assert_output_within_root(run, artifact.get("path", ""))
+        if not path.is_file() or r.sha(path.read_bytes()) != artifact.get("sha256"):
+            raise ContractError("CRITICS_INPUT_CHANGED", "Refine supplement input differs")
+        try:
+            from .cnw_critics_adapter import read_native_result
+        except ImportError:
+            from cnw_critics_adapter import read_native_result
+        actual = read_native_result(hook.get("run_dir") or hook["run_name"], action="text-refine", input_path=path,
+            parent_run_dir=run, parent_stage="critics_text")
+        if actual.get("result") != hook.get("result") or actual.get("evidence_files") != hook.get("evidence_files"):
+            raise ContractError("CRITICS_EVIDENCE_CHANGED", "Refine supplement result differs")
+        feedback["critics_supplement"] = hook
+    brief = r._read_stage_text(run, state, "writing_brief")
+    identity = r.sha(json.dumps({"draft": v0, "feedback": feedback, "brief": brief, "contract": contract},
+                              ensure_ascii=False, sort_keys=True).encode("utf-8"))
+    attempt = record.get("refinement_attempt")
+    if (not isinstance(attempt, dict) or attempt.get("input_identity") != identity
+            or type(attempt.get("revision_number")) is not int or attempt["revision_number"] <= 0):
+        raise ContractError("LIVE_REQUEST_REVISION_IDENTITY_MISMATCH", "actual refinement attempt must bind these issues and draft")
+    number = attempt["revision_number"]
+    cap = max(4096, math.ceil(contract["unit"]["max_visible_chars"] * 1.2) + 512)
+    calls = [_call("refine", "refine", r.refine_attempt_messages(contract, v0, feedback, brief, attempt=0),
+                   cap, {"revision_number": number})]
+    rows = _prior(run, state, "refine", extra={"revision_number": number}, role="refine")
+    for row in rows[:2]:
+        content = _content(run, row)
+        if count_visible_chars(content) >= contract["unit"]["min_visible_chars"]:
+            continue  # complete revisions never authorize length restoration
+        calls.append(_call("refine", "refine", r.refine_attempt_messages(contract, v0, feedback, brief,
+            attempt=1, content=content), cap, {"revision_number": number}))
+    return calls
+
+
+def _rereview(run, state, contract, sources):
+    revision = state["stages"]["refine"]
+    number = revision.get("revision_number", 1)
+    v0, v1 = r._read_stage_text(run, state, "prose"), r._read_stage_text(run, state, "refine")
+    if revision.get("revision_base"):
+        base = revision["revision_base"]
+        path = r.assert_output_within_root(run, base["path"])
+        if r.sha(path.read_bytes()) != base["sha256"]:
+            raise ContractError("REVISION_BASE_CHANGED", base["path"])
+        v0 = path.read_text(encoding="utf-8")
+    if v0 == v1 and revision.get("validation", {}).get("status") == "NO_CHANGE":
+        return []
+    expected = state["stages"]["re_review"].get("expected_role_ids")
+    affected = list(expected) if isinstance(expected, list) and expected else revision.get("affected_lenses", list(r.LENS_IDS))
+    if len(set(affected)) != len(affected) or set(affected) - set(r.LENS_IDS):
+        raise ContractError("LIVE_REREVIEW_CALL_SET_INVALID", str(affected))
+    candidate = r.sha(v1.encode("utf-8"))
+    diff = "".join(difflib.unified_diff(v0.splitlines(keepends=True), v1.splitlines(keepends=True), fromfile="before", tofile="after", n=3))
+    calls, findings = [], []
+    for lens in affected:
+        packet = review.build_lens_input(lens, v1, sources)
+        packet["changed_context"] = {"v0_sha256": r.sha(v0.encode("utf-8")), "v1_sha256": candidate,
+            "diff": diff, "instruction": "Review changed passages and their consequences in the full draft; do not reopen unchanged unrelated passages."}
+        call = _call("re_review", lens, review.lens_messages(packet), 2500,
+            {"lens_id": lens, "task_kind": "lens", "revision_number": number, "candidate_sha256": candidate})
+        calls.append(call)
+        rows = _prior(run, state, "re_review", extra=call["extra"], role=lens)
+        if len(rows) > 1:
+            raise ContractError("LIVE_REQUEST_HISTORY_AMBIGUOUS", "one re-review Lens response is allowed")
+        if rows:
+            parsed = r._parse_json_content(_content(run, rows[0]), "re_review:authorization")
+            if parsed.get("lens_id") != lens or not isinstance(parsed.get("findings"), list):
+                raise ContractError("LIVE_LENS_OUTPUT_INVALID", lens)
+            for index, finding in enumerate(parsed["findings"], 1):
+                findings.append({**finding, "lens_id": lens, "finding_id": f"R{number}-{lens}-{index}"})
+    r._validate_finding_identities(findings)
+    for finding in findings:
+        for verifier in r.VERIFIER_IDS:
+            packet = review.build_verifier_packet(finding, verifier, v1, review.verifier_sources(finding, sources, rereview=True))
+            calls.append(_call("re_review", verifier, review.verifier_messages(packet), 1200,
+                {"task_kind": "verifier", "verifier_id": verifier, "finding_id": finding["finding_id"],
+                 "revision_number": number, "candidate_sha256": candidate}))
+    return calls
+
+
+def expected_requests(run, *, stage, role_id):
+    run = Path(run)
+    state, contract = r.load_state(run), r._contract_for(run)
+    root = r._run_dir_base(run)
+    if stage in {"plot", "scene_cards", "writing_brief", "prose"}:
+        role = {"scene_cards": "cards", "writing_brief": "brief"}.get(stage, stage)
+        materials = r._role_sources(role, run, state, contract, root)
+        if role == "prose": return _prose(run, state, contract, materials, role_id)
+        extra = None
+        if role == "brief" and r._support_integration_mode(contract, "nk") == "ENABLED":
+            extra = {"nk_perspective_reflection_support_only": verified_nk_reflection(run, state, contract)}
+        messages = r._author_messages(role, contract, materials, extra)
+        if role == "plot": messages = r.build_plot_request(root, contract)["messages"]
+        return [_call(stage, {"plot": "plot_agent", "cards": "scene_card_agent", "brief": "brief_agent"}[role],
+                      messages, 4000)]
+    if stage == "refine": return _revision(run, state, contract)
+    sources = r._review_sources(run, state, contract, root)
+    if stage == "re_review": return _rereview(run, state, contract, sources)
+    draft = r._read_stage_text(run, state, "prose")
+    if stage == "multi_lens_review":
+        return [_call(stage, lens, review.lens_messages(review.build_lens_input(lens, draft, sources)), 2500,
+                      {"lens_id": lens}) for lens in r.LENS_IDS]
+    if stage == "adversarial_verify":
+        index = json.loads(r._read_stage_text(run, state, "multi_lens_review"))
+        lint = json.loads(r._read_stage_text(run, state, "lint_layer2"))
+        findings = list(index.get("findings", []))
+        for number, candidate in enumerate(lint.get("findings", []), 1):
+            findings.append({"finding_id": f"L2-{number}", "lens_id": "lint_layer2", "severity": "minor",
+                "evidence": candidate.get("matched_text", ""), "issue": candidate.get("rule_id", ""),
+                "recommendation": "人工复核该本地候选", "candidate_only": True})
+        r._validate_finding_identities(findings)
+        return [_call(stage, verifier, review.verifier_messages(review.build_verifier_packet(finding, verifier, draft,
+            review.verifier_sources(finding, sources))), 1200, {"finding_id": finding["finding_id"], "verifier_id": verifier})
+            for finding in findings for verifier in r.VERIFIER_IDS]
+    if stage == "completeness_critic":
+        verify = json.loads(r._read_stage_text(run, state, "adversarial_verify"))
+        r._validate_finding_identities(verify.get("findings", []))
+        confirmed = [f for f in verify.get("findings", []) if verify.get("verdicts", {}).get(f.get("finding_id"), {}).get("status") == "CONFIRMED"]
+        rejected = [f for f in verify.get("findings", []) if verify.get("verdicts", {}).get(f.get("finding_id"), {}).get("status") != "CONFIRMED"]
+        packet = review.build_completeness_input(draft, confirmed, rejected, review.completeness_sources(sources))
+        return [_call(stage, "completeness", review.completeness_messages(packet), min(8000, 2500 + 256 * (len(confirmed) + len(rejected))))]
+    raise ContractError("LIVE_REQUEST_STAGE_UNSUPPORTED", "no legitimate CNW request exists for this stage")

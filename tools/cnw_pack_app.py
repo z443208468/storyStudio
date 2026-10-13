@@ -618,6 +618,11 @@ def _execute_live_package_job(job_record, *, data_home, new_attempt=False) -> di
                         run = root / "runs" / row["planned_run_id"]
                         if not run.exists():
                             build_contract_preflight(root, contract_path, run_id=run.name)
+                            try:
+                                from .cnw_live_authorization import publish_request
+                            except ImportError:
+                                from cnw_live_authorization import publish_request
+                            row["authorization_request"] = publish_request(root, contract_path, run_id=run.name)
                             cnw_runner.produce(SimpleNamespace(mode="live", unit=contract["unit"]["kind"],
                                 work_id=row["unit_id"], contract=str(contract_path), project_root=str(root), run_id=run.name, create_only=True))
                         _job_run(run, "live")

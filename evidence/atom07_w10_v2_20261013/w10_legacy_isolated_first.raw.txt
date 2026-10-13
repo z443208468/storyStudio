@@ -1,0 +1,22 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 12 items
+
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_explicitly_disabled_provider_call_is_blocked_before_reservation <- tests\test_cnw_live_provider.py PASSED [  8%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_nk_live_wires_preflight_before_key_and_cost_reservation <- tests\test_cnw_live_provider.py PASSED [ 16%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_one_call_is_raw_hash_bound_and_cost_settled_without_key_artifacts <- tests\test_cnw_live_provider.py PASSED [ 25%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_preflight_only_cli_returns_no_provider_call <- tests\test_cnw_live_provider.py PASSED [ 33%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_preflight_only_rejects_disabled_authorization_without_cost_activity <- tests\test_cnw_live_provider.py PASSED [ 41%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_preflight_only_validates_legacy_binding_without_provider_or_cost_activity <- tests\test_cnw_live_provider.py PASSED [ 50%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_request_hash_must_bind_the_serialized_messages <- tests\test_cnw_live_provider.py PASSED [ 58%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_safe_run_accepts_only_registered_projects_under_explicit_data_home <- tests\test_cnw_live_provider.py PASSED [ 66%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_stage_acceptance_cannot_replace_receipted_provider_output <- tests\test_cnw_live_provider.py PASSED [ 75%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_transport_timeout_is_settled_unknown_not_zero_and_not_retried <- tests\test_cnw_live_provider.py PASSED [ 83%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_usage_above_reserved_token_caps_is_charged_and_blocks_acceptance <- tests\test_cnw_live_provider.py PASSED [ 91%]
+tests/test_cnw_w10_legacy_isolated.py::LegacyW10IsolatedTests::test_validated_provider_output_closes_only_its_ready_stage <- tests\test_cnw_live_provider.py PASSED [100%]
+
+============================= 12 passed in 14.10s =============================

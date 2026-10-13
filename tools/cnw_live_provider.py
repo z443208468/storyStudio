@@ -74,6 +74,63 @@ def safe_run(run_dir: str | Path) -> Path:
     return run
 
 
+def _is_v2_run(run: Path) -> bool:
+    """Select from the actual frozen snapshot, never a caller's mode flag."""
+    try:
+        from .project_paths import _assert_no_reparse
+    except ImportError:
+        from project_paths import _assert_no_reparse
+    snapshot = run / 'artifacts/contract.json'
+    _assert_no_reparse(snapshot.absolute(), code='LIVE_RUN_PATH_UNSAFE')
+    state_path = run/'run_state.json'
+    _assert_no_reparse(state_path.absolute(), code='LIVE_RUN_PATH_UNSAFE')
+    state = json.loads(state_path.read_bytes())
+    marked = state.get('literary_source_freeze_version') == 'literary_source_freeze_v2'
+    raw = snapshot.read_bytes() if snapshot.is_file() else None
+    version = json.loads(raw).get('schema_version') if raw is not None else None
+    if marked or version == 'cnw_work_unit_v2':
+        if raw is None or version != 'cnw_work_unit_v2' or sha(raw) != state.get('contract_sha256'):
+            raise ContractError('LIVE_RUN_CONTRACT_CHANGED', 'identified V2 Run requires its original frozen V2 snapshot')
+        return True
+    return False
+
+
+def _complete_v2(run, *, stage, messages, input_sha256, input_token_cap,
+                 output_token_cap, role_id, transport, extra=None, account=None):
+    """One V2 protocol at both W10 entries, then the original shared transport."""
+    try:
+        from . import cnw_runner as runner
+        from .cnw_live_authorization import verify_request
+        from .cost_guard import for_run
+    except ImportError:
+        import cnw_runner as runner
+        from cnw_live_authorization import verify_request
+        from cost_guard import for_run
+    canonical_stage = runner.normalize_stage(stage)
+    if MODEL != runner.MODEL or API_URL != runner.API_URL:
+        raise ContractError('LIVE_AUTHORIZATION_PROVIDER_MISMATCH', 'W10 and actual transport Provider differ')
+    if transport is not None:
+        raise ContractError('LIVE_OWNED_TRANSPORT_REQUIRED', 'V2 uses only the owned final-boundary test session')
+    if (not isinstance(messages, list) or not messages or not isinstance(input_sha256, str)
+            or not re.fullmatch(r'[0-9a-f]{64}', input_sha256)
+            or sha(json.dumps(messages, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')) != input_sha256
+            or type(input_token_cap) is not int or type(output_token_cap) is not int
+            or input_token_cap < runner._estimate_input_tokens(messages) or output_token_cap < 1):
+        raise ContractError('LIVE_REQUEST_INVALID', 'W10 request bytes and explicit transport bounds must be valid')
+    grant = verify_request(run, stage=canonical_stage, role_id=role_id,
+        messages=messages, output_cap=output_token_cap, extra=extra)
+    if input_token_cap > grant['terms']['max_input_tokens']:
+        raise ContractError('LIVE_GRANT_TOKEN_LIMIT_EXCEEDED', 'declared input upper bound exceeds owner scope')
+    current_account = for_run(run, stage=canonical_stage, model=MODEL, legacy_root=ROOT)
+    if account is not None and account != current_account:
+        raise ContractError('COST_BINDINGS_CHANGED', 'W10 account differs from the actual canonical Run')
+    # input_token_cap is a checked upper bound. The original Runner reserves
+    # its actual estimate, and its own high entry acquires the shared slot.
+    # Both W10 entries delegate here, so direct low calls cannot skip the pool.
+    return runner.cnw_live_call(run, stage=canonical_stage, role_id=role_id,
+        messages=messages, output_cap=output_token_cap, extra=extra)
+
+
 def verify_run_preflight(run: Path, state: dict | None = None, *, preflight_path: str | Path | None = None) -> dict:
     """Validate legacy J19 authorization or an explicit project-bound preflight."""
     if state is None:
@@ -81,6 +138,17 @@ def verify_run_preflight(run: Path, state: dict | None = None, *, preflight_path
             state = json.loads((run / "run_state.json").read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise ContractError("LIVE_RUN_STATE_INVALID", run.name) from exc
+    snapshot = run / "artifacts/contract.json"
+    if snapshot.is_file() and json.loads(snapshot.read_bytes()).get("schema_version") == "cnw_work_unit_v2":
+        try:
+            from .cnw_live_authorization import require_run_authorization
+        except ImportError:
+            from cnw_live_authorization import require_run_authorization
+        actual = json.loads((run / "run_state.json").read_bytes())
+        if state != actual:
+            raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "a caller-supplied state cannot grant production permission")
+        require_run_authorization(run, stage=None)
+        return state
     authorization = state.get("w10_contract_preflight", {})
     try:
         from .cnw_w10_policy import CONTRACT_SHA256, PREFLIGHT_EVIDENCE_SHA256, PREFLIGHT_REF, SOURCE_SCRIPT_SHA256
@@ -164,9 +232,13 @@ def _record_failed_attempt(run: Path, attempt: dict) -> None:
 
 def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha256: str,
              input_token_cap: int, output_token_cap: int, role_id: str | None = None,
-             transport=None) -> tuple[str, dict]:
+             transport=None, extra=None) -> tuple[str, dict]:
     """Authorize before joining the single shared Provider concurrency pool."""
     run = safe_run(run_dir)
+    if _is_v2_run(run):
+        return _complete_v2(run, stage=stage, messages=messages, input_sha256=input_sha256,
+            input_token_cap=input_token_cap, output_token_cap=output_token_cap,
+            role_id=role_id, transport=transport, extra=extra)
     if stage == "pov":
         raise ContractError("NK_ADAPTER_REQUIRED", "POV must execute through the pinned local NK service")
     if stage not in {"plot", "cards", "brief", "draft", "lens5", "verifier3", "completeness", "refine", "re-review"}:
@@ -185,9 +257,13 @@ def complete(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha
 
 def _complete_in_slot(run_dir: str | Path, *, stage: str, messages: list[dict], input_sha256: str,
                       input_token_cap: int, output_token_cap: int, role_id: str | None = None,
-                      transport=None, account=None) -> tuple[str, dict]:
+                      transport=None, account=None, extra=None) -> tuple[str, dict]:
     """Make exactly one live request; transport injection exists only for tests."""
     run = safe_run(run_dir)
+    if _is_v2_run(run):
+        return _complete_v2(run, stage=stage, messages=messages, input_sha256=input_sha256,
+            input_token_cap=input_token_cap, output_token_cap=output_token_cap,
+            role_id=role_id, transport=transport, extra=extra, account=account)
     state_path = run / "run_state.json"
     if state_path.is_symlink() or not state_path.is_file():
         raise ContractError("LIVE_RUN_STATE_MISSING", run.name)
@@ -340,6 +416,8 @@ def accept_validated_stage(run_dir: str | Path, *, stage: str, content: str,
                            validation: dict, role_id: str | None = None) -> dict:
     """Persist one validated output and close its stage only when call coverage is complete."""
     run = safe_run(run_dir)
+    if _is_v2_run(run):
+        raise ContractError('V2_LEGACY_STAGE_ACCEPTANCE_FORBIDDEN', 'V2 stages materialize through the original checked CNW executor')
     if not isinstance(validation, dict) or validation.get("status") not in {
         "CONTENT_VALID", "ROLE_OUTPUT_VALID", "LINT_CLEAN", "REVIEW_COMPLETED"
     }:
@@ -428,6 +506,8 @@ def accept_validated_stage(run_dir: str | Path, *, stage: str, content: str,
 def record_nk_pov_receipt(run_dir: str | Path, receipt: dict) -> dict:
     """Bind a separately captured local-NK call to this W10 run and shared ledger."""
     run = safe_run(run_dir)
+    if _is_v2_run(run):
+        raise ContractError('V2_LEGACY_POV_STAGE_FORBIDDEN', 'V2 NK is a validated Brief support hook, not a public stage')
     required = {"stage", "request_id", "provider_request_id", "model", "status", "http_status",
                 "finish_reason", "usage", "input_sha256", "output_sha256", "raw_response_path",
                 "input_payload_path", "raw_response_sha256", "cost_cny", "ledger_settlement", "mode", "fixture_only"}

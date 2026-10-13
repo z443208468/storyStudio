@@ -1,0 +1,20 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 7 items
+
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_actual_import_update_audit_handoff_signed_transport_and_cache PASSED [ 14%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_pending_and_transaction_without_pointer_never_publish_in_prepare PASSED [ 28%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_renewal_keeps_unknown_and_original_context_settlement PASSED [ 42%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_revision_descriptor_rechecks_real_author_decision 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_revision_descriptor_rechecks_real_author_decision PASSED [ 57%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_high_low_revision_forgery_rejected_before_slot_or_fee 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_high_low_revision_forgery_rejected_before_slot_or_fee PASSED [ 71%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_request_mutations_reject_high_low_before_fee_or_http 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_request_mutations_reject_high_low_before_fee_or_http PASSED [ 85%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_unrelated_or_duplicate_success_never_skips_current_constructor PASSED [100%]
+
+============== 7 passed, 14 subtests passed in 321.59s (0:05:21) ==============

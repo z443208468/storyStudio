@@ -63,11 +63,11 @@ def _operation_environment(root, kind, stage):
     if kind == "imports":
         consumers = (imports._run_import, imports._inventory, imports._record_classification,
             imports._apply, imports._verify_cached_operation, imports._reconsume_bookkeeping_response,
-            imports._json, imports._confirmed_canon_sources, imports._document_allowed)
+            imports._json, imports._confirmed_canon_sources, imports._document_allowed, imports._describe_import)
     else:
         consumers = (maintenance._run, maintenance._inventory, maintenance._method,
             maintenance._messages, maintenance._verify_receipt, maintenance._apply,
-            maintenance._json, operations.identity)
+            maintenance._json, operations.identity, maintenance._describe_operation)
     consumer_source = "\n".join(inspect.getsource(value) for value in consumers)
     consumer_source += "\n" + inspect.getsource(verify_cached_operation_receipt)
     return {"data_home_id": _data_home_identity(root.parent.parent, create=False),
@@ -192,6 +192,22 @@ class RunAccount:
             if (value.get("messages") != messages or value.get("role_id") != role_id
                     or value.get("output_cap") != output_cap or value.get("extra") != extra):
                 raise ContractError("COST_OPERATION_REQUEST_MISMATCH", "actual request differs from frozen inputs")
+            try:
+                from . import cnw_runner as runner
+                from .cnw_operation_authorization import verify_request
+            except ImportError:
+                import cnw_runner as runner
+                from cnw_operation_authorization import verify_request
+            if runner._OPERATION_SIMULATION.get() is None:
+                verify_request(self.run, stage=self.context.stage, role_id=role_id,
+                               messages=messages, output_cap=output_cap, extra=extra)
+        elif json.loads((self.run / "run_state.json").read_bytes()).get("mode") == "live":
+            try:
+                from .cnw_live_authorization import verify_request
+            except ImportError:
+                from cnw_live_authorization import verify_request
+            verify_request(self.run, stage=self.context.stage, role_id=role_id,
+                           messages=messages, output_cap=output_cap, extra=extra)
 
     def command_reserve(self, args, *, emit=True):
         # Recheck source/contract/registration before any new reservation.
@@ -200,7 +216,29 @@ class RunAccount:
             raise ContractError("COST_BINDINGS_CHANGED", "run ownership changed before reservation")
         if not accounting.LEDGER.is_file():
             raise ContractError("COST_ACCOUNT_NOT_CONFIGURED", "generic calls require the configured shared account ledger")
-        return accounting.command_reserve(args, emit=emit, context=self.context, expected_model=self.model)
+        state = json.loads((self.run / "run_state.json").read_bytes())
+        check = None
+        if self.run.parent.name.casefold() in {"imports", "maintenance"}:
+            try:
+                from . import cnw_runner as runner
+                from .cnw_operation_authorization import validate_reservation, require_authorization
+            except ImportError:
+                import cnw_runner as runner
+                from cnw_operation_authorization import validate_reservation, require_authorization
+            if runner._OPERATION_SIMULATION.get() is None:
+                require_authorization(self.run, stage=self.context.stage)
+                def check(**values):
+                    return validate_reservation(self.run, stage=self.context.stage, **values)
+        elif state.get("mode") == "live" and self.run.parent.name == "runs":
+            try:
+                from .cnw_live_authorization import validate_reservation, require_run_authorization
+            except ImportError:
+                from cnw_live_authorization import validate_reservation, require_run_authorization
+            require_run_authorization(self.run, stage=self.context.stage)
+            def check(**values):
+                return validate_reservation(self.run, stage=self.context.stage, **values)
+        return accounting.command_reserve(args, emit=emit, context=self.context, expected_model=self.model,
+                                          authorization_check=check)
 
     def command_settle(self, args, *, emit=True):
         # Settle against the original reservation even if source files changed
@@ -241,9 +279,21 @@ def verify_cached_operation_receipt(run, receipt, *, stage, role_id, output_cap,
         runner._verify_operation_simulated_receipt(run, receipt, stage=stage, role_id=role_id,
             messages=value["messages"], output_cap=output_cap, extra=extra)
         return account
+    try:
+        from .cnw_operation_authorization import verify_request
+    except ImportError:
+        from cnw_operation_authorization import verify_request
+    verify_request(run, stage=stage, role_id=role_id, messages=value["messages"],
+                   output_cap=output_cap, extra=extra)
     if receipt.get("mode") == "MOCK_ONLY":
-        runner._verify_operation_simulated_receipt(run, receipt, stage=stage, role_id=role_id,
-            messages=value["messages"], output_cap=output_cap, extra=extra)
+        try:
+            from .cnw_test_live_transport import current_session
+        except ImportError:
+            from cnw_test_live_transport import current_session
+        session = current_session()
+        if session is None:
+            raise ContractError("LIVE_SIMULATED_HISTORY_FORBIDDEN", "fixture operation cache cannot become Live")
+        session.history(run, [receipt])
         return account
     if receipt.get("mode") != "LIVE" or receipt.get("fixture_only") is not False:
         raise ContractError("COST_RECEIPT_BINDING_MISMATCH", "cached operation mode is not an authenticated Live receipt")

@@ -164,13 +164,21 @@ def build_prose_request(contract: dict, brief: str, voice_samples: str, capacity
             raise ContractError("BRIEF_BEAT_ID_MISSING", beat["beat_id"])
     plan = plan_output_segments(contract, capacity_receipt, provider_output_cap=provider_output_cap, budget_output_cap=budget_output_cap)
     unit = contract["unit"]
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    advisory = uses_advisory_length(contract)
+    length_guidance = (f"The scene target is approximately {unit['target_visible_chars']} visible characters, as creative guidance only, without minimum/maximum acceptance limits. "
+                       if advisory else
+                       f"The scene target is {unit['target_visible_chars']} visible characters; acceptable range {unit['min_visible_chars']}–{unit['max_visible_chars']}. ")
     system = (
         f"Write a complete, fully dramatized Chinese interactive-fiction scene in {unit['pov']}'s limited POV. "
         "Follow the supplied Writing Brief and participating-character voice samples. Write actions, responses, dialogue, pauses, and transitions as scene prose; do not return an outline, beat list, synopsis, or a two-sentence summary. "
-        f"The scene target is {unit['target_visible_chars']} visible characters; acceptable range {unit['min_visible_chars']}–{unit['max_visible_chars']}. Cover every required beat in the Brief. "
+        + length_guidance + "Cover every required beat in the Brief. "
         "Do not impose an additional 500–700-character limit. Output only the scene prose."
     )
-    return {
+    result = {
         "schema_version": "cnw_prose_request_v1",
         "inputs": {"brief": brief, "voice_samples": voice_samples, "brief_sha256": accepted_context["brief_sha256"], "voice_sample_sha256": accepted_context["voice_sample_sha256"], "run_id": accepted_context["run_id"]},
         "execution_contract": {"target_visible_chars": unit["target_visible_chars"], "min_visible_chars": unit["min_visible_chars"], "max_visible_chars": unit["max_visible_chars"], "required_beats": contract["story"]["required_beats"]},
@@ -179,6 +187,11 @@ def build_prose_request(contract: dict, brief: str, voice_samples: str, capacity
         "capacity_plan": plan,
         "provider_call": "not_performed_by_W06_offline_builder",
     }
+    if advisory:
+        result['execution_contract'].pop('min_visible_chars')
+        result['execution_contract'].pop('max_visible_chars')
+        result['execution_contract']['length_policy'] = 'ADVISORY'
+    return result
 
 
 def build_segment_request(base_request: dict, segment_id: str, completed_segments: list[dict]) -> dict:
@@ -307,9 +320,14 @@ def validate_generated_scene(contract: dict, prose: str, *, finish_reason: str, 
     failures = []
     visible = count_visible_chars(prose)
     unit = contract["unit"]
-    if visible < unit["min_visible_chars"]:
+    try:
+        from .cnw_contract import uses_advisory_length
+    except ImportError:
+        from cnw_contract import uses_advisory_length
+    advisory = uses_advisory_length(contract)
+    if not advisory and visible < unit["min_visible_chars"]:
         failures.append("RETURN_UNDERPRODUCED")
-    if visible > unit["max_visible_chars"]:
+    if not advisory and visible > unit["max_visible_chars"]:
         failures.append("RETURN_OVER_LIMIT")
     missing_beats = [beat["beat_id"] for beat in contract["story"]["required_beats"] if not beat_evidence.get(beat["beat_id"]) or beat_evidence[beat["beat_id"]] not in prose]
     if missing_beats:
