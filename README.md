@@ -4,7 +4,7 @@ StoryStudio is being separated into a reusable writing application that can host
 
 ## Active plan and governance
 
-- Active plan: [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](plans/MASTER_PLAN_GENERIC_APP_R5.md), original approved source SHA256 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`; current owner-amended file SHA256 `AE5A1959EEAB75AD6A8F41460C38BF9678284C1D51A8D63B25CE37F7CB4F5183`.
+- Active plan: [`plans/MASTER_PLAN_GENERIC_APP_R5.md`](plans/MASTER_PLAN_GENERIC_APP_R5.md), original approved source SHA256 `5CC22861CE3C0603D6EF89619594CD7CD68642241A20036032B031CB3A8C8ECF`; current owner-amended file SHA256 `52541C03DC42B7788507837041A3C9CFA7BA44122E4C49D61BABAF58C6C1F737`.
 - Read [`AGENTS.md`](AGENTS.md), [`CODEX_START.md`](CODEX_START.md), and [`docs/governance/GOVERNANCE.md`](docs/governance/GOVERNANCE.md) before changing the project.
 - The R5 plan advances one Atom at a time, with an independent read-only Controller review for each candidate. Historical P2/P3/J19 plans and records remain historical and do not describe the current product goal.
 
@@ -45,29 +45,34 @@ using the returned path, without supplying a contract, Run ID or SHA:
 ```
 
 `RUNS_PREPARED_PENDING_AUTHORIZATION` means that inputs and actual Runs are ready
-for the next gates. **Package-job automatic CNW execution through story export is
-still pending Atom-09.** Current preparation produces no story and sends no model
-request. Repeating ZIP import creates new instances; `-JobFile` rechecks the
-existing job and retains its progress.
+for later gates. Atom-09's isolated fixture path has been accepted for offline
+simulated production/review/export; this does not prove the supplied owner package
+can run through Live production. The exact owner package has not yet been shown to
+produce a real story. The generic V2 Live route and project-bound fee/authorization
+handoff remain implementation work. Repeating ZIP import creates new instances;
+`-JobFile` rechecks the existing job and retains its progress.
 
 ### Evidence and remaining work
 
-The current code has limited offline evidence for source-bound and original
-contracts, role consumers, review/revision, recovery and export. Atom-07's operation
+The current code has offline evidence for source-bound and original contracts,
+role consumers, review/revision, recovery and export. Atom-07's operation
 and cache repair received an independent limited offline acceptance at
 [`08b4fa4`](https://github.com/z443208468/storyStudio/commit/08b4fa44292809ce8553849945ee5a1eaf3236fa),
 with a source-only cold clone passing 68 tests and 83 subtests. That scope does
 not establish the package-to-story product gate or real model production.
 
 `GENERIC_LIVE_PRODUCTION=NOT_RUN`; trusted production attestation and separate
-Live/fee authorization remain required. Existing private data cutover is blocked.
-The final user flow must deliver stories from the package through the fixed CNW
-workflow; internal JSON fields and manual stage commands belong to diagnostics.
+Live/fee authorization checks remain required by the accepted R5 plan. The owner
+has authorized necessary package acceptance after the plan and exact code gates.
+Existing private data cutover is blocked. The final user flow must deliver stories
+from the actual package through the fixed CNW workflow; internal JSON fields and
+manual stage commands belong to diagnostics. Offline acceptance and an available
+credential do not substitute for the reviewed production path.
 
 Legacy interfaces and historical engineering records remain available within
 their explicit scopes. Keep private drafts, credentials, Provider traffic and
-private runtime data outside Git. This refactor performs no real production API
-calls or private-project migration.
+private runtime data outside Git. No real production API call has yet been made
+for the generic package flow; private-project migration remains separately blocked.
 
 ## Project documentation
 

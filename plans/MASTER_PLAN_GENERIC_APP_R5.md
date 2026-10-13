@@ -3,7 +3,7 @@
 > **执行对象**：本机现有 `z443208468/storyStudio` 工作树及其已存在的私有运行资料。  
 > **R5 基底（保留 R4 的已核实事实）**：2026-10-11 逐项重读 R3 832 行，复核 `z443208468/storyStudio` 远端 `main` 固定树 `26b72cea21dce45eede21cffddd4e75307d75652`（149 个 tracked 文件；该树不是用户本地 W10 工作树）、固定 CNW 作者提交 `97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`、上传的 v5 `prepare_inputs.py` 真正安装逻辑及 Python/GitHub 官方文件系统和 Git 历史说明。本轮额外核实多来源合同、来源清单版本、无双锚改编、单行 JSON、原创第二章、全项目并发写入及离线效果与 Live 效果之间的逻辑缺口。**R1/R2/R3/R4 仅为历史设计；本文件 R5 是本次唯一拟投入执行的施工文本。导入仓库并取得实际 SHA 前不冒称已安装活动计划。**本地未提交 W10、三个已安装项目的真实路径及 TS 失败栈、账本 Pending、磁盘与锁、Controller 可用性 **未被远端验证**，必须在 Atom-00 现场取证；不可把推测变事实。  
 > **本次唯一任务**：先把 StoryStudio 从“围绕《苍歧》旧 J19/EP001 场景搭建的生产环境”改造成**可以创建、导入、生产、审查和导出任意独立故事项目的通用 CNW 应用**；旧场景及历史实验资产独立归档、可显式挂载，不再参与新项目默认启动。  
-> **明确不做**：不执行 TS/DL/RH 三场生成；不发起新付费 API；不为本任务优化任何小说；不重构上游 CNW/NK/CritiCS 算法；不删除或改写历史 Git 提交与私有证据。  
+> **明确不做**：不执行 TS/DL/RH 历史场次生成；不为本任务优化任何小说；不重构上游 CNW/NK/CritiCS 算法；不删除或改写历史 Git 提交与私有证据。项目所有者已另行授权计划内、必要且经过精确候选审查后的通用输入包付费验收；该授权不包括真实 TS 恢复、旧私有数据迁移/cutover 或默认入口切换。
 > **执行角色**：唯一 Writer 修改；**真实、单独启动的只读 Controller 子智能体**分阶段审原件、方法不变量、实际行为、候选代码 C/T 与证据，独立返回 ACCEPT / RETURN / EXTERNAL_INPUT_NEEDED。Writer 不得自签、代签或以单元测试绿色取代其结论；Controller 不得改文件、跑生产命令或发 API。  
 > **治理（遵守仓库既有规则）**：以当前用户的通用化与“原工作流不被破坏”指令更新活动工作范围；持续遵守仓库 `AGENTS.md`、`docs/governance/GOVERNANCE.md`、`docs/governance/PLAN_AUTHORING_STANDARD.md`、`reviews/CONTROLLER_PROMPT.md`、`reviews/P3_1_CONTROLLER.md` 中未被新目标覆盖的保护、Controller、Git、费用、隐私及必要范围原则。旧 J19 单场和“马上生产三篇”的目标/生产范围不再生效，历史证据不涂改。仅现有 `main` 正常本地提交→子智能体读候选 C/T→ACCEPT 后正常推送→远端 C/T 回读；不建新分支、不强推、不 `reset --hard`、不 `git clean`、不删 WIP。**每次提交显式选择待提交路径、核 staging diff**，不得带入未提交的 W10、密钥或忽略数据。R5 与旧活动入口文本冲突时只更新“范围/计划指针”，不能取消安全与原作者方法边界。
 
@@ -141,13 +141,13 @@
 
 ### 0.3 真正的成功定义
 
-一个没有苍歧原稿、没有 J19 合同、没有 v5 ZIP 的新工作环境，仍可（其中生产11阶段按本轮**断网模拟**证据验收，绝不冒称 Live）：
+一个没有苍歧原稿、没有 J19 合同、没有旧 v5 项目数据的新工作环境，仍可创建/导入独立项目并按以下门禁工作。离线模拟证明通用消费者链；最终产品验收还须用所有者提供的实际写作输入包走通经批准的真实生产路径，不把模拟冒称 Live：
 
 1. 完成受控 bootstrap 后，`doctor --app-only` 明确显示引擎/方法/依赖是否就绪，且不以“没有项目”误报故障。纯源码 clone 如缺第三方构建只能返回明确 `RUNTIME_MISSING`，不得冒充 `ENGINE_READY`。
 2. 从零创建一个**不带任何苍歧事实**的项目。
 3. 导入 Markdown/TXT/JSON 原始稿并保留来源及未确定事实；同一项目多个来源和多次修订可以明确选源，旧来源快照不因新导入丢失。
 4. 在新项目中按自己的语言、人物、篇幅、来源、Arc、角色规则创建合法工作合同；至少支持 **三种不同的工作意图**：① `INSERT_BETWEEN`（在两个确实存在的源位置之间插写，验证前后锚）；② `ADAPT_SOURCE`（把既有完整章节/选定段落/JSON 节点改编为新正文，按源范围或 JSON Pointer 验证，不虚构双边锚）；③ `ORIGINAL_EPISODE`（已有经确认的项目 Canon/Arc/Style，但没有待改编原稿，允许原创首章及续章）。新增后两项是 StoryStudio 产品扩展，不是作者已公开证明的“自动量产同级质量”。
-5. 使用真实的通用生产调度/读取/消费者执行 Plot → Cards → Brief → Prose → 两层 Lint → 五 Lens → 三反证 → Completeness → Refine → Re-review；本轮以**隔离网络的模拟模型响应**验证角色间实质消费和可读产物，必须提供不同模式的输入→产物链，不能冒充已做真实 Live、模型实际产能或已证明故事水准。
+5. 使用真实的通用生产调度/读取/消费者执行 Plot → Cards → Brief → Prose → 两层 Lint → 五 Lens → 三反证 → Completeness → Refine → Re-review；离线门以隔离网络的模拟模型响应验证角色间实质消费和可读产物。产品验收另以所有者指定的实际输入包验证要求/材料完整映射、真实 Provider 生产、审查和导出；不得把模拟冒称 Live，也不得把工程验收等同于用户对故事质量的接受。
 6. 生成并校验项目独立的 source/contract/run/review 证据；多 run 同作品候选必须并存、已接受正本只在明确晋升后变动，能够中断恢复和导出。
 7. 同机两个完全不同项目运行互不串资料、互不误用凭据。
 8. 旧 J19 和三场 v5 数据完整：J19 只有**显式只读挂载**才可访问；v5 项目经验证迁入外部数据根并由明确实例身份选择，未授权不自动创作。新项目不读取任何旧场景资料。
@@ -176,7 +176,23 @@
 
 **交付级别必须分开：** `ENGINE_SOURCE_READY`、`CORE_RUNTIME_READY`、`OPTIONAL_NK_READY/UNAVAILABLE/DISABLED`、`OPTIONAL_CRITICS_READY/UNAVAILABLE/DISABLED`、`GENERIC_SIMULATED_OFFLINE_E2E_VERIFIED`、`LEGACY_READ_ONLY_VERIFIED`、`V5_EXISTING_RUN_MIGRATED`、`V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK`、`GENERIC_LIVE_PRODUCTION=NOT_RUN`。后一状态是确定性的可恢复性预检，**不是**重新开启生产或宣称 `LIVE_EVIDENCE_VALIDATED`。不得以一项替代另外一项。
 
-**不可变约束的冲突裁决：** 若“原 TS run 字节不变”与“将它移出仓库”发生冲突，先通过迁移映射和冻结状态校验；若不可能则保留原件并标 `V5_CUTOVER_BLOCKED`，不得伪称已迁完。任务不授权以新 run 取代旧 run，也不授权为消除阻断执行付费生产。
+**不可变约束的冲突裁决：** 若“原 TS run 字节不变”与“将它移出仓库”发生冲突，先通过迁移映射和冻结状态校验；若不可能则保留原件并标 `V5_CUTOVER_BLOCKED`，不得伪称已迁完。本计划不授权以新 run 取代旧 run 或为消除 TS 阻断执行付费生产；通用输入包必要付费验收依 0.3a 单独分层。
+
+### 0.3a 输入包生产目标与既有 Atom 有限依赖补充（项目所有者授权）
+
+最终产品标准是：用户提交写作输入包，应用解析并完整保留其要求与材料，由应用自行建立内部项目/合同/Run/来源身份，将每份材料送入 CNW 正确岗位，按固定原作者工作流真实生产、审查并导出故事。用户不应手工填写内部 SHA/Run ID/合同或逐阶段操作。输入包描述作品和要求；StoryStudio 决定并执行固定 CNW 流程。
+
+本补充纳入现有 Atom，不新增 Atom、不改变公开阶段/岗位或 M01–M16：
+
+1. **ATOM-04：**现有输入包入口须表达并传递执行意图；将来源获取策略与模型执行模式分开。应用自行管理项目、合同、Run、来源选择、阶段身份和输出。包清单、必需材料、写作要求和工作意图必须在 Provider/费用边界前完整验证；缺项、冲突或不能映射时报告具体问题，不静默丢弃。
+2. **ATOM-05：**新通用项目每次 Provider 操作显式携带绑定项目实例的费用上下文，接入既有单一账本、锁和 accounting primitives；不得靠请求间改模块全局 `LEDGER/config` 选择项目账本，不得复制多个可写全局账本或增加共同 Provider 并发额度。历史费用、`PENDING`、`UNKNOWN_NOT_ZERO` 和原字节保持不变。
+3. **ATOM-06：**输入包生产复用既有正式 `execute_checked`、真实阶段消费者、审稿反馈、Refine、受影响 Re-review、恢复与导出；不得另造简化生成器。完整保留四角色读集、两层 Lint、五 Lens、每 Finding 三个独立 Verifier、2/3 门槛、Completeness→Refine→新稿 Re-review、Canon/晋升和 Sprint 约束。`MOCK_ONLY/SIMULATED` 不得冒充 Live、正式前章或用户创意接受。
+4. **ATOM-07：**分开核验项目/Run/合同/来源/Policy/Workflow 身份及可信独立签收，与对具体操作有效的用户 Live/费用授权、Provider 配置、额度/期限及费用上下文。不得把工程 Controller ACCEPT、CLI 开关、拥有 Key 或普通 JSON 当成生产授权；不得把已签收结果 `provider_call_authorized=false` 改为 true。旧 J19/TS 预检身份不解锁新项目，TS 恢复/迁移/cutover 仍须原危险门。
+5. 受影响 ATOM-08 只做不删除、移动或切换旧私有数据的安全工程；ATOM-09 对适用实现执行隔离离线 E2E。此前对精确候选已接受且身份未变化的证据可按原计划规则复用，不追认历史 RETURN。
+
+**验收分层：**离线工程门证明通用身份、权限/费用边界、正式 CNW 消费链和负例已实现；实际故事交付门使用项目所有者提供的输入包，核对包内要求与材料完整映射、真实 CNW 生产/审查/导出、Provider 回执与适用费用证据。项目所有者已授权计划内必要付费验收，无需再次询问或把未检查凭证当作阻塞；仍须等待活动计划及真实代码候选的精确独立 ACCEPT，并满足可信签收、项目/合同绑定、Provider 和费用政策。密钥内容与来源仅限本机受控使用，绝不写入 Git 或公开证据。模拟结果不得通过 Live 验收。实际故事和创意是否满足用户要求，以产物及用户阅读为准。
+
+本补充不授权真实 TS 生成/恢复、私有数据迁移、危险 cutover、新生产默认启用或历史证据改写；`CUTOVER_BLOCKED=true` 维持，直到原有危险门单独接受。保持原批准源 SHA 与全部历史裁决不变。
 
 ---
 
@@ -193,10 +209,10 @@
 9. 未被触发的分支不要求额外真实付费运行；只核对源码、固定原始回执和离线负例。发现执行结果缺失，明确标 `NOT_RUN`。
 10. **迁移作业互斥**：在复制/切换工作区和账本时确认不存在活跃 Writer、NK/CritiCS 子进程和未落盘结算；取得必要的文件锁/迁移锁。若运行未停或无法确认，保持只读/停止迁移，不通过覆盖解决竞争。
 11. **跨 Atom 的“影子配置”规则**：Atom-02 新 schema 可以创建、验证和打快照，但旧活动配置/账本消费者未完成改造前，不得切换它们的读取路径；Atom-03/04 才逐消费者转接；Atom-05 仅在全部转接验证后执行数据切换。不能让中间 Atom 自己破坏下一 Atom 的正常入口。
-12. 本次没有模型服务授权。所有测试中将 Provider、NK、CritiCS 网络调用用明确的断网防护及可审计替身隔离；不能因 `FICT_` 特例绕过通用生产合同。
-13. **模拟绝不等于 Live**：本轮无论模型离线模拟的产物多完整，均只能作为通用流程功能证据；`verify-live`、费用结算、真实小说水准仍为 `NOT_RUN/NOT_VERIFIED`。真实 Provider 调用在全套模拟测试与迁移期间强制拒绝。
+12. 项目所有者已授权计划内必要的通用输入包付费验收，但实际调用必须等待活动计划及代码候选的精确独立 ACCEPT，并通过身份、可信签收、Provider 与费用政策检查。离线/定点测试仍对 Provider、NK、CritiCS 网络使用明确断网防护和可审计替身；不得因 `FICT_` 特例绕过通用生产合同。此授权不包括 TS Live/恢复。
+13. **模拟绝不等于 Live**：模型离线模拟产物只能作为通用流程功能证据；真实小说水准仍为 `NOT_VERIFIED`。真实 Provider 调用在全套离线测试与旧数据迁移期间强制拒绝；仅计划内、精确候选获准后的通用输入包验收可按 0.3a 调用。
 14. **项目公开正本不能被试稿覆盖**：任何新 run 的阶段写入/编辑计划先进入本 run 候选区，保留原始历史；只有经指定接受/晋升门与原子 CAS（期望版本）才更新项目正本。出错不能留下“已更新正文但无凭据”。
-15. **新 Live 授权默认关闭**：新建项目的 CLI 生产预检须检查显式用户授权、模型配置和成本政策。历史 J19/v5 冻结配置不得因本条被改写。该 Atom 内任何测试都不得启用真实 Provider。
+15. **新 Live 授权默认关闭**：新建项目的 CLI 生产预检须检查显式用户授权、模型配置和成本政策。历史 J19/v5 冻结配置不得因本条被改写。该 Atom 内的离线测试不得启用真实 Provider；本计划内实际输入包验收另受 0.3a 约束。
 16. **源码变更与数据迁移分离签收**：Controller 先核对引擎预备代码和模拟回归，再允许唯一指向新数据的 cutover；迁移后如有路径映射失败，回滚活动指针，不得编辑原 run 企图修复。
 17. **真实成果而非测试数验收**：所有结论至少给出具体项目产物、消费链 SHA、失败负例 raw、候选提交与远端回读；运行通过个数和文档中写“支持”均不构成功能成果。
 18. **原方法保护优先于目录美化**：所有修改在对应 Atom 的 M01–M16 适用行接受独立只读子智能体审查；不得用“仍有11阶段”替代职责/读集/票数/反馈/Canon/Sprint 的真实证明。
@@ -587,6 +603,8 @@ CLI 表面语法按现有 PowerShell `-Param` 风格保留即可；上表仅表�
 
 受治理允许的 `main` 分 Atom 提交并不授权把尚未打通的新 CLI 立即设为生产唯一入口。Atom-04 只将新通用参数化入口放在受控影子路由，验证命令确实消费项目上下文；对既有 v5/W10 的**显式**入口以带 pin 的兼容层维持可用性（不再给新项目使用苍歧默认路径），直到 Atom-09 真正断网全链和迁移资格达标。移除旧脚本前 Controller 必须按调用图判定是否仍服务 M01–M16、历史数据和 Sprint/Workflow 03；凡仍有活动消费者或唯一可用能力，先抽出通用薄实现并证实同语义，再撤旧派发。每次本地候选接受、推送前做旧显式入口不退化的有限 smoke；不能删支持命令后在 Atom-09 才发现原方法操作遗失。
 
+**输入包生产入口依赖（见 0.3a）**：项目所有者以包及明确选择的项目上下文启动；CLI/应用内部创建并校验合同、来源选择、Run 与身份，不能要求用户提供这些内部标识或逐阶段执行。包输入格式与项目正式 Contract 不同，应由适配器完整映射并保留原要求/材料，不得要求用户改写为内部格式。
+
 ### 04.2 清理历史一次性脚本
 
 **真实活动路由完整性**：对 PowerShell 调用、Python 模块引用、子进程调用、环境变量、第三方 patched build 路径建立有向消费图；不能只 grep 名称。所有公开 CLI 即便注册为 `SUPPORTED`，在缺当前项目时必须明确报 `PROJECT_REQUIRED`，而不是用旧 J19 私有路径补默认。
@@ -705,6 +723,7 @@ with project_write_lock(project_instance_id):
 - 全局 CritiCS native 运行名/目录、缓存、辅助日志与 Provider 槽位须以明确的 **project+run+hook/唯一随机 ID** 防碰撞，不能只靠重复的 `run_dir.name` 当作跨项目身份。检查 `tools/p2_06_critics_run.py`、`critics_bridge.py`、`cnw_critics_adapter.py` 的真实消费者及原生结果回读；原始 `run_name` 和 receipt 原样保存。
 - 未能确认响应时不自动补0；不因为切换项目清空 Unknown。
 - 新项目启动的 `doctor`、初始化、预检、离线测试，账本的真实已结算总额和历史行不变。
+- 新项目的每个真实费用操作必须把已验证的实例绑定费用上下文显式传入既有 reserve/settle/accounting primitive；禁止临时改写模块全局账本/配置。保留共同 provider 并发总限额，不按项目复制额度或可写账本。
 - 原始 request/raw、价格来源和政策哈希留存；密钥只在受限环境/KeyStore 存放，公共日志不包含敏感内容。
 
 **验收**：两个项目隔离输出、相同 work/run ID 不覆盖、重复实例 ID 的双活 root 拒绝、错误交叉凭据必拒；同 work-id 新 run 不改旧 `run_state.json`；零 API 的迁移测试原始账本前后 SHA 相等；历史费用无重复或丢失。账本切换时保留 `PENDING/UNKNOWN_NOT_ZERO` 按原格式正确解析，不能为了通过迁移简单归零。
@@ -736,6 +755,8 @@ with project_write_lock(project_instance_id):
 各产物仍写入相同 CNW 项目层级（如 `06_plot`、`05_scene_cards`、`07_draft`、`08_review`、`09_revision`），并保证用户可在运行记录中追溯精确消费者和当前模型输入。
 
 ### 06.1 R5 必做的实际方法保真差分（当前 Atom 不要求完成 Atom-09 的11阶段模拟）
+
+**通用输入包生产调用链（见 0.3a）**：生产入口必须调用既有受检调度与本节列明的实际阶段消费者、审查/修订/Re-review、恢复和导出。包适配层负责身份和资料映射，不得建立绕过 CNW 角色/阶段边界的第二生成器。离线阶段验证与后续真实输入包验收分开记证据。
 
 **必须覆盖的源码/Prompt/配置边界**：`cnw_roles.py:AUTHOR_ROLE_READS/resolve_author_reads/build_author_role_messages`，`cnw_runner.py:stage_predecessors/_role_sources/_planning_stage/execute_plot/execute_scene_cards/execute_writing_brief/execute_prose/_review_sources/execute_five_lenses/execute_three_verifiers/execute_completeness/execute_refine/execute_re_review/_critics_hook`，`cnw_review.py` 各 Lens/Verifier 消息构造，`cnw_lint.py`，`cnw_import_workflow.py`，`cnw_maintenance.py`，`cnw_sprint_live.py`，`cnw_revision.py` 和活动 `prompts/cnw/`。与固定作者方法 M01–M16 逐项映射；不得把“只有11个方法名”当完成。
 
@@ -802,7 +823,7 @@ otherwise: accept_valid_preflight_only
 1. **确定性离线身份层**：只读核验当前 project/instance、Run、合同字节、source 与 manifest/revision、Policy、Workflow、历史 run_state 快照、旧项目受限外部映射以及 TOCTOU 稳定性。核验结果可为 `OFFLINE_BINDINGS_VALIDATED`，并记录计算出的身份字段与 SHA。该结果只说明身份与来源可确定，不是 Controller 签收，不是恢复资格，也不能授权 Provider。
 2. **独立工程 Controller 层**：独立只读 Controller 对精确候选 C/T、离线身份报告、真实 W10 调用链和恢复计划审查后，可给出限定的 `ATOM07_OFFLINE_ENGINE_ACCEPT`。不得因为缺少 API Key、真实付费 Provider 回执或 Live 签名私钥而否定已完成的离线工程核验；也不得把该限定结果写成 ATOM-07 Live 完成。
 3. **W10 生产可信签收层**：运行前的 Controller 原始签收必须来自 Writer 不可控制的受信任验证端，并签名绑定 `project_instance_id/project_id/work_id/run_id/contract_sha256/work_intent/source_id+revision/manifest_revision/source_root/selected_span/policy/workflow`。普通 JSON 的 `ACCEPTED`、自报 reviewer/ref 或可重算摘要不是可信签收。签名验证器应通过部署提供的独立信任接口取得信任根；缺少该接口或有效信任根时返回 `ATTESTATION_PENDING`。离线身份报告可以先于签收产生，不能被 Provider 消费为授权。阶段产物的 `accept_controller_role_output()` 必须使用相同的独立签收边界，并额外绑定实际 Run、stage、request/provider receipt 和输出 SHA。
-4. **单独 Live/费用授权层**：Provider 请求另需真实用户授予的 Live 权限、有效 Provider Key、费用政策/额度与适用于该请求的可信签收。离线身份核验或 Controller 工程 ACCEPT 均不能满足这些条件；禁止通过把 `provider_call_authorized=false` 改成 `true` 打通请求。本阶段不调用真实 Provider、不 reserve 费用、不恢复 TS。
+4. **单独 Live/费用授权层**：Provider 请求另需适用于该操作的项目所有者 Live/费用授权、有效 Provider 配置、费用政策/额度与可信签收。离线身份核验或 Controller 工程 ACCEPT 均不能替代这些条件；禁止通过把 `provider_call_authorized=false` 改成 `true` 打通请求。所有者已授权 0.3a 所述计划内必要的通用输入包付费验收，但只有计划与精确代码候选获独立接受后，才能在正确的新项目边界内执行；此项绝不授权 TS Provider 请求、TS 恢复或迁移。
 
 唯一已验证的 TS 如其合同/来源/运行身份与调用链获得完整只读核验，并由独立工程 Controller 接受，可记录 `ATOM07_OFFLINE_ENGINE_ACCEPT`，并按本补充范围申请继续 ATOM-08 中不涉及旧私有数据删除、搬移或切换的安全工程工作，以及 ATOM-09 完全隔离、断网、虚构项目的模拟验收。除非可信生产签收与单独 Live/费用授权另外通过，必须记录 `TS_LIVE_AUTHORIZATION_STATUS=NOT_AUTHORIZED`、`TS_RECOVERY_ELIGIBILITY=NOT_ESTABLISHED`。此路径不接受历史数据迁移、真实恢复或新生产默认启用；`CUTOVER_BLOCKED=true` 继续有效，直至原危险切换门取得 `CUTOVER_READ_ONLY_ACCEPT`。
 
@@ -997,15 +1018,15 @@ resume_and_export_without_network()
 
 ### 10.1a 产品能力与证据等级声明（不可省略）
 
-R4 **只授权重构及完全断网的生产链模拟**。因此交付应当写明：
+交付必须分开陈述工程实现、实际通用输入包运行和用户对成品的接受：
 
 - `GENERIC_ENGINE_CODE_SEPARATED`：实际代码已经不依赖 J19、冷 clone 可按明示条件启动。
 - `GENERIC_OFFLINE_FUNCTIONAL_VERIFIED`：三种创作意图、两源多版本、原创续章、并发、恢复、导出等有真实调度 + 断网模拟消费者和产物。
-- `GENERIC_LIVE_PRODUCTION=NOT_RUN`：并**非**实际 DeepSeek Flash 为新项目写出过文章；NK/CritiCS 真实 Provider 新环境也未重新验证。不得使用 `PRODUCTION_READY_VERIFIED`、`LITERARY_QUALITY_EQUIVALENT` 等超出证据的标签。
+- `GENERIC_LIVE_PRODUCTION=NOT_RUN`：若本计划的实际输入包生产验收尚未执行，明确记为未运行；不得声称实际 Provider 已为新项目写出文章或 NK/CritiCS 已在真实 Provider 新环境验证。不得使用 `PRODUCTION_READY_VERIFIED`、`LITERARY_QUALITY_EQUIVALENT` 等超出证据的标签。项目所有者已经授权计划内必要的付费验收；仅在活动计划与真实代码候选精确接受、绑定和费用检查通过后执行，不得以未重新询问授权或未检查凭证为由阻塞。
 - `V5_RESUME_PREFLIGHT_ELIGIBLE_WITHOUT_NETWORK`：只证明 TS 现有 run 在迁移后、尚未发起付费请求前，源/策略/审查门可静态验；**不等于** TS 后续真实 Plot/Prose 已运行。
-- 若未来用户授权一次付费新项目 Live smoke，另建针对来源、语言、单篇字数、真实 Provider 完整11阶段、导出可读正文和独立审查的**后续任务**；本计划不提前调用，也不把未来任务当本次 Atom 通过门。
+- 所有者授权后的新项目付费验收仍须按 0.3a 在本计划的实现门通过后执行；必须使用其实际输入包，检查要求/材料逐项映射、11 阶段的真实消费者、导出正文及审查证据。此真实故事交付门与较早的离线工程门分开，不可用模拟结果替代；用户阅读后决定创意接受。凭证仅由本机受限运行环境使用，不能记录或提交其内容。
 
-本轮测试不能由模拟文本证明“玩家喜欢人物”或“一定达到原作者正文品质”。同样不能因为这一能力尚未证明，就重启与通用化无关的文学调优。若后续用户真正要求发布级创作品质，需单独定义真实 Live/人工评读任务；不能偷偷扩大本轮 API 和费用授权。
+模拟文本不能证明“读者喜欢人物”或“一定达到原作者正文品质”。不得因此重启与通用化无关的文学调优；实际付费验收严格限于所有者已授权的输入包目标和计划门禁。生产结果的创意接受由用户阅读决定，不得把工程/Controller ACCEPT 当作创意接受。
 
 ### 10.1b R5 独立方法不变量终验与活动入口切换
 

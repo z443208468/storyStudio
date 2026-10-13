@@ -105,6 +105,10 @@ instances; it is not a shortcut for resuming an existing job.
 `RUNS_PREPARED_PENDING_AUTHORIZATION` records actual offline Runs, with Provider
 permission false. Capacity-pending tasks remain pending and create no Run.
 Identity conflicts return a blocking code while retaining prior progress.
-Package-job automatic production/review/revision/export remains pending Atom-09.
-The eventual application flow must handle these internal identities and stages
-from the supplied package; low-level diagnostic commands do not complete that flow.
+Atom-09's fixture chain is accepted for offline simulated production,
+review/revision and export. It does not establish that the owner-supplied package
+can run through Live production. The generic V2 Live route and project-bound
+fee/authorization handoff remain implementation work; the exact package-to-real-
+story acceptance has not run. Simulated receipts cannot satisfy Live gates.
+The final application flow must handle internal identities and stages from the
+supplied package; low-level diagnostic commands do not complete that flow.
