@@ -1,130 +1,16 @@
 {
-  "stage": "P2-04",
-  "status": "LIVE_CALLS_PASS_PENDING_CONTROLLER_ACCEPTANCE",
-  "run_id": "p2-04-live-20261010",
-  "requested_model": "deepseek-flash",
-  "base_url": "https://api.deepseek.com/v1",
-  "current_nk_patch_sha256": "289D6E5CA63C3B45D7BC2697A095E0344033482B0F5512E679E6ABF3A2E355B1",
-  "current_nk_runtime_build_id": "p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161",
-  "nk_live_call_build_id": "p2-03-b857f34b-a34b8daee0aa-8d6ef80b3161",
-  "reasoning_disabled_generation_routes": 8,
-  "campaign_limit_cny": "10",
-  "estimated_campaign_spend_cny": "0.004892",
-  "actual_provider_requests": 5,
-  "request_records": 7,
-  "cost_estimator": {
-    "policy": "peak rates; assume cache-miss input; USD/CNY estimate 6.70",
-    "pricing_checked_date": "2026-10-10",
-    "pricing_source": "https://api-docs.deepseek.com/quick_start/pricing/",
-    "fx_source": "https://www.ecb.europa.eu/stats/exchange/eurofxref/shared/pdf/2026/10/20261007.pdf",
-    "guard_self_check": "PASS"
-  },
-  "cost_guard_self_check": {
-    "over_limit_reservation": "REJECTED",
-    "unknown_usage": "RESERVATION_REMAINS_COMMITTED",
-    "test_ledger": "temporary and removed"
-  },
-  "probes": [
-    {
-      "path": "OpenAI-compatible plain text",
-      "status": "SUCCEEDED",
-      "provider_request_id": "85be8426-6ae0-45d4-baf3-ab70d6377d76",
-      "returned_model": "deepseek-flash",
-      "finish_reason": "stop",
-      "usage": {
-        "input_tokens": 14,
-        "output_tokens": 6
-      },
-      "estimated_cost_cny": "0.000077",
-      "raw_evidence": "runs/p2-04-live-20261010/direct-response.json"
-    },
-    {
-      "path": "NK /api/generate-perspective initial live response",
-      "status": "PROVIDER_SUCCEEDED_APP_SCHEMA_FAILED",
-      "provider_request_id": "d6b08e49-08a6-4b10-85cb-10316e194857",
-      "returned_model": "deepseek-flash",
-      "finish_reason": "stop",
-      "usage": {
-        "input_tokens": 452,
-        "output_tokens": 280
-      },
-      "estimated_cost_cny": "0.003160",
-      "corrective_action": "Made the exact top-level Zod JSON contract explicit, set reasoning_effort=none, and capped output at 512 tokens.",
-      "raw_evidence": [
-        "runs/p2-04-live-20261010/nk-http-request.json",
-        "runs/p2-04-live-20261010/nk-http-response.json",
-        "runs/p2-04-live-20261010/nk-provider.jsonl"
-      ]
-    },
-    {
-      "path": "NK /api/generate-perspective corrected live response",
-      "status": "SUCCEEDED",
-      "provider_request_id": "719d26e0-6804-4da8-b96c-39f10efc220e",
-      "returned_model": "deepseek-flash",
-      "finish_reason": "stop",
-      "usage": {
-        "input_tokens": 469,
-        "output_tokens": 39
-      },
-      "estimated_cost_cny": "0.001257",
-      "http_status": 200,
-      "zod_result_count": 1,
-      "reasoning_effort": "none",
-      "max_output_tokens": 512,
-      "raw_evidence": [
-        "runs/p2-04-live-20261010/nk-http-request-nk-00a4f62fcff04860b1386640c9c2f0ac.json",
-        "runs/p2-04-live-20261010/nk-http-response-nk-00a4f62fcff04860b1386640c9c2f0ac.json",
-        "runs/p2-04-live-20261010/nk-provider-nk-00a4f62fcff04860b1386640c9c2f0ac.jsonl"
-      ]
-    },
-    {
-      "path": "CritiCS chatsettubg / ConversationChain (first successful call; reconciled)",
-      "status": "SUCCEEDED_COST_RECONCILED_RAW_RESPONSE_NOT_RETAINED",
-      "local_request_id": "critics-b6f3d53fcae34ffa8d7a578cc67140e9",
-      "provider_request_id": null,
-      "returned_model": "deepseek-flash",
-      "finish_reason": "stop",
-      "usage": {
-        "input_tokens": 71,
-        "output_tokens": 7
-      },
-      "estimated_cost_cny": "0.000199",
-      "memory_messages": 2,
-      "response_chars": 24,
-      "reconciliation": "runs/p2-04-live-20261010/critics-b6f3d53fcae34ffa8d7a578cc67140e9-reconciliation.json",
-      "limitation": "Provider request ID was not captured and the shared raw response artifact was overwritten by the separately evidenced second instrumentation call. No ID or response body is inferred; usage and cost remain included in campaign totals."
-    },
-    {
-      "path": "CritiCS chatsettubg / ConversationChain (instrumented second successful call)",
-      "status": "SUCCEEDED",
-      "provider_request_id": "9a8d96b8-0c75-48ce-8f58-c8dfbf5f4c7e",
-      "returned_model": "deepseek-flash",
-      "finish_reason": "stop",
-      "usage": {
-        "input_tokens": 71,
-        "output_tokens": 7
-      },
-      "estimated_cost_cny": "0.000199",
-      "memory_messages": 2,
-      "raw_evidence": [
-        "runs/p2-04-live-20261010/critics-conversation-response.json",
-        "runs/p2-04-live-20261010/critics-provider-response.json"
-      ]
-    }
-  ],
-  "startup_attempts_without_provider_request": 2,
-  "private_evidence_sha256": {
-    "runs/p2-04-live-20261010/direct-response.json": "FBCD76D25AEE02BD0FED2C82979092C899CCF90E5A16C366566953537FC603FC",
-    "runs/p2-04-live-20261010/nk-http-request-nk-00a4f62fcff04860b1386640c9c2f0ac.json": "B417D9E4ACF4516D57B95E6AA303FBF5E4E8190142BF6DC8D73F5573D4134265",
-    "runs/p2-04-live-20261010/nk-http-response-nk-00a4f62fcff04860b1386640c9c2f0ac.json": "51AAB0D6BB22F73DE7CFDC17CB76CC4A7066A9AE7499F912061F9424E4E20829",
-    "runs/p2-04-live-20261010/nk-provider-nk-00a4f62fcff04860b1386640c9c2f0ac.jsonl": "E9A07A045F0610B9DBA8CA9B8DD19A4636D7C5A6AB5B5FAFE605C926DCAA7DBB",
-    "runs/p2-04-live-20261010/critics-conversation-response.json": "0C5F0FB3C5F4508710CD141C4D62CC61EC5EDA95BB8F00677AD3D92EDA69986A",
-    "runs/p2-04-live-20261010/critics-provider-response.json": "CD33EC203CCE80037E5697C65379F6873A38EA85B3AA9AEF750537706B6EC992",
-    "runs/p2-04-live-20261010/p2-cost-ledger.json": "529CD410FE48FD93399EF4CACA82AA32D2ECEE4615A94D38E3AED71E6742B285",
-    "runs/p2-04-live-20261010/nk-http-request.json": "96626EDDE41B3FA7669EFD7A357D5F01E24E3266EA9FD7F5930118EEE6B76220",
-    "runs/p2-04-live-20261010/nk-http-response.json": "32B352DECC6C93DC1B34E3F6BAD3455D51E4DF09A9F1180DF48A07ED134F2AA8",
-    "runs/p2-04-live-20261010/nk-provider.jsonl": "9B0FE040136CE8ED094520D3210A2A9D12167B7A9F7931F93EBFE9492ACC8477",
-    "runs/p2-04-live-20261010/critics-b6f3d53fcae34ffa8d7a578cc67140e9-reconciliation.json": "822FE6AF7E2A6F07EFDECF6BF172AF168212E0FB8FA980252FA1AB54F7A87C8D"
-  },
-  "sensitive_data_policy": "Key is absent from evidence and ledger; requests contained no project source; NK provider evidence has been checked for and stripped of reasoning_content."
+  "schema_version": "atom08_historical_evidence_pointer_v1",
+  "record_status": "ARCHIVED_INACTIVE",
+  "original_path": "evidence/p2-04-live-check.json",
+  "classification": "Historical P2 Live-check execution record.",
+  "original_worktree_sha256": "5e2318c038bbb83adcab7ef0400752418cf73a3275085f18a6ecfbf5b489e2c8",
+  "original_git_blob_oid": "24c4026353e1f8011649ee565fe8e81a7787db2d",
+  "original_git_blob_content_sha256": "d45f191e72e00815302e5c75fa2d091f282c59a843ca4c88da83b4b604950f45",
+  "external_archive": "D:\\CangqiStudio\\StoryStudio_R5_Atom08_20261014\\atom08_legacy_evidence_and_plan_sources_b93d009.zip",
+  "external_archive_sha256": "005e11b1826a7e1d938723070c7a2c27aa650bd6ab2fbe728032b72fe9acc9a1",
+  "worktree_archive_member": "worktree/evidence/p2-04-live-check.json",
+  "git_blob_archive_member": "git-object/evidence/p2-04-live-check.json",
+  "source_commit": "b93d0094003ca93428ab18fd5def6d29119543d0",
+  "source_tree": "8c4b97ac61092c9522a674c67625b88df19b8db7",
+  "git_history_rewritten": false
 }

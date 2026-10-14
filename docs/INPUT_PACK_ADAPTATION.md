@@ -30,9 +30,10 @@ stages, request-bound Controller/Owner interfaces and shared accounting have
 current07 offline engineering acceptance. Production trust deployment is still
 pending. Missing or invalid grants refuse before Key, slot, reserve and HTTP;
 an available Key, an engineering ACCEPT or ZIP import is not a grant.
-`-NewAttempt` requires explicit Live execution and preserves all older attempts,
-contracts, histories and fees. The actual owner package's full story delivery
-has not been accepted.
+The PowerShell `studio.ps1 project-pack` route does not expose a `-NewAttempt`
+switch. Only the lower-level Python adapter has `--new-attempt`, which requires
+explicit Live execution and preserves all older attempts, contracts, histories
+and fees. The actual owner package's full story delivery has not been accepted.
 
 Use `-SourceRepository <local-Git-repository> -Offline` for a local source.
 Without a local repository the app uses a private DataHome cache for the exact

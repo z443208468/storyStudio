@@ -10,7 +10,7 @@ StoryStudio is being separated into a reusable writing application that can host
 
 ## Intended application model
 
-The app keeps generic engine code and the pinned CNW method in the repository. New project identities, contracts, source snapshots, runs, exports, and shared accounting use an explicitly selected private DataHome. Project writes require the selected registered instance; there is no default story. Legacy private data remains protected in place until its separate relocation and cutover gates pass.
+The app keeps generic engine code and the pinned CNW method in the repository. New project identities, contracts, source snapshots, runs and exports use an explicitly selected private DataHome. Provider costs still use the existing shared application ledger at `runtime/private/p2-cost-ledger.json`; request accounting is bound to the selected project instance, but physical ledger relocation has not happened. Project writes require the selected registered instance; there is no default story. Legacy private data remains protected in place until its separate relocation and cutover gates pass.
 
 The CNW public method includes its eleven ordered stages, source-bound role inputs, layered lint, five independent review lenses, per-finding verification, completeness feedback, refinement, affected-item re-review, canon approval, and sprint gates. The exact invariants and migration checks are in the active plan and source-to-code map. The refactor does not claim these requirements are already satisfied by current runtime behavior.
 
@@ -61,9 +61,13 @@ Atom07's complete current offline engineering verdict binds
 and tree `8c4b97ac61092c9522a674c67625b88df19b8db7`;
 [the original verdict](evidence/ATOM07_CONTROLLER_ACCEPT_b93d009_20261014.md)
 and [freeze/readback record](evidence/ATOM07_FREEZE_b93d009_20261014.json)
-state the evidence and limits. Atom08 safe engineering is in progress and has
-not been accepted. Atom09 awaits its current sequential review; historical
-fixture results do not constitute a current Atom09 ACCEPT.
+are included in the repository tree for clean-clone review. They state the
+evidence and limits. Atom08 safe engineering is in progress and has
+not been accepted. Atom06's prior exact-candidate ACCEPT and freeze are also
+available in [its original verdict](evidence/ATOM06_CONTROLLER_ACCEPT_84e022d_20261013.md)
+and [freeze record](evidence/ATOM06_FREEZE_84e022d_20261013.json). Atom09
+awaits its current sequential review; historical fixture results do not
+constitute a current Atom09 ACCEPT.
 
 `GENERIC_LIVE_PRODUCTION=NOT_RUN`; trusted production attestation and separate
 Live/fee authorization checks remain required by the accepted R5 plan. The owner

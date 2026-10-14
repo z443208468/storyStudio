@@ -123,9 +123,12 @@ supplied package; low-level diagnostic commands do not complete that flow.
 `-Offline` controls Git source acquisition. `-Mode` controls execution intent;
 Live never falls back to simulated output. A Live job uses an independent bound
 attempt and real reviewed request grants; it does not relabel an offline Run.
-`-NewAttempt` requires `-ExecuteJob -Mode live`, preserves old attempts and their
-fees, and does not itself grant a Provider call. Existing jobs keep their
-contracts, requests, stage artifacts and failures on interruption.
+The PowerShell `studio.ps1 project-pack` route does not expose a `-NewAttempt`
+switch. The lower-level Python adapter `tools/cnw_pack_app.py` exposes
+`--new-attempt`, which requires `--execute-job --execution-mode live`; it
+preserves old attempts and their fees, and does not itself grant a Provider
+call. Existing jobs keep their contracts, requests, stage artifacts and
+failures on interruption.
 
 The V2 `prepare-live/live-call` branches use actual `execute_checked` stages.
 The manual `accept-role` path cannot supply a substitute V2 stage receipt.

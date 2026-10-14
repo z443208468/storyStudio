@@ -1,0 +1,162 @@
+{
+  "schema_version": "atom08_toplevel_history_archive_map_v1",
+  "source_commit": "b93d0094003ca93428ab18fd5def6d29119543d0",
+  "source_tree": "8c4b97ac61092c9522a674c67625b88df19b8db7",
+  "archive": "D:\\CangqiStudio\\StoryStudio_R5_Atom08_20261014\\atom08_legacy_evidence_and_plan_sources_b93d009.zip",
+  "archive_sha256": "005e11b1826a7e1d938723070c7a2c27aa650bd6ab2fbe728032b72fe9acc9a1",
+  "manifest": "D:\\CangqiStudio\\StoryStudio_R5_Atom08_20261014\\atom08_legacy_evidence_and_plan_manifest_b93d009.json",
+  "entries": [
+    {
+      "path": "evidence/P2-01_PRIVATE_HASHES.md",
+      "classification": "Private-source hash inventory from the historical P2 execution; retained externally to avoid treating old project fingerprints as current application evidence.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "b678561f8812d8ea3e5684d8f08cf483e809bbcbbd9f9016b48de5ab80c22348",
+      "original_git_blob_oid": "413ba6826f7e74ac6d99a5e0ba3b75d85c99f99d",
+      "original_git_blob_content_sha256": "2c649dc243e4c72849148088ae99db31ea78f21f1e2a2aa197d34bdab3fbfc76",
+      "archive_members": [
+        "worktree/evidence/P2-01_PRIVATE_HASHES.md",
+        "git-object/evidence/P2-01_PRIVATE_HASHES.md"
+      ]
+    },
+    {
+      "path": "evidence/P2-02_FINDINGS.md",
+      "classification": "Historical CritiCS adapter findings from the P2 project-specific investigation.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "d4de01034766334234deaf81d01441d122423d988d6f17f7912f1d79e8c6d882",
+      "original_git_blob_oid": "32b1567407e44a95ec3a7ba7d63969a1b9fe0ec1",
+      "original_git_blob_content_sha256": "84d8e3a76c6ce88968cedbde4f9fb0539ce28caa09ab7debcb70afa19225feae",
+      "archive_members": [
+        "worktree/evidence/P2-02_FINDINGS.md",
+        "git-object/evidence/P2-02_FINDINGS.md"
+      ]
+    },
+    {
+      "path": "evidence/P2-03_FINDINGS.md",
+      "classification": "Historical Narrative Keyframing adapter findings from the P2 project-specific investigation.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "d02a94c087d963e92a1170acad029f8928d1edbaa57ee5fcc4a51cb3f5d89c86",
+      "original_git_blob_oid": "a597de0266e61945ac495ad0608c7bc07cbc70f8",
+      "original_git_blob_content_sha256": "79a27653ab5b85673a8669f46e257d9050dc0ec40718a21db1558190c37c79ed",
+      "archive_members": [
+        "worktree/evidence/P2-03_FINDINGS.md",
+        "git-object/evidence/P2-03_FINDINGS.md"
+      ]
+    },
+    {
+      "path": "evidence/P2_CURRENT_STATE.md",
+      "classification": "Superseded P2 status snapshot.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "a8ecdc90beecdc4f071e4ab121c52bd88535345f2f3686a91cabdbb2ebc5f7bc",
+      "original_git_blob_oid": "90d51b40a89e7027dab79a9027dace56922896df",
+      "original_git_blob_content_sha256": "a8ecdc90beecdc4f071e4ab121c52bd88535345f2f3686a91cabdbb2ebc5f7bc",
+      "archive_members": [
+        "worktree/evidence/P2_CURRENT_STATE.md",
+        "git-object/evidence/P2_CURRENT_STATE.md"
+      ]
+    },
+    {
+      "path": "evidence/P3_CURRENT_STATE.md",
+      "classification": "Superseded P3 status and execution snapshot.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "6b199e4802d517b931fe8a10c52ccd21eca4510d54ed42b283762c7594294341",
+      "original_git_blob_oid": "540a176e2a71667752ccd1cc29a427cd64fb36e0",
+      "original_git_blob_content_sha256": "6b199e4802d517b931fe8a10c52ccd21eca4510d54ed42b283762c7594294341",
+      "archive_members": [
+        "worktree/evidence/P3_CURRENT_STATE.md",
+        "git-object/evidence/P3_CURRENT_STATE.md"
+      ]
+    },
+    {
+      "path": "evidence/p2-04-live-check.json",
+      "classification": "Historical P2 Live-check execution record.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "5e2318c038bbb83adcab7ef0400752418cf73a3275085f18a6ecfbf5b489e2c8",
+      "original_git_blob_oid": "24c4026353e1f8011649ee565fe8e81a7787db2d",
+      "original_git_blob_content_sha256": "d45f191e72e00815302e5c75fa2d091f282c59a843ca4c88da83b4b604950f45",
+      "archive_members": [
+        "worktree/evidence/p2-04-live-check.json",
+        "git-object/evidence/p2-04-live-check.json"
+      ]
+    },
+    {
+      "path": "evidence/p2-05-plot-check.json",
+      "classification": "Historical P2 Plot-check execution record.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "a60e4b12ee9499799a73c325c8aeea90d75d826a1af7449e2971f428be997531",
+      "original_git_blob_oid": "6a1282564149ffc32da5144c257ad23ad2f46a8a",
+      "original_git_blob_content_sha256": "69048cea1e2304026add14624decbf822a647276cf183e03fe6fb5ae6413c436",
+      "archive_members": [
+        "worktree/evidence/p2-05-plot-check.json",
+        "git-object/evidence/p2-05-plot-check.json"
+      ]
+    },
+    {
+      "path": "evidence/p2-06-execution.json",
+      "classification": "Historical P2 execution, review and refinement record.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "a7081a93e8c12b0fef30ef419086626095f0459b57e0e17073a3925be828873b",
+      "original_git_blob_oid": "3d7b83bc86ab0bd1a6eb5364a71879c228a900f0",
+      "original_git_blob_content_sha256": "e0e5c9cccd4be145d0c24d915bb871e4936fba3522dca84ff4b7f994d113832b",
+      "archive_members": [
+        "worktree/evidence/p2-06-execution.json",
+        "git-object/evidence/p2-06-execution.json"
+      ]
+    },
+    {
+      "path": "evidence/p2-06-plot-check.json",
+      "classification": "Historical P2 Plot-gate execution record.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "a8baef6714df53e8566905fb2515517f366cbd16a249b38aa799d3b00fb3e085",
+      "original_git_blob_oid": "6aaf3c2815051aa756253b57462963e72b4a23b0",
+      "original_git_blob_content_sha256": "7438dd4291f8f51471ccc02da87fb4caf24f9c832d931ed98a3352487b3b04c6",
+      "archive_members": [
+        "worktree/evidence/p2-06-plot-check.json",
+        "git-object/evidence/p2-06-plot-check.json"
+      ]
+    },
+    {
+      "path": "evidence/p2-07-delivery.json",
+      "classification": "Historical P2 delivery and review record.",
+      "active_consumer_audit": "No active application/test/config/current-R5 consumer found; remaining mentions are in historical documents.",
+      "replacement": "Non-executable pointer at original path",
+      "original_worktree_sha256": "e2b3bc7b3f063f31390097d810653e75896204e3e196d516a73c501b05700321",
+      "original_git_blob_oid": "5739a8a227706c14f90b0ae85a5a20ed279bfe29",
+      "original_git_blob_content_sha256": "01a52a5c71ba0f056fe74aa3cb1b5ce26036fb2cb0965a81d23de20361de214d",
+      "archive_members": [
+        "worktree/evidence/p2-07-delivery.json",
+        "git-object/evidence/p2-07-delivery.json"
+      ]
+    }
+  ],
+  "historical_plan": {
+    "path": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+    "classification": "Former project-specific execution plan; replaced by a same-path inactive index. Full original text remains in the verified external archive; public method mapping remains in current C01-C15 and R5 M01-M16.",
+    "original_worktree_sha256": "14e2e0a8b5c2fe2dc39944ff167fa6086283c5b3d08039a9f3996d9f63493846",
+    "original_git_blob_oid": "ad57bde5f44c01b1e28fdb9b094092816fae77cd",
+    "original_git_blob_content_sha256": "14e2e0a8b5c2fe2dc39944ff167fa6086283c5b3d08039a9f3996d9f63493846",
+    "archive_members": [
+      "worktree/plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+      "git-object/plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md"
+    ],
+    "replacement": "Same-path inactive index; not a current instruction or authorization.",
+    "active_consumer_audit": "No active application/test/config/current-R5 consumer found; references inside the original historical plan are archived."
+  },
+  "retained_current_r5_source_bytes": [
+    "evidence/atom06_current_20261013/source_bytes/tools/p2_06_critics_run.py.source",
+    "evidence/atom06_current_20261013/source_bytes/tools/p2_cost_guard.py.source",
+    "evidence/atom07_nk_advisory_20261013/source_bytes/tools/p2_cost_guard.py.source",
+    "evidence/atom07_w10_v2_20261013/source_bytes/tools/p2_cost_guard.py.source"
+  ],
+  "git_history_rewritten": false,
+  "private_project_files_read": 0,
+  "provider_calls": 0
+}

@@ -1,37 +1,16 @@
 {
-  "stage": "P2-05",
-  "status": "PLOT_DRAFT_FOR_CONTROLLER_REVIEW",
-  "run_id": "p2-05-live-20261010",
-  "source_version": "JUN-SINGLE-02.3",
-  "source_zip_sha256": "300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2",
-  "insert_window": "within J19 after line 555 dialogue and before line 557 gameplay opens; before line 559 immediate-confession option and before any player interaction",
-  "scene_count": 1,
-  "provider": {
-    "model": "deepseek-flash",
-    "provider_request_id": "02ed6533-354f-432d-8bd7-25a1774f4122",
-    "local_request_id": "plot-18d1b1eda69e40a780ef07cff2dbe162",
-    "finish_reason": "stop",
-    "input_tokens": 3142,
-    "output_tokens": 955,
-    "estimated_cost_cny": "0.013994",
-    "reasoning": "disabled"
-  },
-  "campaign": {
-    "limit_cny": "10",
-    "committed_estimate_cny": "0.018886",
-    "actual_provider_requests": 6,
-    "request_records": 8,
-    "p2_04_actual_provider_requests": 5,
-    "p2_05_actual_provider_requests": 1
-  },
-  "artifacts": {
-    "workspace/cangqi/sample_contract.json": "652157EE7F7F17924ACDE368B2DBA04A55A3E9ECBEE91D83159099D986DBF3DF",
-    "workspace/cangqi/06_plot/ep001_plot.v0.md": "83F2BABDD3C6674D38FE5DDBF80D79D6E31492971512445BCEA0D1CB446DBECA",
-    "workspace/cangqi/06_plot/ep001_source_anchors.md": "A5B2BF3EDD64225339B4B79AFC49082C62D345AFA435374B994F42F0731BCB5E",
-    "runs/p2-05-live-20261010/plot-prompt.txt": "4B391BB79746E7B87872DC8DD5459555C01B505CB7AF2390FF735E8E98BF9293",
-    "runs/p2-05-live-20261010/plot-provider-response.json": "D687253BA61B5906F5C3A6174E3B78DD692EC79E0F8BEB5F398B95DFD10EAD77",
-    "runs/p2-05-live-20261010/p2-cost-ledger.json": "9ACE1D402FE8CE46454B4ABE0CF4F2FBEE8DCB1CBEBA497B8E323A906CC3A045",
-    "runs/p2-05-live-20261010/controller-return-correction.md": "2F58179BAF58A4997D35E7C483FE7D62DE47D0592C38F405183047B7EEDCA452"
-  },
-  "return_flow": "After the insert, resume J19 gameplay and immediate-confession options unchanged; then continue the existing J20 route flow."
+  "schema_version": "atom08_historical_evidence_pointer_v1",
+  "record_status": "ARCHIVED_INACTIVE",
+  "original_path": "evidence/p2-05-plot-check.json",
+  "classification": "Historical P2 Plot-check execution record.",
+  "original_worktree_sha256": "a60e4b12ee9499799a73c325c8aeea90d75d826a1af7449e2971f428be997531",
+  "original_git_blob_oid": "6a1282564149ffc32da5144c257ad23ad2f46a8a",
+  "original_git_blob_content_sha256": "69048cea1e2304026add14624decbf822a647276cf183e03fe6fb5ae6413c436",
+  "external_archive": "D:\\CangqiStudio\\StoryStudio_R5_Atom08_20261014\\atom08_legacy_evidence_and_plan_sources_b93d009.zip",
+  "external_archive_sha256": "005e11b1826a7e1d938723070c7a2c27aa650bd6ab2fbe728032b72fe9acc9a1",
+  "worktree_archive_member": "worktree/evidence/p2-05-plot-check.json",
+  "git_blob_archive_member": "git-object/evidence/p2-05-plot-check.json",
+  "source_commit": "b93d0094003ca93428ab18fd5def6d29119543d0",
+  "source_tree": "8c4b97ac61092c9522a674c67625b88df19b8db7",
+  "git_history_rewritten": false
 }

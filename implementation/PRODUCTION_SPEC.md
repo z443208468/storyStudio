@@ -21,7 +21,7 @@ INSERT/ADAPT/ORIGINAL改变合法输入证据，不改变岗位分工。新V2篇
 .\tools\studio.ps1 project-pack -JobFile '<returned job record>' -DataHome '<same absolute DataHome>' -Mode live -ExecuteJob
 ```
 
-本节为接口说明，不是此轮真实调用。`-Offline`只选择源取得模式；`-Mode`明确生产意图。Live attempt独立于offline Run，`-NewAttempt`保留旧attempt/账本/失败。生产可信Controller、Owner Live/费用许可、Key与当前请求/预算全部有效才能发送；生产信任未部署时明确拒绝，不落入mock。恢复核实原产物/请求/费用和输入身份，不重放成功或未知请求，不覆盖历史。
+本节为接口说明，不是此轮真实调用。`-Offline`只选择源取得模式；`-Mode`明确生产意图。PowerShell `studio.ps1 project-pack` 当前没有 `-NewAttempt` 参数；底层 Python `tools/cnw_pack_app.py` 的 `--new-attempt` 仅在 `--execute-job --execution-mode live` 下建立独立 attempt，并保留旧 attempt/账本/失败。生产可信Controller、Owner Live/费用许可、Key与当前请求/预算全部有效才能发送；生产信任未部署时明确拒绝，不落入mock。恢复核实原产物/请求/费用和输入身份，不重放成功或未知请求，不覆盖历史。
 
 ## 交付与接受
 

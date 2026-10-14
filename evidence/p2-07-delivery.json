@@ -1,149 +1,16 @@
 {
-  "stage": "P2-07",
-  "status": "ACCEPTED_BY_CONTROLLER",
-  "controller_p2_06": "ACCEPT",
-  "source_version": "JUN-SINGLE-02.3",
-  "source_sha256": "300A829C7524D620AB89177AFCF52C03DFFEA633392C632F69A943F798DAD3B2",
-  "entrypoint": "tools/studio.ps1",
-  "entrypoint_sha256": "DA9111EBD765E900A6B4601972F795CAD41D0C4583B6A33BE84028B06830B131",
-  "runtime_resolution": {
-    "python": "3.11.15",
-    "node": "v24.13.1",
-    "npm": "11.8.0",
-    "critics_build": "p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1",
-    "nk_build": "p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161"
-  },
-  "fresh_powershell_replay": {
-    "commands": [
-      "doctor",
-      "prepare",
-      "import-source",
-      "scene plot",
-      "scene draft",
-      "scene revise",
-      "resume",
-      "export"
-    ],
-    "status": "PASS",
-    "provider_requests_added": 0,
-    "ledger_sha256_before_after": "13760931C4A6A948D45B7880B376121C76819008BAF2384E44BD990134C261BE",
-    "transcript": "runs/p2-07-replay-20261010/reuse-export-transcript.json",
-    "transcript_sha256": "99C13C67D8936C05EF0DCB676E883A10CEEE1BC02FAEC13DD8396F98E9E6D905",
-    "shell": "pwsh 7.6.5 -NoProfile; DEEPSEEK_API_KEY absent"
-  },
-  "nk_lifecycle": {
-    "status": "PASS",
-    "listener": "127.0.0.1:3175",
-    "start_command_ready_checked": true,
-    "stop_command_stopped_process": true,
-    "provider_requests_added": 0,
-    "ledger_unchanged": true,
-    "non_billable_startup_failures": 2,
-    "cause": "initial Start-Process launch lacked the NK build directory; fixed with npm --prefix plus ready and loopback checks",
-    "raw_stdout_in_transcript": true,
-    "stop_stdout": "{\n  \"status\": \"STOPPED\",\n  \"port\": 3175,\n  \"stopped\": 2,\n  \"listener_remaining\": false\n}",
-    "listener_after_stop": [],
-    "listener_after_stop_wait_seconds": 2,
-    "process_control": "private process record tracks launcher/server PID; stop validates locked NK build, selected port, loopback listener, and verifies process/listener exit",
-    "raw_stdout": "runs/p2-07-replay-20261010/nk-lifecycle.stdout.txt",
-    "raw_stdout_sha256": "6683875AFD2C6543972DE70072A351B4380B83026E5526998247E39AC6ACC1DD",
-    "transcript": "runs/p2-07-replay-20261010/nk-lifecycle-replay.json",
-    "transcript_sha256": "C451A34AD33B887DC29A9FF44D61599EFFC817C595829AA093EFD88CDDF04A93"
-  },
-  "exports": {
-    "directory": "deliverables/EP001",
-    "manifest_entries": 11,
-    "manifest_entries_valid": true,
-    "html_external_scripts_or_resources": false,
-    "hidden_j20_route_details_in_reader_export": false,
-    "files": [
-      {
-        "path": "deliverables/EP001/01_初稿.md",
-        "sha256": "0921F7C6E77F046909D5AD66966DDBBC69CD7322913D6F3DD19371E15A0A3ACF",
-        "bytes": 993
-      },
-      {
-        "path": "deliverables/EP001/01_初稿.txt",
-        "sha256": "0921F7C6E77F046909D5AD66966DDBBC69CD7322913D6F3DD19371E15A0A3ACF",
-        "bytes": 993
-      },
-      {
-        "path": "deliverables/EP001/02_修订稿.md",
-        "sha256": "973F54AF8FD03041A98D9282794A81F84A7984C1432B9B712485ACA9265BEA60",
-        "bytes": 469
-      },
-      {
-        "path": "deliverables/EP001/02_修订稿.txt",
-        "sha256": "973F54AF8FD03041A98D9282794A81F84A7984C1432B9B712485ACA9265BEA60",
-        "bytes": 469
-      },
-      {
-        "path": "deliverables/EP001/03_前后文连读.html",
-        "sha256": "02F7253F5FE4B0BE4471D5707B0E57DAA5F68C8DA1E05875B069DC703F52A105",
-        "bytes": 1756
-      },
-      {
-        "path": "deliverables/EP001/03_前后文连读.md",
-        "sha256": "962D228D5177C224EEA2852A87316B3A23BD153897AA27EF5E92664BBA12BC01",
-        "bytes": 1354
-      },
-      {
-        "path": "deliverables/EP001/03_前后文连读.txt",
-        "sha256": "962D228D5177C224EEA2852A87316B3A23BD153897AA27EF5E92664BBA12BC01",
-        "bytes": 1354
-      },
-      {
-        "path": "deliverables/EP001/04_修改说明.md",
-        "sha256": "BB5A4A7A0B4090A15ECE0FE84F93C1C462B03F0120032CDC3F81D44D540B59A4",
-        "bytes": 1382
-      },
-      {
-        "path": "deliverables/EP001/04_修改说明.txt",
-        "sha256": "BB5A4A7A0B4090A15ECE0FE84F93C1C462B03F0120032CDC3F81D44D540B59A4",
-        "bytes": 1382
-      },
-      {
-        "path": "deliverables/EP001/05_本地使用说明.md",
-        "sha256": "78DBEC5786CEB3688C1D1FA1F853269542742A69F786617140A3F0A2AFFD4188",
-        "bytes": 2498
-      },
-      {
-        "path": "deliverables/EP001/manifest.json",
-        "sha256": "3DAE9ADCF28EE4AEE718F2A37EFBD25BCD9A286A087F000AFD406FB92578C73C",
-        "bytes": 1420
-      },
-      {
-        "path": "deliverables/EP001/production_preset.json",
-        "sha256": "8448B8E9B1D7B3C37157BA4F88F5AE1BAEC5C511A3EEF2DAA5C83628402E0788",
-        "bytes": 1525
-      }
-    ]
-  },
-  "campaign": {
-    "provider_requests": 17,
-    "ledger_records": 21,
-    "input_tokens": 25018,
-    "output_tokens": 9055,
-    "estimated_spend_cny": "0.123297",
-    "limit_cny": "10",
-    "invoice_status": "unavailable; estimated spend only"
-  },
-  "security": {
-    "deliverables_gitignored": true,
-    "workspace_and_runs_gitignored": true,
-    "key_persisted": false,
-    "raw_requests_in_public_index": false
-  },
-  "controller_verdict": {
-    "reviewer": "/root/g00_reviewer",
-    "verdict": "ACCEPT",
-    "scope": "P2-07 local delivery only",
-    "remote_readback": "REMOTE_READBACK_ACCEPT",
-    "remote_commit": "0b40876b2f90cfc88c700f5d651719fa214d58af",
-    "remote_tree": "eb23c4b4a8e48bf966845e339ab6bfc62ed88b98",
-    "final_local_candidate": "ef76fb329a10e22284de9701b94cb99d690b19bb",
-    "final_local_tree": "91ceb9b822815e824d358a5fff82e14137efe3f5"
-  },
-  "delivery_state": "READY_FOR_USER_REVIEW",
-  "user_creative_acceptance": "PENDING_USER_REVIEW"
+  "schema_version": "atom08_historical_evidence_pointer_v1",
+  "record_status": "ARCHIVED_INACTIVE",
+  "original_path": "evidence/p2-07-delivery.json",
+  "classification": "Historical P2 delivery and review record.",
+  "original_worktree_sha256": "e2b3bc7b3f063f31390097d810653e75896204e3e196d516a73c501b05700321",
+  "original_git_blob_oid": "5739a8a227706c14f90b0ae85a5a20ed279bfe29",
+  "original_git_blob_content_sha256": "01a52a5c71ba0f056fe74aa3cb1b5ce26036fb2cb0965a81d23de20361de214d",
+  "external_archive": "D:\\CangqiStudio\\StoryStudio_R5_Atom08_20261014\\atom08_legacy_evidence_and_plan_sources_b93d009.zip",
+  "external_archive_sha256": "005e11b1826a7e1d938723070c7a2c27aa650bd6ab2fbe728032b72fe9acc9a1",
+  "worktree_archive_member": "worktree/evidence/p2-07-delivery.json",
+  "git_blob_archive_member": "git-object/evidence/p2-07-delivery.json",
+  "source_commit": "b93d0094003ca93428ab18fd5def6d29119543d0",
+  "source_tree": "8c4b97ac61092c9522a674c67625b88df19b8db7",
+  "git_history_rewritten": false
 }

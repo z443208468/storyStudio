@@ -1,8 +1,16 @@
-# P2-03 Narrative Keyframing adapter
+# Historical evidence pointer
 
-- Source commit/tree: `b857f34b7d371ae82c30e00eb021884c14d08ae9` / `3960b25cb52265933e0fa4897d1319ad6161bf9c`; source archive SHA256 `921B92480300FC2EDF484108E936E01BC97D938A28A17829F90133CE28A9E9C6`.
-- Production patch: `patches/nk/0001-nk-deepseek-adapter.patch` SHA256 `F468219F2A0BC8D9D5205DEF48D245896CD1DF19D84FD9BA5C4DBB141C06963E`. Package manifest SHA256 `249BF34AA2B53701832B2BFC760797E365841A6CB2FEF42440AA1FC9CF62DAE5`; lock SHA256 `8D6EF80B3161DDDA089DF6EB83AB986326370E9F0F97041E516DD478A0C8E9A4`. Rebuildable instance: `runtime/patched/NK/p2-03-b857f34b-f468219f2a0b-8d6ef80b3161`.
-- Node/npm: v24.13.1 / 11.8.0. Clean install and Next production build pass from the indexed patch and lock.
-- All 8 active generation routes use server-only `DEEPSEEK_API_KEY`, the explicit Chat model `deepseek-flash`, fixed DeepSeek host, JSON object mode, and local Zod schemas. The browser no longer sends or persists API keys. Prompts and provider response bodies are not logged. The default `npm run dev` and `npm start` scripts bind to `127.0.0.1`; the HTTP harness launches both servers with ordinary `npm start` and confirms each listener is loopback.
-- `generate-perspective` retains its source template and task input structure; it now labels task order and requires one non-empty result per request. The checked HTTP harness returns 200 for one valid captured response, 502 for count mismatch, 500 for empty/malformed/truncated output, and 400 for invalid input. All 8 routes return 401 with no server key. The harness makes 0 real provider calls; this is offline transport evidence, not live provider acceptance.
-- Dependency audit scope and remaining advisory records: `evidence/nk/security-audit.md`. Offline HTTP evidence: `evidence/nk/http-offline-check.json` (PASS via default `npm start`, 0 real provider calls).
+This inactive P2/P3 record is preserved outside the current source tree. It is not current application state, authorization, a current test result, or a production entry point.
+
+- Original path: `evidence/P2-03_FINDINGS.md`
+- Classification: Historical Narrative Keyframing adapter findings from the P2 project-specific investigation.
+- Original worktree bytes: 1875
+- Original worktree SHA-256: `d02a94c087d963e92a1170acad029f8928d1edbaa57ee5fcc4a51cb3f5d89c86`
+- Original Git blob: `a597de0266e61945ac495ad0608c7bc07cbc70f8`
+- Exact Git blob content SHA-256: `79a27653ab5b85673a8669f46e257d9050dc0ec40718a21db1558190c37c79ed`
+- Archive: `D:\CangqiStudio\StoryStudio_R5_Atom08_20261014\atom08_legacy_evidence_and_plan_sources_b93d009.zip`
+- Archive SHA-256: `005e11b1826a7e1d938723070c7a2c27aa650bd6ab2fbe728032b72fe9acc9a1`
+- Archive member: `worktree/evidence/P2-03_FINDINGS.md` (physical bytes); `git-object/evidence/P2-03_FINDINGS.md` (Git blob bytes)
+- Source commit/tree: `b93d0094003ca93428ab18fd5def6d29119543d0` / `8c4b97ac61092c9522a674c67625b88df19b8db7`
+
+Git history was not rewritten. For access to the preserved original, verify the archive SHA and member SHA against `D:\CangqiStudio\StoryStudio_R5_Atom08_20261014\atom08_legacy_evidence_and_plan_manifest_b93d009.json` before extraction.

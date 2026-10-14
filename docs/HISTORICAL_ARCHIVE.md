@@ -25,9 +25,13 @@ execute or activate old files in the working tree.
 The [per-file source map](../evidence/ATOM08_HISTORY_SOURCE_MAP_20261014.json)
 records original paths/SHA, archive members, original consumer locations,
 replacement SHA and current routes for 24 inactive history indexes and seven
-retired one-off commands. Static imports and executable references were checked
-before retirement. Old commands' outgoing calls/data paths remain in original
-archived source; they are not executed to verify current routing.
+retired one-off commands. Its external physical-file SHA256 is
+`543946cfd2b49ba66353f97324e5e45bf7c092405c96af89aa7c16780e898f70`; its
+Git-normalized blob content SHA256 is
+`75cd0f9a0edc14b0eb7bd576a43a1626282700a50f407903042daa9faf7044e5`.
+Static imports and executable references were checked before retirement. Old
+commands' outgoing calls/data paths remain in original archived source; they are
+not executed to verify current routing.
 
 ## Current consumers and replacements
 
@@ -60,6 +64,30 @@ historical evidence files have not been silently removed. This inventory does
 not claim every historical evidence artifact has been archived or every
 possible dynamic consumer has been executed. The exact candidate and complete
 current08 evidence must receive independent review before closure.
+
+## Additional P2 evidence and former execution plan
+
+After the overall Atom08 inventory, a further source audit classified ten
+top-level P2/P3 evidence files as inactive, project-specific execution records;
+no active application, test, configuration or current R5 document consumes
+them. Their original physical bytes and the exact Git blob bytes are both
+preserved outside the repository:
+
+- Archive: `D:\CangqiStudio\StoryStudio_R5_Atom08_20261014\atom08_legacy_evidence_and_plan_sources_b93d009.zip`.
+- Archive SHA256: `005e11b1826a7e1d938723070c7a2c27aa650bd6ab2fbe728032b72fe9acc9a1`.
+- Manifest: `atom08_legacy_evidence_and_plan_manifest_b93d009.json`.
+- Source: commit `b93d0094003ca93428ab18fd5def6d29119543d0`, tree `8c4b97ac61092c9522a674c67625b88df19b8db7`.
+- The 10 evidence files are now non-executable pointers to that archive. The old
+  `plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md` is a same-path inactive index; its
+  full original is in the archive, while current C01–C15 and R5 M01–M16 retain
+  the public method mapping.
+- The per-file mapping is
+  [`ATOM08_TOPLEVEL_HISTORY_ARCHIVE_MAP_20261014.json`](../evidence/ATOM08_TOPLEVEL_HISTORY_ARCHIVE_MAP_20261014.json).
+
+The four current R5 source-byte records under `evidence/atom06_current_20261013`
+and `evidence/atom07_*_20261013` remain in place. Git history was not rewritten;
+this is a current-HEAD organization change, not a claim that historical Git
+objects have been scrubbed.
 
 ## Separate private-data boundary
 
