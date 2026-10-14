@@ -1,0 +1,18 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6 items
+
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_actual_import_update_audit_handoff_signed_transport_and_cache PASSED [ 16%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_revision_descriptor_rechecks_real_author_decision 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_revision_descriptor_rechecks_real_author_decision PASSED [ 33%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_high_low_revision_forgery_rejected_before_slot_or_fee 
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_high_low_revision_forgery_rejected_before_slot_or_fee PASSED [ 50%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_interrupted_import_preserves_receipt_then_requires_session_for_recovery PASSED [ 66%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_maintenance_pending_and_latest_cache_never_publish_without_session PASSED [ 83%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_import_recovery_rejects_rebound_simulation_cost_snapshot PASSED [100%]
+
+============== 6 passed, 6 subtests passed in 2226.19s (0:37:06) ==============

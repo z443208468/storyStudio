@@ -1,0 +1,47 @@
+{
+  "status": "PUBLIC_SOURCE_PREIMAGE_ONLY",
+  "records": [
+    {
+      "path": "tools/cnw_runner.py",
+      "size": 199413,
+      "sha256": "66cb903a5d9b3dae3d33dd78fb8f14033ca2b44a32f26df203be4ae9225a8acb",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tools\\cnw_runner.py"
+    },
+    {
+      "path": "tools/cnw_live_authorization.py",
+      "size": 22899,
+      "sha256": "72d14da9e3dce6252b3ad1d4229870eb9d739d1c2ccace9635b4bcf269479469",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tools\\cnw_live_authorization.py"
+    },
+    {
+      "path": "tools/nk-live-fetch.cjs",
+      "size": 2440,
+      "sha256": "cb9553fa86e83b72fc5dea9ed65051ed31d046d603466f42441cd6d4cedcf7aa",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tools\\nk-live-fetch.cjs"
+    },
+    {
+      "path": "tools/cnw_w10_nk_live.ps1",
+      "size": 12412,
+      "sha256": "4c2ba1615d3e5e61d521f203ab2a76ee6513896b4855aa103fdc51db7dc12098",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tools\\cnw_w10_nk_live.ps1"
+    },
+    {
+      "path": "tools/p2_06_nk_live_probe.ps1",
+      "size": 7891,
+      "sha256": "f71415dc7803ccf4023b9214bf6acc57ede438f7440a58892db9786bc9080179",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tools\\p2_06_nk_live_probe.ps1"
+    },
+    {
+      "path": "tools/p2_nk_live_probe.ps1",
+      "size": 6970,
+      "sha256": "c5a775249c1196c967cc58dbbb6eac4648aff239ca84d1b46fb3225f3762c044",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tools\\p2_nk_live_probe.ps1"
+    },
+    {
+      "path": "tests/test_cnw_signed_auxiliary_consumers.py",
+      "size": 9186,
+      "sha256": "7eed7a25d9902d90d5feef6bd925ba90b51f01e93f09857de2b47f7e2eb2702d",
+      "external_backup": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\nk_text_boundary_preimages_20261014\\tests\\test_cnw_signed_auxiliary_consumers.py"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6 items
+
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_ready_drift_blocks_generation_preserves_original_reservation 
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_ready_drift_blocks_generation_preserves_original_reservation PASSED [ 16%]
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_signed_owner_lower_cap_reserve_shim_and_unknown 
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_signed_owner_lower_cap_reserve_shim_and_unknown PASSED [ 33%]
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_isolated_shim_byte_change_invalidates_original_signature 
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_isolated_shim_byte_change_invalidates_original_signature PASSED [ 50%]
+tests/test_cnw_signed_auxiliary_consumers.py::SignedAuxiliaryConsumerTests::test_signed_nk_service_shared_account_brief_cache_and_mock_rejection PASSED [ 66%]
+tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering PASSED [ 83%]
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_actual_shim_v1_astral_caps_and_invalid_messages 
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_actual_shim_v1_astral_caps_and_invalid_messages PASSED [100%]
+
+============== 6 passed, 27 subtests passed in 533.60s (0:08:53) ==============

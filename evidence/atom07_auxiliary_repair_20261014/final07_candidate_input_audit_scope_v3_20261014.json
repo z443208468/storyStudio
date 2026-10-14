@@ -1,0 +1,2257 @@
+{
+  "status": "CANDIDATE_INPUT_PROVENANCE_NOT_ACCEPTANCE",
+  "head_before_candidate": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+  "full_chain_source_inputs": [
+    {
+      "path": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+      "sha256": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "prompts/cnw/brief.md",
+      "sha256": "9d7b2654d537fb032d6b9bb8042cd38edb7ee700376878ff4b152a08abd38667",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "prompts/cnw/plot.md",
+      "sha256": "dc8a4fda550b8790359618cbaf01691ff38585ab0b0f4e6d89ef9cd7e7e41cbd",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "prompts/cnw/prose.md",
+      "sha256": "6ccfafa1ee8269fec1e3c0bbebc19f314c8272c1ddce3de85176594a1a03c380",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "prompts/cnw/scene_cards.md",
+      "sha256": "cfb7ba8099e2bc413335ecb83d3f32116ac3bbb7fa83a0c99a170aee5bb0fa45",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tests/test_cnw_early_e2e.py",
+      "sha256": "6d10fec0bb5f9fb11bc292426aa15abbec1dd48af8a44acacd7ab5472cb31b7b",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tests/test_cnw_live_authorization.py",
+      "sha256": "ea80286cd51da44baed6fef539eed8aada85d3dadd12b2bc0334fa4b99fb748c",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tests/test_cnw_signed_critics_consumers.py",
+      "sha256": "b4e728997f0560316b5d947642aaaffce781ad77f08b973c459291574e99d1aa",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tests/test_p2_cost_guard.py",
+      "sha256": "e0042860375719924278ac7c6128df92b1a15e0d77c877a6154ba2aa077d8aba",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "68041f030d742de5043d15efcdd7c99579dedc53735195b4302cf91ee4ad9bb5",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "68041f030d742de5043d15efcdd7c99579dedc53735195b4302cf91ee4ad9bb5",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "580f82262a8459dcee1819b8af66bd0d311ea36a",
+      "git_filtered_oid": "32c2aea764d664e2caec3b66b578008a5061ae24"
+    },
+    {
+      "path": "tools/bootstrap_verification.ps1",
+      "sha256": "47977fc6c244bfa2281e2a9be1219806ffc17c35e90de972ab81aad976ac4cd6",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/build_critics.ps1",
+      "sha256": "94e524ea24d54ccd850240431b5a0250f3fa46d81eefb115c9d310986d1adf25",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "823c93a8b2702be2e552e78cdb1084668f6c3da0ddd4f8cf30c344d50eb9316e",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "823c93a8b2702be2e552e78cdb1084668f6c3da0ddd4f8cf30c344d50eb9316e",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        }
+      },
+      "original_raw_oid": "c9fc11d3b24773233c0f3919a21ca6eccd348e49",
+      "git_filtered_oid": "7f38274d3b64f1df61c7ebfc4d9ada4680268089"
+    },
+    {
+      "path": "tools/build_nk.ps1",
+      "sha256": "1e62c048bf971a33817956b427f7a9d3c886f26f11375aebb9eab38d8f550185",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "03379bbda1061e33d7208f21805b48a4730fd3e360eb857c6397a6ed9eca6fff",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "03379bbda1061e33d7208f21805b48a4730fd3e360eb857c6397a6ed9eca6fff",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        }
+      },
+      "original_raw_oid": "ba9d33e6e5c3f2635df24d7f121450808c590e1f",
+      "git_filtered_oid": "31fb146195629a6a5fc91f211197130c5c64d092"
+    },
+    {
+      "path": "tools/build_policy_snapshots.py",
+      "sha256": "429c9450b8f8e640b38bfd652cadf26786aa5a5420128384c43d57eaae8de3ab",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/capture_cnw_reference.py",
+      "sha256": "f7efe75e9671d9df62fd876876f828b40aec90c1baaf653b23cd93590e30a6e5",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_arc.py",
+      "sha256": "4d2c8ed1efecb9888c61d2e2756fcfbc4f867b7f07da58274eddb6497b429d15",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_contract.py",
+      "sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_critics_adapter.py",
+      "sha256": "02ec549128f8a811b937e9ba3e540f4504051fd431fbec89f9ed1f203a036477",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_export.py",
+      "sha256": "fa71a5bde40e9d278fe64bf8d0eb7dcd6c726dfa184c6e8fe133d24c70e3a1c7",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_generate.py",
+      "sha256": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_import_workflow.py",
+      "sha256": "9aa0ec69ca713e717b91c9b836e47dd829a3d00fd1ed897f58a779549e4b8657",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_input_pack.py",
+      "sha256": "37f7495f100de5f01d90c19698c34f0b7f5f805893418e9e31a4d5db586d6686",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_lint.py",
+      "sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_live_authorization.py",
+      "sha256": "4451cdd42c479b51c84cae1005aef597379e132eaff4db3e94cdeed3b2444f74",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_live_executor.py",
+      "sha256": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_live_provider.py",
+      "sha256": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_maintenance.py",
+      "sha256": "476a1e79a63ecfa89d90bf7ef53dad4b196898ed9bdbc806604d8b1ea1f16bd8",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_native_pack.py",
+      "sha256": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_nk_adapter.py",
+      "sha256": "9355ce5936fea662fa2995be303fea6a9a0f7970be63787a73a434e202745063",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_operation_authorization.py",
+      "sha256": "b021373b8750346c39146d925f76ac9657d3f604616fd6b6506d772c78dfd970",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_operations.py",
+      "sha256": "d4a33809672993fd91dfda22ed51771a792690eb338858e32028018fda171420",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_pack_app.py",
+      "sha256": "f993dd3ba4b388c9f806a83c013b390ca9ad92f6b179f3e4bfd71cb30f9926d6",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_project.py",
+      "sha256": "e883f11a1de780f03e1d69e56609de5c0a25ebe917c3a7203cbb5f7418e09a60",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_recovery.py",
+      "sha256": "41ca90a7c57d75c45d6c4151d9d69daa1209bbade0665b9c861905011bf4913a",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_request_identity.py",
+      "sha256": "667cbbf060de7b8a0971ef0cc13e1b7309cc32e7588dc337bcebb57a403f7490",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_review.py",
+      "sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_revision.py",
+      "sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_roles.py",
+      "sha256": "a873ec33bb89cdf28e5ab82004a7d0b70f81f8759421f98ea9376e47fceaa2ab",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_runner.py",
+      "sha256": "28b0d57d7136af74d989c444f2bf6dac7f44d86d44e40ec27906e95d576f338f",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_sprint.py",
+      "sha256": "e376b77b94f865e54dc7d91a204c96617a91a1b352ba48e9102a1717be370028",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_sprint_live.py",
+      "sha256": "19a2268e221de7c2751c8f1037f6f3885d3ceb53918602def09a73482664dbc4",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_task_requirements.py",
+      "sha256": "4b881590ee074a12f736969793832d40d293af060dba1211353ac5f2fa76278d",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_test_live_transport.py",
+      "sha256": "d87c49e17e7dbe0d6686d0626c086a38463f11b85e6e1f0b356d1e9961a440db",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_w10_critics.py",
+      "sha256": "854eac961e0d6f262a16434482340b1935522359fb9a62f1aac7a13bb35a9f16",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "3acab6405318e091c5d458bfd9f6f4c89a1d34612ec2d6002af7ac40feb11bbd",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "3acab6405318e091c5d458bfd9f6f4c89a1d34612ec2d6002af7ac40feb11bbd",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "6bbb5b5b755ab1a93523fb9e69c71688db0208f8",
+      "git_filtered_oid": "9c5cc2d20511b8a325dbfea8019fcbd0ef37d9cb"
+    },
+    {
+      "path": "tools/cnw_w10_nk_live.ps1",
+      "sha256": "7eb8e49112c75b6986e55fb9bbd484f23b0e2ecdf20102d0139e71ce6796548f",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cnw_w10_policy.py",
+      "sha256": "59f306d3e59f19116dae7c288edec66a30cf9363eb88985e94707608a7425034",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/controller_trust_loader.py",
+      "sha256": "13fcc27be0487b10ca713cf8c08fd2d2b8f815bb8d385eb2c6e36a8d30d15466",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/cost_guard.py",
+      "sha256": "71bfeb7233041014020fbb900f43468b6a8bc80cf9a44c53de69a97f6037fac2",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/critics_bridge.py",
+      "sha256": "faf83fdf5932afaca9c98af72854e0a5746c82a7e73e7c4f8521b95235efc93f",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/critics_offline_check.py",
+      "sha256": "874d91f982b6e93cdfffae8197c893f496daf289a7f7249ca1f905b02bdba5df",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "4d058326da60baa99c70367f2b60ec98d59d42a68f5de652770dee3db33b9824",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "4d058326da60baa99c70367f2b60ec98d59d42a68f5de652770dee3db33b9824",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "b5ed366857798df278797e39c35f44c6f7e9b55c",
+      "git_filtered_oid": "baf1dcbeae39e1fe1e130a45e0ff47fb057b0334"
+    },
+    {
+      "path": "tools/legacy_source_path_map.py",
+      "sha256": "efc9dca9aa92b5ce40ad83fc3cb6eab4e784ef7751d5555c8fb9cfb8ae769092",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/nk-live-fetch.cjs",
+      "sha256": "206653b347536399734dd8fa24342a6ed3ca6e5df16f55bd9420b0ba59447c0c",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/nk-offline-fetch.cjs",
+      "sha256": "091d02571e44088aa692b2231fa546b135e3a501f7ce27a484f49e3f02092be6",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "d587725cb2fdfa869e5a65b186fedc7504a1b2a6fc928858c4ab7f64258ab2a1",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "d587725cb2fdfa869e5a65b186fedc7504a1b2a6fc928858c4ab7f64258ab2a1",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        }
+      },
+      "original_raw_oid": "adf4f1471a9a1a1cb1963f6db470a37103a5d839",
+      "git_filtered_oid": "2c8eac7c86ed5c6ecda3b569d414f755809f0444"
+    },
+    {
+      "path": "tools/nk_http_offline_check.ps1",
+      "sha256": "89876f3be0e1fe48522fc34546948177d6320a0fd3f3c5c2fd8d4ddb33a72b47",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "f1bd9954cf1b5b3846a3bdad99a09135bc3da2124c0d8f26ead7686448570a35",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "f1bd9954cf1b5b3846a3bdad99a09135bc3da2124c0d8f26ead7686448570a35",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        }
+      },
+      "original_raw_oid": "8cb1f7b5442f0cebc4ba2974111adac479b0f333",
+      "git_filtered_oid": "037bea05451524b619c6885e40d297c5bd33fcd8"
+    },
+    {
+      "path": "tools/p2_06_critics_run.py",
+      "sha256": "4a155894bbf387f1bd9df641d949b881074f33f2e81b2aa336edd6b825318706",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/p2_06_draft_run.py",
+      "sha256": "bd16b2d763cb3a6a599da29f49ae89b3956bb337073d0729958673dad66c04c0",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "c4756d606fbef31cabf2c997a491dca85e7c32d76f64ce536d0651778f11905d",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "c4756d606fbef31cabf2c997a491dca85e7c32d76f64ce536d0651778f11905d",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "163c7f8d1dccb7cd350edaaebfda4603b3137479",
+      "git_filtered_oid": "1cd510f02346d0a473b8ebd6cbbc30d32ceff86a"
+    },
+    {
+      "path": "tools/p2_06_nk_live_probe.ps1",
+      "sha256": "ebcbee4b6d3e19f4286c35c6a9ac64a6bbb3da5fbdfa4ae9b7a053ff3ba2e8f8",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/p2_06_revision_run.py",
+      "sha256": "0bac00d04902b926262423ce1bf2decd3ef98ff16ae3b5f9f28af726050cb4a7",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "58bff4a5b94f5e3b7700d36ddd2ce730c5b1bb76bd5708ecad815ff6c1fcc658",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "58bff4a5b94f5e3b7700d36ddd2ce730c5b1bb76bd5708ecad815ff6c1fcc658",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "1f5790f36f666cce7c0d72215d64d8c80b302b1c",
+      "git_filtered_oid": "c38ad4a62b53b243ecec10f234dd36643ae80922"
+    },
+    {
+      "path": "tools/p2_cost_guard.py",
+      "sha256": "228ce468ae71814e58f2ff29c88f786a7b83ff42aa5903360e08f2851d4c1f7e",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/p2_critics_live_probe.ps1",
+      "sha256": "f2989f3b55ac5f52b070b8995415678811e6b935c712db10cd3bab6ec06ee2a4",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "1b3df95e130544eed9bf6c7f91b9989237763a346db29aa33ef73ab870c39491",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "1b3df95e130544eed9bf6c7f91b9989237763a346db29aa33ef73ab870c39491",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true
+        }
+      },
+      "original_raw_oid": "d5ecf3b13e60df4df0e6b645459619f78db203b0",
+      "git_filtered_oid": "c6e1a18f99e3f6fab6a1605454fe190f3bbed6b8"
+    },
+    {
+      "path": "tools/p2_critics_live_probe.py",
+      "sha256": "f57256363077dfa14e591d1b1ad85d0ca07675d4b64fa16065efe8be1e18a300",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "708b7c814b23bb81cc53c5737e10c221a6ecdbd98c4dde79e9a67d9855e52cf3",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "708b7c814b23bb81cc53c5737e10c221a6ecdbd98c4dde79e9a67d9855e52cf3",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "2b40e4c6a1ad653bd65489076be3defe617771c2",
+      "git_filtered_oid": "9d02075c075f41237ff5e1f6dae8515d7b7ee98c"
+    },
+    {
+      "path": "tools/p2_direct_live_probe.py",
+      "sha256": "42eec1fafc88437df0a0558b8057cc155816fa6a65a79b93c823a0b66c70263f",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": false,
+      "comparison_mode": "DECLARED_UNMODIFIED_LEGACY_LF_EQUIVALENCE_NOT_REEXECUTION",
+      "legacy_baselines": {
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "git_blob_sha256": "14b397467fa44e4e54f98ca133acdadfdbe6bb7e27fd49d7b3f86d072f865e65",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        },
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "git_blob_sha256": "14b397467fa44e4e54f98ca133acdadfdbe6bb7e27fd49d7b3f86d072f865e65",
+          "same_exact_bytes": false,
+          "same_universal_newline_bytes": true,
+          "same_python_ast": true
+        }
+      },
+      "original_raw_oid": "d9dfa4534ed7d4a6e58118c202831c0ffe259eeb",
+      "git_filtered_oid": "2798d3376e450af0cdee7b8416fe78281fd7f800"
+    },
+    {
+      "path": "tools/p2_nk_live_probe.ps1",
+      "sha256": "74b3963a5953314ee46e0ee992f34699e87f5d901d11c814e877e0c695283b93",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/policy_snapshots.py",
+      "sha256": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/project_paths.py",
+      "sha256": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/project_transactions.py",
+      "sha256": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/studio.ps1",
+      "sha256": "aeedadfea44408e07afa4d664c629bf7d9492e3a0959b2eff64e46962efcf902",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    },
+    {
+      "path": "tools/studio_health.py",
+      "sha256": "ae66d17ee9b3f59070a331d25fc33816e9693313478ca0440114b3c066665943",
+      "equals_full_chain_source": true,
+      "physical_equals_git_filter": true,
+      "comparison_mode": "RAW_BYTE_IDENTICAL_TO_GIT"
+    }
+  ],
+  "actual_signed_sources": [
+    {
+      "path": "tools/cnw_live_authorization.py",
+      "sha256": "4451cdd42c479b51c84cae1005aef597379e132eaff4db3e94cdeed3b2444f74",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_runner.py",
+      "sha256": "28b0d57d7136af74d989c444f2bf6dac7f44d86d44e40ec27906e95d576f338f",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_recovery.py",
+      "sha256": "41ca90a7c57d75c45d6c4151d9d69daa1209bbade0665b9c861905011bf4913a",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_roles.py",
+      "sha256": "a873ec33bb89cdf28e5ab82004a7d0b70f81f8759421f98ea9376e47fceaa2ab",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_review.py",
+      "sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_contract.py",
+      "sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_project.py",
+      "sha256": "e883f11a1de780f03e1d69e56609de5c0a25ebe917c3a7203cbb5f7418e09a60",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_input_pack.py",
+      "sha256": "37f7495f100de5f01d90c19698c34f0b7f5f805893418e9e31a4d5db586d6686",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_native_pack.py",
+      "sha256": "f6aa0b467786244d8abce67a599da40a66c0cb100d4d8ea2a84c2df360b644fe",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_task_requirements.py",
+      "sha256": "4b881590ee074a12f736969793832d40d293af060dba1211353ac5f2fa76278d",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_nk_adapter.py",
+      "sha256": "9355ce5936fea662fa2995be303fea6a9a0f7970be63787a73a434e202745063",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_critics_adapter.py",
+      "sha256": "02ec549128f8a811b937e9ba3e540f4504051fd431fbec89f9ed1f203a036477",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_live_provider.py",
+      "sha256": "08f0acdaf90d928185276d78361ad4a6d24ee34b38d1baa272da8421ccd0787a",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_live_executor.py",
+      "sha256": "ce4e476b0ef5722766c0bbe1ef26e6e70bbab5a91c5153137233c17450e7cd63",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_w10_policy.py",
+      "sha256": "59f306d3e59f19116dae7c288edec66a30cf9363eb88985e94707608a7425034",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/controller_trust_loader.py",
+      "sha256": "13fcc27be0487b10ca713cf8c08fd2d2b8f815bb8d385eb2c6e36a8d30d15466",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cost_guard.py",
+      "sha256": "71bfeb7233041014020fbb900f43468b6a8bc80cf9a44c53de69a97f6037fac2",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/p2_cost_guard.py",
+      "sha256": "228ce468ae71814e58f2ff29c88f786a7b83ff42aa5903360e08f2851d4c1f7e",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_pack_app.py",
+      "sha256": "f993dd3ba4b388c9f806a83c013b390ca9ad92f6b179f3e4bfd71cb30f9926d6",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_request_identity.py",
+      "sha256": "667cbbf060de7b8a0971ef0cc13e1b7309cc32e7588dc337bcebb57a403f7490",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_test_live_transport.py",
+      "sha256": "d87c49e17e7dbe0d6686d0626c086a38463f11b85e6e1f0b356d1e9961a440db",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/policy_snapshots.py",
+      "sha256": "659e0c1ff769b1322152c6ce31399f684729166bc6ee19bc88e9999a88f4720f",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_generate.py",
+      "sha256": "a93bb5069b8b73aa18ebbfec05e8b27a4687938f2e823db9575ce17165dc99b0",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_revision.py",
+      "sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_export.py",
+      "sha256": "fa71a5bde40e9d278fe64bf8d0eb7dcd6c726dfa184c6e8fe133d24c70e3a1c7",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_operation_authorization.py",
+      "sha256": "b021373b8750346c39146d925f76ac9657d3f604616fd6b6506d772c78dfd970",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_import_workflow.py",
+      "sha256": "9aa0ec69ca713e717b91c9b836e47dd829a3d00fd1ed897f58a779549e4b8657",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_maintenance.py",
+      "sha256": "476a1e79a63ecfa89d90bf7ef53dad4b196898ed9bdbc806604d8b1ea1f16bd8",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/cnw_operations.py",
+      "sha256": "d4a33809672993fd91dfda22ed51771a792690eb338858e32028018fda171420",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/p2_06_critics_run.py",
+      "sha256": "4a155894bbf387f1bd9df641d949b881074f33f2e81b2aa336edd6b825318706",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/critics_bridge.py",
+      "sha256": "faf83fdf5932afaca9c98af72854e0a5746c82a7e73e7c4f8521b95235efc93f",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/project_paths.py",
+      "sha256": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/project_transactions.py",
+      "sha256": "7a62ac1729df168cb2fc8e8922f2f1c3c0e354872c5019e0849c1b9ee259745b",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/studio.ps1",
+      "sha256": "aeedadfea44408e07afa4d664c629bf7d9492e3a0959b2eff64e46962efcf902",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "tools/nk-live-fetch.cjs",
+      "sha256": "206653b347536399734dd8fa24342a6ed3ca6e5df16f55bd9420b0ba59447c0c",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "prompts/cnw/plot.md",
+      "sha256": "dc8a4fda550b8790359618cbaf01691ff38585ab0b0f4e6d89ef9cd7e7e41cbd",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "prompts/cnw/scene_cards.md",
+      "sha256": "cfb7ba8099e2bc413335ecb83d3f32116ac3bbb7fa83a0c99a170aee5bb0fa45",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "prompts/cnw/brief.md",
+      "sha256": "9d7b2654d537fb032d6b9bb8042cd38edb7ee700376878ff4b152a08abd38667",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "prompts/cnw/prose.md",
+      "sha256": "6ccfafa1ee8269fec1e3c0bbebc19f314c8272c1ddce3de85176594a1a03c380",
+      "physical_equals_git_filter": true
+    },
+    {
+      "path": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+      "sha256": "408864defbe39c7ccd6a113c53614378688b18fd2eb48ac0a58ed6d246b6a247",
+      "physical_equals_git_filter": true
+    }
+  ],
+  "legacy_filter_scope_sha256": "d0c959d9e6f5658521c5cd0341d9741bd6553f1fa1a778246668401220b958b1",
+  "comparison_policy": "All 67 current physical SHA match terminal test; actual signed/modified sources are byte exact; 12 unchanged legacy raw differences are explicit LF equivalence, not new execution.",
+  "raw_evidence_index": [
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/auxiliary_mock_receipt_corrected.check.json",
+      "check_sha256": "94c3e1468681c7e7a1a0484b448df237d833f1e1453f2ba012e4ea107533c9f6",
+      "raw_sha256": "9f07c88f34a60db3931962057eba260ef485f4e2b629ed9f3dbe89bbecc23eb0",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/auxiliary_mock_receipt_regression.check.json",
+      "check_sha256": "f3b4bb31dd8528cdfe0ba77fd9f021b47625c1f085212d1e1b32a5a6b1ee47e8",
+      "raw_sha256": "731aa10d7c41b04f66a4ac13eaab81077daf5b9f97645ce769b137a28b622e37",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/consolidated_final_native_full_chain_after_preflight.check.json",
+      "check_sha256": "8afcea3b76564d5136e2cf6daea8be1cb616b78b027e5c47de6449231ed3481b",
+      "raw_sha256": "7446516ae0878992e4fab51602042bf6b5a8ee7d838707e9c1d22f9c1cd2ab59",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/consolidated_final_native_full_chain_single_slot.check.json",
+      "check_sha256": "d72b306a1719b0074c3deb611f3039b5992e2572ea132e6c9f32c4f269ced958",
+      "raw_sha256": "6704911715609e9c71e1481983d4c9ae5578dd859a86999171706e32c5ae4ea8",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.check.json",
+      "check_sha256": "465b8180e328610417993ffcc09da51857997d95fb9b57a3254ebb970d0ebd9b",
+      "raw_sha256": "3222b35428a0d47f0057e98281c1cc9031c9f11dc1da8abba26fc9628971c89d",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.check.json",
+      "check_sha256": "ac9f38d33035a98d871337b3e87e9384e971a15299015e47feb64f7984b6dcba",
+      "raw_sha256": "e3b351fe518f9038691db1dd09be783b1f977c9ab7b0f3b62542ec4e8b89210b",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/critics_mock_boundary_fast_regression.check.json",
+      "check_sha256": "fe77646daf4b4d33922450b0dcdf038e65e28f8ec6f19eef5b6a0272acc55d39",
+      "raw_sha256": "c8c66cdbee95aa924fb8d7bf08ea23b08d2bee36de52e2c4170cb3503cc9853f",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/final_operation_consumers_batch.check.json",
+      "check_sha256": "6aa42973730d011b759fce89927f85428490824de58f8b15dc8e388eda26a029",
+      "raw_sha256": "ead5a4675026986a62fa2087a16eee1d51c71221bb6d3ef1c261cd6064044526",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.check.json",
+      "check_sha256": "ad90917ef86a2ddd80e7f6fe78819c3056f849fe620d9e0aab93d7980bc2d173",
+      "raw_sha256": "700b2bdecaa9b21bc4e467c53adfbeda847e97ff9ab438ecea8a68eaa6ac1fe6",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/legacy_native_export_compat_final.check.json",
+      "check_sha256": "3ae1ed50e9ec03b76d7626bebaeb6a069efefeb842bb41cb1afc87470f2b620d",
+      "raw_sha256": "2f5faa367d1c25b425a97536bcbd3829c4846e3497a2884a38a8dfe538f6fbbe",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/lf_final_identity_revision_consumers.check.json",
+      "check_sha256": "dc038402b43dd1356e32cc22b10e95de9a75d321622a7df9758ce754eb9aae20",
+      "raw_sha256": "687521c632bec2bd25c84d2f88da21b45fc55728c9f40eff738e18d872ec827d",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/lf_final_native_full_chain_finite_grant.check.json",
+      "check_sha256": "ca2b6e2a69729542611cfeb3e3a29a064982565b7181ac5155cd3d486b2e916c",
+      "raw_sha256": "23adf3cdb67b57a6569bd4968c536a302c4a8a13d5816ef8dd4b2a2af9ad938b",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_actual_input_limit_negative.check.json",
+      "check_sha256": "85afc2523a011e099c9f09f3a1d3eb3f243bad58f021a2394363c80c921f358b",
+      "raw_sha256": "1d5f302195b475ce8f1ea9973c428a1fd8dff94cdb818a7d78d7b48588b9d7ff",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_batch_direct_read_compat.check.json",
+      "check_sha256": "929ec404cb1517b076b3188fd8b0815a02425e94e9aea804a6f8d6298840388f",
+      "raw_sha256": "f56cb3f4394ecc36dca267b4618919a241b83545d0f5ec319c367d686d47eaab",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_batch_direct_read_compat_fixed.check.json",
+      "check_sha256": "4677ba071f833ff0a6e8da8d3770ffbf44630b6054639973e3a994cd747437e8",
+      "raw_sha256": "76559711b2c23727c71f8c040147c43d5f05d072d690dfcc1b1e61287c718f32",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_batch_legacy_smoke.check.json",
+      "check_sha256": "80887b8b5e638e875d255622a0ca53ae93388d6cae2cfbbd6108f4249a6457eb",
+      "raw_sha256": "7af1b676625b8840f1e1dec696efed1775cd95611bbb1e03e40b2c692ead0306",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_action_guard_fixed.check.json",
+      "check_sha256": "15d7790620ca420918e0361a190eaa50b54e5fffeb2c2f90f4f0e303878679bc",
+      "raw_sha256": "b0ca73b499723abf09386d67d069dea7fd861d4b9d6e72f0b0222340a861c5bc",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_batch_reader.check.json",
+      "check_sha256": "0605041e66c3b40c8e767def184e6bd5649576180df19884de6285ceddcf4c09",
+      "raw_sha256": "8be5eee168aafd3d3471116425a48596076689d83fa375b4e537d3fe4b57a8ac",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_dedup_final.check.json",
+      "check_sha256": "1229d375409558c2833e77433ede89f1534e4e64fbc9916b6e2023be1974cfb2",
+      "raw_sha256": "3415db3d50186ee4e410fb8a7d763a096d6479228b93c3b8147f013c367a0d4c",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/native_record_enumeration_regression.check.json",
+      "check_sha256": "54b9866da9c17242f861236e32b4183fec92fb0f43538d51b62d3979a6e620f8",
+      "raw_sha256": "d0ffe49a2257b95c6f2cb51dadeec0b88378112f92602773bd17494b65e57e7a",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.check.json",
+      "check_sha256": "b953b46349db856068f06ac7203fd6d681c450f8941d954775cee9742bfc57bc",
+      "raw_sha256": "ea55ad9f6eb600327dfb5bcf77a8f94164f0c1759e0337ccc03ed538bb00f3ea",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.check.json",
+      "check_sha256": "21e24b239b4c987e6bb4025aa1e16cef195e9b75f04670b810620067935511b0",
+      "raw_sha256": "0089442fc4fb3e5cdc617264f661c5379af531c15630f1150631e568888b2b1a",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_native_full_chain.check.json",
+      "check_sha256": "13d3edb28fceb195c3e2bbedafb5f882764ecbde79c6ead498affdc8eceb43f9",
+      "raw_sha256": "753805070f9fb8a505d8f79baa5a6a8c266376e5f1175a9897f7ead2003a5b30",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/old_account_only_admission_refusal.check.json",
+      "check_sha256": "0e3aca4a72cdbd2536d00e8c249aad26d4d3b95716c3350ca1fc85db29dfd6a6",
+      "raw_sha256": "fd27386c72ea68a008db4c818aa2baeb70cda4dde51ca9b56a6417f88b31ef45",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/shared_fanout_capacity_regression.check.json",
+      "check_sha256": "b6ea14151c63eeca1f266667c7e2f2c3df6ccc70c938ab90ce631a75458de8fc",
+      "raw_sha256": "d870aa113faab0d3401b313508c3a8dd6383513618cd5e38ac74bdec5f4a03ae",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_native_full_chain_shared_fanout_fixed.check.json",
+      "check_sha256": "94a3905e77e375a12655d7b508555ebf3a0ed29e433d43ce57c3cbe2fd117936",
+      "raw_sha256": "f4208c0029ce69bb1d772f9281b3545cd1afa1a81b6b5943f976cb0d19c52846",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_native_shared_account_unknown.check.json",
+      "check_sha256": "b2e9a0f08ec9cf4649088ccc868e15a35f922263d63bbe99a58fbafad46437a6",
+      "raw_sha256": "4767b69d5b93112fa1f8c6d45301a8d170b33e7c6714aa5437210436bc0b5387",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_consumer_first.check.json",
+      "check_sha256": "0d8e3dfee988a38f4eacac9e495679b75220224f9e0ffe9dd0cbe52840232e7c",
+      "raw_sha256": "15f646f7535b7f652c6385e6e048a66fddb8771234d7a80380d7be4c92076a85",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_markers_recovery_fixed.check.json",
+      "check_sha256": "116effc7f91970675f5cfd856960c4f3f21f34184e14a279504f96343cd41827",
+      "raw_sha256": "963fe1832cb512246b12d65e06c59728cd1d7097ed204fd095bb192d6b5f3fb3",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_protocol_fixed.check.json",
+      "check_sha256": "96a84c4bff6f661a104164faeb98a2ed4506178189b71ecd2a00208e0f429c0e",
+      "raw_sha256": "0d2ddcfae68f3f0b16ff155248c36493a2d25153a638c5ca0d2b83028443019e",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_first.check.json",
+      "check_sha256": "25a5149676a7774d1456bb3121949edb8bdc9d8d60f833620aae40bb5e8d8bcf",
+      "raw_sha256": "5b69927e664dd46198bc7cec4a03c45098f59b3a2ee3637fa76e329ac0c66bd3",
+      "raw_matches_record": true,
+      "exit_code": 4294967295,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_launcher_fixed.check.json",
+      "check_sha256": "d2873d497952b2db0bdb86510e166dd1c7d2be6da58584bafc58d2bac80614ec",
+      "raw_sha256": "5ddfad3e14e670c3adaee81c8b0e1b09047b5d8c0029bcbfad1504316477f57d",
+      "raw_matches_record": true,
+      "exit_code": 0,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    },
+    {
+      "check_path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_scoped.check.json",
+      "check_sha256": "ea4bb3b8a9e84810168d327a8d023ccfc76450a1d8d107d27ab606576781c699",
+      "raw_sha256": "2503a2d47789cfd91fbed0595eae83be91d2b53d47a126dc5562f4ef0de5f10e",
+      "raw_matches_record": true,
+      "exit_code": 1,
+      "source_unchanged_during_run": true,
+      "interpretation": "PROVENANCE_ONLY_EACH_RESULT_RETAINS_ORIGINAL_SCOPE"
+    }
+  ],
+  "definition_comparisons": [
+    {
+      "path": "tools/cnw_roles.py",
+      "current_sha256": "a873ec33bb89cdf28e5ab82004a7d0b70f81f8759421f98ea9376e47fceaa2ab",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "33d8167751329536c53a1064422c55466cf98df1f57ce5609324b1f942e5da87",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_hash_inputs",
+            "_pinned_upstream",
+            "_project_language_instruction",
+            "_read_project_file",
+            "_validate_legacy_markers",
+            "_validate_sidecar_budget",
+            "brief_voice_characters",
+            "brief_voice_samples",
+            "build_role_packet",
+            "plot_structure",
+            "read_actual_texts",
+            "read_production_preparation",
+            "relevant_voice_samples",
+            "resolve_arc",
+            "resolve_author_reads",
+            "role_metadata",
+            "role_receipt",
+            "sha256_bytes",
+            "sha256_file",
+            "validate_role_output",
+            "verify_stage_chain"
+          ],
+          "changed_definitions": [
+            "build_author_role_messages",
+            "build_prose_input_view",
+            "creative_assignment"
+          ],
+          "added_definitions": [
+            "_advisory_length",
+            "_length_guidance"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "a873ec33bb89cdf28e5ab82004a7d0b70f81f8759421f98ea9376e47fceaa2ab",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_advisory_length",
+            "_hash_inputs",
+            "_length_guidance",
+            "_pinned_upstream",
+            "_project_language_instruction",
+            "_read_project_file",
+            "_validate_legacy_markers",
+            "_validate_sidecar_budget",
+            "brief_voice_characters",
+            "brief_voice_samples",
+            "build_author_role_messages",
+            "build_prose_input_view",
+            "build_role_packet",
+            "creative_assignment",
+            "plot_structure",
+            "read_actual_texts",
+            "read_production_preparation",
+            "relevant_voice_samples",
+            "resolve_arc",
+            "resolve_author_reads",
+            "role_metadata",
+            "role_receipt",
+            "sha256_bytes",
+            "sha256_file",
+            "validate_role_output",
+            "verify_stage_chain"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_review.py",
+      "current_sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "build_completeness_input",
+            "build_verifier_packet",
+            "completeness_packet",
+            "digest",
+            "dry_run_cost_reservation",
+            "lens_packet",
+            "main",
+            "mock_lens",
+            "review_offline",
+            "tally_verifiers",
+            "verifier_packets"
+          ],
+          "changed_definitions": [
+            "build_lens_input",
+            "completeness_messages",
+            "completeness_sources",
+            "lens_messages",
+            "verifier_messages",
+            "verifier_sources"
+          ],
+          "added_definitions": [
+            "_length_policy_instruction"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_length_policy_instruction",
+            "build_completeness_input",
+            "build_lens_input",
+            "build_verifier_packet",
+            "completeness_messages",
+            "completeness_packet",
+            "completeness_sources",
+            "digest",
+            "dry_run_cost_reservation",
+            "lens_messages",
+            "lens_packet",
+            "main",
+            "mock_lens",
+            "review_offline",
+            "tally_verifiers",
+            "verifier_messages",
+            "verifier_packets",
+            "verifier_sources"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_lint.py",
+      "current_sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "lint",
+            "main",
+            "project_rules"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "lint",
+            "main",
+            "project_rules"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_contract.py",
+      "current_sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "378195c7455a70ffc1a5b4714c7957b1983c6a75b324d900df16e8939ea5eb7f",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "ContractError",
+            "_safe_source_file",
+            "_sha256",
+            "_strict_json_object",
+            "_validate_story_anchors",
+            "assert_output_within_root",
+            "check_required_beats",
+            "check_required_fields",
+            "count_visible_chars",
+            "load_contract",
+            "resolve_json_pointer",
+            "validate_episode_budget",
+            "validate_scene_budget",
+            "validate_source_identity",
+            "validate_v2_source_identity",
+            "validate_work_unit_policy",
+            "visible_char_metrics"
+          ],
+          "changed_definitions": [
+            "validate_output_length",
+            "validate_work_unit"
+          ],
+          "added_definitions": [
+            "prose_output_cap",
+            "uses_advisory_length"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "ContractError",
+            "_safe_source_file",
+            "_sha256",
+            "_strict_json_object",
+            "_validate_story_anchors",
+            "assert_output_within_root",
+            "check_required_beats",
+            "check_required_fields",
+            "count_visible_chars",
+            "load_contract",
+            "prose_output_cap",
+            "resolve_json_pointer",
+            "uses_advisory_length",
+            "validate_episode_budget",
+            "validate_output_length",
+            "validate_scene_budget",
+            "validate_source_identity",
+            "validate_v2_source_identity",
+            "validate_work_unit",
+            "validate_work_unit_policy",
+            "visible_char_metrics"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_export.py",
+      "current_sha256": "fa71a5bde40e9d278fe64bf8d0eb7dcd6c726dfa184c6e8fe133d24c70e3a1c7",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "cfde506cbda8287bc36570705cd8318dc100bc1b2e8aae959de1b4d9e5e6aaba",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_html_escape",
+            "_new_export_file",
+            "_publish_job_export",
+            "_read"
+          ],
+          "changed_definitions": [
+            "export_reading_package"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "fa71a5bde40e9d278fe64bf8d0eb7dcd6c726dfa184c6e8fe133d24c70e3a1c7",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_html_escape",
+            "_new_export_file",
+            "_publish_job_export",
+            "_read",
+            "export_reading_package"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_revision.py",
+      "current_sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_durable_replace",
+            "_promote_revision_unlocked",
+            "_promotion_transaction_id",
+            "_recover_promotion_transaction",
+            "build_rereview_packets",
+            "build_revision_plan",
+            "build_revision_record",
+            "main",
+            "plan_persisted_continuation",
+            "promote_revision",
+            "validate_episode_assembly"
+          ],
+          "changed_definitions": [
+            "validate_revision"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_durable_replace",
+            "_promote_revision_unlocked",
+            "_promotion_transaction_id",
+            "_recover_promotion_transaction",
+            "build_rereview_packets",
+            "build_revision_plan",
+            "build_revision_record",
+            "main",
+            "plan_persisted_continuation",
+            "promote_revision",
+            "validate_episode_assembly",
+            "validate_revision"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_import_workflow.py",
+      "current_sha256": "9aa0ec69ca713e717b91c9b836e47dd829a3d00fd1ed897f58a779549e4b8657",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "c7d822a83b1e80d9f79134c863d0f8097c95b80269f4fc7f8e47af5bc9616510",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_apply",
+            "_confirmed_canon_sources",
+            "_document_allowed",
+            "_internal_inbox_metadata",
+            "_inventory",
+            "_json"
+          ],
+          "changed_definitions": [
+            "_reconsume_bookkeeping_response",
+            "_record_classification",
+            "_run_import",
+            "_verify_cached_operation",
+            "run_import"
+          ],
+          "added_definitions": [
+            "_describe_import"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "9aa0ec69ca713e717b91c9b836e47dd829a3d00fd1ed897f58a779549e4b8657",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_apply",
+            "_confirmed_canon_sources",
+            "_describe_import",
+            "_document_allowed",
+            "_internal_inbox_metadata",
+            "_inventory",
+            "_json",
+            "_reconsume_bookkeeping_response",
+            "_record_classification",
+            "_run_import",
+            "_verify_cached_operation",
+            "run_import"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_runner.py",
+      "current_sha256": "28b0d57d7136af74d989c444f2bf6dac7f44d86d44e40ec27906e95d576f338f",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "d53596b8ffe9a8c13de6b2b8aa9711a231aebbe44d6a37ea6bf8d6f10343e5a0",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_OperationSimulationSession",
+            "_assert_support_components_available",
+            "_author_messages",
+            "_confirmed_findings",
+            "_contract_for",
+            "_cost_account",
+            "_dispatch_cnw_stage",
+            "_estimate_input_tokens",
+            "_execute_cnw_stage_locked",
+            "_held_paths",
+            "_isolated_operation_transport",
+            "_mark_stage_locked",
+            "_next_stage",
+            "_offline_test_fixture_context",
+            "_operation_owner",
+            "_operation_project_registration",
+            "_operation_simulation_call",
+            "_operation_simulation_request_binding",
+            "_p2_guard",
+            "_parse_json_content",
+            "_persist_stage",
+            "_planning_stage",
+            "_project_relative",
+            "_publish_lens_feedback",
+            "_read_stage_text",
+            "_record_hook",
+            "_resolve_legacy_frozen_path",
+            "_role_meta",
+            "_role_sources",
+            "_run_dir_base",
+            "_sanitize",
+            "_single_verifier_vote",
+            "_source_root",
+            "_step_locked",
+            "_support_integration_mode",
+            "_validate_finding_identities",
+            "_validate_review_call_coverage",
+            "_validate_role",
+            "_verify_cost_receipt",
+            "_verify_operation_simulated_receipt",
+            "_write_run_candidate_file",
+            "bind_accepted_review_outputs",
+            "build_plot_request",
+            "cached_receipts",
+            "execute_cnw_stage",
+            "execute_completeness",
+            "execute_five_lenses",
+            "execute_lint",
+            "execute_plot",
+            "execute_re_review",
+            "execute_scene_cards",
+            "execute_three_verifiers",
+            "execute_writing_brief",
+            "export_run",
+            "invalidate_run",
+            "legacy_recovery_plan",
+            "legacy_source_preflight",
+            "literary_source_freeze",
+            "load_state",
+            "locked_run",
+            "main",
+            "make_parser",
+            "mark_stage",
+            "normalize_stage",
+            "now",
+            "promote_run",
+            "reactivate_receipt",
+            "recovery_plan",
+            "register_editorial_candidate",
+            "resume_run",
+            "review_run",
+            "run_path",
+            "run_remaining_stages",
+            "runs_root_for",
+            "safe_run_id",
+            "safe_run_input",
+            "save_state",
+            "sha",
+            "show_run",
+            "sprint_run",
+            "stage_predecessors",
+            "stage_prompt_hash",
+            "step",
+            "validate_literary_source_freeze",
+            "verify_history"
+          ],
+          "changed_definitions": [
+            "_cnw_live_call_in_slot",
+            "_critics_excerpt",
+            "_critics_hook",
+            "_invoke_nk_service",
+            "_invoke_nk_service_in_slot",
+            "_nk_pov",
+            "_operation_transport_identity",
+            "_parallel_provider_calls",
+            "_receipt_content",
+            "_require_generic_provider_authorization",
+            "_require_project_operation_authorization",
+            "_review_sources",
+            "_validate_raw_live_response",
+            "cnw_live_call",
+            "execute_prose",
+            "execute_refine",
+            "produce",
+            "verify_live"
+          ],
+          "added_definitions": [
+            "_critics_excerpt_selection",
+            "_nk_input_token_cap",
+            "_verify_current_nk_payload",
+            "_verify_nk_send_authorization",
+            "prose_attempt_messages",
+            "refine_attempt_messages",
+            "strip_prose_envelope"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "1fd16c23b18c476e31dddd38ba06112ef878ef18d845c05f7a8f7ef0015cdfcd",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_OperationSimulationSession",
+            "_assert_support_components_available",
+            "_author_messages",
+            "_cnw_live_call_in_slot",
+            "_confirmed_findings",
+            "_contract_for",
+            "_cost_account",
+            "_dispatch_cnw_stage",
+            "_estimate_input_tokens",
+            "_execute_cnw_stage_locked",
+            "_held_paths",
+            "_isolated_operation_transport",
+            "_mark_stage_locked",
+            "_next_stage",
+            "_offline_test_fixture_context",
+            "_operation_owner",
+            "_operation_project_registration",
+            "_operation_simulation_call",
+            "_operation_simulation_request_binding",
+            "_operation_transport_identity",
+            "_p2_guard",
+            "_parse_json_content",
+            "_persist_stage",
+            "_planning_stage",
+            "_project_relative",
+            "_publish_lens_feedback",
+            "_read_stage_text",
+            "_receipt_content",
+            "_record_hook",
+            "_require_project_operation_authorization",
+            "_resolve_legacy_frozen_path",
+            "_review_sources",
+            "_role_meta",
+            "_role_sources",
+            "_run_dir_base",
+            "_sanitize",
+            "_single_verifier_vote",
+            "_source_root",
+            "_step_locked",
+            "_support_integration_mode",
+            "_validate_finding_identities",
+            "_validate_raw_live_response",
+            "_validate_review_call_coverage",
+            "_validate_role",
+            "_verify_cost_receipt",
+            "_verify_operation_simulated_receipt",
+            "_write_run_candidate_file",
+            "bind_accepted_review_outputs",
+            "build_plot_request",
+            "cached_receipts",
+            "cnw_live_call",
+            "execute_cnw_stage",
+            "execute_completeness",
+            "execute_five_lenses",
+            "execute_lint",
+            "execute_plot",
+            "execute_prose",
+            "execute_re_review",
+            "execute_refine",
+            "execute_scene_cards",
+            "execute_three_verifiers",
+            "execute_writing_brief",
+            "export_run",
+            "invalidate_run",
+            "legacy_recovery_plan",
+            "legacy_source_preflight",
+            "literary_source_freeze",
+            "load_state",
+            "locked_run",
+            "main",
+            "make_parser",
+            "mark_stage",
+            "normalize_stage",
+            "now",
+            "produce",
+            "promote_run",
+            "prose_attempt_messages",
+            "reactivate_receipt",
+            "recovery_plan",
+            "refine_attempt_messages",
+            "register_editorial_candidate",
+            "resume_run",
+            "review_run",
+            "run_path",
+            "run_remaining_stages",
+            "runs_root_for",
+            "safe_run_id",
+            "safe_run_input",
+            "save_state",
+            "sha",
+            "show_run",
+            "sprint_run",
+            "stage_predecessors",
+            "stage_prompt_hash",
+            "step",
+            "strip_prose_envelope",
+            "validate_literary_source_freeze",
+            "verify_history"
+          ],
+          "changed_definitions": [
+            "_critics_excerpt",
+            "_critics_hook",
+            "_invoke_nk_service",
+            "_invoke_nk_service_in_slot",
+            "_nk_pov",
+            "_parallel_provider_calls",
+            "_require_generic_provider_authorization",
+            "verify_live"
+          ],
+          "added_definitions": [
+            "_critics_excerpt_selection",
+            "_nk_input_token_cap",
+            "_verify_current_nk_payload",
+            "_verify_nk_send_authorization"
+          ],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_recovery.py",
+      "current_sha256": "41ca90a7c57d75c45d6c4151d9d69daa1209bbade0665b9c861905011bf4913a",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_code",
+            "_digest",
+            "_modules",
+            "archive_stage",
+            "execute_checked",
+            "plan_recovery",
+            "refresh_references",
+            "stage_identity",
+            "support_input_snapshot",
+            "verify_contract"
+          ],
+          "changed_definitions": [
+            "verify_evidence"
+          ],
+          "added_definitions": [
+            "iter_native_support_records"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_code",
+            "_digest",
+            "_modules",
+            "archive_stage",
+            "execute_checked",
+            "plan_recovery",
+            "refresh_references",
+            "stage_identity",
+            "support_input_snapshot",
+            "verify_contract"
+          ],
+          "changed_definitions": [
+            "verify_evidence"
+          ],
+          "added_definitions": [
+            "iter_native_support_records"
+          ],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_request_identity.py",
+      "current_sha256": "667cbbf060de7b8a0971ef0cc13e1b7309cc32e7588dc337bcebb57a403f7490",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "status": "ABSENT_IN_EXACT_TREE"
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_call",
+            "_content",
+            "_prior",
+            "_prose",
+            "_rereview",
+            "_revision",
+            "expected_requests",
+            "nk_response_from_receipt"
+          ],
+          "changed_definitions": [
+            "verified_nk_reflection"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_project.py",
+      "current_sha256": "e883f11a1de780f03e1d69e56609de5c0a25ebe917c3a7203cbb5f7418e09a60",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "fea6f6459bc8fc24caf527d6ffe54e4efb85f35d534fb36de35844f2fc63be66",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_append_log",
+            "_compute_contract_preflight",
+            "_import_source_unlocked",
+            "_incremental_update_unlocked",
+            "_initialize_project_root",
+            "_json_bytes",
+            "_json_scalars",
+            "_registered_project_identity",
+            "_reject_duplicate_json_keys",
+            "_required_text",
+            "_run_import_unlocked",
+            "_source_manifest_revision",
+            "_write_contract_draft_unlocked",
+            "_write_immutable_snapshot",
+            "build_contract_preflight",
+            "build_run_contract_preflight",
+            "build_source_bound_contract",
+            "canon_audit",
+            "handoff",
+            "import_source",
+            "incremental_update",
+            "init_project",
+            "init_registered_project",
+            "list_source_revisions",
+            "main",
+            "project_directory",
+            "semantic_import",
+            "sha",
+            "standard_operation",
+            "support_workflow_prompt",
+            "verify_contract_preflight",
+            "write_contract_draft"
+          ],
+          "changed_definitions": [
+            "build_work_contract_v2"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "e883f11a1de780f03e1d69e56609de5c0a25ebe917c3a7203cbb5f7418e09a60",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_append_log",
+            "_compute_contract_preflight",
+            "_import_source_unlocked",
+            "_incremental_update_unlocked",
+            "_initialize_project_root",
+            "_json_bytes",
+            "_json_scalars",
+            "_registered_project_identity",
+            "_reject_duplicate_json_keys",
+            "_required_text",
+            "_run_import_unlocked",
+            "_source_manifest_revision",
+            "_write_contract_draft_unlocked",
+            "_write_immutable_snapshot",
+            "build_contract_preflight",
+            "build_run_contract_preflight",
+            "build_source_bound_contract",
+            "build_work_contract_v2",
+            "canon_audit",
+            "handoff",
+            "import_source",
+            "incremental_update",
+            "init_project",
+            "init_registered_project",
+            "list_source_revisions",
+            "main",
+            "project_directory",
+            "semantic_import",
+            "sha",
+            "standard_operation",
+            "support_workflow_prompt",
+            "verify_contract_preflight",
+            "write_contract_draft"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_pack_app.py",
+      "current_sha256": "f993dd3ba4b388c9f806a83c013b390ca9ad92f6b179f3e4bfd71cb30f9926d6",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "0c38a6e8958675938db60ef3de17d77107dc827152cab730c547173e27fa4ccf",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_attempt_source_projection",
+            "_execute_package_task",
+            "_export_package_run",
+            "_git",
+            "_home",
+            "_job_run",
+            "_live_attempt",
+            "_live_attempt_declaration",
+            "_offline_job_run",
+            "_save_job_progress",
+            "_task_job_identity",
+            "derive_fifth_lens",
+            "execute_package_job",
+            "import_package",
+            "main",
+            "prepare_package_runs",
+            "source_repository",
+            "validate_attempt_metadata"
+          ],
+          "changed_definitions": [
+            "_execute_live_package_job"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "f993dd3ba4b388c9f806a83c013b390ca9ad92f6b179f3e4bfd71cb30f9926d6",
+          "same_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_attempt_source_projection",
+            "_execute_live_package_job",
+            "_execute_package_task",
+            "_export_package_run",
+            "_git",
+            "_home",
+            "_job_run",
+            "_live_attempt",
+            "_live_attempt_declaration",
+            "_offline_job_run",
+            "_save_job_progress",
+            "_task_job_identity",
+            "derive_fifth_lens",
+            "execute_package_job",
+            "import_package",
+            "main",
+            "prepare_package_runs",
+            "source_repository",
+            "validate_attempt_metadata"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_critics_adapter.py",
+      "current_sha256": "02ec549128f8a811b937e9ba3e540f4504051fd431fbec89f9ed1f203a036477",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "build_plan_critique_command",
+            "build_plan_revise_command",
+            "native_conversation_template",
+            "native_prompt_dependencies_match",
+            "native_templates",
+            "native_text_templates",
+            "verify_plan_receipt"
+          ],
+          "changed_definitions": [
+            "read_native_result"
+          ],
+          "added_definitions": [
+            "_NativeReadBatch",
+            "_read_native_result",
+            "read_native_support_records"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "build_plan_critique_command",
+            "build_plan_revise_command",
+            "native_conversation_template",
+            "native_prompt_dependencies_match",
+            "native_templates",
+            "native_text_templates",
+            "verify_plan_receipt"
+          ],
+          "changed_definitions": [
+            "read_native_result"
+          ],
+          "added_definitions": [
+            "_NativeReadBatch",
+            "_read_native_result",
+            "read_native_support_records"
+          ],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_live_authorization.py",
+      "current_sha256": "4451cdd42c479b51c84cae1005aef597379e132eaff4db3e94cdeed3b2444f74",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "status": "ABSENT_IN_EXACT_TREE"
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "a7f7dd2dc8fd75974c01ac19c08d93f24ea281580e52798361d1b88a8e0e4af9",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_OwnerVerifier",
+            "_digest",
+            "_runner",
+            "_validate_grant_reservation",
+            "authorization_path",
+            "publish_request",
+            "require_authorization",
+            "validate_reservation",
+            "verify_request"
+          ],
+          "changed_definitions": [
+            "_terms",
+            "_verify_bundle",
+            "build_request",
+            "implementation_identity",
+            "require_run_authorization"
+          ],
+          "added_definitions": [
+            "verify_auxiliary_native_input"
+          ],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_nk_adapter.py",
+      "current_sha256": "9355ce5936fea662fa2995be303fea6a9a0f7970be63787a73a434e202745063",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_card_beat_descriptions",
+            "build_nk_payload"
+          ],
+          "changed_definitions": [
+            "map_reflection_to_brief"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "510c39a68f29008b0c74ed76ac1c5ad3b6071fa6802b63dbd2053bd7784c5aa5",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_card_beat_descriptions",
+            "build_nk_payload"
+          ],
+          "changed_definitions": [
+            "map_reflection_to_brief"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/p2_06_critics_run.py",
+      "current_sha256": "4a155894bbf387f1bd9df641d949b881074f33f2e81b2aa336edd6b825318706",
+      "baselines": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "sha256": "09ce9f0ca20704bb8dfd71b1f1ee9db06f4b8f2a84d5244fa9a27abc81ffc037",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_validated_native_materials",
+            "strip_key"
+          ],
+          "changed_definitions": [
+            "_execute_native",
+            "main"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "sha256": "09ce9f0ca20704bb8dfd71b1f1ee9db06f4b8f2a84d5244fa9a27abc81ffc037",
+          "same_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_validated_native_materials",
+            "strip_key"
+          ],
+          "changed_definitions": [
+            "_execute_native",
+            "main"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    }
+  ],
+  "protected_anchors": [
+    {
+      "object": "workspace/CQ_F01_TS_INPUT_V5/runs/F01-TS-V5-20261011-01/run_state.json",
+      "sha256": "3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d",
+      "frozen_sha256": "3bae0722506641f1c14840d2f2568f03484cd6b1298c972baf3700d0de42ee0d",
+      "unchanged": true
+    },
+    {
+      "object": "runtime/private/p2-cost-ledger.json",
+      "sha256": "c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b",
+      "frozen_sha256": "c8b0705f491ef824db01be0b7991f4db9db7d84e153c26481e93a4fdcd0eab9b",
+      "unchanged": true
+    }
+  ],
+  "frozen_reference": {
+    "commit": "26b72cea21dce45eede21cffddd4e75307d75652",
+    "tree": "535496ba3b8a331e12d0e5e161b15bf21a25393e",
+    "porcelain": ""
+  },
+  "frozen06_exact_copies": [
+    {
+      "original": "ATOM06_CONTROLLER_ACCEPT_84e022d_20261013.md",
+      "copy": "frozen_atom06_controller_original.md",
+      "sha256": "6e2ec3ffed2bad6fbbb1f2409b9752c511aa260b6c05f8b8c448114d76f08055"
+    },
+    {
+      "original": "ATOM06_FREEZE_84e022d_20261013.json",
+      "copy": "frozen_atom06_record_original.json",
+      "sha256": "834add33d4c2b2f1744d92dd17631aa0d20e735c3ea0938688b47e1b5eef4c0f"
+    }
+  ],
+  "tests_run_by_this_audit": 0,
+  "real_provider_calls": 0,
+  "limits": "Static equality and test metadata do not confer method fidelity, production authorization, candidate acceptance or next Atom permission."
+}

@@ -1,0 +1,248 @@
+{
+  "scope": "ACTUAL_SEND_BOUNDARY_COMPONENT_NOT_E2E",
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "actual_observations": [
+    {
+      "case": "cards_changed",
+      "expected_error": "NK_CURRENT_CARDS_MISMATCH",
+      "actual_original_reservation": {
+        "request_id": "nk-SIGNED-ADAPT-RUN-4821e0b4cd68422194d9aacff5174e27",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "PENDING",
+        "reserved_at": "2026-10-13T21:36:17Z",
+        "cost_context": {
+          "project_instance_id": "be35ef70-ac43-41d8-9245-5a2f2e1d1eca",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "134a7a3466979e56c8805b5a3b09b3e80938b8034f7af895bca5e8642ad1f346"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "2f03333c4b1e490157237d4cfb7b0ac4eb9b3c6ecf8bdf5b15fa5af16ad132f7",
+          "owner_grant_sha256": "10e553ac2a09da406378a63654b7bf54d943901aac032ed6206fe3e7289e6c70",
+          "identity_sha256": "134a7a3466979e56c8805b5a3b09b3e80938b8034f7af895bca5e8642ad1f346"
+        }
+      },
+      "actual_terminal_row": {
+        "request_id": "nk-SIGNED-ADAPT-RUN-4821e0b4cd68422194d9aacff5174e27",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "UNKNOWN_NOT_ZERO",
+        "reserved_at": "2026-10-13T21:36:17Z",
+        "cost_context": {
+          "project_instance_id": "be35ef70-ac43-41d8-9245-5a2f2e1d1eca",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "134a7a3466979e56c8805b5a3b09b3e80938b8034f7af895bca5e8642ad1f346"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "2f03333c4b1e490157237d4cfb7b0ac4eb9b3c6ecf8bdf5b15fa5af16ad132f7",
+          "owner_grant_sha256": "10e553ac2a09da406378a63654b7bf54d943901aac032ed6206fe3e7289e6c70",
+          "identity_sha256": "134a7a3466979e56c8805b5a3b09b3e80938b8034f7af895bca5e8642ad1f346"
+        },
+        "provider_request_id": null,
+        "returned_model": null,
+        "finish_reason": null,
+        "settled_at": "2026-10-13T21:36:17Z",
+        "usage": "UNKNOWN_NOT_ZERO"
+      },
+      "generate_calls": 0,
+      "original_cards_sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6",
+      "actual_original_cards_sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6"
+    },
+    {
+      "case": "owner_reissued_same_input_cap",
+      "expected_error": "NK_RESERVATION_BINDING_CHANGED",
+      "actual_original_reservation": {
+        "request_id": "nk-SIGNED-ADAPT-RUN-15ae3c0710e94edab8eee6346599050b",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "PENDING",
+        "reserved_at": "2026-10-13T21:36:56Z",
+        "cost_context": {
+          "project_instance_id": "14a25183-8d1b-41b5-906c-8bf854d2e3e2",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "cd3226d0b0287c41c30d3badce68cf694137309a19d0985c618092358ecd1937"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "e4d1c9ed11717e64908716bfcb43530ee11a7c8d486d5ca0e0812d2dd64ab321",
+          "owner_grant_sha256": "3627383d67cb6be052379d6382fd3760e8c8fc20255a007b8bbcb0896dfe5fe3",
+          "identity_sha256": "cd3226d0b0287c41c30d3badce68cf694137309a19d0985c618092358ecd1937"
+        }
+      },
+      "actual_terminal_row": {
+        "request_id": "nk-SIGNED-ADAPT-RUN-15ae3c0710e94edab8eee6346599050b",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "UNKNOWN_NOT_ZERO",
+        "reserved_at": "2026-10-13T21:36:56Z",
+        "cost_context": {
+          "project_instance_id": "14a25183-8d1b-41b5-906c-8bf854d2e3e2",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "cd3226d0b0287c41c30d3badce68cf694137309a19d0985c618092358ecd1937"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "e4d1c9ed11717e64908716bfcb43530ee11a7c8d486d5ca0e0812d2dd64ab321",
+          "owner_grant_sha256": "3627383d67cb6be052379d6382fd3760e8c8fc20255a007b8bbcb0896dfe5fe3",
+          "identity_sha256": "cd3226d0b0287c41c30d3badce68cf694137309a19d0985c618092358ecd1937"
+        },
+        "provider_request_id": null,
+        "returned_model": null,
+        "finish_reason": null,
+        "settled_at": "2026-10-13T21:37:04Z",
+        "usage": "UNKNOWN_NOT_ZERO"
+      },
+      "generate_calls": 0,
+      "original_cards_sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6",
+      "actual_original_cards_sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6"
+    },
+    {
+      "case": "owner_expired",
+      "expected_error": "LIVE_GRANT_EXPIRED",
+      "actual_original_reservation": {
+        "request_id": "nk-SIGNED-ADAPT-RUN-2a011037644a42338cc9134fd99cd21d",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "PENDING",
+        "reserved_at": "2026-10-13T21:37:39Z",
+        "cost_context": {
+          "project_instance_id": "0ad73bcd-1d28-470b-9fef-b110b034f183",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "0a4ab02ae37020dbd36ddab6be2639a843758b07fa13ec454fe527f4465ea10c"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "76748ebb2c18644956b8944f8001f40e83921242ab6bcab4c6d33427adf37171",
+          "owner_grant_sha256": "a9eed2819b00be51efd88edcd64fb7ae2f81be25eef0a8a01c348521b97b8b96",
+          "identity_sha256": "0a4ab02ae37020dbd36ddab6be2639a843758b07fa13ec454fe527f4465ea10c"
+        }
+      },
+      "actual_terminal_row": {
+        "request_id": "nk-SIGNED-ADAPT-RUN-2a011037644a42338cc9134fd99cd21d",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "UNKNOWN_NOT_ZERO",
+        "reserved_at": "2026-10-13T21:37:39Z",
+        "cost_context": {
+          "project_instance_id": "0ad73bcd-1d28-470b-9fef-b110b034f183",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "0a4ab02ae37020dbd36ddab6be2639a843758b07fa13ec454fe527f4465ea10c"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "76748ebb2c18644956b8944f8001f40e83921242ab6bcab4c6d33427adf37171",
+          "owner_grant_sha256": "a9eed2819b00be51efd88edcd64fb7ae2f81be25eef0a8a01c348521b97b8b96",
+          "identity_sha256": "0a4ab02ae37020dbd36ddab6be2639a843758b07fa13ec454fe527f4465ea10c"
+        },
+        "provider_request_id": null,
+        "returned_model": null,
+        "finish_reason": null,
+        "settled_at": "2026-10-13T21:37:42Z",
+        "usage": "UNKNOWN_NOT_ZERO"
+      },
+      "generate_calls": 0,
+      "original_cards_sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6",
+      "actual_original_cards_sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6"
+    }
+  ]
+}

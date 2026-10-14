@@ -1,0 +1,210 @@
+{
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "actual_shim_sha256": "206653b347536399734dd8fa24342a6ed3ca6e5df16f55bd9420b0ba59447c0c",
+  "observations": [
+    {
+      "case": "v1_legal",
+      "cap": 10000,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 1,
+        "actual_forwarded_bodies": [
+          {
+            "model": "deepseek-flash",
+            "response_format": {
+              "type": "json_object"
+            },
+            "reasoning_effort": "none",
+            "max_tokens": 512,
+            "messages": [
+              {
+                "role": "user",
+                "content": "MOCK_ONLY actual V1 input"
+              }
+            ]
+          }
+        ],
+        "error": null
+      }
+    },
+    {
+      "case": "astral_exact",
+      "cap": 305,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 1,
+        "actual_forwarded_bodies": [
+          {
+            "model": "deepseek-flash",
+            "response_format": {
+              "type": "json_object"
+            },
+            "reasoning_effort": "none",
+            "max_tokens": 512,
+            "messages": [
+              {
+                "role": "user",
+                "content": "MOCK_ONLY 🌊🌈 harbor"
+              }
+            ]
+          }
+        ],
+        "error": null
+      }
+    },
+    {
+      "case": "astral_one_below",
+      "cap": 304,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_LIMIT_EXCEEDED"
+      }
+    },
+    {
+      "case": "reservation_limit",
+      "cap": 10000,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_LIMIT_EXCEEDED"
+      }
+    },
+    {
+      "case": "owner_lower_limit",
+      "cap": 600,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_LIMIT_EXCEEDED"
+      }
+    },
+    {
+      "case": "empty_messages",
+      "cap": 10000,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_PROVIDER_MESSAGES_INVALID"
+      }
+    },
+    {
+      "case": "object_messages",
+      "cap": 10000,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_PROVIDER_MESSAGES_INVALID"
+      }
+    },
+    {
+      "invalid_cap": null,
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "0",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "-1",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "1.5",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "NaN",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "Infinity",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    },
+    {
+      "invalid_cap": "10001",
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_CAP_INVALID"
+      }
+    }
+  ]
+}

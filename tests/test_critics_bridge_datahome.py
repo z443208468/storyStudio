@@ -274,6 +274,7 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
         self.assertEqual(module._RegisteredNativeInvocation._fields[0], 'account')
 
     def test_native_component_uses_real_shared_accounts_and_preserves_unknown(self):
+        """Account-only old fixture must refuse; signed UNKNOWN is tested separately."""
         from tests.test_cnw_run_bindings import ExistingRunBindingTests
         from tests.test_p2_cost_guard import CampaignLimitTests
         from tools import cost_guard, cnw_critics_adapter
@@ -288,6 +289,7 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
         self.addCleanup(fees.doCleanups)
         with p2_cost_guard.locked_ledger():
             pass
+        ledger_before = fees.ledger.read_bytes()
         parents = [fixture.run for fixture in fixtures]
         states = [(parent / 'run_state.json').read_bytes() for parent in parents]
         accounts = [cost_guard.for_run(parent, stage='critics_plot', model='deepseek-flash')
@@ -358,36 +360,21 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
                 finally:
                     os.chdir(previous_cwd)
                     sys.path[:] = previous_path
-                self.assertEqual(result, 0 if index == 0 else 1)
-                if index == 0:
-                    receipt_path = children[index] / 'run_receipt.json'
-                    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
-                    receipt.update(mode='MOCK_ONLY', simulation_status='SIMULATED', fixture_only=True)
-                    receipt_path.write_text(json.dumps(receipt), encoding='utf-8')
+                self.assertEqual(result, 1)
+                self.assertFalse((children[index] / 'run_receipt.json').exists())
             ledger = p2_cost_guard.read_ledger_snapshot()
-            self.assertEqual(len(ledger['requests']), 2)
-            for index, row in enumerate(ledger['requests']):
-                self.assertEqual(row['cost_context'], accounts[index].context.record())
-                self.assertEqual(row['run_id'], parents[index].name)
-            self.assertEqual(ledger['requests'][0]['status'], 'SETTLED')
-            self.assertEqual(ledger['requests'][1]['status'], 'UNKNOWN_NOT_ZERO')
-            self.assertGreater(float(ledger['requests'][1]['reserved_cny']), 0)
-            unknown = json.loads(json.dumps(ledger['requests'][1]))
-            self.assertEqual(slots, [str(fees.ledger.parent / 'provider-slots')] * 2)
-            consumed = cnw_critics_adapter.read_native_result(children[0], action='plan-revise',
-                input_path=inputs[0], critique_path=critiques[0], parent_run_dir=parents[0],
-                parent_stage='critics_plot')
-            self.assertEqual(consumed['result'], 'Fictional revised choice.')
-            self.assertEqual(consumed['provider_request_ids'], ['MOCK-PROVIDER-A'])
-            with self.assertRaisesRegex(ContractError, 'CRITICS_PARENT_RUN_BINDING_INVALID'):
-                cnw_critics_adapter.read_native_result(children[0], action='plan-revise',
-                    input_path=inputs[1], critique_path=critiques[1], parent_run_dir=parents[1],
-                    parent_stage='critics_plot')
-            scoped = json.loads((children[0] / 'p2-cost-ledger.json').read_text(encoding='utf-8'))
-            self.assertEqual(len(scoped['requests']), 1)
-            self.assertEqual(scoped['cost_context'], accounts[0].context.record())
+            self.assertEqual(ledger['requests'], [])
+            self.assertEqual(fees.ledger.read_bytes(), ledger_before)
+            self.assertEqual(calls, [])
+            self.assertEqual(slots, [])
+            for parent, original, child, account in zip(parents, states, children, accounts):
+                self.assertEqual((parent / 'run_state.json').read_bytes(), original)
+                self.assertEqual(json.loads((child / 'provider-calls.json').read_text()), [])
+                scoped = json.loads((child / 'p2-cost-ledger.json').read_text())
+                self.assertEqual(scoped['requests'], [])
+                self.assertEqual(scoped['cost_context'], account.context.record())
             failed_calls = json.loads((children[1] / 'provider-calls.json').read_text(encoding='utf-8'))
-            self.assertEqual(failed_calls[0]['ledger_settlement']['status'], 'UNKNOWN_NOT_ZERO')
+            self.assertEqual(failed_calls, [])
             with self.assertRaisesRegex(ContractError, 'OFFLINE_PROVIDER_FORBIDDEN'):
                 p2_06_critics_run.main(['--action', 'plan-revise', '--input', str(inputs[0]),
                     '--critique', str(critiques[0]), '--run-dir', str(parents[0].parent / 'CLI-DENIED'),
@@ -399,25 +386,24 @@ class CriticsBridgeDataHomeTests(unittest.TestCase):
                     '--ledger-run-id', parents[0].name, '--parent-run-dir', str(parents[0]),
                     '--parent-stage', 'critics_plot'])
             self.assertEqual(native.call_count, 2)
-            self.assertEqual(len(calls), 2)
-            self.assertEqual(p2_cost_guard.read_ledger_snapshot()['requests'][1], unknown)
+            self.assertEqual(len(calls), 0)
+            self.assertEqual(fees.ledger.read_bytes(), ledger_before)
             for parent, original in zip(parents, states):
                 self.assertEqual((parent / 'run_state.json').read_bytes(), original)
             from tests.test_cnw_work_intent_v2 import _record_atom07_evidence
             import hashlib
-            _record_atom07_evidence('atom05_critics_account_effect', {
+            _record_atom07_evidence('atom07_critics_account_only_refusal', {
                 'execution': 'MOCK_ONLY', 'ledger': ledger['requests'],
-                'consumed': consumed, 'scoped_ledger': scoped, 'failed_calls': failed_calls,
+                'scoped_ledger': scoped, 'failed_calls': failed_calls,
                 'files': [{'label': label, 'bytes_hex': path.read_bytes().hex(),
                     'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for label, path in (
                         ('input', inputs[0]), ('critique', critiques[0]),
-                        ('output', children[0]/'modified_plot.md'),
-                        ('receipt', children[0]/'run_receipt.json'),
                         ('calls', children[0]/'provider-calls.json'),
                         ('scoped_ledger', children[0]/'p2-cost-ledger.json'),
                         ('failed_calls', children[1]/'provider-calls.json'))],
                 'production_admission_rejected': True, 'cross_project_replay_rejected': True,
-                'unknown_preserved': True, 'parent_states_unchanged': True})
+                'ledger_unchanged': True, 'parent_states_unchanged': True,
+                'signed_unknown_oracle': 'tests/test_cnw_signed_critics_accounting.py'})
 
 
 if __name__ == "__main__":

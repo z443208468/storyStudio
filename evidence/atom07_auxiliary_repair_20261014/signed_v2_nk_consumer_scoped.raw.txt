@@ -1,0 +1,38 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_cnw_signed_auxiliary_consumers.py::SignedAuxiliaryConsumerTests::test_signed_nk_service_shared_account_brief_cache_and_mock_rejection FAILED [100%]
+
+================================== FAILURES ===================================
+_ SignedAuxiliaryConsumerTests.test_signed_nk_service_shared_account_brief_cache_and_mock_rejection _
+tests\test_cnw_signed_auxiliary_consumers.py:65: in launch
+    launches.append({'command': command, 'capture': kwargs['env']['STORYSTUDIO_NK_LIVE_CAPTURE'],
+                                                    ^^^^^^^^^^^^^
+E   KeyError: 'env'
+
+The above exception was the direct cause of the following exception:
+tests\test_cnw_signed_auxiliary_consumers.py:96: in test_signed_nk_service_shared_account_brief_cache_and_mock_rejection
+    recovery.execute_checked(s.run, stage)
+tools\cnw_recovery.py:355: in execute_checked
+    result = r._dispatch_cnw_stage(run_dir, stage)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:1413: in _dispatch_cnw_stage
+    return execute_plot(run_dir)
+           ^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:1484: in execute_plot
+    request = build_plot_request(_run_dir_base(run_dir), contract)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_runner.py:1468: in build_plot_request
+    registered = _registered_project_identity(project)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tools\cnw_project.py:369: in _registered_project_identity
+    raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity or registry could not be verified") from exc
+E   tools.cnw_contract.ContractError: PROJECT_INSTANCE_ID_REQUIRED: registered project identity or registry could not be verified
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_signed_auxiliary_consumers.py::SignedAuxiliaryConsumerTests::test_signed_nk_service_shared_account_brief_cache_and_mock_rejection - tools.cnw_contract.ContractError: PROJECT_INSTANCE_ID_REQUIRED: registered project identity or registry could not be verified
+============================== 1 failed in 7.89s ==============================

@@ -51,7 +51,7 @@ class NKRequestIdentityTests(unittest.TestCase):
             'raw_response_sha256': r.sha(raw.read_bytes()), 'output_sha256': r.sha(content.encode()),
             'mode': 'MOCK_ONLY', 'fixture_only': True, 'simulation_status': 'SIMULATED'}
         mapped, mapping = nk.map_reflection_to_brief('', self.response, {**self.receipt,
-            'status': 'LIVE_ACCEPTED',
+            'status': 'SIMULATED',
             'validated_response_sha256': r.sha(json.dumps(self.response, ensure_ascii=False, sort_keys=True).encode())})
         self.reflection = self.run / 'artifacts/support/nk-reflection.md'
         self.reflection.parent.mkdir(parents=True)

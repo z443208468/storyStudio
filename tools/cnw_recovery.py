@@ -72,6 +72,19 @@ def support_input_snapshot(run_dir: Path, state: dict, name: str, hook: dict) ->
     return snapshot
 
 
+def iter_native_support_records(state: dict):
+    """Enumerate retained native evidence; enumeration grants no authority."""
+    for name in ("critics_plot", "critics_text"):
+        evidence = state.get("support_hooks", {}).get(name, {})
+        if evidence.get("status") in {"SUCCEEDED", "NATIVE_RESULT_PENDING"}:
+            yield name, evidence
+    for row in state.get("support_hook_attempts", []):
+        if row.get("hook") in {"critics_plot", "critics_text"}:
+            evidence = row["evidence"]
+            if evidence.get("status") in {"SUCCEEDED", "NATIVE_RESULT_PENDING"}:
+                yield row["hook"], evidence
+
+
 def verify_evidence(run_dir: Path, state: dict) -> None:
     runner, _, _ = _modules()
     def verify(value):
@@ -94,19 +107,24 @@ def verify_evidence(run_dir: Path, state: dict) -> None:
     # evidence, verified by its adapter when that support hook is consumed.
     verify(state.get("support_hooks", {}).get("nk_pov", {}).get("artifact"))
     try:
-        from .cnw_critics_adapter import read_native_result
+        from .cnw_critics_adapter import read_native_result, read_native_support_records
     except ImportError:
-        from cnw_critics_adapter import read_native_result
-    hooks = [(name, state.get("support_hooks", {}).get(name, {})) for name in ("critics_plot", "critics_text")]
-    hooks += [(row["hook"], row["evidence"]) for row in state.get("support_hook_attempts", []) if row.get("hook") in {"critics_plot", "critics_text"}]
-    for name, hook in hooks:
+        from cnw_critics_adapter import read_native_result, read_native_support_records
+    records = []
+    for name, hook in iter_native_support_records(state):
         if hook.get("status") != "SUCCEEDED":
             continue
         source = support_input_snapshot(run_dir, state, name, hook)
-        action = "plan-critique" if name == "critics_plot" else "text-refine"
-        evidence = read_native_result(hook["run_name"], action=action, input_path=source)
-        if hook.get("evidence_files") != evidence.get("evidence_files") or hook.get("result") != evidence.get("result"):
-            raise runner.ContractError("CRITICS_EVIDENCE_CHANGED", hook["run_name"])
+        records.append((name, hook, source))
+    account = runner._cost_account(run_dir, records[0][0]) if records else None
+    if account:
+        read_native_support_records(run_dir, records)
+    else:
+        for name, hook, source in records:
+            action = "plan-critique" if name == "critics_plot" else "text-refine"
+            evidence = read_native_result(hook["run_name"], action=action, input_path=source)
+            if hook.get("evidence_files") != evidence.get("evidence_files") or hook.get("result") != evidence.get("result"):
+                raise runner.ContractError("CRITICS_EVIDENCE_CHANGED", hook["run_name"])
     receipts = state.get("provider_requests", []) + [a["prior_receipt"]
         for a in state.get("provider_attempts", []) if a.get("prior_receipt")]
     for receipt in receipts:

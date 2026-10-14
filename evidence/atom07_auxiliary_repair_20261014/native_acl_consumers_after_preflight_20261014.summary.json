@@ -1,0 +1,150 @@
+{
+  "status": "OBSERVATION_SUMMARY_NOT_ACCEPTANCE",
+  "diagnostic_report_sha256": "c5be5bc3a5145d483dc09488cd16327e024ab351755f6db5cd77a55c11a427ac",
+  "commands": {
+    "whoami.exe": 13436,
+    "icacls.exe": 13441
+  },
+  "cli_returncodes": {
+    "0": 26877
+  },
+  "cli_error_types": {},
+  "duration_s": {
+    "mean": 0.014832607805928114,
+    "median": 0.0159999999741558,
+    "maximum": 0.6410000000032596,
+    "total": 398.6559999999299
+  },
+  "stack_outer_functions": {
+    "<module>": 159,
+    "setUp": 48,
+    "run_bounded_diagnosis": 22,
+    "create": 18,
+    "produce": 18,
+    "require_authorization": 18,
+    "_verify_bundle": 4,
+    "build_plot_request": 2200,
+    "execute_plot": 14,
+    "validate": 692,
+    "require_run_authorization": 2092,
+    "_compute_contract_preflight": 9828,
+    "build_run_contract_preflight": 7644,
+    "_cost_account": 56,
+    "cnw_live_call": 56,
+    "expected_requests": 42,
+    "_cnw_live_call_in_slot": 112,
+    "command_reserve": 36,
+    "response": 64,
+    "history": 1800,
+    "_critics_hook": 14,
+    "project_path": 28,
+    "main": 208,
+    "_validated_native_materials": 52,
+    "service": 42,
+    "_execute_native": 46,
+    "_verify_registered_invocation": 16,
+    "create_run_directory": 4,
+    "capture_send": 70,
+    "__init__": 108,
+    "read_native_result": 28,
+    "_read_native_result": 432,
+    "finish": 108,
+    "verify_evidence": 70,
+    "read_native_support_records": 728
+  },
+  "milestones": [
+    {
+      "kind": "milestone",
+      "label": "start",
+      "elapsed_s": 0.0,
+      "python_threads": 1,
+      "own_process_handles": 312,
+      "cli_calls": 0,
+      "max_cli_inflight": 0
+    },
+    {
+      "kind": "milestone",
+      "label": "native_service_finished",
+      "elapsed_s": 212.23399999999674,
+      "python_threads": 1,
+      "own_process_handles": 795,
+      "cli_calls": 12093,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "before_one_lens",
+      "elapsed_s": 429.3429999999935,
+      "python_threads": 1,
+      "own_process_handles": 780,
+      "cli_calls": 26877,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "terminal_before_cleanup",
+      "elapsed_s": 429.3429999999935,
+      "python_threads": 1,
+      "own_process_handles": 780,
+      "cli_calls": 26877,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "terminal_after_cleanup",
+      "elapsed_s": 429.35899999999674,
+      "python_threads": 1,
+      "own_process_handles": 780,
+      "cli_calls": 26877,
+      "max_cli_inflight": 1
+    }
+  ],
+  "terminal_stages": {
+    "plot": "STAGE_MATERIALIZED",
+    "scene_cards": "STAGE_MATERIALIZED",
+    "writing_brief": "STAGE_MATERIALIZED",
+    "prose": "STAGE_MATERIALIZED",
+    "lint_layer1": "STAGE_MATERIALIZED",
+    "lint_layer2": "STAGE_MATERIALIZED",
+    "multi_lens_review": "NOT_RUN",
+    "adversarial_verify": "NOT_RUN",
+    "completeness_critic": "NOT_RUN",
+    "refine": "NOT_RUN",
+    "re_review": "NOT_RUN"
+  },
+  "actual_provider_receipt_count": 4,
+  "actual_synthetic_ledger_rows": 9,
+  "original_bounded_observation": {
+    "commands": {
+      "whoami.exe": 998,
+      "icacls.exe": 1002
+    },
+    "duration_s": {
+      "mean": 0.019508499999879858,
+      "median": 0.0159999999741558,
+      "maximum": 1.9839999999967404,
+      "total": 39.01699999975972
+    },
+    "terminal_stages": {
+      "plot": "EXECUTION_INCOMPLETE",
+      "scene_cards": "NOT_RUN",
+      "writing_brief": "NOT_RUN",
+      "prose": "NOT_RUN",
+      "lint_layer1": "NOT_RUN",
+      "lint_layer2": "NOT_RUN",
+      "multi_lens_review": "NOT_RUN",
+      "adversarial_verify": "NOT_RUN",
+      "completeness_critic": "NOT_RUN",
+      "refine": "NOT_RUN",
+      "re_review": "NOT_RUN"
+    },
+    "limitations": "The explicit 2000-CLI safety bound was reached before Plot. No real CLI timeout was reproduced; repeated load is measured but not proven the timeout cause."
+  },
+  "comparison_limitations": "Different stopping points: original stopped before Plot at 2000 CLI calls; current explicitly bounds 60000 calls/1200 seconds. Counts/times are observations, not equivalent-work speedup or an explanation of the earlier timeouts. Function group counts are CLI event attribution, not full preflight invocation counts. No full-chain acceptance.",
+  "diagnostic_error": {
+    "type": "RuntimeError",
+    "message": "DIAGNOSTIC_EXPECTED_ONE_LEGITIMATE_LENS",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\diagnose_native_acl_consumers_after_preflight_20261014.py\", line 145, in <module>\n    namespace['run_bounded_diagnosis'](case)\n  File \"D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\native_acl_consumers_after_preflight_20261014.driver.py\", line 64, in run_bounded_diagnosis\n    raise RuntimeError('DIAGNOSTIC_EXPECTED_ONE_LEGITIMATE_LENS')\nRuntimeError: DIAGNOSTIC_EXPECTED_ONE_LEGITIMATE_LENS\n"
+  },
+  "source_unchanged": true
+}

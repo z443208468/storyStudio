@@ -1,0 +1,28 @@
+test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ERROR
+
+======================================================================
+ERROR: test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_native_mock_live_boundary.py", line 99, in test_native_current_attempt_pending_relabel_and_context_exit_refuse
+    recovery.execute_checked(s.run, 'plot')
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 373, in execute_checked
+    result = r._dispatch_cnw_stage(run_dir, stage)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1413, in _dispatch_cnw_stage
+    return execute_plot(run_dir)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1504, in execute_plot
+    _critics_hook(run_dir, "plot")  # user-authorized supplement, not a CNW completion gate
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2557, in _critics_hook
+    raise ContractError("CRITICS_INVOCATION_FAILED", f"CritiCS {action} exited with status {completed.returncode}")
+tools.cnw_contract.ContractError: CRITICS_INVOCATION_FAILED: CritiCS plan-critique exited with status 1
+
+----------------------------------------------------------------------
+Ran 1 test in 179.747s
+
+FAILED (errors=1)
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-cyhu3g1r\\ExplicitTestDataHome\\projects\\e159fc03-f2c0-4ef9-b306-95032175cfa5\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-9b3b78dd", "provider_call_count": 1, "provider_request_ids": ["SIMULATED-NATIVE-0"], "error_type": "ValueError"}

@@ -1,0 +1,33 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 20 items
+
+tests/test_cnw_adapters.py::AdapterTests::test_author_plot_design_needs_no_prefilled_beats_or_scenes PASSED [  5%]
+tests/test_cnw_adapters.py::AdapterTests::test_critics_hook_routes_through_existing_cost_guarded_runner PASSED [ 10%]
+tests/test_cnw_adapters.py::AdapterTests::test_critics_receipt_binds_source_output_and_pinned_build PASSED [ 15%]
+tests/test_cnw_adapters.py::AdapterTests::test_live_role_packet_requires_live_mode_and_frozen_contract PASSED [ 20%]
+tests/test_cnw_adapters.py::AdapterTests::test_native_empty_conversation_framing_preserves_exact_dependencies PASSED [ 25%]
+tests/test_cnw_adapters.py::AdapterTests::test_native_plan_revise_binds_original_plot_and_critique_request PASSED [ 30%]
+tests/test_cnw_adapters.py::AdapterTests::test_native_result_rechecks_registered_parent_run_cost_identity PASSED [ 35%]
+tests/test_cnw_adapters.py::AdapterTests::test_nk_receives_ordered_events_and_reflection_enters_brief PASSED [ 40%]
+tests/test_cnw_adapters.py::AdapterTests::test_plot_card_brief_cannot_drop_beat_ids_or_budget PASSED [ 45%]
+tests/test_cnw_adapters.py::AdapterTests::test_production_preparation_resolves_episode_arc_and_reads_previous_text PASSED [ 50%]
+tests/test_cnw_adapters.py::AdapterTests::test_prose_cannot_unlock_with_fixture_or_unaccepted_stage PASSED [ 55%]
+tests/test_cnw_adapters.py::AdapterTests::test_prose_packet_is_limited_to_brief_and_voice_samples PASSED [ 60%]
+tests/test_cnw_adapters.py::AdapterTests::test_role_prompt_sources_match_captured_cnw_manifest_blobs PASSED [ 65%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_actual_brief_builder_consumes_matching_native_response PASSED [ 70%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_current_cards_cannot_rebind_old_nk_payload PASSED [ 75%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected PASSED [ 80%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_native_request_is_mandatory_and_self_rehash_cannot_change_payload 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_native_request_is_mandatory_and_self_rehash_cannot_change_payload PASSED [ 85%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response PASSED [ 90%]
+tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering PASSED [ 95%]
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_legacy_workspace_revision_apply_rejects_high_and_low_before_cost 
+tests/test_cnw_operation_authorization.py::OperationAuthorizationTests::test_legacy_workspace_revision_apply_rejects_high_and_low_before_cost PASSED [100%]
+
+=================== 20 passed, 9 subtests passed in 12.57s ====================

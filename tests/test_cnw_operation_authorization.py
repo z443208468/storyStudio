@@ -178,6 +178,20 @@ class OperationAuthorizationTests(unittest.TestCase):
         self.assertFalse((self.root / maintenance.PENDING).exists())
         self._assert_no_real_transport()
 
+    def test_legacy_workspace_revision_apply_rejects_high_and_low_before_cost(self):
+        # A physical V1 workspace operation has no registered project grant.
+        legacy_root = self.base / "workspace" / "FICTIONAL_LEGACY_REVISION"
+        legacy_run = self._run("maintenance", root=legacy_root, name="legacy-revision")
+        before = (legacy_run / "run_state.json").read_bytes()
+        with patch.object(runner, "ROOT", self.base):
+            for entry in (runner.cnw_live_call, runner._cnw_live_call_in_slot):
+                with self.subTest(entry=entry.__name__), self.assertRaisesRegex(
+                        ContractError, "LIVE_AUTHORIZATION_REQUIRED"):
+                    entry(legacy_run, stage="project_revision_apply",
+                          role_id="project_revision_apply", messages=[], output_cap=100)
+        self.assertEqual((legacy_run / "run_state.json").read_bytes(), before)
+        self._assert_no_real_transport()
+
     def test_actual_import_incremental_and_maintenance_consume_simulated_receipts(self):
         original = (self.root / "_INBOX/notes.md").read_bytes()
         with self._session():

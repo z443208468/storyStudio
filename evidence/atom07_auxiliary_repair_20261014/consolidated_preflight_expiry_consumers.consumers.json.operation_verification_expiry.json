@@ -1,0 +1,22 @@
+{
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "observations": [
+    {
+      "entry": "cnw_live_call",
+      "clock": [
+        "2026-10-13T23:37:18.694301+00:00",
+        "2026-10-13T23:37:19.694301+00:00"
+      ]
+    },
+    {
+      "entry": "_cnw_live_call_in_slot",
+      "clock": [
+        "2026-10-13T23:37:18.694301+00:00",
+        "2026-10-13T23:37:19.694301+00:00"
+      ]
+    }
+  ],
+  "synthetic_ledger_sha256": "eff1f5f046c35eff3e7e4d19620ae0e9b63540f18f8490ca3af1a4169e19dd9b",
+  "actual_transport_calls": []
+}

@@ -27,9 +27,12 @@ except ImportError:
     from policy_snapshots import resolve_policy_by_sha
 
 SCHEMA = "cnw_live_authorization_bundle_v1"
+AUXILIARY_SCOPES = {"support_hook": ("writing_brief", "nk", "nk_pov"),
+    "critics_plot": ("plot", "critics", "critics_plot"),
+    "critics_text": ("refine", "critics", "critics_text")}
 PROVIDER_STAGES = frozenset({"plot", "scene_cards", "writing_brief", "prose",
     "lint_layer2", "multi_lens_review", "adversarial_verify", "completeness_critic",
-    "refine", "re_review"})
+    "refine", "re_review", *AUXILIARY_SCOPES})
 STAGE_ALIASES = {"cards": "scene_cards", "brief": "writing_brief", "draft": "prose",
     "lens5": "multi_lens_review", "verifier3": "adversarial_verify", "completeness": "completeness_critic",
     "re-review": "re_review"}
@@ -63,9 +66,11 @@ def implementation_identity():
         "cnw_w10_policy", "controller_trust_loader", "cost_guard", "p2_cost_guard",
         "cnw_pack_app", "cnw_request_identity", "cnw_test_live_transport", "policy_snapshots",
         "cnw_generate", "cnw_revision", "cnw_export", "cnw_operation_authorization",
-        "cnw_import_workflow", "cnw_maintenance", "cnw_operations")
+        "cnw_import_workflow", "cnw_maintenance", "cnw_operations",
+        "p2_06_critics_run", "critics_bridge", "project_paths", "project_transactions")
     code_sources = {name + ".py": _digest((runner.ROOT / "tools" / (name + ".py")).read_bytes()) for name in code_names}
     code_sources['studio.ps1'] = _digest((runner.ROOT/'tools/studio.ps1').read_bytes())
+    code_sources['nk-live-fetch.cjs'] = _digest((runner.ROOT/'tools/nk-live-fetch.cjs').read_bytes())
     for name in runner.STAGE_PROMPTS.values():
         code_sources["prompts/cnw/" + name] = _digest((runner.PROMPT_ROOT / name).read_bytes())
     code_sources["MASTER_PLAN_GENERIC_APP_R5.md"] = _digest((runner.ROOT / "plans/MASTER_PLAN_GENERIC_APP_R5.md").read_bytes())
@@ -77,24 +82,29 @@ def build_request(project, contract_path, *, run_id):
     """Bind the same inputs before creation and throughout the actual Run."""
     runner = _runner()
     root = Path(project).resolve(strict=True)
-    planned = cnw_project._compute_contract_preflight(root, contract_path,
-        run_id=run_id, existing_run=(root / "runs" / run_id).exists())
-    contract_file = Path(contract_path)
-    contract_file = (contract_file if contract_file.is_absolute() else root / contract_file).resolve(strict=True)
-    contract = json.loads(contract_file.read_bytes())
     provider_file = runner.ROOT / "config/policies/provider_policy.deepseek_flash.v1.json"
     provider_raw, workflow_raw = provider_file.read_bytes(), runner.WORKFLOW_PATH.read_bytes()
     provider = resolve_policy_by_sha(_digest(provider_raw), expected_kind="provider_policy")
-    bindings = {key: planned[key] for key in ("project_id", "project_instance_id", "run_id", "work_id",
-        "contract_sha256", "work_intent", "source_identity", "source_root_identity", "selected_scope_sha256",
-        "policy_version", "plot_request_sha256", "production_preparation_hashes")}
-    bindings.update(workflow_template_sha256=_digest(workflow_raw), provider_policy_sha256=provider["sha256"],
-                    literary_source_freeze=runner.literary_source_freeze(contract, root))
     run = root / "runs" / run_id
     if run.exists():
-        actual = cnw_project.build_run_contract_preflight(root, contract_file, run_id=run_id)
-        if policy._canonical_bytes(actual["bindings"]) != policy._canonical_bytes(bindings):
-            raise ContractError("LIVE_AUTHORIZATION_BINDING_MISMATCH", "pre-run and existing Run bindings differ")
+        # This report already recomputes the complete preflight before and
+        # after validating the frozen Run. Do not add a third computation.
+        actual = cnw_project.build_run_contract_preflight(root, contract_path, run_id=run_id)
+        bindings = dict(actual["bindings"])
+        if (bindings["workflow_template_sha256"] != _digest(workflow_raw)
+                or bindings["provider_policy_sha256"] != provider["sha256"]):
+            raise ContractError("LIVE_AUTHORIZATION_BINDING_MISMATCH", "Run and current Provider/Workflow bindings differ")
+    else:
+        planned = cnw_project._compute_contract_preflight(root, contract_path,
+            run_id=run_id, existing_run=False)
+        contract_file = Path(contract_path)
+        contract_file = (contract_file if contract_file.is_absolute() else root / contract_file).resolve(strict=True)
+        contract = json.loads(contract_file.read_bytes())
+        bindings = {key: planned[key] for key in ("project_id", "project_instance_id", "run_id", "work_id",
+            "contract_sha256", "work_intent", "source_identity", "source_root_identity", "selected_scope_sha256",
+            "policy_version", "plot_request_sha256", "production_preparation_hashes")}
+        bindings.update(workflow_template_sha256=_digest(workflow_raw), provider_policy_sha256=provider["sha256"],
+                        literary_source_freeze=runner.literary_source_freeze(contract, root))
     guard, pricing, cost_snapshot = accounting._config_snapshot()
     settings = provider["document"] if "document" in provider else json.loads(provider_raw)
     if (settings["model"] != runner.MODEL or guard["model"] != runner.MODEL
@@ -139,6 +149,9 @@ def _terms(value, *, allowed_stages=PROVIDER_STAGES):
                 or any(role is not None and (not isinstance(role, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", role)) for role in permitted)
                 or len(set(permitted)) != len(permitted)):
             raise ContractError("LIVE_GRANT_TERMS_INVALID", "roles must be explicit distinct role IDs")
+    for hook, (parent, _, role) in AUXILIARY_SCOPES.items():
+        if hook in stages and (parent not in stages or roles[hook] != [role]):
+            raise ContractError("LIVE_GRANT_TERMS_INVALID", "auxiliary grant needs its parent stage and exact role")
     try:
         start, end = (datetime.fromisoformat(value[key].replace("Z", "+00:00")) for key in ("not_before", "expires_at"))
         if start.utcoffset() is None or end.utcoffset() is None or start >= end:
@@ -208,6 +221,9 @@ def _verify_bundle(request, path, *, rebuild, stage=None, allowed_stages=PROVIDE
         raise ContractError("LIVE_AUTHORIZATION_ROLES_NOT_INDEPENDENT", "engineering preflight and owner grant require distinct authorities")
     if path.read_bytes() != raw or rebuild() != request:
         raise ContractError("LIVE_AUTHORIZATION_CHANGED_DURING_READ", "authorization or bound inputs changed")
+    # Signature and binding reconstruction can outlast the grant. Check the
+    # same signed terms again at the point where permission would be returned.
+    _terms(terms, allowed_stages=allowed_stages)
     return {"status": "LIVE_AND_FEES_AUTHORIZED", "bindings": request["bindings"],
         "identity_sha256": request["identity_sha256"], "bundle_sha256": _digest(raw),
         "owner_grant_sha256": value["owner"]["sha256"], "terms": terms,
@@ -233,8 +249,70 @@ def require_run_authorization(run, *, stage, _locked_ledger=None):
         if session is None:
             raise ContractError("LIVE_SIMULATED_HISTORY_FORBIDDEN", "Live authorization cannot convert simulated receipts")
         session.history(run, rows, ledger=_locked_ledger)
-    return require_authorization(run.parent.parent, state["contract_path"], run_id=run.name,
-                                 stage=STAGE_ALIASES.get(stage, stage))
+    try:
+        from .cnw_critics_adapter import read_native_support_records
+        from .cnw_recovery import iter_native_support_records
+    except ImportError:
+        from cnw_critics_adapter import read_native_support_records
+        from cnw_recovery import iter_native_support_records
+    records = []
+    for name, hook in iter_native_support_records(state):
+        artifact = hook.get("input_artifact", {})
+        if not hook.get("run_dir") or not artifact.get("path"):
+            raise ContractError("CRITICS_NATIVE_RUN_IDENTITY_MISSING", name)
+        input_path = runner.assert_output_within_root(run, artifact["path"])
+        if not input_path.is_file() or _digest(input_path.read_bytes()) != artifact.get("sha256"):
+            raise ContractError("CRITICS_INPUT_CHANGED", name)
+        records.append((name, hook, input_path))
+    for name, hook, actual in read_native_support_records(run, records, ledger=_locked_ledger):
+        if actual.get("mode") == "MOCK_ONLY" and session is None:
+            raise ContractError("LIVE_SIMULATED_HISTORY_FORBIDDEN", "native support cannot authorize Live")
+    stage = STAGE_ALIASES.get(stage, stage)
+    grant = require_authorization(run.parent.parent, state["contract_path"], run_id=run.name,
+                                  stage=stage)
+    if stage in AUXILIARY_SCOPES:
+        parent, integration, _ = AUXILIARY_SCOPES[stage]
+        contract = runner._contract_for(run)
+        if runner._support_integration_mode(contract, integration) != "ENABLED":
+            raise ContractError("LIVE_AUXILIARY_DISABLED", "unused support hook cannot consume an owner grant")
+        required = {"support_hook": ("scene_cards",), "critics_plot": ("plot",),
+                    "critics_text": ("prose", "completeness_critic")}[stage]
+        for predecessor in required:
+            runner._read_stage_text(run, state, predecessor)
+        if parent not in grant["terms"]["stages"]:
+            raise ContractError("LIVE_GRANT_STAGE_FORBIDDEN", parent)
+    return grant
+
+
+def verify_auxiliary_native_input(run, *, stage, action, input_path):
+    """Check the actual CritiCS child input against the parent Run before fees."""
+    if stage not in {"critics_plot", "critics_text"}:
+        raise ContractError("LIVE_AUXILIARY_STAGE_INVALID", str(stage))
+    required_action = "plan-critique" if stage == "critics_plot" else "text-refine"
+    if action != required_action:
+        raise ContractError("LIVE_AUXILIARY_ACTION_MISMATCH", str(action))
+    run = Path(run).resolve(strict=True)
+    require_run_authorization(run, stage=stage)
+    runner = _runner()
+    state = runner.load_state(run)
+    if stage == "critics_plot":
+        runner._read_stage_text(run, state, "plot")
+        artifact = state["stages"]["plot"]["artifact"]
+        raw = runner.assert_output_within_root(run, artifact["path"]).read_bytes()
+    else:
+        selection = runner._critics_excerpt_selection(run, state)
+        if selection is None:
+            raise ContractError("CRITICS_INPUT_MISSING", "current findings have no relevant excerpt")
+        raw = selection[0].encode("utf-8")
+    digest = _digest(raw)
+    expected = run / "artifacts/support" / ("critics-input-" + digest + ".md")
+    supplied = Path(input_path).absolute()
+    _assert_no_reparse(supplied, code="CRITICS_INPUT_PATH_UNSAFE")
+    if (not expected.is_file() or supplied.resolve(strict=True) != expected.resolve(strict=True)
+            or expected.read_bytes() != raw):
+        raise ContractError("CRITICS_INPUT_CHANGED", "native child input differs from the current parent material")
+    return {"parent_run_id": run.name, "hook": stage, "action": action,
+            "input_sha256": digest}
 
 
 def verify_request(run, *, stage, role_id, messages, output_cap, extra=None):

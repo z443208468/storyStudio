@@ -11,7 +11,7 @@ $Capture = Join-Path $Run ("nk-provider-" + $RequestId + '.jsonl')
 $Preload = Join-Path $Root 'tools\nk-live-fetch.cjs'
 $Npm = (Get-Command npm.cmd).Source
 $Python = Join-Path $Root 'runtime\envs\critics-api\Scripts\python.exe'
-$EnvNames = @('DEEPSEEK_API_KEY','NODE_OPTIONS','STORYSTUDIO_NK_LIVE_CAPTURE','STORYSTUDIO_NK_LIVE_REQUEST_ID')
+$EnvNames = @('DEEPSEEK_API_KEY','NODE_OPTIONS','STORYSTUDIO_NK_LIVE_CAPTURE','STORYSTUDIO_NK_LIVE_REQUEST_ID','STORYSTUDIO_NK_MAX_INPUT_TOKENS')
 $OldEnv = @{}
 foreach ($Name in $EnvNames) {
     $Value = [Environment]::GetEnvironmentVariable($Name, 'Process')
@@ -34,6 +34,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'NK_COST_RESERVATION_FAILED' }
     $env:STORYSTUDIO_NK_LIVE_CAPTURE = $Capture
     $env:STORYSTUDIO_NK_LIVE_REQUEST_ID = $RequestId
+    $env:STORYSTUDIO_NK_MAX_INPUT_TOKENS = '10000'
     $PreloadNodePath = $Preload.Replace('\','/')
     $env:NODE_OPTIONS = "--require=$PreloadNodePath"
     $Server = Start-Process -FilePath $Npm -ArgumentList @('start','--','--port',"$Port") -WorkingDirectory $Build -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $Run 'nk-server.stdout.log') -RedirectStandardError (Join-Path $Run 'nk-server.stderr.log')

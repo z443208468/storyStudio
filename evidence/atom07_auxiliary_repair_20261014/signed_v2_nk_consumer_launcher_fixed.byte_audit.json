@@ -1,0 +1,131 @@
+{
+  "source_sha256": "aaa8163cf322f49d880f732268724c21e3d3153ca71e698aa69d65a1dc5bb9b3",
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "file_count": 20,
+  "mismatches": 0,
+  "contract_matches_run": true,
+  "rows": [
+    {
+      "path": "nk-provider-nk-SIGNED-ADAPT-RUN-f934231e34bd43bea928f833dafe9bd2.jsonl",
+      "stored_sha256": "9b0961432edfda730746b93585f26ad23ae3ae085ae3cc87bde75590786de173",
+      "computed_sha256": "9b0961432edfda730746b93585f26ad23ae3ae085ae3cc87bde75590786de173",
+      "matches": true
+    },
+    {
+      "path": "nk-service-nk-SIGNED-ADAPT-RUN-f934231e34bd43bea928f833dafe9bd2.json",
+      "stored_sha256": "c558bf9ce545f8e3a05e657d16f11277af1e31d95f9e2c4e33af8d403f032189",
+      "computed_sha256": "c558bf9ce545f8e3a05e657d16f11277af1e31d95f9e2c4e33af8d403f032189",
+      "matches": true
+    },
+    {
+      "path": "run.lock",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "computed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "matches": true
+    },
+    {
+      "path": "run_state.json",
+      "stored_sha256": "4a68eeb88f55e970bf92abe11cd401315464bf84d16c6200a3f61ee18fea74e3",
+      "computed_sha256": "4a68eeb88f55e970bf92abe11cd401315464bf84d16c6200a3f61ee18fea74e3",
+      "matches": true
+    },
+    {
+      "path": "artifacts/contract.json",
+      "stored_sha256": "70c02d24fbe5727943dfad0067e35cae037a4f121e636358e3435aa8856dc03a",
+      "computed_sha256": "70c02d24fbe5727943dfad0067e35cae037a4f121e636358e3435aa8856dc03a",
+      "matches": true
+    },
+    {
+      "path": "artifacts/production_preparation.json",
+      "stored_sha256": "c12f0a3a44a28d786c35cd065f12bedcbfeb6e79ad08fa88c603fe2b13b65928",
+      "computed_sha256": "c12f0a3a44a28d786c35cd065f12bedcbfeb6e79ad08fa88c603fe2b13b65928",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-021823353445481a97e7ddb7a6534784.json",
+      "stored_sha256": "d2e91ba70147de7a59b3a42323aef4a513e736a44638e7cba5fc77e10bc86b52",
+      "computed_sha256": "d2e91ba70147de7a59b3a42323aef4a513e736a44638e7cba5fc77e10bc86b52",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-021823353445481a97e7ddb7a6534784.request.json",
+      "stored_sha256": "4c4b58d9b95ba6f306babb74e1638ac7a4d434740473223f2439f73020c3dfa8",
+      "computed_sha256": "4c4b58d9b95ba6f306babb74e1638ac7a4d434740473223f2439f73020c3dfa8",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-6cae9b192ade4e4ca64b56c5b47198bd.json",
+      "stored_sha256": "c75ce09571f479eceba3c5320af7b39a9498dbe900b3430e062f540b6c28b3ea",
+      "computed_sha256": "c75ce09571f479eceba3c5320af7b39a9498dbe900b3430e062f540b6c28b3ea",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-6cae9b192ade4e4ca64b56c5b47198bd.request.json",
+      "stored_sha256": "fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e",
+      "computed_sha256": "fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-47b411c1f4284bd0a0d49d1ab10e4cb7.json",
+      "stored_sha256": "6cfb9c1336c8d937ef060e2cecca65d4558d10c0b5d5e0c08573b09cac47116e",
+      "computed_sha256": "6cfb9c1336c8d937ef060e2cecca65d4558d10c0b5d5e0c08573b09cac47116e",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-47b411c1f4284bd0a0d49d1ab10e4cb7.request.json",
+      "stored_sha256": "793f4a83dead81a273b12cfec5519b15d9dc0c592aadf57d123c728b48e4f320",
+      "computed_sha256": "793f4a83dead81a273b12cfec5519b15d9dc0c592aadf57d123c728b48e4f320",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-f934231e34bd43bea928f833dafe9bd2.json",
+      "stored_sha256": "3d7d0653f68918f9088be3df23288725972ff377c74bffac82f250e683bb2af1",
+      "computed_sha256": "3d7d0653f68918f9088be3df23288725972ff377c74bffac82f250e683bb2af1",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-f934231e34bd43bea928f833dafe9bd2.request.json",
+      "stored_sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "computed_sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "matches": true
+    },
+    {
+      "path": "artifacts/support/nk-reflection.md",
+      "stored_sha256": "2bfdc5ca4ed98c7b88ce24b9acf64e1c2cd787284b06334b670899c73282bfe7",
+      "computed_sha256": "2bfdc5ca4ed98c7b88ce24b9acf64e1c2cd787284b06334b670899c73282bfe7",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+      "stored_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "computed_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json",
+      "stored_sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6",
+      "computed_sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/scene_cards/8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa.meta.json",
+      "stored_sha256": "8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa",
+      "computed_sha256": "8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/scene_cards/90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874.md",
+      "stored_sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+      "computed_sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
+      "stored_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "computed_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "matches": true
+    }
+  ]
+}

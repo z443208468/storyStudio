@@ -1,0 +1,139 @@
+{
+  "status": "IDENTITY_DIAGNOSIS_NOT_ACCEPTANCE",
+  "all_mismatches": [
+    {
+      "path": "tests/test_p2_cost_guard.py",
+      "current_sha256": "e0042860375719924278ac7c6128df92b1a15e0d77c877a6154ba2aa077d8aba",
+      "full_chain_sha256": "e0042860375719924278ac7c6128df92b1a15e0d77c877a6154ba2aa077d8aba",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "580f82262a8459dcee1819b8af66bd0d311ea36a",
+      "filtered_oid": "32c2aea764d664e2caec3b66b578008a5061ae24",
+      "crlf_count": 229,
+      "lf_count": 296
+    },
+    {
+      "path": "tools/build_critics.ps1",
+      "current_sha256": "94e524ea24d54ccd850240431b5a0250f3fa46d81eefb115c9d310986d1adf25",
+      "full_chain_sha256": "94e524ea24d54ccd850240431b5a0250f3fa46d81eefb115c9d310986d1adf25",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "c9fc11d3b24773233c0f3919a21ca6eccd348e49",
+      "filtered_oid": "7f38274d3b64f1df61c7ebfc4d9ada4680268089",
+      "crlf_count": 46,
+      "lf_count": 46
+    },
+    {
+      "path": "tools/build_nk.ps1",
+      "current_sha256": "1e62c048bf971a33817956b427f7a9d3c886f26f11375aebb9eab38d8f550185",
+      "full_chain_sha256": "1e62c048bf971a33817956b427f7a9d3c886f26f11375aebb9eab38d8f550185",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "ba9d33e6e5c3f2635df24d7f121450808c590e1f",
+      "filtered_oid": "31fb146195629a6a5fc91f211197130c5c64d092",
+      "crlf_count": 80,
+      "lf_count": 80
+    },
+    {
+      "path": "tools/cnw_w10_critics.py",
+      "current_sha256": "854eac961e0d6f262a16434482340b1935522359fb9a62f1aac7a13bb35a9f16",
+      "full_chain_sha256": "854eac961e0d6f262a16434482340b1935522359fb9a62f1aac7a13bb35a9f16",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "6bbb5b5b755ab1a93523fb9e69c71688db0208f8",
+      "filtered_oid": "9c5cc2d20511b8a325dbfea8019fcbd0ef37d9cb",
+      "crlf_count": 1,
+      "lf_count": 148
+    },
+    {
+      "path": "tools/critics_offline_check.py",
+      "current_sha256": "874d91f982b6e93cdfffae8197c893f496daf289a7f7249ca1f905b02bdba5df",
+      "full_chain_sha256": "874d91f982b6e93cdfffae8197c893f496daf289a7f7249ca1f905b02bdba5df",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "b5ed366857798df278797e39c35f44c6f7e9b55c",
+      "filtered_oid": "baf1dcbeae39e1fe1e130a45e0ff47fb057b0334",
+      "crlf_count": 241,
+      "lf_count": 241
+    },
+    {
+      "path": "tools/nk-offline-fetch.cjs",
+      "current_sha256": "091d02571e44088aa692b2231fa546b135e3a501f7ce27a484f49e3f02092be6",
+      "full_chain_sha256": "091d02571e44088aa692b2231fa546b135e3a501f7ce27a484f49e3f02092be6",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "adf4f1471a9a1a1cb1963f6db470a37103a5d839",
+      "filtered_oid": "2c8eac7c86ed5c6ecda3b569d414f755809f0444",
+      "crlf_count": 52,
+      "lf_count": 52
+    },
+    {
+      "path": "tools/nk_http_offline_check.ps1",
+      "current_sha256": "89876f3be0e1fe48522fc34546948177d6320a0fd3f3c5c2fd8d4ddb33a72b47",
+      "full_chain_sha256": "89876f3be0e1fe48522fc34546948177d6320a0fd3f3c5c2fd8d4ddb33a72b47",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "8cb1f7b5442f0cebc4ba2974111adac479b0f333",
+      "filtered_oid": "037bea05451524b619c6885e40d297c5bd33fcd8",
+      "crlf_count": 151,
+      "lf_count": 151
+    },
+    {
+      "path": "tools/p2_06_draft_run.py",
+      "current_sha256": "bd16b2d763cb3a6a599da29f49ae89b3956bb337073d0729958673dad66c04c0",
+      "full_chain_sha256": "bd16b2d763cb3a6a599da29f49ae89b3956bb337073d0729958673dad66c04c0",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "163c7f8d1dccb7cd350edaaebfda4603b3137479",
+      "filtered_oid": "1cd510f02346d0a473b8ebd6cbbc30d32ceff86a",
+      "crlf_count": 45,
+      "lf_count": 45
+    },
+    {
+      "path": "tools/p2_06_revision_run.py",
+      "current_sha256": "0bac00d04902b926262423ce1bf2decd3ef98ff16ae3b5f9f28af726050cb4a7",
+      "full_chain_sha256": "0bac00d04902b926262423ce1bf2decd3ef98ff16ae3b5f9f28af726050cb4a7",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "1f5790f36f666cce7c0d72215d64d8c80b302b1c",
+      "filtered_oid": "c38ad4a62b53b243ecec10f234dd36643ae80922",
+      "crlf_count": 33,
+      "lf_count": 33
+    },
+    {
+      "path": "tools/p2_critics_live_probe.ps1",
+      "current_sha256": "f2989f3b55ac5f52b070b8995415678811e6b935c712db10cd3bab6ec06ee2a4",
+      "full_chain_sha256": "f2989f3b55ac5f52b070b8995415678811e6b935c712db10cd3bab6ec06ee2a4",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "d5ecf3b13e60df4df0e6b645459619f78db203b0",
+      "filtered_oid": "c6e1a18f99e3f6fab6a1605454fe190f3bbed6b8",
+      "crlf_count": 17,
+      "lf_count": 17
+    },
+    {
+      "path": "tools/p2_critics_live_probe.py",
+      "current_sha256": "f57256363077dfa14e591d1b1ad85d0ca07675d4b64fa16065efe8be1e18a300",
+      "full_chain_sha256": "f57256363077dfa14e591d1b1ad85d0ca07675d4b64fa16065efe8be1e18a300",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "2b40e4c6a1ad653bd65489076be3defe617771c2",
+      "filtered_oid": "9d02075c075f41237ff5e1f6dae8515d7b7ee98c",
+      "crlf_count": 175,
+      "lf_count": 175
+    },
+    {
+      "path": "tools/p2_direct_live_probe.py",
+      "current_sha256": "42eec1fafc88437df0a0558b8057cc155816fa6a65a79b93c823a0b66c70263f",
+      "full_chain_sha256": "42eec1fafc88437df0a0558b8057cc155816fa6a65a79b93c823a0b66c70263f",
+      "current_matches_test": true,
+      "physical_equals_git_filter": false,
+      "raw_oid": "d9dfa4534ed7d4a6e58118c202831c0ffe259eeb",
+      "filtered_oid": "2798d3376e450af0cdee7b8416fe78281fd7f800",
+      "crlf_count": 101,
+      "lf_count": 101
+    }
+  ],
+  "source_count": 67,
+  "production_files_changed_by_diagnosis": 0
+}

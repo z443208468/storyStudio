@@ -23,4 +23,5 @@ evidence/atom07_current_authorization_20261013/** -text whitespace=cr-at-eol,-bl
 evidence/atom07_nk_advisory_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
 evidence/atom07_request_consumers_20261013/** -text whitespace=cr-at-eol,-blank-at-eol
 evidence/atom07_signed_operations_20261014/** -text whitespace=cr-at-eol,-blank-at-eol
+evidence/atom07_auxiliary_repair_20261014/** -text whitespace=cr-at-eol,-blank-at-eol
 evidence/atom07_w10_v2_20261013/** -text whitespace=cr-at-eol,-blank-at-eol

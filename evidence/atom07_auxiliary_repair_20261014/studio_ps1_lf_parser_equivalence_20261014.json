@@ -1,0 +1,15 @@
+{
+  "status": "READ_ONLY_PARSER_EQUIVALENCE_NOT_EXECUTION_OR_ACCEPTANCE",
+  "path": "tools/studio.ps1",
+  "powershell_version": "7.6.5",
+  "original_sha256": "6b0e8ace6b72371ce45092ca113788e31a08ac24ea98221189f4f014979fec2c",
+  "lf_sha256": "aeedadfea44408e07afa4d664c629bf7d9492e3a0959b2eff64e46962efcf902",
+  "source_parse_error_count": 0,
+  "lf_parse_error_count": 0,
+  "tokens_equal": true,
+  "ast_equal": true,
+  "token_count": 4615,
+  "ast_node_count": 4242,
+  "source_unchanged": true,
+  "script_executed": false
+}

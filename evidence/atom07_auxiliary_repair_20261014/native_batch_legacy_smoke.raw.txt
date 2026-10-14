@@ -1,0 +1,14 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_cnw_runner.py::RunnerTests::test_parallel_transport_keeps_all_receipts_and_shared_budget PASSED [ 25%]
+tests/test_cnw_runner.py::RunnerTests::test_single_shared_slot_keeps_all_independent_requests_without_waiting_workers PASSED [ 50%]
+tests/test_cnw_native_mock_live_boundary.py::NativeMockLiveBoundaryTests::test_shared_enumeration_keeps_pending_and_attempts_without_mutation PASSED [ 75%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_true_legacy_input_and_output_keep_actual_native_route PASSED [100%]
+
+============================== 4 passed in 0.70s ==============================

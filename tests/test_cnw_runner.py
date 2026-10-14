@@ -4,6 +4,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -216,6 +217,8 @@ class RunnerTests(unittest.TestCase):
         path = cnw_runner._critics_excerpt(run, cnw_runner.load_state(run))
         mapping = json.loads(path.with_suffix(".sources.json").read_text(encoding="utf-8"))
         self.assertEqual(len(mapping["selected_sentences"]), 5)
+        expected = "\n".join(row["text"] for row in mapping["selected_sentences"]).rstrip() + "\n"
+        self.assertEqual(path.read_bytes(), expected.replace("\n", os.linesep).encode("utf-8"))
         self.assertNotIn("己关窗", path.read_text(encoding="utf-8"))
         for row in mapping["selected_sentences"]:
             self.assertEqual(prose[row["start"]:row["end"]], row["text"])
@@ -808,6 +811,12 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(cnw_runner.stage_predecessors("writing_brief", "scene"), ("plot", "scene_cards"))
 
     def test_parallel_transport_keeps_all_receipts_and_shared_budget(self):
+        self._exercise_shared_parallel_transport(3)
+
+    def test_single_shared_slot_keeps_all_independent_requests_without_waiting_workers(self):
+        self._exercise_shared_parallel_transport(1)
+
+    def _exercise_shared_parallel_transport(self, shared_limit):
         from tools import p2_cost_guard as guard_module
         from unittest.mock import Mock
         run_dir = self.base / "runs/FICT_SCENE_A"
@@ -815,10 +824,10 @@ class RunnerTests(unittest.TestCase):
         state["max_in_flight"] = 5
         cnw_runner.save_state(run_dir, state)
         config = self.base / "config/production.example.json"
-        config.write_text(json.dumps({"provider": {"max_in_flight": 3}}), encoding="utf-8")
+        config.write_text(json.dumps({"provider": {"max_in_flight": shared_limit}}), encoding="utf-8")
         pricing = json.loads((ROOT / "config/p2_cost_pricing_2026-10-10.json").read_text(encoding="utf-8-sig"))
         ledger = self.base / "mock-ledger.json"
-        barrier = threading.Barrier(3)
+        barrier = threading.Barrier(shared_limit)
         mutex = threading.Lock()
         active = peak = started = 0
         def post(*args, **kwargs):
@@ -828,7 +837,7 @@ class RunnerTests(unittest.TestCase):
                 peak = max(peak, active)
                 started += 1
                 ordinal = started
-            if ordinal <= 3:
+            if ordinal <= shared_limit:
                 barrier.wait(timeout=5)
             time.sleep(0.03)
             with mutex:
@@ -842,10 +851,12 @@ class RunnerTests(unittest.TestCase):
         with patch.object(guard_module, "CONFIG", config), patch.object(guard_module, "LEDGER", ledger), \
                 patch.object(guard_module, "load_config", return_value=({"model": cnw_runner.MODEL, "scope": "MOCK_ONLY", "currency": "CNY", "estimated_campaign_limit": 10}, pricing)), \
                 patch.object(cnw_runner.httpx, "post", side_effect=post), \
+                patch.object(cnw_runner, "ThreadPoolExecutor", wraps=ThreadPoolExecutor) as executor, \
                 patch.dict(cnw_runner.os.environ, {"DEEPSEEK_API_KEY": "MOCK_ONLY_NOT_A_REAL_KEY_12345"}):
             with cnw_runner.locked_run(run_dir, lock_name="execution.lock"):
                 results = cnw_runner._parallel_provider_calls(run_dir, calls)
-            self.assertEqual(peak, 3)
+            self.assertEqual(peak, shared_limit)
+            self.assertEqual(executor.call_args.kwargs["max_workers"], shared_limit)
             self.assertEqual([item[0] for item in results], ["MOCK_ONLY " + str(i) for i in range(5)])
             self.assertEqual(len(cnw_runner.load_state(run_dir)["provider_requests"]), 5)
             entries = json.loads(ledger.read_text(encoding="utf-8"))["requests"]

@@ -1,0 +1,10 @@
+test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2805.688s
+
+OK
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

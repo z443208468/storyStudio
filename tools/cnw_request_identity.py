@@ -103,7 +103,8 @@ def verified_nk_reflection(run, state, contract):
     if receipt.get('input_sha256') != expected_hash:
         raise ContractError('NK_CURRENT_CARDS_MISMATCH', 'the cached request was made for different Cards')
     response = nk_response_from_receipt(run, receipt, expected_payload=payload)
-    section, mapping = map_reflection_to_brief('', response, {**receipt, 'status': 'LIVE_ACCEPTED',
+    section, mapping = map_reflection_to_brief('', response, {**receipt,
+        'status': 'SIMULATED' if receipt.get('mode') == 'MOCK_ONLY' else 'LIVE_ACCEPTED',
         'validated_response_sha256': r.sha(json.dumps(response, ensure_ascii=False, sort_keys=True).encode('utf-8'))})
     artifact = hook.get('artifact', {})
     path = r.assert_output_within_root(run, artifact.get('path', ''))

@@ -1,0 +1,972 @@
+{
+  "status": "STATIC_DEFINITION_COMPARISON_NOT_METHOD_ACCEPTANCE",
+  "records": [
+    {
+      "path": "tools/cnw_roles.py",
+      "current_sha256": "a873ec33bb89cdf28e5ab82004a7d0b70f81f8759421f98ea9376e47fceaa2ab",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "33d8167751329536c53a1064422c55466cf98df1f57ce5609324b1f942e5da87",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_hash_inputs",
+            "_pinned_upstream",
+            "_project_language_instruction",
+            "_read_project_file",
+            "_validate_legacy_markers",
+            "_validate_sidecar_budget",
+            "brief_voice_characters",
+            "brief_voice_samples",
+            "build_role_packet",
+            "plot_structure",
+            "read_actual_texts",
+            "read_production_preparation",
+            "relevant_voice_samples",
+            "resolve_arc",
+            "resolve_author_reads",
+            "role_metadata",
+            "role_receipt",
+            "sha256_bytes",
+            "sha256_file",
+            "validate_role_output",
+            "verify_stage_chain"
+          ],
+          "changed_definitions": [
+            "build_author_role_messages",
+            "build_prose_input_view",
+            "creative_assignment"
+          ],
+          "added_definitions": [
+            "_advisory_length",
+            "_length_guidance"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "a873ec33bb89cdf28e5ab82004a7d0b70f81f8759421f98ea9376e47fceaa2ab",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_advisory_length",
+            "_hash_inputs",
+            "_length_guidance",
+            "_pinned_upstream",
+            "_project_language_instruction",
+            "_read_project_file",
+            "_validate_legacy_markers",
+            "_validate_sidecar_budget",
+            "brief_voice_characters",
+            "brief_voice_samples",
+            "build_author_role_messages",
+            "build_prose_input_view",
+            "build_role_packet",
+            "creative_assignment",
+            "plot_structure",
+            "read_actual_texts",
+            "read_production_preparation",
+            "relevant_voice_samples",
+            "resolve_arc",
+            "resolve_author_reads",
+            "role_metadata",
+            "role_receipt",
+            "sha256_bytes",
+            "sha256_file",
+            "validate_role_output",
+            "verify_stage_chain"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_review.py",
+      "current_sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "dac34e9137a97a6aed8bb3e0ed3e61994157eba4dc23fd8210afd38ab8730ad3",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "build_completeness_input",
+            "build_verifier_packet",
+            "completeness_packet",
+            "digest",
+            "dry_run_cost_reservation",
+            "lens_packet",
+            "main",
+            "mock_lens",
+            "review_offline",
+            "tally_verifiers",
+            "verifier_packets"
+          ],
+          "changed_definitions": [
+            "build_lens_input",
+            "completeness_messages",
+            "completeness_sources",
+            "lens_messages",
+            "verifier_messages",
+            "verifier_sources"
+          ],
+          "added_definitions": [
+            "_length_policy_instruction"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "12989f195abddb2ec5c372b18144243bc69f3da317fdcee77a57a96804e64905",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_length_policy_instruction",
+            "build_completeness_input",
+            "build_lens_input",
+            "build_verifier_packet",
+            "completeness_messages",
+            "completeness_packet",
+            "completeness_sources",
+            "digest",
+            "dry_run_cost_reservation",
+            "lens_messages",
+            "lens_packet",
+            "main",
+            "mock_lens",
+            "review_offline",
+            "tally_verifiers",
+            "verifier_messages",
+            "verifier_packets",
+            "verifier_sources"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_lint.py",
+      "current_sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "lint",
+            "main",
+            "project_rules"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "f7d34b3c64b86b7252c9a7fb995674ac53f7297266e23d0d85e5f45ef161ce7b",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "lint",
+            "main",
+            "project_rules"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_contract.py",
+      "current_sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "378195c7455a70ffc1a5b4714c7957b1983c6a75b324d900df16e8939ea5eb7f",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "ContractError",
+            "_safe_source_file",
+            "_sha256",
+            "_strict_json_object",
+            "_validate_story_anchors",
+            "assert_output_within_root",
+            "check_required_beats",
+            "check_required_fields",
+            "count_visible_chars",
+            "load_contract",
+            "resolve_json_pointer",
+            "validate_episode_budget",
+            "validate_scene_budget",
+            "validate_source_identity",
+            "validate_v2_source_identity",
+            "validate_work_unit_policy",
+            "visible_char_metrics"
+          ],
+          "changed_definitions": [
+            "validate_output_length",
+            "validate_work_unit"
+          ],
+          "added_definitions": [
+            "prose_output_cap",
+            "uses_advisory_length"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "07edcc57f7159add89c888da1e4dad510eb7d10d72205725ffe294ac6c8f88a6",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "ContractError",
+            "_safe_source_file",
+            "_sha256",
+            "_strict_json_object",
+            "_validate_story_anchors",
+            "assert_output_within_root",
+            "check_required_beats",
+            "check_required_fields",
+            "count_visible_chars",
+            "load_contract",
+            "prose_output_cap",
+            "resolve_json_pointer",
+            "uses_advisory_length",
+            "validate_episode_budget",
+            "validate_output_length",
+            "validate_scene_budget",
+            "validate_source_identity",
+            "validate_v2_source_identity",
+            "validate_work_unit",
+            "validate_work_unit_policy",
+            "visible_char_metrics"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_export.py",
+      "current_sha256": "fa71a5bde40e9d278fe64bf8d0eb7dcd6c726dfa184c6e8fe133d24c70e3a1c7",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "cfde506cbda8287bc36570705cd8318dc100bc1b2e8aae959de1b4d9e5e6aaba",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_html_escape",
+            "_new_export_file",
+            "_publish_job_export",
+            "_read"
+          ],
+          "changed_definitions": [
+            "export_reading_package"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "fa71a5bde40e9d278fe64bf8d0eb7dcd6c726dfa184c6e8fe133d24c70e3a1c7",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_html_escape",
+            "_new_export_file",
+            "_publish_job_export",
+            "_read",
+            "export_reading_package"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_revision.py",
+      "current_sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "7e8003c251211fc3cffbd495df1b9cf367549db64673db839ed886a3172ec532",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_durable_replace",
+            "_promote_revision_unlocked",
+            "_promotion_transaction_id",
+            "_recover_promotion_transaction",
+            "build_rereview_packets",
+            "build_revision_plan",
+            "build_revision_record",
+            "main",
+            "plan_persisted_continuation",
+            "promote_revision",
+            "validate_episode_assembly"
+          ],
+          "changed_definitions": [
+            "validate_revision"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "dcf5eb0ad749165e86b71a1f05f7deba0ac37eafe8f59673d0c78f6d471913b0",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_durable_replace",
+            "_promote_revision_unlocked",
+            "_promotion_transaction_id",
+            "_recover_promotion_transaction",
+            "build_rereview_packets",
+            "build_revision_plan",
+            "build_revision_record",
+            "main",
+            "plan_persisted_continuation",
+            "promote_revision",
+            "validate_episode_assembly",
+            "validate_revision"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_import_workflow.py",
+      "current_sha256": "9aa0ec69ca713e717b91c9b836e47dd829a3d00fd1ed897f58a779549e4b8657",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "c7d822a83b1e80d9f79134c863d0f8097c95b80269f4fc7f8e47af5bc9616510",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_apply",
+            "_confirmed_canon_sources",
+            "_document_allowed",
+            "_internal_inbox_metadata",
+            "_inventory",
+            "_json"
+          ],
+          "changed_definitions": [
+            "_reconsume_bookkeeping_response",
+            "_record_classification",
+            "_run_import",
+            "_verify_cached_operation",
+            "run_import"
+          ],
+          "added_definitions": [
+            "_describe_import"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "9aa0ec69ca713e717b91c9b836e47dd829a3d00fd1ed897f58a779549e4b8657",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_apply",
+            "_confirmed_canon_sources",
+            "_describe_import",
+            "_document_allowed",
+            "_internal_inbox_metadata",
+            "_inventory",
+            "_json",
+            "_reconsume_bookkeeping_response",
+            "_record_classification",
+            "_run_import",
+            "_verify_cached_operation",
+            "run_import"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_runner.py",
+      "current_sha256": "66cb903a5d9b3dae3d33dd78fb8f14033ca2b44a32f26df203be4ae9225a8acb",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "d53596b8ffe9a8c13de6b2b8aa9711a231aebbe44d6a37ea6bf8d6f10343e5a0",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_OperationSimulationSession",
+            "_assert_support_components_available",
+            "_author_messages",
+            "_confirmed_findings",
+            "_contract_for",
+            "_cost_account",
+            "_dispatch_cnw_stage",
+            "_estimate_input_tokens",
+            "_execute_cnw_stage_locked",
+            "_held_paths",
+            "_isolated_operation_transport",
+            "_mark_stage_locked",
+            "_next_stage",
+            "_offline_test_fixture_context",
+            "_operation_owner",
+            "_operation_project_registration",
+            "_operation_simulation_call",
+            "_operation_simulation_request_binding",
+            "_p2_guard",
+            "_parse_json_content",
+            "_persist_stage",
+            "_planning_stage",
+            "_project_relative",
+            "_publish_lens_feedback",
+            "_read_stage_text",
+            "_record_hook",
+            "_resolve_legacy_frozen_path",
+            "_role_meta",
+            "_role_sources",
+            "_run_dir_base",
+            "_sanitize",
+            "_single_verifier_vote",
+            "_source_root",
+            "_step_locked",
+            "_support_integration_mode",
+            "_validate_finding_identities",
+            "_validate_review_call_coverage",
+            "_validate_role",
+            "_verify_cost_receipt",
+            "_verify_operation_simulated_receipt",
+            "_write_run_candidate_file",
+            "bind_accepted_review_outputs",
+            "build_plot_request",
+            "cached_receipts",
+            "execute_cnw_stage",
+            "execute_completeness",
+            "execute_five_lenses",
+            "execute_lint",
+            "execute_plot",
+            "execute_re_review",
+            "execute_scene_cards",
+            "execute_three_verifiers",
+            "execute_writing_brief",
+            "export_run",
+            "invalidate_run",
+            "legacy_recovery_plan",
+            "legacy_source_preflight",
+            "literary_source_freeze",
+            "load_state",
+            "locked_run",
+            "main",
+            "make_parser",
+            "mark_stage",
+            "normalize_stage",
+            "now",
+            "promote_run",
+            "reactivate_receipt",
+            "recovery_plan",
+            "register_editorial_candidate",
+            "resume_run",
+            "review_run",
+            "run_path",
+            "run_remaining_stages",
+            "runs_root_for",
+            "safe_run_id",
+            "safe_run_input",
+            "save_state",
+            "sha",
+            "show_run",
+            "sprint_run",
+            "stage_predecessors",
+            "stage_prompt_hash",
+            "step",
+            "validate_literary_source_freeze",
+            "verify_history"
+          ],
+          "changed_definitions": [
+            "_cnw_live_call_in_slot",
+            "_critics_excerpt",
+            "_critics_hook",
+            "_invoke_nk_service",
+            "_invoke_nk_service_in_slot",
+            "_nk_pov",
+            "_operation_transport_identity",
+            "_parallel_provider_calls",
+            "_receipt_content",
+            "_require_generic_provider_authorization",
+            "_require_project_operation_authorization",
+            "_review_sources",
+            "_validate_raw_live_response",
+            "cnw_live_call",
+            "execute_prose",
+            "execute_refine",
+            "produce",
+            "verify_live"
+          ],
+          "added_definitions": [
+            "_critics_excerpt_selection",
+            "_verify_current_nk_payload",
+            "prose_attempt_messages",
+            "refine_attempt_messages",
+            "strip_prose_envelope"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "1fd16c23b18c476e31dddd38ba06112ef878ef18d845c05f7a8f7ef0015cdfcd",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_OperationSimulationSession",
+            "_assert_support_components_available",
+            "_author_messages",
+            "_cnw_live_call_in_slot",
+            "_confirmed_findings",
+            "_contract_for",
+            "_cost_account",
+            "_dispatch_cnw_stage",
+            "_estimate_input_tokens",
+            "_execute_cnw_stage_locked",
+            "_held_paths",
+            "_isolated_operation_transport",
+            "_mark_stage_locked",
+            "_next_stage",
+            "_offline_test_fixture_context",
+            "_operation_owner",
+            "_operation_project_registration",
+            "_operation_simulation_call",
+            "_operation_simulation_request_binding",
+            "_operation_transport_identity",
+            "_p2_guard",
+            "_parse_json_content",
+            "_persist_stage",
+            "_planning_stage",
+            "_project_relative",
+            "_publish_lens_feedback",
+            "_read_stage_text",
+            "_receipt_content",
+            "_record_hook",
+            "_require_project_operation_authorization",
+            "_resolve_legacy_frozen_path",
+            "_review_sources",
+            "_role_meta",
+            "_role_sources",
+            "_run_dir_base",
+            "_sanitize",
+            "_single_verifier_vote",
+            "_source_root",
+            "_step_locked",
+            "_support_integration_mode",
+            "_validate_finding_identities",
+            "_validate_raw_live_response",
+            "_validate_review_call_coverage",
+            "_validate_role",
+            "_verify_cost_receipt",
+            "_verify_operation_simulated_receipt",
+            "_write_run_candidate_file",
+            "bind_accepted_review_outputs",
+            "build_plot_request",
+            "cached_receipts",
+            "cnw_live_call",
+            "execute_cnw_stage",
+            "execute_completeness",
+            "execute_five_lenses",
+            "execute_lint",
+            "execute_plot",
+            "execute_prose",
+            "execute_re_review",
+            "execute_refine",
+            "execute_scene_cards",
+            "execute_three_verifiers",
+            "execute_writing_brief",
+            "export_run",
+            "invalidate_run",
+            "legacy_recovery_plan",
+            "legacy_source_preflight",
+            "literary_source_freeze",
+            "load_state",
+            "locked_run",
+            "main",
+            "make_parser",
+            "mark_stage",
+            "normalize_stage",
+            "now",
+            "produce",
+            "promote_run",
+            "prose_attempt_messages",
+            "reactivate_receipt",
+            "recovery_plan",
+            "refine_attempt_messages",
+            "register_editorial_candidate",
+            "resume_run",
+            "review_run",
+            "run_path",
+            "run_remaining_stages",
+            "runs_root_for",
+            "safe_run_id",
+            "safe_run_input",
+            "save_state",
+            "sha",
+            "show_run",
+            "sprint_run",
+            "stage_predecessors",
+            "stage_prompt_hash",
+            "step",
+            "strip_prose_envelope",
+            "validate_literary_source_freeze",
+            "verify_history"
+          ],
+          "changed_definitions": [
+            "_critics_excerpt",
+            "_critics_hook",
+            "_invoke_nk_service",
+            "_invoke_nk_service_in_slot",
+            "_nk_pov",
+            "_parallel_provider_calls",
+            "_require_generic_provider_authorization",
+            "verify_live"
+          ],
+          "added_definitions": [
+            "_critics_excerpt_selection",
+            "_verify_current_nk_payload"
+          ],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_recovery.py",
+      "current_sha256": "41ca90a7c57d75c45d6c4151d9d69daa1209bbade0665b9c861905011bf4913a",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_code",
+            "_digest",
+            "_modules",
+            "archive_stage",
+            "execute_checked",
+            "plan_recovery",
+            "refresh_references",
+            "stage_identity",
+            "support_input_snapshot",
+            "verify_contract"
+          ],
+          "changed_definitions": [
+            "verify_evidence"
+          ],
+          "added_definitions": [
+            "iter_native_support_records"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "727c19d62d53e5055e61e1308b1f922f9149e1dba08294c08b0f832b5109aa69",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_code",
+            "_digest",
+            "_modules",
+            "archive_stage",
+            "execute_checked",
+            "plan_recovery",
+            "refresh_references",
+            "stage_identity",
+            "support_input_snapshot",
+            "verify_contract"
+          ],
+          "changed_definitions": [
+            "verify_evidence"
+          ],
+          "added_definitions": [
+            "iter_native_support_records"
+          ],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_request_identity.py",
+      "current_sha256": "667cbbf060de7b8a0971ef0cc13e1b7309cc32e7588dc337bcebb57a403f7490",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "baseline_module": "ABSENT_IN_EXACT_TREE",
+          "identical_universal_newline_text": false,
+          "changed_definitions": [],
+          "added_definitions": [
+            "_call",
+            "_content",
+            "_prior",
+            "_prose",
+            "_rereview",
+            "_revision",
+            "expected_requests",
+            "nk_response_from_receipt",
+            "verified_nk_reflection"
+          ]
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "3da605ffe773e4e02f1c8926e5a76085d1c607cb1c0bc0f016ea1c92e9987881",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_call",
+            "_content",
+            "_prior",
+            "_prose",
+            "_rereview",
+            "_revision",
+            "expected_requests",
+            "nk_response_from_receipt"
+          ],
+          "changed_definitions": [
+            "verified_nk_reflection"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_project.py",
+      "current_sha256": "e883f11a1de780f03e1d69e56609de5c0a25ebe917c3a7203cbb5f7418e09a60",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "fea6f6459bc8fc24caf527d6ffe54e4efb85f35d534fb36de35844f2fc63be66",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_append_log",
+            "_compute_contract_preflight",
+            "_import_source_unlocked",
+            "_incremental_update_unlocked",
+            "_initialize_project_root",
+            "_json_bytes",
+            "_json_scalars",
+            "_registered_project_identity",
+            "_reject_duplicate_json_keys",
+            "_required_text",
+            "_run_import_unlocked",
+            "_source_manifest_revision",
+            "_write_contract_draft_unlocked",
+            "_write_immutable_snapshot",
+            "build_contract_preflight",
+            "build_run_contract_preflight",
+            "build_source_bound_contract",
+            "canon_audit",
+            "handoff",
+            "import_source",
+            "incremental_update",
+            "init_project",
+            "init_registered_project",
+            "list_source_revisions",
+            "main",
+            "project_directory",
+            "semantic_import",
+            "sha",
+            "standard_operation",
+            "support_workflow_prompt",
+            "verify_contract_preflight",
+            "write_contract_draft"
+          ],
+          "changed_definitions": [
+            "build_work_contract_v2"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "e883f11a1de780f03e1d69e56609de5c0a25ebe917c3a7203cbb5f7418e09a60",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_append_log",
+            "_compute_contract_preflight",
+            "_import_source_unlocked",
+            "_incremental_update_unlocked",
+            "_initialize_project_root",
+            "_json_bytes",
+            "_json_scalars",
+            "_registered_project_identity",
+            "_reject_duplicate_json_keys",
+            "_required_text",
+            "_run_import_unlocked",
+            "_source_manifest_revision",
+            "_write_contract_draft_unlocked",
+            "_write_immutable_snapshot",
+            "build_contract_preflight",
+            "build_run_contract_preflight",
+            "build_source_bound_contract",
+            "build_work_contract_v2",
+            "canon_audit",
+            "handoff",
+            "import_source",
+            "incremental_update",
+            "init_project",
+            "init_registered_project",
+            "list_source_revisions",
+            "main",
+            "project_directory",
+            "semantic_import",
+            "sha",
+            "standard_operation",
+            "support_workflow_prompt",
+            "verify_contract_preflight",
+            "write_contract_draft"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_pack_app.py",
+      "current_sha256": "f993dd3ba4b388c9f806a83c013b390ca9ad92f6b179f3e4bfd71cb30f9926d6",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "0c38a6e8958675938db60ef3de17d77107dc827152cab730c547173e27fa4ccf",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "_attempt_source_projection",
+            "_execute_package_task",
+            "_export_package_run",
+            "_git",
+            "_home",
+            "_job_run",
+            "_live_attempt",
+            "_live_attempt_declaration",
+            "_offline_job_run",
+            "_save_job_progress",
+            "_task_job_identity",
+            "derive_fifth_lens",
+            "execute_package_job",
+            "import_package",
+            "main",
+            "prepare_package_runs",
+            "source_repository",
+            "validate_attempt_metadata"
+          ],
+          "changed_definitions": [
+            "_execute_live_package_job"
+          ],
+          "added_definitions": [],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "f993dd3ba4b388c9f806a83c013b390ca9ad92f6b179f3e4bfd71cb30f9926d6",
+          "identical_git_bytes": true,
+          "identical_universal_newline_text": true,
+          "unchanged_definitions": [
+            "_attempt_source_projection",
+            "_execute_live_package_job",
+            "_execute_package_task",
+            "_export_package_run",
+            "_git",
+            "_home",
+            "_job_run",
+            "_live_attempt",
+            "_live_attempt_declaration",
+            "_offline_job_run",
+            "_save_job_progress",
+            "_task_job_identity",
+            "derive_fifth_lens",
+            "execute_package_job",
+            "import_package",
+            "main",
+            "prepare_package_runs",
+            "source_repository",
+            "validate_attempt_metadata"
+          ],
+          "changed_definitions": [],
+          "added_definitions": [],
+          "removed_definitions": []
+        }
+      }
+    },
+    {
+      "path": "tools/cnw_critics_adapter.py",
+      "current_sha256": "02ec549128f8a811b937e9ba3e540f4504051fd431fbec89f9ed1f203a036477",
+      "comparisons": {
+        "frozen06": {
+          "commit": "84e022de0fee6eb7d7eec4c248703621129491e1",
+          "source_sha256": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "build_plan_critique_command",
+            "build_plan_revise_command",
+            "native_conversation_template",
+            "native_prompt_dependencies_match",
+            "native_templates",
+            "native_text_templates",
+            "verify_plan_receipt"
+          ],
+          "changed_definitions": [
+            "read_native_result"
+          ],
+          "added_definitions": [
+            "_NativeReadBatch",
+            "_read_native_result",
+            "read_native_support_records"
+          ],
+          "removed_definitions": []
+        },
+        "returned07": {
+          "commit": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+          "source_sha256": "f4570876a9284983cb707542000f933ef69dbf72be61b9e45b7e1693b64124bb",
+          "identical_git_bytes": false,
+          "identical_universal_newline_text": false,
+          "unchanged_definitions": [
+            "build_plan_critique_command",
+            "build_plan_revise_command",
+            "native_conversation_template",
+            "native_prompt_dependencies_match",
+            "native_templates",
+            "native_text_templates",
+            "verify_plan_receipt"
+          ],
+          "changed_definitions": [
+            "read_native_result"
+          ],
+          "added_definitions": [
+            "_NativeReadBatch",
+            "_read_native_result",
+            "read_native_support_records"
+          ],
+          "removed_definitions": []
+        }
+      }
+    }
+  ],
+  "tests_run": 0,
+  "production_calls": 0,
+  "limits": "Definition hashes exclude line positions. Equality supports evidence scope, not runtime correctness. All changed or added functions remain subject to actual consumer evidence and independent verdict."
+}

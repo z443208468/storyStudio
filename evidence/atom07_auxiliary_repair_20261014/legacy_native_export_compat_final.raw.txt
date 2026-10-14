@@ -1,0 +1,43 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 20 items
+
+tests/test_cnw_export.py::ExportTests::test_anchor_free_adapt_export_uses_selected_source_excerpt PASSED [  5%]
+tests/test_cnw_export.py::ExportTests::test_changed_anchor_refuses_instead_of_exporting_different_context PASSED [ 10%]
+tests/test_cnw_export.py::ExportTests::test_original_episode_exports_one_chapter_without_fabricated_anchors PASSED [ 15%]
+tests/test_cnw_export.py::ExportTests::test_reading_package_contains_verified_real_anchors_in_order PASSED [ 20%]
+tests/test_cnw_export.py::ExportTests::test_v2_export_rejects_well_formed_but_unsupported_locale PASSED [ 25%]
+tests/test_cnw_export.py::ExportTests::test_v2_export_requires_explicit_matching_locale PASSED [ 30%]
+tests/test_cnw_export.py::ExportTests::test_v2_exports_for_same_project_id_stay_in_distinct_instances PASSED [ 35%]
+tests/test_cnw_support_consumers.py::SupportConsumerTests::test_actual_nk_result_enters_brief_and_verified_cache_rejects_tampering PASSED [ 40%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_actual_brief_builder_consumes_matching_native_response PASSED [ 45%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_current_cards_cannot_rebind_old_nk_payload PASSED [ 50%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_duplicate_receipt_and_mapping_or_provider_mismatch_rejected PASSED [ 55%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_native_request_is_mandatory_and_self_rehash_cannot_change_payload 
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_native_request_is_mandatory_and_self_rehash_cannot_change_payload PASSED [ 60%]
+tests/test_cnw_nk_request_identity.py::NKRequestIdentityTests::test_self_rehashed_reflection_cannot_replace_actual_response PASSED [ 65%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_bridge_keeps_existing_dynamic_import_without_module_registration PASSED [ 70%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_direct_bridge_rejects_registered_material_before_key_or_output 
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_direct_bridge_rejects_registered_material_before_key_or_output PASSED [ 75%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_legacy_output_cannot_downgrade_registered_input_or_critique 
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_legacy_output_cannot_downgrade_registered_input_or_critique PASSED [ 80%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_native_component_uses_real_shared_accounts_and_preserves_unknown FAILED [ 85%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_p2_runner_rejects_unbound_registered_run_before_provider_or_cost PASSED [ 90%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_registered_project_inputs_and_run_output_are_scoped_to_instance PASSED [ 95%]
+tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_true_legacy_input_and_output_keep_actual_native_route PASSED [100%]
+
+================================== FAILURES ===================================
+_ CriticsBridgeDataHomeTests.test_native_component_uses_real_shared_accounts_and_preserves_unknown _
+tests\test_critics_bridge_datahome.py:361: in test_native_component_uses_real_shared_accounts_and_preserves_unknown
+    self.assertEqual(result, 0 if index == 0 else 1)
+E   AssertionError: 1 != 0
+---------------------------- Captured stdout call -----------------------------
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-revise", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-input-pack-j0nmf1lb\\data\\projects\\e2328906-cb63-43a1-8952-6506dc25d6d3\\runs\\NATIVE-COMPONENT", "provider_call_count": 0, "provider_request_ids": [], "error_type": "ContractError"}
+=========================== short test summary info ===========================
+FAILED tests/test_critics_bridge_datahome.py::CriticsBridgeDataHomeTests::test_native_component_uses_real_shared_accounts_and_preserves_unknown - AssertionError: 1 != 0
+======== 1 failed, 19 passed, 19 subtests passed in 392.52s (0:06:32) =========

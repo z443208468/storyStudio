@@ -92,6 +92,33 @@ class SignedOperationTests(unittest.TestCase):
         self.assertFalse(result['provider_call_authorized'])
         return Path(result['run_dir'])
 
+    def test_verification_expiry_rejects_operation_before_slot_or_reservation(self):
+        run = self.prepare('audit')
+        self.sign(run)
+        frozen = json.loads((run/'artifacts/cost_operation.json').read_bytes())
+        args = {key:frozen[key] for key in ('stage','role_id','messages','output_cap','extra')}
+        original_files, original_ledger = self.snapshot(), self.base.fees.ledger.read_bytes()
+        observations = []
+        with self.session([run]):
+            for entry in (runner.cnw_live_call, runner._cnw_live_call_in_slot):
+                clock = live_fixtures.verification_expiry_clock(self.terms)
+                with self.subTest(entry=entry.__name__), patch.object(auth, 'datetime', clock), \
+                        patch.object(cost_guard.accounting, 'provider_slot',
+                            side_effect=AssertionError('expired grant cannot open slot')), \
+                        self.assertRaisesRegex(ContractError, 'LIVE_GRANT_EXPIRED'):
+                    entry(run, **args)
+                self.assertEqual(len(clock.observations), 2)
+                observations.append({'entry':entry.__name__,'clock':clock.observations})
+        self.assertEqual(self.snapshot(), original_files)
+        self.assertEqual(self.base.fees.ledger.read_bytes(), original_ledger)
+        self.assertEqual(self.calls, [])
+        target = os.environ.get('CNW_LIVE_GRANT_TEST_EVIDENCE')
+        if target:
+            Path(target+'.operation_verification_expiry.json').write_text(json.dumps({
+                'simulation_status':'SIMULATED','real_provider_calls':0,
+                'observations':observations,'synthetic_ledger_sha256':hashlib.sha256(original_ledger).hexdigest(),
+                'actual_transport_calls':self.calls},indent=2),encoding='utf-8')
+
     def test_actual_import_update_audit_handoff_signed_transport_and_cache(self):
         evidence = []
         for operation in ('import', 'update', 'audit', 'handoff'):
@@ -292,6 +319,97 @@ class SignedOperationTests(unittest.TestCase):
             self.assertEqual(self.snapshot(), before_files)
             self.assertEqual(self.base.fees.ledger.read_bytes(), before_fee)
             self.assertEqual(self.calls, [])
+
+    def test_signed_approved_revision_publishes_only_copy_and_reuses_receipt(self):
+        original = '07_draft/episodes/EP001.md'
+        unapproved = '07_draft/episodes/EP002.md'
+        plan, approval = '09_revision/revision_plan.md', '00_meta/author_decisions/fictional.json'
+        for name, text in ((original, 'Mira has not yet asked her neighbor for help.'),
+                           (unapproved, 'Unapproved second chapter must stay untouched.')):
+            (self.root/name).parent.mkdir(parents=True, exist_ok=True)
+            (self.root/name).write_text(text, encoding='utf-8')
+        item = 'EP001: clarify the fictional request without changing Canon.'
+        (self.root/plan).parent.mkdir(parents=True, exist_ok=True)
+        (self.root/plan).write_text('# Revision plan\n' + item + '\nEP002: unapproved suggestion.\n', encoding='utf-8')
+        digest = lambda name: hashlib.sha256((self.root/name).read_bytes()).hexdigest()
+        protected = {p.relative_to(self.root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                     for folder in ('01_theme', '02_logline', '90_canon')
+                     for p in (self.root/folder).rglob('*') if p.is_file() and p.suffix.lower() in {'.md', '.txt', '.json'}}
+        decision = {'schema_version': 'cnw_workflow03_user_approval_v1',
+            'author_decision': 'APPROVE_SELECTED_ITEMS',
+            'project_instance_id': json.loads((self.root/'project_identity.json').read_bytes())['project_instance_id'],
+            'plan_sha256': digest(plan), 'draft_sha256': {original: digest(original)},
+            'approved_items': [{'chapter': original, 'plan_excerpt': item}], 'protected_sha256': protected}
+        (self.root/approval).parent.mkdir(parents=True, exist_ok=True)
+        (self.root/approval).write_text(json.dumps(decision), encoding='utf-8')
+        untouched = {name: (self.root/name).read_bytes() for name in (original, unapproved, plan, approval)}
+        prepared = maintenance.run_maintenance(self.root, 'revision_apply', sources=(original,),
+            revision_approval=approval, prepare_only=True)
+        self.assertEqual(prepared['status'], 'AUTHORIZATION_PENDING')
+        self.assertFalse(prepared['provider_call_authorized'])
+        run = Path(prepared['run_dir'])
+        request = self.sign(run)
+        binding = operations.revision_approval(self.root, [original], approval)
+        destination = binding['revision_destinations'][original]
+        self.assertFalse((self.root/destination).exists())
+        revised = 'Mira asks the keeper for a screwdriver before touching the hinge. They remain neighbors.'
+        def reply(run_dir, *, url, body, request_id):
+            self.assertEqual(Path(run_dir), run)
+            payload = json.loads(body['messages'][1]['content'])
+            self.assertEqual(payload['selection']['operation'], 'revision_apply')
+            self.assertEqual(payload['selection']['revision_approval'], binding)
+            self.calls.append({'run': str(run_dir), 'request_id': request_id, 'body': copy.deepcopy(body)})
+            content = {'documents': {destination: revised}, 'report_markdown': '# Revision\nOnly the approved request was clarified.',
+                'assumptions': [], 'unresolved_questions': [], 'next_action': 'Review the separate revised copy.'}
+            return SimpleNamespace(status_code=200, json=lambda: {
+                'id': 'SIMULATED-APPROVED-REVISION', 'model': runner.MODEL,
+                'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps(content)}}],
+                'usage': {'prompt_tokens': 10, 'completion_tokens': 10}})
+        with _isolated_live_transport(self.owner, data_home=self.base.fixture.data_home,
+                projects=[self.root], runs=[run], transport=reply):
+            self.assertIsNone(runner._OPERATION_SIMULATION.get())
+            applied = maintenance.run_maintenance(self.root, 'revision_apply', sources=(original,), revision_approval=approval)
+            before_reuse = self.base.fees.ledger.read_bytes()
+            repeat = maintenance.run_maintenance(self.root, 'revision_apply', sources=(original,), revision_approval=approval)
+            self.assertEqual(repeat['provider_call'], 'reused')
+            self.assertEqual(self.base.fees.ledger.read_bytes(), before_reuse)
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(set(applied['documents']), {destination})
+        self.assertEqual((self.root/destination).read_bytes(), revised.encode('utf-8'))
+        self.assertTrue(applied['revision_approved'])
+        self.assertFalse(applied['promoted'])
+        self.assertFalse(applied['canon_modified'])
+        self.assertFalse(applied['user_creative_accepted'])
+        self.assertTrue((self.root/applied['revision_record']).is_file())
+        self.assertEqual(list((self.root/'09_revision/approved').rglob('EP002.md')), [])
+        for name, raw in untouched.items():
+            self.assertEqual((self.root/name).read_bytes(), raw)
+        for name, frozen in protected.items():
+            self.assertEqual(digest(name), frozen)
+        state = runner.load_state(run)
+        self.assertEqual(len(state['provider_requests']), 1)
+        receipt = state['provider_requests'][0]
+        self.assertEqual(receipt['mode'], 'MOCK_ONLY')
+        self.assertEqual(receipt['simulation_status'], 'SIMULATED')
+        self.assertIs(receipt['fixture_only'], True)
+        rows = cost_guard.accounting.read_ledger_snapshot()['requests']
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['status'], 'SETTLED')
+        self.assertEqual(rows[0]['cost_context']['stage'], 'project_revision_apply')
+        self.assertEqual(rows[0]['cost_context']['run_id'], run.name)
+        self.assertEqual(rows[0]['cost_context']['project_instance_id'], decision['project_instance_id'])
+        target = os.environ.get('CNW_LIVE_GRANT_TEST_EVIDENCE')
+        if target:
+            files = {p.relative_to(run).as_posix(): {'sha256': hashlib.sha256(p.read_bytes()).hexdigest(),
+                'utf8': p.read_bytes().decode('utf-8')} for p in run.rglob('*') if p.is_file()}
+            Path(target + '.signed_revision.json').write_text(json.dumps({
+                'simulation_status': 'SIMULATED', 'real_provider_calls': 0,
+                'operations': [{'operation': 'revision_apply', 'result': applied,
+                    'request': request, 'state': state, 'files': files}],
+                'actual_http': self.calls, 'actual_synthetic_ledger': rows,
+                'approved_copy': {'path': destination, 'sha256': digest(destination), 'utf8': revised},
+                'original_protected_sha256': {name: digest(name) for name in untouched},
+                'canon_protected_sha256': protected}, ensure_ascii=False, indent=2), encoding='utf-8')
 
     def test_pending_and_transaction_without_pointer_never_publish_in_prepare(self):
         run = self.prepare('import')

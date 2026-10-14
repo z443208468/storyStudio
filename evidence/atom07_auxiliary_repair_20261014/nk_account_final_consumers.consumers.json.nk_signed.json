@@ -1,0 +1,906 @@
+{
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "actual_requests": [
+    {
+      "stage": "plot",
+      "messages": [
+        {
+          "role": "system",
+          "content": "[pinned_author_template: templates/06_plot/plot.template.md blob=8eb22fa6221351c2b614a3ae7d5dc4a53d3e8688]\n# Chapter Plot — ch<NN>\n\nThe structured plot for a single chapter. The first agent in the per-chapter pipeline produces this; the scene card agent expands it; the brief agent narrows it; the prose agent writes from the brief.\n\nThis file is the macro layer. It answers: \"What is this chapter about, and what must it accomplish?\"\n\n---\n\n## Identity\n\n- **Chapter number**: <NN>\n- **Working title**: <title>\n- **Arc**: <which arc this chapter belongs to (e.g. \"Arc 2, chapter 5 of 20\")>\n- **POV**: <character>\n\n---\n\n## Role in the Arc\n\nOne paragraph: what does this chapter exist to do at the arc level?\n\n- Is it a setup chapter (planting seeds)?\n- A payoff chapter (resolving prior setups)?\n- A pivot chapter (changing the direction of the arc)?\n- A breather chapter (character beat / world detail)?\n- A climactic chapter (arc-level resolution)?\n\nIf the chapter doesn't have a clear role, the chapter shouldn't exist yet — go back to the arc design.\n\n---\n\n## Key Scenes (3–6 typical)\n\nBullet list of the scenes this chapter must include, in order. Each scene gets one line at this stage; the scene card agent will expand each one.\n\n1. <scene one — one-line summary>\n2. <scene two — one-line summary>\n3. <scene three — one-line summary>\n4. ...\n\n---\n\n## Hook (chapter ending)\n\nThe last beat of the chapter. What makes the reader want to read the next one?\n\n- **Hook type**: <cliffhanger / revelation / atmospheric / character-moment / question-raised>\n- **Specific hook**: <one sentence>\n\nThe hook should match the arc-level pacing target. Not every chapter needs a cliffhanger; not every chapter can afford a quiet ending.\n\n---\n\n## Required Story Beats (must land in this chapter)\n\nThings that MUST happen, regardless of how the prose develops:\n\n- <beat — e.g. \"Character X learns Character Y is alive\">\n- <beat — e.g. \"The reader sees the antagonist make decision Z\">\n- <beat>\n\nThese are non-negotiable. The plot review lens checks for them.\n\n---\n\n## Forbidden Items (must NOT appear in this chapter)\n\nThings that must NOT show up:\n\n- <forbidden — e.g. \"No mention of [future plot element] yet\">\n- <forbidden — e.g. \"Character X's true name must not be spoken aloud\">\n- <forbidden — e.g. \"The reader must not learn fact Y until chapter NN+3\">\n\nThese are the per-scene/per-chapter forbidden items, distinct from the global `forbidden_patterns.md` (which is about prose style, not story disclosure).\n\n---\n\n## Foreshadowing — plant / payoff\n\nIf this chapter plants a seed for later payoff, or pays off a seed planted earlier, document it:\n\n- **Planting**: <seed planted in this chapter, target payoff chapter>\n- **Paying off**: <seed planted in ch<NN>, paid off here>\n\nUpdate `../90_canon/timeline.md` foreshadowing ledger to match.\n\n---\n\n## Connections\n\n- **Previous chapter (ch<NN-1>) ended with**: <one sentence>\n- **This chapter starts at**: <time gap from previous? location change?>\n- **Next chapter (ch<NN+1>) will need to receive from this one**: <what must be true at chapter end>\n\n---\n\n## Target Length\n\n<word count or character count target>\n\n---\n\n## Notes for the Scene Card Agent\n\nAnything the next stage of the pipeline needs to know that doesn't fit above:\n\n- <note>\n- <note>\n\n---\n\n## How Agents Use This File\n\n- **Scene card agent** reads this and expands each \"key scene\" into a structured scene card.\n- **Brief agent** reads this for the macro view, then narrows it to per-scene instructions.\n- **Plot review lens** checks the drafted chapter against the \"Required Story Beats\" and \"Forbidden Items\" sections.\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_language_contract]\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\n\n\n[project_length_policy]\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：## Identity / ## Role in the Arc / ## Key Scenes / ## Hook / ## Required Story Beats / ## Forbidden Items / ## Connections / ## Target Length。\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n\n[plot_design_responsibility]\n依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、Required Story Beats、Hook、伏笔与章节衔接。已有必需节拍是必须覆盖的要求，不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。按作者模板区分 Key Scenes（场景概要）与 Required Story Beats（必须发生的事件），本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。仅依据合同明确选定的来源修订与选段设计改编；保留选段中可确认的来源事实，不把未选来源或未选范围当作事实。他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。不得从执行器的记账元数据推导创作要求。\n"
+        },
+        {
+          "role": "user",
+          "content": "{\"assignment\": {\"project_id\": \"TIDELINE\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"arc_sha256\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1}, \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_policy\": \"ADVISORY\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"planning_mode\": \"author_plot\", \"policy_sha256\": \"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\", \"pov\": \"Mira\", \"target_visible_chars\": 150}}, \"materials\": {\"04_chapter_design/arc_<NN>.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\", \"90_canon/canon.md\": \"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\"}, \"support\": {\"production_preparation\": {\"documents\": {\"04_chapter_design/arc_01.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\", \"04_chapter_design/arc_01_episode_details.md\": \"Keep the action to one hinge repair and its immediate social consequence.\", \"07_draft/manuscript_index.md\": \"No prior story chapter has been accepted.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\", \"92_style_engine/character_voice_samples.md\": \"## Mira\\n'I would rather ask than guess.'\\n\\n## Keeper\\n'Try this screwdriver.'\\n\", \"94_runtime/current_state.md\": \"Mira and the keeper are neighbors; their relationship is not familial.\", \"selected_source_excerpt\": \"Mira asks the keeper to help with a loose hinge.\\r\\n\", \"selected_source_identity\": \"{\\\"canonical_selected_value_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"manifest_revision_sha256\\\": \\\"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_index_sha256\\\": \\\"a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"wire_excerpt_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\"}\"}, \"previous_episode\": \"SCENE_SOURCE_ANCHORS\", \"source_hashes\": {\"04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\", \"07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\", \"90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\", \"92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\", \"94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\", \"selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"selected_source_identity\": \"cfb5c43b4055bbfd95d0161be3eb82bb2ba1c502e15d3508287762700da461fb\"}, \"source_method\": \"example_project/00_meta/episode_production_manual.md#production-reading-order\"}}}"
+        }
+      ],
+      "mode": "MOCK_ONLY"
+    },
+    {
+      "stage": "scene_cards",
+      "messages": [
+        {
+          "role": "system",
+          "content": "[pinned_author_template: templates/05_scene_cards/scene_cards.template.md blob=b003a987ac1bd5eb1ae6f8dcf7dceffdfdfeaf5d]\n# Scene Cards — ch<NN>\n\nPer-scene breakdown. The scene card agent expands each \"key scene\" from the plot file into a structured card. The brief agent then uses these cards to build the prose-writing instructions.\n\nFormat: one section per scene, in the order they appear in the chapter.\n\n---\n\n## Scene 1\n\n### Identity\n- **Scene label**: <e.g. \"Opening — discovery in the library\">\n- **POV**: <character — usually inherited from chapter POV but can shift>\n- **Location**: <specific place>\n- **Time**: <when in the in-world day; how long after previous scene>\n- **Approximate length**: <% of chapter, or word/character count>\n\n### Cast\n- **On-screen characters**: <list>\n- **Mentioned but off-screen**: <list>\n\n### Start state\nWhat is the situation as the scene opens? One paragraph.\n- Where are the characters physically?\n- What just happened?\n- What does each on-screen character WANT in this moment?\n- What does the POV character know / not know?\n\n### End state\nWhat must be true when the scene ends? One paragraph.\n- What has changed in the situation?\n- What has changed in the POV character's understanding?\n- What new fact / feeling does the reader walk away with?\n\n### Required beats\nBullet list of beats that MUST happen in this scene:\n- <beat — e.g. \"Character A names the artifact for the first time\">\n- <beat — e.g. \"Character B's hesitation is visible to the reader but not to character A\">\n- <beat>\n\n### Forbidden items for this scene\nThings that must NOT happen in THIS scene, even if they're fine in other scenes:\n- <forbidden — e.g. \"POV character does not yet realize what they're looking at\">\n- <forbidden — e.g. \"No mention of [later plot element]\">\n- <forbidden — e.g. \"Character C does not enter the room until next scene\">\n\n### Sensory anchor\nOne sense detail to ground the scene. (Helps prose stay specific instead of generic.)\n- <e.g. \"The library smells faintly of mildew under the lamp oil\">\n\n### Tone / pacing\n- **Tempo**: <slow / measured / brisk / urgent>\n- **Emotional register**: <one sentence>\n\n### Connection to next scene\n- **How this scene hands off to scene 2**: <one sentence>\n\n---\n\n## Scene 2\n\n(Repeat the block above for each scene in the chapter.)\n\n---\n\n## Scene 3\n\n...\n\n---\n\n## Notes for the Brief Agent\n\nAnything the next stage needs to know about the chapter as a whole, that didn't fit into individual scenes:\n\n- <note>\n- <note>\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** reads all scene cards for the chapter, plus the plot file, plus relevant canon, and produces the final writing brief.\n- **Prose agent** does NOT read this file directly (too much for one prompt). It reads the brief instead.\n- **Plot review lens** checks the drafted chapter to verify each scene's \"Required beats\" landed and no \"Forbidden items\" appeared.\n\nThe scene card stage is where most structural problems get caught early — before any prose is generated. If a scene's start state, required beats, and end state don't add up, fix it here, not in the prose.\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_language_contract]\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\n\n\n[project_length_policy]\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：### Identity / ### Cast / ### Start state / ### End state / ### Required beats / ### Forbidden items for this scene / ### Sensory anchor / ### Tone / pacing / ### Connection to next scene。\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+        },
+        {
+          "role": "user",
+          "content": "{\"assignment\": {\"project_id\": \"TIDELINE\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"arc_sha256\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1}, \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_policy\": \"ADVISORY\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"planning_mode\": \"author_plot\", \"policy_sha256\": \"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\", \"pov\": \"Mira\", \"target_visible_chars\": 150}}, \"materials\": {\"06_plot/<work_id>_plot.md\": \"## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\"}}"
+        }
+      ],
+      "mode": "MOCK_ONLY"
+    },
+    {
+      "stage": "writing_brief",
+      "messages": [
+        {
+          "role": "system",
+          "content": "[pinned_author_template: templates/07_draft/writing_brief.template.md blob=d67e3c4539eaea5bbcce904f3eb3ee42ff1e2fc5]\n# Writing Brief — ch<NN>\n\nThe compressed, scene-scoped instruction packet that goes directly to the prose agent.\n\nThis is the file the prose agent reads. Nothing else. (Well — plus the relevant character voice samples.)\n\nThe brief agent's job is to take the plot file, the scene cards, and the relevant canon, and distill everything into THIS file. Compression matters: the prose agent shouldn't have to wade through the whole world bible to find what it needs.\n\n---\n\n## Quick Header\n\n- **Chapter**: ch<NN>\n- **POV**: <character>\n- **Target length**: <word / character count>\n- **Style register**: <one phrase — e.g. \"wry restraint\", \"rising tension\", \"domestic warmth\">\n\n---\n\n## Active Canon (extracted, scene-scoped)\n\n### Characters in this chapter\n\nFor each character who appears: pull their essential facts from `character_bible.md` AND the relevant calling rules. The prose agent should be able to write every interaction without consulting the full bible.\n\n**<CHARACTER NAME>**\n- Role: <one line>\n- How they address others in this chapter: <calling rules for the specific pairings that appear>\n- How others address them in this chapter: <same>\n- MUST-INCLUDE facts (physical, behavioral): <e.g. \"missing left eye since ch5\", \"speaks formally to elders only\">\n\n**<CHARACTER NAME>**\n(repeat for each)\n\n### Glossary terms in play\n\nPull only the glossary terms that will or may appear:\n- **<TERM>**: <definition>\n- **<TERM>**: <definition>\n\n### World rules in play\n\nPull only the world-bible facts that this chapter's events touch:\n- <rule — e.g. \"magic at this academy is silent — no incantations spoken aloud\">\n- <rule — e.g. \"travel from capital to academy takes 2 days by carriage\">\n\n---\n\n## Scene-by-Scene Instructions\n\nFor each scene, distill the scene card into action-oriented instructions for prose generation.\n\n### Scene 1\n- **Goal**: <what this scene accomplishes>\n- **Open with**: <specific opening beat>\n- **Required beats**: <bullet list, in order>\n- **Forbidden in this scene**: <bullet list>\n- **End with**: <specific closing beat>\n- **Approximate length**: <X% of chapter>\n\n### Scene 2\n(repeat)\n\n### Scene 3\n...\n\n---\n\n## Voice References\n\nVoice samples are loaded separately from `../92_style_engine/character_voice_samples.md`. Include only the samples for characters who SPEAK in this chapter.\n\n- <CHARACTER NAME> — see voice sample\n- <CHARACTER NAME> — see voice sample\n\n---\n\n## Hard Constraints\n\nThe non-negotiables for this chapter. Anything that's a \"must\" or \"must not\" at the chapter level.\n\n- <MUST: e.g. \"POV character's internal narration uses 俺, never 私\">\n- <MUST: e.g. \"Chapter must end on a hook of type X\">\n- <MUST NOT: e.g. \"Antagonist's true name does not appear\">\n- <MUST NOT: e.g. \"Em-dash count must stay under 5\">\n\n---\n\n## Style Targets (chapter-specific, on top of the global style guide)\n\n- <e.g. \"Dialogue density slightly elevated vs default — this is a conversation-heavy chapter\">\n- <e.g. \"Description sparse — pacing is brisk\">\n- <e.g. \"Internal monologue minimal — POV character is in shock\">\n\n---\n\n## What NOT to include in the prose\n\nDirect from scene cards' forbidden items, consolidated:\n- <forbidden>\n- <forbidden>\n\n---\n\n## How the Prose Agent Should Use This Brief\n\n- Read it once, fully, before writing.\n- Treat \"Hard Constraints\" as inviolable.\n- Treat \"Required beats\" as the structural skeleton — every one must land.\n- Treat \"Forbidden in this scene\" / \"What NOT to include\" as veto rules.\n- Follow scene order. Write each scene completely before moving to the next.\n- Output the chapter as one continuous markdown file. No commentary, no meta-text.\n\n---\n\n## Notes (optional, for human reviewer)\n\n- <e.g. \"This is a tricky chapter — the misperception layer between the protagonist and the academy must stay visible without becoming explicit. Watch for accidental leakage in scene 3.\">\n\n\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\n# AI Roles Configuration\n\nagents:\n  plot_agent:\n    role: \"Plot specialist\"\n    reads:\n      - 04_chapter_design/arc_<NN>.md\n      - 90_canon/canon.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 06_plot/epNNN_plot.md\n\n  scene_card_agent:\n    role: \"Scene-level structure\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 90_canon/character_bible.md\n    outputs:\n      - 05_scene_cards/epNNN_scene_cards.md\n\n  brief_agent:\n    role: \"Prepare prose prompt\"\n    reads:\n      - 06_plot/epNNN_plot.md\n      - 05_scene_cards/epNNN_scene_cards.md\n      - 90_canon/character_bible.md\n      - 92_style_engine/style_guide.md\n    outputs:\n      - 07_draft/epNNN_writing_brief.md\n\n  prose_agent:\n    role: \"Write prose\"\n    reads:\n      - 07_draft/epNNN_writing_brief.md\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\n    outputs:\n      - 07_draft/episodes/epNNN.md\n\n  # ... add review lenses, refine agent, etc.\n\n\n[project_language_contract]\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\n\n\n[project_length_policy]\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/canon.template.md blob=b39055a63394ec8e738517a49160260ebb3b3e78]\n# Canon\n\nThe master index and final-arbiter file for canonical facts about the story.\n\nIf something is contested across other canon files, the value in **this** file wins.\nMost canonical facts should live in their specialized files (`character_bible.md`, `world_bible.md`, etc.). This file is for cross-cutting decisions, story-level facts, and the authoritative pointer to where everything else lives.\n\n---\n\n## Canonical Policy\n\n- **Canon-promoted decisions** are locked. Agents cannot override them. To change canon, a human author must edit the source file.\n- **Provisional decisions** are decisions made during drafting that may still change. Use `Provisional (YYYY-MM-DD)` markers in the source files.\n- **Source-of-truth precedence (high → low)**:\n  1. This file (`canon.md`)\n  2. Specialized canon files (`character_bible.md`, `world_bible.md`, `glossary.md`, `timeline.md`)\n  3. Style engine (`style_guide.md`, `forbidden_patterns.md`)\n  4. Per-arc design files\n  5. Per-chapter scene cards and briefs\n  6. The drafts themselves (lowest authority — drafts are output, not source)\n\n---\n\n## Story-Level Canon\n\nThe handful of facts that define what makes this story THIS story. If you change any of these, you're writing a different story.\n\n- **Genre / hybrid**: <e.g. \"reincarnation fantasy with misperception comedy\">\n- **Core premise (one sentence)**: <the elevator pitch>\n- **Protagonist's defining wound / drive**: <one sentence>\n- **The promise to the reader**: <what you guarantee the story will deliver>\n- **The thing you won't do**: <one or two anti-promises — what this story will NEVER become>\n\n---\n\n## Cross-File Indexing\n\nPointers to where specific canonical info lives:\n\n| Topic | Lives in |\n|---|---|\n| Character names, roles, calling rules | `character_bible.md` |\n| Detailed character voice and speech | `../03_project_design/characters/<NAME>.md` (if exists) |\n| Locations, magic system, institutions | `world_bible.md` |\n| Terminology and proper nouns | `glossary.md` |\n| In-world dates and event sequence | `timeline.md` |\n| Prose style rules | `../92_style_engine/style_guide.md` |\n| Banned constructions and AI-tells | `../92_style_engine/forbidden_patterns.md` |\n\n---\n\n## Canon Change Log\n\nEvery promotion from Provisional → Canon, every demotion, every contested-then-resolved decision goes here:\n\n| Date | Change | Reason |\n|---|---|---|\n| YYYY-MM-DD | <e.g. \"Character X's calling pattern in private with Y: promoted to Canon\"> | <reason> |\n| YYYY-MM-DD | <change> | <reason> |\n\nThis log is for human review during arc-end canon passes. It is NOT loaded into agent context (would bloat too fast).\n\n---\n\n## Hard Rules (story-specific things agents must never do)\n\nThis section is where you encode the project's non-negotiables. Things that can't be expressed cleanly in `forbidden_patterns.md` (because they're not patterns, they're story facts).\n\nExamples:\n\n- \"Character X never reveals their true name in dialogue.\"\n- \"The enemy faction's existence is not narrated directly in the protagonist's POV before chapter 60.\"\n- \"Magic system rule: no character can use [specific ability] without paying [specific cost]. Any draft that does is wrong.\"\n- \"[Character Y] is dead from chapter 15 onward and cannot appear except in flashback or as a corpse.\"\n\n---\n\n## How Agents Use This File\n\n- **All agents** read `canon.md` first when given a task. It tells them which other files to consult and which non-negotiables apply.\n- **Canon review lens** uses the Hard Rules section as a checklist against the draft.\n- **Brief agent** uses the Story-Level Canon to keep every chapter aligned with the story's defining promises.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/timeline.template.md blob=88240b3720175123b59e48fda92941e22371d7c6]\n# Timeline\n\nThe canonical sequence of events in the story, plus the time each chapter covers and when characters reach which milestones.\n\nWhy this file exists: continuity errors love long projects. If chapter 12 says the journey takes 3 days and chapter 28 says it took 5, you need a single source of truth that catches the contradiction.\n\n---\n\n## Story Timeline (in-world dates)\n\n| Date / Year | Event | Chapter |\n|---|---|---:|\n| Year 0 (story start) | <protagonist's age, world state> | ch1 |\n| Year 0, Month 3 | <event> | ch5 |\n| Year 1 | <event> | ch20 |\n\nUse relative dates (\"Year 0, Day 47\") rather than real-world dates unless your story explicitly uses them. Relative dates are easier to keep consistent.\n\n---\n\n## Per-Chapter Time Coverage\n\n| Chapter | Starts | Ends | Duration | POV |\n|---|---|---|---:|---|\n| ch1 | Year 0, Day 1, morning | Year 0, Day 1, evening | 1 day | <character> |\n| ch2 | Year 0, Day 2, morning | Year 0, Day 5, night | 4 days | <character> |\n| ch3 | Year 0, Day 6 | Year 0, Day 6 | 1 day | <character> |\n\nThis table is what the canon review lens uses to catch \"chapter 12 happens AFTER chapter 14 but references events from chapter 13\" errors.\n\n---\n\n## Character Ages / Milestones\n\n| Character | Age at ch1 | Age at ch20 | Age at ch50 | Notes |\n|---|---:|---:|---:|---|\n| <CHAR> | 10 | 12 | 15 | Birthday is in Month 4 |\n| <CHAR> | 25 | 27 | 30 | |\n\nIf your story spans multiple in-world years, this is the table that prevents the \"wait, isn't she still 10?\" error in later chapters.\n\n---\n\n## Major Events (cross-chapter)\n\nFor events that have ripples across many chapters (a war, a death, a reveal), track them as anchored points:\n\n| Event | Happens in | Referenced in | Status |\n|---|---|---|---|\n| <EVENT> | ch15 | ch16, ch18, ch24, ch31 | Active reference |\n| <EVENT> | ch7 | ch9, ch12 | Resolved by ch20 |\n\n---\n\n## Foreshadowing Ledger\n\nIf you do plant-and-payoff structure (especially important for mysteries and long-running series), track every planted seed here:\n\n| Seed | Planted in | Payoff target | Status |\n|---|---|---|---|\n| <SEED — one line> | ch3 | ch28 | Planted |\n| <SEED> | ch7 | ch20 | Paid off in ch20 |\n| <SEED> | ch12 | ch45 | Planted, needs reinforcement at ch30 |\n\nThe plot review lens checks this ledger and flags:\n- Seeds that have been visible too long without movement (probably forgotten)\n- Payoff chapters whose brief doesn't reference their planted seeds (will read as unmotivated)\n\nFor long series with deep foreshadowing, this is the most important table in the timeline file.\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** for chapter N reads the per-chapter time coverage of chapter N-1, ensuring the new chapter starts at a valid point in story-time.\n- **Canon review lens** loads this whole file and catches date/age/duration contradictions.\n- **Plot review lens** uses the foreshadowing ledger to verify setup and payoff land correctly.\n\nWhen a chapter is finalized, update this file: add its time coverage, age any characters whose birthdays passed, mark any seeds as paid off.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/world_bible.template.md blob=f8165ace427d0e46ae1d4b7dffd653b0060f943d]\n# World Bible\n\nThe physical, social, and metaphysical laws of the story world.\nIf something is true about how the world works — and any character in any chapter could be affected by it — it lives here.\n\n---\n\n## Setting Overview\n\n- **Genre**: <e.g. fantasy / sci-fi / mystery / contemporary>\n- **Time period / equivalent**: <e.g. \"early industrial revolution analog\", \"Heian-era Japan analog\">\n- **Geographic scope**: <e.g. \"single kingdom\", \"multi-continent\">\n- **Tech / magic level**: <one paragraph summary>\n\n---\n\n## Geography\n\n| Place | Type | Notes |\n|---|---|---|\n| <PLACE NAME> | capital / town / region / continent | <role in story> |\n| <PLACE NAME> | <type> | <notes> |\n\nTravel times between major locations (relevant if the timeline.md references them):\n\n| From → To | Method | Duration |\n|---|---|---|\n| <A> → <B> | <horse / train / portal> | <X days> |\n\n---\n\n## Political / Social Structure\n\n- **Government type**: <e.g. constitutional monarchy, federation, tribal council>\n- **Class structure**: <e.g. nobility / commoner / slave; or none>\n- **Currency**: <name and rough purchasing power>\n- **Languages**: <number, who speaks what>\n\n---\n\n## Magic / Tech System (if applicable)\n\nDefine the rules. The clearer the rules, the harder it is for AI to violate them by accident.\n\n- **Source of power**: <where magic/tech comes from>\n- **Cost**: <what does using it cost the user>\n- **Limits**: <hard limits — what's impossible>\n- **Common applications**: <typical everyday uses>\n- **Rare / forbidden applications**: <what's possible but restricted>\n\n---\n\n## Institutions\n\nFor any organization that has its own rules, hierarchy, or culture (academies, guilds, churches, courts), give it a dedicated subsection:\n\n### <INSTITUTION NAME>\n\n- **Purpose**: <what it does>\n- **Hierarchy**: <ranks, leadership>\n- **Membership / access**: <who's in it, who's not>\n- **Internal rules / culture**: <relevant for character behavior>\n\n---\n\n## Calendar / Time\n\n- **Year length**: <e.g. 360 days, 4 seasons>\n- **Week / month structure**: <if it matters>\n- **Notable annual events**: <festivals, ceremonies, anniversaries the plot might use>\n\n---\n\n## Material Culture (only what matters for prose)\n\nDon't write a complete anthropology. Document only what would surface in a scene:\n\n- **Clothing**: <enough that the prose agent doesn't invent silk dresses in a Bronze Age setting>\n- **Food**: <staples, status foods, taboos>\n- **Transport**: <relevant to pacing>\n- **Architecture**: <enough to set a scene>\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** extracts the world details relevant to a chapter's setting (if the chapter is set in <PLACE X>, pull the geography + institution details for <PLACE X>).\n- **Canon review lens** loads this whole file and checks the draft for contradictions: travel time errors, magic-rule violations, institution misuse, anachronisms.\n- **Plot review lens** uses the calendar to verify timeline consistency across chapters.\n\nIf a rule established here is broken by a chapter, the canon lens should flag it before the chapter is finalized.\n\n\n[pinned_author_supplementary_reading: templates/90_canon/glossary.template.md blob=6e7403fc6f93d82c1f7dbb6a2537348b39a5be81]\n# Glossary\n\nEvery proper noun, in-world term, or specialized vocabulary item in the story, with its canonical definition.\n\nWhy this file exists: AI models will happily invent synonyms, alternate spellings, or \"creative\" rewordings of your terminology if you don't lock it down. The glossary is the lock.\n\n---\n\n## Format\n\n| Term | Definition | First Appearance | Notes |\n|---|---|---:|---|\n| <TERM> | <one-sentence canonical definition> | ch1 | <usage notes, e.g. \"always capitalized; never abbreviated\"> |\n| <TERM> | <definition> | ch5 | <notes> |\n\n---\n\n## Suggested Categories\n\nFor long projects, group terms by category. Examples:\n\n### Places\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Titles / Ranks\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Magic / Tech Terms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Cultural / Religious Terms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### In-World Slang / Idioms\n| Term | Definition | First | Notes |\n|---|---|---:|---|\n\n### Faction-Specific Vocabulary\nDifferent factions may have different words for the same thing. Document the mapping:\n\n| Concept | Faction A calls it | Faction B calls it | Reader knows it as |\n|---|---|---|---|\n| <CONCEPT> | <TERM> | <TERM> | <TERM> |\n\nThis is critical for multi-faction stories — agents writing from Faction A's POV must use Faction A's vocabulary, not the reader-default term.\n\n---\n\n## Character-Specific Vocabulary\n\nSome characters have signature phrases or unique vocabulary tied to their voice. Document them here (or cross-reference to `character_voice_samples.md`):\n\n| Character | Signature term / phrase | Meaning / use |\n|---|---|---|\n| <CHAR> | <PHRASE> | <when they say it, what it conveys> |\n\n---\n\n## How Agents Use This File\n\n- **Brief agent** scans the chapter outline, identifies which glossary terms will appear, and includes their definitions in the prose prompt.\n- **Style review lens** flags any in-world term that doesn't appear in this glossary (could be a typo, could be an invented term that needs to be added or removed).\n- **Canon review lens** flags any glossary term used with the wrong meaning.\n\nWhen a term is upgraded from invented-in-draft to canon, add it here. The glossary should grow with the story.\n\n\n[project_output_contract]\n请严格按作者模板的章节标题输出，至少包含这些标题：## Quick Header / ## Active Canon / ## Scene-by-Scene Instructions / ## Voice References / ## Hard Constraints / ## Style Targets / ## What NOT to include in the prose。\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\n"
+        },
+        {
+          "role": "user",
+          "content": "{\"assignment\": {\"project_id\": \"TIDELINE\", \"story\": {\"arc_ref\": \"04_chapter_design/arc_01.md\", \"arc_sha256\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1}, \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_policy\": \"ADVISORY\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"planning_mode\": \"author_plot\", \"policy_sha256\": \"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\", \"pov\": \"Mira\", \"target_visible_chars\": 150}}, \"materials\": {\"05_scene_cards/<work_id>_scene_cards.md\": \"### Identity\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Cast\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Start state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### End state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Required beats\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Forbidden items for this scene\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Sensory anchor\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Tone / pacing\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Connection to next scene\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n## Scene S1\\n### Required beats\\n- Mira asks for a screwdriver.\\n\", \"06_plot/<work_id>_plot.md\": \"## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\", \"90_canon/canon.md\": \"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\", \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\", \"90_canon/glossary.md\": \"Harbor door: the public entrance beside the workshop.\", \"90_canon/timeline.md\": \"The scene occurs on an ordinary afternoon.\", \"90_canon/world_bible.md\": \"A small fictional harbor has a public door with a loose hinge.\", \"92_style_engine/style_guide.md\": \"Use close third person, concrete action, and distinct dialogue.\"}, \"support\": {\"nk_perspective_reflection_support_only\": \"\\n\\n## NK Perspective Reflection (support only)\\n\\n- response_sha256: `e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896`\\n- source_status: `SIMULATED`\\n- provider_request_id: `SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9`\\n- scope: POV-boundary reminder only; not canon and not prose\\n\\n> MOCK_ONLY: Mira may observe the offered screwdriver, not hidden motives.\\n\"}}"
+        }
+      ],
+      "mode": "MOCK_ONLY"
+    }
+  ],
+  "actual_nk_payloads": [
+    {
+      "eventSequence": [
+        {
+          "label": "Scene S1-01",
+          "description": "Mira asks for a screwdriver."
+        }
+      ],
+      "perspectives": [
+        {
+          "id": "ADAPT-HINGE-01-pov-01",
+          "narrator": "Mira",
+          "eventLabel": "Scene S1-01",
+          "eventObjective": "POV=Mira. Scene scope: Adapt only the selected source moment into one playable scene. Reflect only on the narrator's own experience and directly observable or heard events. Do not infer other characters' unspoken motives or use protected future information.",
+          "characterSnapshots": [
+            {
+              "name": "Mira",
+              "traits": {
+                "physiology": [],
+                "psychology": [],
+                "sociology": []
+              }
+            },
+            {
+              "name": "Keeper",
+              "traits": {
+                "physiology": [],
+                "psychology": [],
+                "sociology": []
+              }
+            }
+          ]
+        }
+      ],
+      "customPrompt": "只输出简短、可执行的 POV 边界反思；限于当前事件中的亲历、亲闻和可观察事实。不得把 reflection 当正文、补写秘密或推断旁人内心。"
+    }
+  ],
+  "actual_run_state": {
+    "schema_version": "cnw_run_state_v1",
+    "run_id": "SIGNED-ADAPT-RUN",
+    "work_id": "ADAPT-HINGE-01",
+    "unit_kind": "scene",
+    "project_id": "TIDELINE",
+    "contract_path": "contracts/ADAPT-HINGE-01.json",
+    "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+    "source_identity": {
+      "source_origin": "IMPORTED_PROJECT",
+      "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+      "source_id": "61f61b74038ace77",
+      "source_revision_id": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "source_file_sha256": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "manifest_file": "_INBOX/revisions/manifests/f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844.json",
+      "source_manifest_sha256": "f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844",
+      "manifest_revision_sha256": "f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844",
+      "source_index_file": "_INBOX/revisions/indexes/a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348.json",
+      "source_index_sha256": "a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348"
+    },
+    "fixture_only": false,
+    "created_at": "2026-10-13T20:52:06Z",
+    "updated_at": "2026-10-13T20:57:42Z",
+    "status": "RUNNING",
+    "mode": "live",
+    "workflow_template_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+    "cnw_method_source": {
+      "commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+      "workflow_blob": "146ea01a484cc0578cf290478b3941599ad7fb15"
+    },
+    "cnw_stages": [
+      "plot",
+      "scene_cards",
+      "writing_brief",
+      "prose",
+      "lint_layer1",
+      "lint_layer2",
+      "multi_lens_review",
+      "adversarial_verify",
+      "completeness_critic",
+      "refine",
+      "re_review"
+    ],
+    "support_hooks": {
+      "critics_plot": {
+        "status": "DISABLED",
+        "provider_call": "none"
+      },
+      "nk_pov": {
+        "status": "MATERIALIZED",
+        "artifact": {
+          "path": "artifacts/support/nk-reflection.md",
+          "sha256": "6c822374e2f085c750712511bf73da47f889c573d068c14283b55e4fe9623c74"
+        },
+        "request_id": "nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+        "provider_request_id": "SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+        "mapping": {
+          "response_sha256": "e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896",
+          "reflection_sha256": "fdbd47f94b1c1218d299be43ae7031e8411a194ebda65c8177ff88d0c1d69fe7",
+          "brief_section": "NK Perspective Reflection (support only)",
+          "source_status": "SIMULATED",
+          "provider_request_id": "SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9"
+        }
+      }
+    },
+    "next_stage": "prose",
+    "provider_requests": [
+      {
+        "stage": "plot",
+        "role_id": "plot_agent",
+        "request_id": "cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e",
+        "request_fingerprint": "c629fa9817eaa8ca30c60275782f9dbc3181e14ab64de95ffbfc467f848d3aad",
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e",
+        "model": "deepseek-flash",
+        "status": "SUCCEEDED",
+        "http_status": 200,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 10,
+          "completion_tokens": 10
+        },
+        "input_sha256": "70a70ec136ad6033b8bb2ccd98d02b37364e89efa3ea175b506ac871912b05be",
+        "request_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e.request.json",
+        "request_sha256": "4ff94d8790d853ed885256c2107b46c5c28014e776c1d6fd7cd90201d6081889",
+        "output_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+        "raw_response_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e.json",
+        "raw_response_sha256": "1de0c958e4f13a303aa8deef40c8a9680d494556391bb42ea3b823e94247f404",
+        "cost_cny": 3e-05,
+        "ledger_settlement": {
+          "status": "SETTLED",
+          "request_id": "cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e",
+          "estimated_request_cny": "0.000030",
+          "campaign_committed_cny": "0.000030",
+          "limit_cny": null,
+          "cost_context": {
+            "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+            "project_id": "TIDELINE",
+            "run_id": "SIGNED-ADAPT-RUN",
+            "stage": "plot",
+            "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+          }
+        },
+        "mode": "MOCK_ONLY",
+        "fixture_only": true,
+        "simulation_status": "SIMULATED"
+      },
+      {
+        "stage": "scene_cards",
+        "role_id": "scene_card_agent",
+        "request_id": "cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43",
+        "request_fingerprint": "9135895a947c96aabb01001a4f53b9ff1cea68884be75ab55a116f645c69bbeb",
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43",
+        "model": "deepseek-flash",
+        "status": "SUCCEEDED",
+        "http_status": 200,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 10,
+          "completion_tokens": 10
+        },
+        "input_sha256": "7c93ccbfdc29ccc490680273f0710f2769efff563e746fd0d28009cb1ce5abdb",
+        "request_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43.request.json",
+        "request_sha256": "fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e",
+        "output_sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+        "raw_response_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43.json",
+        "raw_response_sha256": "7c471862f4a1d86e1f94315bd22f0264e27287e06b72807613d8e053ffde92b6",
+        "cost_cny": 3e-05,
+        "ledger_settlement": {
+          "status": "SETTLED",
+          "request_id": "cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43",
+          "estimated_request_cny": "0.000030",
+          "campaign_committed_cny": "0.000060",
+          "limit_cny": null,
+          "cost_context": {
+            "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+            "project_id": "TIDELINE",
+            "run_id": "SIGNED-ADAPT-RUN",
+            "stage": "scene_cards",
+            "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+          }
+        },
+        "mode": "MOCK_ONLY",
+        "fixture_only": true,
+        "simulation_status": "SIMULATED"
+      },
+      {
+        "stage": "support_hook",
+        "role_id": "nk_pov",
+        "request_id": "nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+        "provider_request_id": "SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+        "model": "deepseek-flash",
+        "status": "SUCCEEDED",
+        "http_status": 200,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 12,
+          "completion_tokens": 8
+        },
+        "input_sha256": "484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8",
+        "request_path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.request.json",
+        "request_sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+        "request_format": "native_nk_payload",
+        "output_sha256": "e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896",
+        "raw_response_path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.json",
+        "raw_response_sha256": "3b9a6c08d6a4a8d680f945dd71ce219a3851227d2c4e714dbbd49c9bc7a12131",
+        "cost_cny": 2.8e-05,
+        "ledger_settlement": {
+          "status": "SETTLED",
+          "request_id": "nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+          "estimated_request_cny": "0.000028",
+          "campaign_committed_cny": "0.000088",
+          "limit_cny": null,
+          "cost_context": {
+            "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+            "project_id": "TIDELINE",
+            "run_id": "SIGNED-ADAPT-RUN",
+            "stage": "support_hook",
+            "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+          }
+        },
+        "mode": "MOCK_ONLY",
+        "fixture_only": true,
+        "simulation_status": "SIMULATED"
+      },
+      {
+        "stage": "writing_brief",
+        "role_id": "brief_agent",
+        "request_id": "cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c",
+        "request_fingerprint": "bd8a83eb119d8cc21c5815d1ee4a784c6471ce3d4033a90a404b447a114a00ff",
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c",
+        "model": "deepseek-flash",
+        "status": "SUCCEEDED",
+        "http_status": 200,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 10,
+          "completion_tokens": 10
+        },
+        "input_sha256": "f6a9746746b0c006d07b22cf5db6bf90900c4a942bec7b20107bbe7871a96a36",
+        "request_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c.request.json",
+        "request_sha256": "9989b98f55a599e7602e170d4dc4d0234e9a70889587080cbafab251f59fe11a",
+        "output_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+        "raw_response_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c.json",
+        "raw_response_sha256": "5bf06dcb46b375ead34bead3af8578ae59dbc44b2bf1830a67cfa24a158029a7",
+        "cost_cny": 3e-05,
+        "ledger_settlement": {
+          "status": "SETTLED",
+          "request_id": "cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c",
+          "estimated_request_cny": "0.000030",
+          "campaign_committed_cny": "0.000118",
+          "limit_cny": null,
+          "cost_context": {
+            "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+            "project_id": "TIDELINE",
+            "run_id": "SIGNED-ADAPT-RUN",
+            "stage": "writing_brief",
+            "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+          }
+        },
+        "mode": "MOCK_ONLY",
+        "fixture_only": true,
+        "simulation_status": "SIMULATED"
+      }
+    ],
+    "stages": {
+      "plot": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [],
+        "artifact": {
+          "path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+          "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd"
+        },
+        "meta": {
+          "path": "artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json",
+          "sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6"
+        },
+        "role_ids": [
+          "plot_agent"
+        ],
+        "provider_request_ids": [
+          "cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e"
+        ],
+        "execution_input_identity": {
+          "version": 1,
+          "stage": "plot",
+          "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+          "input_sha256": "6ecec5ec7d34ac779932dfb114d086ad80da865251f8fa82468b5ef657e0932a",
+          "input_hashes": {
+            "messages": "f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671"
+          },
+          "message_sha256": "f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671",
+          "builder_sha256": "9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "86baff89976ed5c890ca71c1877bcd00ec853dc83ab488046b70882d0b166491"
+        },
+        "execution_identity": {
+          "version": 1,
+          "stage": "plot",
+          "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+          "input_sha256": "6ecec5ec7d34ac779932dfb114d086ad80da865251f8fa82468b5ef657e0932a",
+          "input_hashes": {
+            "messages": "f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671"
+          },
+          "message_sha256": "f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671",
+          "builder_sha256": "9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "86baff89976ed5c890ca71c1877bcd00ec853dc83ab488046b70882d0b166491"
+        }
+      },
+      "scene_cards": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [
+          "plot"
+        ],
+        "artifact": {
+          "path": "artifacts/candidates/scene_cards/90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874.md",
+          "sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874"
+        },
+        "meta": {
+          "path": "artifacts/candidates/scene_cards/8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa.meta.json",
+          "sha256": "8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa"
+        },
+        "role_ids": [
+          "scene_card_agent"
+        ],
+        "provider_request_ids": [
+          "cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43"
+        ],
+        "execution_input_identity": {
+          "version": 1,
+          "stage": "scene_cards",
+          "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+          "input_sha256": "3bba46446f8b76baaa98934570de4030ac880fc6342a346e01d01cd2fd8a14f9",
+          "input_hashes": {
+            "messages": "61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18"
+          },
+          "message_sha256": "61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18",
+          "builder_sha256": "6e60e3d7a7e49dca5a8ad6c30a84f4c6353f5b9e04bbde2fe3514d15a3d50c4a",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "108f072c53e8ab960a7cf978f2fef8f32b497c141f6293bf36101c44eb1b631f"
+        },
+        "execution_identity": {
+          "version": 1,
+          "stage": "scene_cards",
+          "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+          "input_sha256": "3bba46446f8b76baaa98934570de4030ac880fc6342a346e01d01cd2fd8a14f9",
+          "input_hashes": {
+            "messages": "61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18"
+          },
+          "message_sha256": "61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18",
+          "builder_sha256": "6e60e3d7a7e49dca5a8ad6c30a84f4c6353f5b9e04bbde2fe3514d15a3d50c4a",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "108f072c53e8ab960a7cf978f2fef8f32b497c141f6293bf36101c44eb1b631f"
+        }
+      },
+      "writing_brief": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [
+          "plot",
+          "scene_cards"
+        ],
+        "artifact": {
+          "path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
+          "sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963"
+        },
+        "role_ids": [
+          "brief_agent"
+        ],
+        "provider_request_ids": [
+          "cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c"
+        ],
+        "execution_input_identity": {
+          "version": 1,
+          "stage": "writing_brief",
+          "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+          "input_sha256": "81bc81c4d8b22e50fed264aba5602c3dfa6b7ae45ac84ad0584fe125a69bd2a8",
+          "input_hashes": {
+            "messages": "2b7d29a9357d67304982717e5655a18d269fb0c4680d4b37210357a6c8d611d8",
+            "nk_mode": "ed9cc9fc9dffc2b4d2137728fca2ba0efbb031c24352b94529dec66e50c7d7db",
+            "nk_payload": "484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8"
+          },
+          "message_sha256": "2b7d29a9357d67304982717e5655a18d269fb0c4680d4b37210357a6c8d611d8",
+          "builder_sha256": "aa608de26c63df4015d16e13b3384ef41373595e6f67b3ca437d0a499f97340d",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "713e7051c34e85abd55664245319269e7d19893eb016befbdeafeff2d0fcc36d"
+        },
+        "execution_identity": {
+          "version": 1,
+          "stage": "writing_brief",
+          "contract_sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+          "input_sha256": "d26fe959c52a80b909cf216665ffafe06fa9e715ec2a8800f75114c0af2d2039",
+          "input_hashes": {
+            "messages": "957e20f4e2714a04ee44c34e591de1c324fa40378c77e8498590777ffc3fb801",
+            "nk_mode": "ed9cc9fc9dffc2b4d2137728fca2ba0efbb031c24352b94529dec66e50c7d7db",
+            "nk_payload": "484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8",
+            "nk_result": "f9f480ac1b73ea8a86b9745be1a5c43ed5942b8c8a5e648a7b46220d537856e7"
+          },
+          "message_sha256": "957e20f4e2714a04ee44c34e591de1c324fa40378c77e8498590777ffc3fb801",
+          "builder_sha256": "aa608de26c63df4015d16e13b3384ef41373595e6f67b3ca437d0a499f97340d",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "7aa2435cd1c3fb6e8f9379c4f7fbd3708c3d895a6f20c3f05f1eec31d1f45e5b"
+        }
+      },
+      "prose": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief"
+        ],
+        "artifact": null
+      },
+      "lint_layer1": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose"
+        ],
+        "artifact": null
+      },
+      "lint_layer2": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1"
+        ],
+        "artifact": null
+      },
+      "multi_lens_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2"
+        ],
+        "artifact": null
+      },
+      "adversarial_verify": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review"
+        ],
+        "artifact": null
+      },
+      "completeness_critic": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify"
+        ],
+        "artifact": null
+      },
+      "refine": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic"
+        ],
+        "artifact": null
+      },
+      "re_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic",
+          "refine"
+        ],
+        "artifact": null
+      }
+    },
+    "max_in_flight": 5,
+    "literary_source_hashes": {
+      "project:94_runtime/current_state.md": "8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73",
+      "project:07_draft/manuscript_index.md": "6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73",
+      "project:04_chapter_design/arc_01.md": "666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea",
+      "project:04_chapter_design/arc_01_episode_details.md": "73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5",
+      "project:92_style_engine/character_voice_samples.md": "c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2",
+      "project:90_canon/character_bible.md": "dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29",
+      "project:selected_source_excerpt": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "project:selected_source_identity": "cfb5c43b4055bbfd95d0161be3eb82bb2ba1c502e15d3508287762700da461fb",
+      "project:04_chapter_design/arc_index.md": "fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84",
+      "preparation:identity": "0648004a37ae8bd37ade7b67cac59ba8608a5ecc8b5ddea70eadc074a46f9902"
+    },
+    "literary_source_freeze_version": "literary_source_freeze_v2",
+    "provider_config_sha256": "3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519",
+    "cost_guard_runner_sha256": null,
+    "state_migrations": [
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases"
+    ],
+    "production_preparation": {
+      "path": "artifacts/production_preparation.json",
+      "sha256": "2a3100a50e9021dfb2f231b94c4b240be3f5d001a619b93188b8829941c3497a"
+    }
+  },
+  "actual_files": {
+    "nk-provider-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.jsonl": {
+      "sha256": "3109e8ca8f597f32482b7f4f4f7c55494e5576b9dc1f675b4a82f6c503ef8c33",
+      "utf8": "{\"request_id\": \"nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\", \"response\": {\"id\": \"SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"fixture_only\": true, \"usage\": {\"prompt_tokens\": 12, \"completion_tokens\": 8}, \"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"{\\\"perspectives\\\": [{\\\"reflection\\\": \\\"MOCK_ONLY: Mira may observe the offered screwdriver, not hidden motives.\\\"}]}\"}}]}}"
+    },
+    "nk-service-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.json": {
+      "sha256": "efd0d6f81c92ddb60de5c0a5e0f4d430199f2e47136cebcd0acdd1790b3a1cef",
+      "utf8": "{\r\n  \"request_id\": \"nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\",\r\n  \"port\": 49127,\r\n  \"command\": [\r\n    \"fictional-node.exe\",\r\n    \"D:\\\\CangqiStudio\\\\StoryStudio\\\\runtime\\\\patched\\\\NK\\\\p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161\\\\node_modules\\\\next\\\\dist\\\\bin\\\\next\",\r\n    \"start\",\r\n    \"--hostname\",\r\n    \"127.0.0.1\",\r\n    \"--port\",\r\n    \"49127\"\r\n  ],\r\n  \"runtime_build_id\": \"p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161\",\r\n  \"status\": \"STOPPED\",\r\n  \"pid\": 4567\r\n}"
+    },
+    "run.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    "run_state.json": {
+      "sha256": "2605e8daf013ad3a7d5bec5120ab8f2653da8b9f43ce45b2f50728497bb88589",
+      "utf8": "{\r\n  \"schema_version\": \"cnw_run_state_v1\",\r\n  \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n  \"work_id\": \"ADAPT-HINGE-01\",\r\n  \"unit_kind\": \"scene\",\r\n  \"project_id\": \"TIDELINE\",\r\n  \"contract_path\": \"contracts/ADAPT-HINGE-01.json\",\r\n  \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n  \"source_identity\": {\r\n    \"source_origin\": \"IMPORTED_PROJECT\",\r\n    \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\",\r\n    \"source_id\": \"61f61b74038ace77\",\r\n    \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"source_file_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"manifest_file\": \"_INBOX/revisions/manifests/f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844.json\",\r\n    \"source_manifest_sha256\": \"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\",\r\n    \"manifest_revision_sha256\": \"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\",\r\n    \"source_index_file\": \"_INBOX/revisions/indexes/a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348.json\",\r\n    \"source_index_sha256\": \"a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348\"\r\n  },\r\n  \"fixture_only\": false,\r\n  \"created_at\": \"2026-10-13T20:52:06Z\",\r\n  \"updated_at\": \"2026-10-13T20:57:42Z\",\r\n  \"status\": \"RUNNING\",\r\n  \"mode\": \"live\",\r\n  \"workflow_template_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n  \"cnw_method_source\": {\r\n    \"commit\": \"97ad71fe5e5e76a82275c6c63d4add06fb60ab6e\",\r\n    \"workflow_blob\": \"146ea01a484cc0578cf290478b3941599ad7fb15\"\r\n  },\r\n  \"cnw_stages\": [\r\n    \"plot\",\r\n    \"scene_cards\",\r\n    \"writing_brief\",\r\n    \"prose\",\r\n    \"lint_layer1\",\r\n    \"lint_layer2\",\r\n    \"multi_lens_review\",\r\n    \"adversarial_verify\",\r\n    \"completeness_critic\",\r\n    \"refine\",\r\n    \"re_review\"\r\n  ],\r\n  \"support_hooks\": {\r\n    \"critics_plot\": {\r\n      \"status\": \"DISABLED\",\r\n      \"provider_call\": \"none\"\r\n    },\r\n    \"nk_pov\": {\r\n      \"status\": \"MATERIALIZED\",\r\n      \"artifact\": {\r\n        \"path\": \"artifacts/support/nk-reflection.md\",\r\n        \"sha256\": \"6c822374e2f085c750712511bf73da47f889c573d068c14283b55e4fe9623c74\"\r\n      },\r\n      \"request_id\": \"nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\",\r\n      \"provider_request_id\": \"SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\",\r\n      \"mapping\": {\r\n        \"response_sha256\": \"e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896\",\r\n        \"reflection_sha256\": \"fdbd47f94b1c1218d299be43ae7031e8411a194ebda65c8177ff88d0c1d69fe7\",\r\n        \"brief_section\": \"NK Perspective Reflection (support only)\",\r\n        \"source_status\": \"SIMULATED\",\r\n        \"provider_request_id\": \"SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\"\r\n      }\r\n    }\r\n  },\r\n  \"next_stage\": \"prose\",\r\n  \"provider_requests\": [\r\n    {\r\n      \"stage\": \"plot\",\r\n      \"role_id\": \"plot_agent\",\r\n      \"request_id\": \"cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e\",\r\n      \"request_fingerprint\": \"c629fa9817eaa8ca30c60275782f9dbc3181e14ab64de95ffbfc467f848d3aad\",\r\n      \"provider_request_id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"status\": \"SUCCEEDED\",\r\n      \"http_status\": 200,\r\n      \"finish_reason\": \"stop\",\r\n      \"usage\": {\r\n        \"prompt_tokens\": 10,\r\n        \"completion_tokens\": 10\r\n      },\r\n      \"input_sha256\": \"70a70ec136ad6033b8bb2ccd98d02b37364e89efa3ea175b506ac871912b05be\",\r\n      \"request_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e.request.json\",\r\n      \"request_sha256\": \"4ff94d8790d853ed885256c2107b46c5c28014e776c1d6fd7cd90201d6081889\",\r\n      \"output_sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\",\r\n      \"raw_response_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e.json\",\r\n      \"raw_response_sha256\": \"1de0c958e4f13a303aa8deef40c8a9680d494556391bb42ea3b823e94247f404\",\r\n      \"cost_cny\": 3e-05,\r\n      \"ledger_settlement\": {\r\n        \"status\": \"SETTLED\",\r\n        \"request_id\": \"cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e\",\r\n        \"estimated_request_cny\": \"0.000030\",\r\n        \"campaign_committed_cny\": \"0.000030\",\r\n        \"limit_cny\": null,\r\n        \"cost_context\": {\r\n          \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\",\r\n          \"project_id\": \"TIDELINE\",\r\n          \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n          \"stage\": \"plot\",\r\n          \"binding_sha256\": \"940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820\"\r\n        }\r\n      },\r\n      \"mode\": \"MOCK_ONLY\",\r\n      \"fixture_only\": true,\r\n      \"simulation_status\": \"SIMULATED\"\r\n    },\r\n    {\r\n      \"stage\": \"scene_cards\",\r\n      \"role_id\": \"scene_card_agent\",\r\n      \"request_id\": \"cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43\",\r\n      \"request_fingerprint\": \"9135895a947c96aabb01001a4f53b9ff1cea68884be75ab55a116f645c69bbeb\",\r\n      \"provider_request_id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"status\": \"SUCCEEDED\",\r\n      \"http_status\": 200,\r\n      \"finish_reason\": \"stop\",\r\n      \"usage\": {\r\n        \"prompt_tokens\": 10,\r\n        \"completion_tokens\": 10\r\n      },\r\n      \"input_sha256\": \"7c93ccbfdc29ccc490680273f0710f2769efff563e746fd0d28009cb1ce5abdb\",\r\n      \"request_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43.request.json\",\r\n      \"request_sha256\": \"fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e\",\r\n      \"output_sha256\": \"90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874\",\r\n      \"raw_response_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43.json\",\r\n      \"raw_response_sha256\": \"7c471862f4a1d86e1f94315bd22f0264e27287e06b72807613d8e053ffde92b6\",\r\n      \"cost_cny\": 3e-05,\r\n      \"ledger_settlement\": {\r\n        \"status\": \"SETTLED\",\r\n        \"request_id\": \"cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43\",\r\n        \"estimated_request_cny\": \"0.000030\",\r\n        \"campaign_committed_cny\": \"0.000060\",\r\n        \"limit_cny\": null,\r\n        \"cost_context\": {\r\n          \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\",\r\n          \"project_id\": \"TIDELINE\",\r\n          \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n          \"stage\": \"scene_cards\",\r\n          \"binding_sha256\": \"940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820\"\r\n        }\r\n      },\r\n      \"mode\": \"MOCK_ONLY\",\r\n      \"fixture_only\": true,\r\n      \"simulation_status\": \"SIMULATED\"\r\n    },\r\n    {\r\n      \"stage\": \"support_hook\",\r\n      \"role_id\": \"nk_pov\",\r\n      \"request_id\": \"nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\",\r\n      \"provider_request_id\": \"SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"status\": \"SUCCEEDED\",\r\n      \"http_status\": 200,\r\n      \"finish_reason\": \"stop\",\r\n      \"usage\": {\r\n        \"prompt_tokens\": 12,\r\n        \"completion_tokens\": 8\r\n      },\r\n      \"input_sha256\": \"484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8\",\r\n      \"request_path\": \"artifacts/provider/nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.request.json\",\r\n      \"request_sha256\": \"ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422\",\r\n      \"request_format\": \"native_nk_payload\",\r\n      \"output_sha256\": \"e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896\",\r\n      \"raw_response_path\": \"artifacts/provider/nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.json\",\r\n      \"raw_response_sha256\": \"3b9a6c08d6a4a8d680f945dd71ce219a3851227d2c4e714dbbd49c9bc7a12131\",\r\n      \"cost_cny\": 2.8e-05,\r\n      \"ledger_settlement\": {\r\n        \"status\": \"SETTLED\",\r\n        \"request_id\": \"nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\",\r\n        \"estimated_request_cny\": \"0.000028\",\r\n        \"campaign_committed_cny\": \"0.000088\",\r\n        \"limit_cny\": null,\r\n        \"cost_context\": {\r\n          \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\",\r\n          \"project_id\": \"TIDELINE\",\r\n          \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n          \"stage\": \"support_hook\",\r\n          \"binding_sha256\": \"940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820\"\r\n        }\r\n      },\r\n      \"mode\": \"MOCK_ONLY\",\r\n      \"fixture_only\": true,\r\n      \"simulation_status\": \"SIMULATED\"\r\n    },\r\n    {\r\n      \"stage\": \"writing_brief\",\r\n      \"role_id\": \"brief_agent\",\r\n      \"request_id\": \"cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c\",\r\n      \"request_fingerprint\": \"bd8a83eb119d8cc21c5815d1ee4a784c6471ce3d4033a90a404b447a114a00ff\",\r\n      \"provider_request_id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"status\": \"SUCCEEDED\",\r\n      \"http_status\": 200,\r\n      \"finish_reason\": \"stop\",\r\n      \"usage\": {\r\n        \"prompt_tokens\": 10,\r\n        \"completion_tokens\": 10\r\n      },\r\n      \"input_sha256\": \"f6a9746746b0c006d07b22cf5db6bf90900c4a942bec7b20107bbe7871a96a36\",\r\n      \"request_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c.request.json\",\r\n      \"request_sha256\": \"9989b98f55a599e7602e170d4dc4d0234e9a70889587080cbafab251f59fe11a\",\r\n      \"output_sha256\": \"8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963\",\r\n      \"raw_response_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c.json\",\r\n      \"raw_response_sha256\": \"5bf06dcb46b375ead34bead3af8578ae59dbc44b2bf1830a67cfa24a158029a7\",\r\n      \"cost_cny\": 3e-05,\r\n      \"ledger_settlement\": {\r\n        \"status\": \"SETTLED\",\r\n        \"request_id\": \"cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c\",\r\n        \"estimated_request_cny\": \"0.000030\",\r\n        \"campaign_committed_cny\": \"0.000118\",\r\n        \"limit_cny\": null,\r\n        \"cost_context\": {\r\n          \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\",\r\n          \"project_id\": \"TIDELINE\",\r\n          \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n          \"stage\": \"writing_brief\",\r\n          \"binding_sha256\": \"940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820\"\r\n        }\r\n      },\r\n      \"mode\": \"MOCK_ONLY\",\r\n      \"fixture_only\": true,\r\n      \"simulation_status\": \"SIMULATED\"\r\n    }\r\n  ],\r\n  \"stages\": {\r\n    \"plot\": {\r\n      \"status\": \"STAGE_MATERIALIZED\",\r\n      \"dependencies\": [],\r\n      \"artifact\": {\r\n        \"path\": \"artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md\",\r\n        \"sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\"\r\n      },\r\n      \"meta\": {\r\n        \"path\": \"artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json\",\r\n        \"sha256\": \"d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6\"\r\n      },\r\n      \"role_ids\": [\r\n        \"plot_agent\"\r\n      ],\r\n      \"provider_request_ids\": [\r\n        \"cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e\"\r\n      ],\r\n      \"execution_input_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"plot\",\r\n        \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n        \"input_sha256\": \"6ecec5ec7d34ac779932dfb114d086ad80da865251f8fa82468b5ef657e0932a\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671\"\r\n        },\r\n        \"message_sha256\": \"f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671\",\r\n        \"builder_sha256\": \"9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"86baff89976ed5c890ca71c1877bcd00ec853dc83ab488046b70882d0b166491\"\r\n      },\r\n      \"execution_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"plot\",\r\n        \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n        \"input_sha256\": \"6ecec5ec7d34ac779932dfb114d086ad80da865251f8fa82468b5ef657e0932a\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671\"\r\n        },\r\n        \"message_sha256\": \"f9e36cd317fc7c4a4a033fa8f7eeb7940c6b4eebf7ab8769f85ccc4b5b080671\",\r\n        \"builder_sha256\": \"9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"86baff89976ed5c890ca71c1877bcd00ec853dc83ab488046b70882d0b166491\"\r\n      }\r\n    },\r\n    \"scene_cards\": {\r\n      \"status\": \"STAGE_MATERIALIZED\",\r\n      \"dependencies\": [\r\n        \"plot\"\r\n      ],\r\n      \"artifact\": {\r\n        \"path\": \"artifacts/candidates/scene_cards/90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874.md\",\r\n        \"sha256\": \"90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874\"\r\n      },\r\n      \"meta\": {\r\n        \"path\": \"artifacts/candidates/scene_cards/8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa.meta.json\",\r\n        \"sha256\": \"8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa\"\r\n      },\r\n      \"role_ids\": [\r\n        \"scene_card_agent\"\r\n      ],\r\n      \"provider_request_ids\": [\r\n        \"cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43\"\r\n      ],\r\n      \"execution_input_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"scene_cards\",\r\n        \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n        \"input_sha256\": \"3bba46446f8b76baaa98934570de4030ac880fc6342a346e01d01cd2fd8a14f9\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18\"\r\n        },\r\n        \"message_sha256\": \"61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18\",\r\n        \"builder_sha256\": \"6e60e3d7a7e49dca5a8ad6c30a84f4c6353f5b9e04bbde2fe3514d15a3d50c4a\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"108f072c53e8ab960a7cf978f2fef8f32b497c141f6293bf36101c44eb1b631f\"\r\n      },\r\n      \"execution_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"scene_cards\",\r\n        \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n        \"input_sha256\": \"3bba46446f8b76baaa98934570de4030ac880fc6342a346e01d01cd2fd8a14f9\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18\"\r\n        },\r\n        \"message_sha256\": \"61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18\",\r\n        \"builder_sha256\": \"6e60e3d7a7e49dca5a8ad6c30a84f4c6353f5b9e04bbde2fe3514d15a3d50c4a\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"108f072c53e8ab960a7cf978f2fef8f32b497c141f6293bf36101c44eb1b631f\"\r\n      }\r\n    },\r\n    \"writing_brief\": {\r\n      \"status\": \"STAGE_MATERIALIZED\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\"\r\n      ],\r\n      \"artifact\": {\r\n        \"path\": \"artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md\",\r\n        \"sha256\": \"8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963\"\r\n      },\r\n      \"role_ids\": [\r\n        \"brief_agent\"\r\n      ],\r\n      \"provider_request_ids\": [\r\n        \"cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c\"\r\n      ],\r\n      \"execution_input_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"writing_brief\",\r\n        \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n        \"input_sha256\": \"81bc81c4d8b22e50fed264aba5602c3dfa6b7ae45ac84ad0584fe125a69bd2a8\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"2b7d29a9357d67304982717e5655a18d269fb0c4680d4b37210357a6c8d611d8\",\r\n          \"nk_mode\": \"ed9cc9fc9dffc2b4d2137728fca2ba0efbb031c24352b94529dec66e50c7d7db\",\r\n          \"nk_payload\": \"484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8\"\r\n        },\r\n        \"message_sha256\": \"2b7d29a9357d67304982717e5655a18d269fb0c4680d4b37210357a6c8d611d8\",\r\n        \"builder_sha256\": \"aa608de26c63df4015d16e13b3384ef41373595e6f67b3ca437d0a499f97340d\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"713e7051c34e85abd55664245319269e7d19893eb016befbdeafeff2d0fcc36d\"\r\n      },\r\n      \"execution_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"writing_brief\",\r\n        \"contract_sha256\": \"bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5\",\r\n        \"input_sha256\": \"d26fe959c52a80b909cf216665ffafe06fa9e715ec2a8800f75114c0af2d2039\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"957e20f4e2714a04ee44c34e591de1c324fa40378c77e8498590777ffc3fb801\",\r\n          \"nk_mode\": \"ed9cc9fc9dffc2b4d2137728fca2ba0efbb031c24352b94529dec66e50c7d7db\",\r\n          \"nk_payload\": \"484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8\",\r\n          \"nk_result\": \"f9f480ac1b73ea8a86b9745be1a5c43ed5942b8c8a5e648a7b46220d537856e7\"\r\n        },\r\n        \"message_sha256\": \"957e20f4e2714a04ee44c34e591de1c324fa40378c77e8498590777ffc3fb801\",\r\n        \"builder_sha256\": \"aa608de26c63df4015d16e13b3384ef41373595e6f67b3ca437d0a499f97340d\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"740d5906cb21d91d71cd784846adecff50edd6495e0c605252e4a59672b7104c\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"7aa2435cd1c3fb6e8f9379c4f7fbd3708c3d895a6f20c3f05f1eec31d1f45e5b\"\r\n      }\r\n    },\r\n    \"prose\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"lint_layer1\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"lint_layer2\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"multi_lens_review\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"adversarial_verify\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"completeness_critic\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"refine\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\",\r\n        \"completeness_critic\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"re_review\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\",\r\n        \"completeness_critic\",\r\n        \"refine\"\r\n      ],\r\n      \"artifact\": null\r\n    }\r\n  },\r\n  \"max_in_flight\": 5,\r\n  \"literary_source_hashes\": {\r\n    \"project:94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\",\r\n    \"project:07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\",\r\n    \"project:04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\",\r\n    \"project:04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\",\r\n    \"project:92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\",\r\n    \"project:90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\",\r\n    \"project:selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"project:selected_source_identity\": \"cfb5c43b4055bbfd95d0161be3eb82bb2ba1c502e15d3508287762700da461fb\",\r\n    \"project:04_chapter_design/arc_index.md\": \"fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84\",\r\n    \"preparation:identity\": \"0648004a37ae8bd37ade7b67cac59ba8608a5ecc8b5ddea70eadc074a46f9902\"\r\n  },\r\n  \"literary_source_freeze_version\": \"literary_source_freeze_v2\",\r\n  \"provider_config_sha256\": \"3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519\",\r\n  \"cost_guard_runner_sha256\": null,\r\n  \"state_migrations\": [\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\"\r\n  ],\r\n  \"production_preparation\": {\r\n    \"path\": \"artifacts/production_preparation.json\",\r\n    \"sha256\": \"2a3100a50e9021dfb2f231b94c4b240be3f5d001a619b93188b8829941c3497a\"\r\n  }\r\n}\r\n"
+    },
+    "artifacts/contract.json": {
+      "sha256": "bcf3fe0b064c1bd5208db3354d731b2cd2d7eaf231a6faac334e9aeb07bc5ca5",
+      "utf8": "{\"schema_version\": \"cnw_work_unit_v2\", \"project_id\": \"TIDELINE\", \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\", \"status\": \"PROPOSED_FOR_HUMAN_PREFLIGHT\", \"work_intent\": \"ADAPT_SOURCE\", \"source\": {\"source_origin\": \"IMPORTED_PROJECT\", \"project_instance_id\": \"6b31d3ed-8803-4126-885f-ea1791a567a6\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_file_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"manifest_file\": \"_INBOX/revisions/manifests/f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844.json\", \"source_manifest_sha256\": \"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\", \"manifest_revision_sha256\": \"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\", \"source_index_file\": \"_INBOX/revisions/indexes/a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348.json\", \"source_index_sha256\": \"a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348\"}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"planning_mode\": \"author_plot\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"pov\": \"Mira\", \"target_visible_chars\": 150, \"min_visible_chars\": 100, \"max_visible_chars\": 250, \"length_policy\": \"ADVISORY\", \"policy_sha256\": \"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\"}, \"integrations\": {\"nk\": \"ENABLED\", \"critics\": \"DISABLED\"}, \"story\": {\"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1, \"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\"}, \"arc_ref\": \"04_chapter_design/arc_01.md\", \"arc_sha256\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"review\": {\"workflow_template_git_blob\": \"146ea01a484cc0578cf290478b3941599ad7fb15\", \"require_cnw_11_stages\": true, \"require_3_verifiers\": true, \"require_completeness_critic\": true, \"require_re_review\": true, \"fifth_lens\": {\"id\": \"harbor-reader-promise\", \"responsibility\": \"Check whether this project makes a practical offer feel emotionally earned.\", \"responsibility_sha256\": \"749d35ddc0964dddc81c528917317fce3106ec6a481a139f8bc104883cb90748\"}, \"cnw_reference_manifest_sha256\": \"e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983\"}}"
+    },
+    "artifacts/production_preparation.json": {
+      "sha256": "2a3100a50e9021dfb2f231b94c4b240be3f5d001a619b93188b8829941c3497a",
+      "utf8": "{\r\n  \"documents\": {\r\n    \"94_runtime/current_state.md\": \"Mira and the keeper are neighbors; their relationship is not familial.\",\r\n    \"07_draft/manuscript_index.md\": \"No prior story chapter has been accepted.\",\r\n    \"04_chapter_design/arc_01.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\",\r\n    \"04_chapter_design/arc_01_episode_details.md\": \"Keep the action to one hinge repair and its immediate social consequence.\",\r\n    \"92_style_engine/character_voice_samples.md\": \"## Mira\\n'I would rather ask than guess.'\\n\\n## Keeper\\n'Try this screwdriver.'\\n\",\r\n    \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\",\r\n    \"selected_source_excerpt\": \"Mira asks the keeper to help with a loose hinge.\\r\\n\",\r\n    \"selected_source_identity\": \"{\\\"canonical_selected_value_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"manifest_revision_sha256\\\": \\\"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_index_sha256\\\": \\\"a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"wire_excerpt_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\"}\"\r\n  },\r\n  \"source_hashes\": {\r\n    \"94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\",\r\n    \"07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\",\r\n    \"04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\",\r\n    \"04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\",\r\n    \"92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\",\r\n    \"90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\",\r\n    \"selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"selected_source_identity\": \"cfb5c43b4055bbfd95d0161be3eb82bb2ba1c502e15d3508287762700da461fb\"\r\n  },\r\n  \"source_method\": \"example_project/00_meta/episode_production_manual.md#production-reading-order\",\r\n  \"previous_episode\": \"SCENE_SOURCE_ANCHORS\"\r\n}\r\n"
+    },
+    "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e.json": {
+      "sha256": "1de0c958e4f13a303aa8deef40c8a9680d494556391bb42ea3b823e94247f404",
+      "utf8": "{\"request_id\": \"cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e\", \"requested_model\": \"deepseek-flash\", \"response\": {\"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\"}}], \"fixture_only\": true, \"id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"usage\": {\"completion_tokens\": 10, \"prompt_tokens\": 10}}, \"status\": 200}\n"
+    },
+    "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e.request.json": {
+      "sha256": "4ff94d8790d853ed885256c2107b46c5c28014e776c1d6fd7cd90201d6081889",
+      "utf8": "{\"max_tokens\": 4000, \"messages\": [{\"content\": \"[pinned_author_template: templates/06_plot/plot.template.md blob=8eb22fa6221351c2b614a3ae7d5dc4a53d3e8688]\\n# Chapter Plot — ch<NN>\\n\\nThe structured plot for a single chapter. The first agent in the per-chapter pipeline produces this; the scene card agent expands it; the brief agent narrows it; the prose agent writes from the brief.\\n\\nThis file is the macro layer. It answers: \\\"What is this chapter about, and what must it accomplish?\\\"\\n\\n---\\n\\n## Identity\\n\\n- **Chapter number**: <NN>\\n- **Working title**: <title>\\n- **Arc**: <which arc this chapter belongs to (e.g. \\\"Arc 2, chapter 5 of 20\\\")>\\n- **POV**: <character>\\n\\n---\\n\\n## Role in the Arc\\n\\nOne paragraph: what does this chapter exist to do at the arc level?\\n\\n- Is it a setup chapter (planting seeds)?\\n- A payoff chapter (resolving prior setups)?\\n- A pivot chapter (changing the direction of the arc)?\\n- A breather chapter (character beat / world detail)?\\n- A climactic chapter (arc-level resolution)?\\n\\nIf the chapter doesn't have a clear role, the chapter shouldn't exist yet — go back to the arc design.\\n\\n---\\n\\n## Key Scenes (3–6 typical)\\n\\nBullet list of the scenes this chapter must include, in order. Each scene gets one line at this stage; the scene card agent will expand each one.\\n\\n1. <scene one — one-line summary>\\n2. <scene two — one-line summary>\\n3. <scene three — one-line summary>\\n4. ...\\n\\n---\\n\\n## Hook (chapter ending)\\n\\nThe last beat of the chapter. What makes the reader want to read the next one?\\n\\n- **Hook type**: <cliffhanger / revelation / atmospheric / character-moment / question-raised>\\n- **Specific hook**: <one sentence>\\n\\nThe hook should match the arc-level pacing target. Not every chapter needs a cliffhanger; not every chapter can afford a quiet ending.\\n\\n---\\n\\n## Required Story Beats (must land in this chapter)\\n\\nThings that MUST happen, regardless of how the prose develops:\\n\\n- <beat — e.g. \\\"Character X learns Character Y is alive\\\">\\n- <beat — e.g. \\\"The reader sees the antagonist make decision Z\\\">\\n- <beat>\\n\\nThese are non-negotiable. The plot review lens checks for them.\\n\\n---\\n\\n## Forbidden Items (must NOT appear in this chapter)\\n\\nThings that must NOT show up:\\n\\n- <forbidden — e.g. \\\"No mention of [future plot element] yet\\\">\\n- <forbidden — e.g. \\\"Character X's true name must not be spoken aloud\\\">\\n- <forbidden — e.g. \\\"The reader must not learn fact Y until chapter NN+3\\\">\\n\\nThese are the per-scene/per-chapter forbidden items, distinct from the global `forbidden_patterns.md` (which is about prose style, not story disclosure).\\n\\n---\\n\\n## Foreshadowing — plant / payoff\\n\\nIf this chapter plants a seed for later payoff, or pays off a seed planted earlier, document it:\\n\\n- **Planting**: <seed planted in this chapter, target payoff chapter>\\n- **Paying off**: <seed planted in ch<NN>, paid off here>\\n\\nUpdate `../90_canon/timeline.md` foreshadowing ledger to match.\\n\\n---\\n\\n## Connections\\n\\n- **Previous chapter (ch<NN-1>) ended with**: <one sentence>\\n- **This chapter starts at**: <time gap from previous? location change?>\\n- **Next chapter (ch<NN+1>) will need to receive from this one**: <what must be true at chapter end>\\n\\n---\\n\\n## Target Length\\n\\n<word count or character count target>\\n\\n---\\n\\n## Notes for the Scene Card Agent\\n\\nAnything the next stage of the pipeline needs to know that doesn't fit above:\\n\\n- <note>\\n- <note>\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **Scene card agent** reads this and expands each \\\"key scene\\\" into a structured scene card.\\n- **Brief agent** reads this for the macro view, then narrows it to per-scene instructions.\\n- **Plot review lens** checks the drafted chapter against the \\\"Required Story Beats\\\" and \\\"Forbidden Items\\\" sections.\\n\\n\\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\\n# AI Roles Configuration\\n\\nagents:\\n  plot_agent:\\n    role: \\\"Plot specialist\\\"\\n    reads:\\n      - 04_chapter_design/arc_<NN>.md\\n      - 90_canon/canon.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 06_plot/epNNN_plot.md\\n\\n  scene_card_agent:\\n    role: \\\"Scene-level structure\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 05_scene_cards/epNNN_scene_cards.md\\n\\n  brief_agent:\\n    role: \\\"Prepare prose prompt\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 05_scene_cards/epNNN_scene_cards.md\\n      - 90_canon/character_bible.md\\n      - 92_style_engine/style_guide.md\\n    outputs:\\n      - 07_draft/epNNN_writing_brief.md\\n\\n  prose_agent:\\n    role: \\\"Write prose\\\"\\n    reads:\\n      - 07_draft/epNNN_writing_brief.md\\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\\n    outputs:\\n      - 07_draft/episodes/epNNN.md\\n\\n  # ... add review lenses, refine agent, etc.\\n\\n\\n[project_language_contract]\\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\\n\\n\\n[project_length_policy]\\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\\n\\n\\n[project_output_contract]\\n请严格按作者模板的章节标题输出，至少包含这些标题：## Identity / ## Role in the Arc / ## Key Scenes / ## Hook / ## Required Story Beats / ## Forbidden Items / ## Connections / ## Target Length。\\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\\n\\n[plot_design_responsibility]\\n依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、Required Story Beats、Hook、伏笔与章节衔接。已有必需节拍是必须覆盖的要求，不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。按作者模板区分 Key Scenes（场景概要）与 Required Story Beats（必须发生的事件），本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。仅依据合同明确选定的来源修订与选段设计改编；保留选段中可确认的来源事实，不把未选来源或未选范围当作事实。他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。不得从执行器的记账元数据推导创作要求。\\n\", \"role\": \"system\"}, {\"content\": \"{\\\"assignment\\\": {\\\"project_id\\\": \\\"TIDELINE\\\", \\\"story\\\": {\\\"arc_ref\\\": \\\"04_chapter_design/arc_01.md\\\", \\\"arc_sha256\\\": \\\"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\\\", \\\"chapter_context\\\": \\\"A small repair gives two neighbors a reason to speak plainly.\\\", \\\"character_knowledge_boundary_ref\\\": \\\"90_canon/canon.md\\\", \\\"characters_in_scene\\\": [\\\"Mira\\\", \\\"Keeper\\\"], \\\"entry_state\\\": \\\"The hinge is loose and Mira has not asked for help.\\\", \\\"exit_state\\\": \\\"The hinge works and Mira has made a specific next request.\\\", \\\"forbidden_future_revelations\\\": [\\\"Do not invent a family relationship or future secret.\\\"], \\\"reader_reward\\\": \\\"See a practical offer change the distance between neighbors.\\\", \\\"required_beats\\\": [{\\\"beat_id\\\": \\\"B01\\\", \\\"goal\\\": \\\"Mira asks for help and responds to the offer.\\\"}], \\\"role_in_story\\\": \\\"Adapt only the selected source moment into one playable scene.\\\", \\\"source_file\\\": \\\"_INBOX/originals/61f61b74038ace77_source-B.md\\\", \\\"source_selection\\\": {\\\"end_line\\\": 1, \\\"hash_semantics\\\": \\\"raw_line_span_sha256\\\", \\\"selected_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"start_line\\\": 1}, \\\"voice_sample_refs\\\": [\\\"Mira\\\", \\\"Keeper\\\"]}, \\\"unit\\\": {\\\"id\\\": \\\"ADAPT-HINGE-01\\\", \\\"kind\\\": \\\"scene\\\", \\\"language\\\": \\\"en-US\\\", \\\"language_locale\\\": \\\"en-US\\\", \\\"length_metric\\\": \\\"unicode_visible_code_points\\\", \\\"length_policy\\\": \\\"ADVISORY\\\", \\\"length_semantics\\\": \\\"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\\\", \\\"planning_mode\\\": \\\"author_plot\\\", \\\"policy_sha256\\\": \\\"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\\\", \\\"pov\\\": \\\"Mira\\\", \\\"target_visible_chars\\\": 150}}, \\\"materials\\\": {\\\"04_chapter_design/arc_<NN>.md\\\": \\\"Mira chooses whether to ask her neighbor for help with the harbor door.\\\", \\\"90_canon/canon.md\\\": \\\"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\\\", \\\"90_canon/character_bible.md\\\": \\\"Mira asks direct questions. The keeper answers briefly and offers practical help.\\\"}, \\\"support\\\": {\\\"production_preparation\\\": {\\\"documents\\\": {\\\"04_chapter_design/arc_01.md\\\": \\\"Mira chooses whether to ask her neighbor for help with the harbor door.\\\", \\\"04_chapter_design/arc_01_episode_details.md\\\": \\\"Keep the action to one hinge repair and its immediate social consequence.\\\", \\\"07_draft/manuscript_index.md\\\": \\\"No prior story chapter has been accepted.\\\", \\\"90_canon/character_bible.md\\\": \\\"Mira asks direct questions. The keeper answers briefly and offers practical help.\\\", \\\"92_style_engine/character_voice_samples.md\\\": \\\"## Mira\\\\n'I would rather ask than guess.'\\\\n\\\\n## Keeper\\\\n'Try this screwdriver.'\\\\n\\\", \\\"94_runtime/current_state.md\\\": \\\"Mira and the keeper are neighbors; their relationship is not familial.\\\", \\\"selected_source_excerpt\\\": \\\"Mira asks the keeper to help with a loose hinge.\\\\r\\\\n\\\", \\\"selected_source_identity\\\": \\\"{\\\\\\\"canonical_selected_value_sha256\\\\\\\": \\\\\\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\\\\\", \\\\\\\"manifest_revision_sha256\\\\\\\": \\\\\\\"f654c26a91ca04c7d4013e4b867facdef4f5c21cceb9cc257882de0245484844\\\\\\\", \\\\\\\"source_id\\\\\\\": \\\\\\\"61f61b74038ace77\\\\\\\", \\\\\\\"source_index_sha256\\\\\\\": \\\\\\\"a1d2965a6ac8ba0e288f7986f839ac62df085d1268f88987e024fd78922ed348\\\\\\\", \\\\\\\"source_revision_id\\\\\\\": \\\\\\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\\\\\", \\\\\\\"wire_excerpt_sha256\\\\\\\": \\\\\\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\\\\\"}\\\"}, \\\"previous_episode\\\": \\\"SCENE_SOURCE_ANCHORS\\\", \\\"source_hashes\\\": {\\\"04_chapter_design/arc_01.md\\\": \\\"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\\\", \\\"04_chapter_design/arc_01_episode_details.md\\\": \\\"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\\\", \\\"07_draft/manuscript_index.md\\\": \\\"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\\\", \\\"90_canon/character_bible.md\\\": \\\"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\\\", \\\"92_style_engine/character_voice_samples.md\\\": \\\"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\\\", \\\"94_runtime/current_state.md\\\": \\\"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\\\", \\\"selected_source_excerpt\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"selected_source_identity\\\": \\\"cfb5c43b4055bbfd95d0161be3eb82bb2ba1c502e15d3508287762700da461fb\\\"}, \\\"source_method\\\": \\\"example_project/00_meta/episode_production_manual.md#production-reading-order\\\"}}}\", \"role\": \"user\"}], \"model\": \"deepseek-flash\", \"stream\": false, \"thinking\": {\"type\": \"disabled\"}}\r\n"
+    },
+    "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43.json": {
+      "sha256": "7c471862f4a1d86e1f94315bd22f0264e27287e06b72807613d8e053ffde92b6",
+      "utf8": "{\"request_id\": \"cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43\", \"requested_model\": \"deepseek-flash\", \"response\": {\"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"### Identity\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Cast\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Start state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### End state\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Required beats\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Forbidden items for this scene\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Sensory anchor\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Tone / pacing\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n### Connection to next scene\\nB01 Mira asks; the keeper responds with a screwdriver.\\n\\n## Scene S1\\n### Required beats\\n- Mira asks for a screwdriver.\\n\"}}], \"fixture_only\": true, \"id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"usage\": {\"completion_tokens\": 10, \"prompt_tokens\": 10}}, \"status\": 200}\n"
+    },
+    "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43.request.json": {
+      "sha256": "fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e",
+      "utf8": "{\"max_tokens\": 4000, \"messages\": [{\"content\": \"[pinned_author_template: templates/05_scene_cards/scene_cards.template.md blob=b003a987ac1bd5eb1ae6f8dcf7dceffdfdfeaf5d]\\n# Scene Cards — ch<NN>\\n\\nPer-scene breakdown. The scene card agent expands each \\\"key scene\\\" from the plot file into a structured card. The brief agent then uses these cards to build the prose-writing instructions.\\n\\nFormat: one section per scene, in the order they appear in the chapter.\\n\\n---\\n\\n## Scene 1\\n\\n### Identity\\n- **Scene label**: <e.g. \\\"Opening — discovery in the library\\\">\\n- **POV**: <character — usually inherited from chapter POV but can shift>\\n- **Location**: <specific place>\\n- **Time**: <when in the in-world day; how long after previous scene>\\n- **Approximate length**: <% of chapter, or word/character count>\\n\\n### Cast\\n- **On-screen characters**: <list>\\n- **Mentioned but off-screen**: <list>\\n\\n### Start state\\nWhat is the situation as the scene opens? One paragraph.\\n- Where are the characters physically?\\n- What just happened?\\n- What does each on-screen character WANT in this moment?\\n- What does the POV character know / not know?\\n\\n### End state\\nWhat must be true when the scene ends? One paragraph.\\n- What has changed in the situation?\\n- What has changed in the POV character's understanding?\\n- What new fact / feeling does the reader walk away with?\\n\\n### Required beats\\nBullet list of beats that MUST happen in this scene:\\n- <beat — e.g. \\\"Character A names the artifact for the first time\\\">\\n- <beat — e.g. \\\"Character B's hesitation is visible to the reader but not to character A\\\">\\n- <beat>\\n\\n### Forbidden items for this scene\\nThings that must NOT happen in THIS scene, even if they're fine in other scenes:\\n- <forbidden — e.g. \\\"POV character does not yet realize what they're looking at\\\">\\n- <forbidden — e.g. \\\"No mention of [later plot element]\\\">\\n- <forbidden — e.g. \\\"Character C does not enter the room until next scene\\\">\\n\\n### Sensory anchor\\nOne sense detail to ground the scene. (Helps prose stay specific instead of generic.)\\n- <e.g. \\\"The library smells faintly of mildew under the lamp oil\\\">\\n\\n### Tone / pacing\\n- **Tempo**: <slow / measured / brisk / urgent>\\n- **Emotional register**: <one sentence>\\n\\n### Connection to next scene\\n- **How this scene hands off to scene 2**: <one sentence>\\n\\n---\\n\\n## Scene 2\\n\\n(Repeat the block above for each scene in the chapter.)\\n\\n---\\n\\n## Scene 3\\n\\n...\\n\\n---\\n\\n## Notes for the Brief Agent\\n\\nAnything the next stage needs to know about the chapter as a whole, that didn't fit into individual scenes:\\n\\n- <note>\\n- <note>\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **Brief agent** reads all scene cards for the chapter, plus the plot file, plus relevant canon, and produces the final writing brief.\\n- **Prose agent** does NOT read this file directly (too much for one prompt). It reads the brief instead.\\n- **Plot review lens** checks the drafted chapter to verify each scene's \\\"Required beats\\\" landed and no \\\"Forbidden items\\\" appeared.\\n\\nThe scene card stage is where most structural problems get caught early — before any prose is generated. If a scene's start state, required beats, and end state don't add up, fix it here, not in the prose.\\n\\n\\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\\n# AI Roles Configuration\\n\\nagents:\\n  plot_agent:\\n    role: \\\"Plot specialist\\\"\\n    reads:\\n      - 04_chapter_design/arc_<NN>.md\\n      - 90_canon/canon.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 06_plot/epNNN_plot.md\\n\\n  scene_card_agent:\\n    role: \\\"Scene-level structure\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 05_scene_cards/epNNN_scene_cards.md\\n\\n  brief_agent:\\n    role: \\\"Prepare prose prompt\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 05_scene_cards/epNNN_scene_cards.md\\n      - 90_canon/character_bible.md\\n      - 92_style_engine/style_guide.md\\n    outputs:\\n      - 07_draft/epNNN_writing_brief.md\\n\\n  prose_agent:\\n    role: \\\"Write prose\\\"\\n    reads:\\n      - 07_draft/epNNN_writing_brief.md\\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\\n    outputs:\\n      - 07_draft/episodes/epNNN.md\\n\\n  # ... add review lenses, refine agent, etc.\\n\\n\\n[project_language_contract]\\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\\n\\n\\n[project_length_policy]\\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\\n\\n\\n[project_output_contract]\\n请严格按作者模板的章节标题输出，至少包含这些标题：### Identity / ### Cast / ### Start state / ### End state / ### Required beats / ### Forbidden items for this scene / ### Sensory anchor / ### Tone / pacing / ### Connection to next scene。\\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\\n\", \"role\": \"system\"}, {\"content\": \"{\\\"assignment\\\": {\\\"project_id\\\": \\\"TIDELINE\\\", \\\"story\\\": {\\\"arc_ref\\\": \\\"04_chapter_design/arc_01.md\\\", \\\"arc_sha256\\\": \\\"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\\\", \\\"chapter_context\\\": \\\"A small repair gives two neighbors a reason to speak plainly.\\\", \\\"character_knowledge_boundary_ref\\\": \\\"90_canon/canon.md\\\", \\\"characters_in_scene\\\": [\\\"Mira\\\", \\\"Keeper\\\"], \\\"entry_state\\\": \\\"The hinge is loose and Mira has not asked for help.\\\", \\\"exit_state\\\": \\\"The hinge works and Mira has made a specific next request.\\\", \\\"forbidden_future_revelations\\\": [\\\"Do not invent a family relationship or future secret.\\\"], \\\"reader_reward\\\": \\\"See a practical offer change the distance between neighbors.\\\", \\\"required_beats\\\": [{\\\"beat_id\\\": \\\"B01\\\", \\\"goal\\\": \\\"Mira asks for help and responds to the offer.\\\"}], \\\"role_in_story\\\": \\\"Adapt only the selected source moment into one playable scene.\\\", \\\"source_file\\\": \\\"_INBOX/originals/61f61b74038ace77_source-B.md\\\", \\\"source_selection\\\": {\\\"end_line\\\": 1, \\\"hash_semantics\\\": \\\"raw_line_span_sha256\\\", \\\"selected_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"start_line\\\": 1}, \\\"voice_sample_refs\\\": [\\\"Mira\\\", \\\"Keeper\\\"]}, \\\"unit\\\": {\\\"id\\\": \\\"ADAPT-HINGE-01\\\", \\\"kind\\\": \\\"scene\\\", \\\"language\\\": \\\"en-US\\\", \\\"language_locale\\\": \\\"en-US\\\", \\\"length_metric\\\": \\\"unicode_visible_code_points\\\", \\\"length_policy\\\": \\\"ADVISORY\\\", \\\"length_semantics\\\": \\\"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\\\", \\\"planning_mode\\\": \\\"author_plot\\\", \\\"policy_sha256\\\": \\\"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\\\", \\\"pov\\\": \\\"Mira\\\", \\\"target_visible_chars\\\": 150}}, \\\"materials\\\": {\\\"06_plot/<work_id>_plot.md\\\": \\\"## Identity\\\\nSynthetic Plot context.\\\\n\\\\n## Role in the Arc\\\\nSynthetic Plot context.\\\\n\\\\n## Key Scenes\\\\n- S1 Mira asks for a screwdriver and steadies the public door.\\\\n\\\\n## Hook\\\\nSynthetic Plot context.\\\\n\\\\n## Required Story Beats\\\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\\\n\\\\n## Forbidden Items\\\\nSynthetic Plot context.\\\\n\\\\n## Connections\\\\nSynthetic Plot context.\\\\n\\\\n## Target Length\\\\nSynthetic Plot context.\\\", \\\"90_canon/character_bible.md\\\": \\\"Mira asks direct questions. The keeper answers briefly and offers practical help.\\\"}}\", \"role\": \"user\"}], \"model\": \"deepseek-flash\", \"stream\": false, \"thinking\": {\"type\": \"disabled\"}}\r\n"
+    },
+    "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c.json": {
+      "sha256": "5bf06dcb46b375ead34bead3af8578ae59dbc44b2bf1830a67cfa24a158029a7",
+      "utf8": "{\"request_id\": \"cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c\", \"requested_model\": \"deepseek-flash\", \"response\": {\"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"## Quick Header\\nSynthetic project constraints.\\n\\n## Active Canon\\nSynthetic project constraints.\\n\\n## Scene-by-Scene Instructions\\nOne scene; 100–250 visible characters; preserve B01.\\n\\n## Voice References\\nMira: direct question. Keeper: brief practical offer.\\n\\n## Hard Constraints\\nSynthetic project constraints.\\n\\n## Style Targets\\nSynthetic project constraints.\\n\\n## What NOT to include in the prose\\nSynthetic project constraints.\"}}], \"fixture_only\": true, \"id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"usage\": {\"completion_tokens\": 10, \"prompt_tokens\": 10}}, \"status\": 200}\n"
+    },
+    "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c.request.json": {
+      "sha256": "9989b98f55a599e7602e170d4dc4d0234e9a70889587080cbafab251f59fe11a",
+      "utf8": "{\"max_tokens\": 4000, \"messages\": [{\"content\": \"[pinned_author_template: templates/07_draft/writing_brief.template.md blob=d67e3c4539eaea5bbcce904f3eb3ee42ff1e2fc5]\\n# Writing Brief — ch<NN>\\n\\nThe compressed, scene-scoped instruction packet that goes directly to the prose agent.\\n\\nThis is the file the prose agent reads. Nothing else. (Well — plus the relevant character voice samples.)\\n\\nThe brief agent's job is to take the plot file, the scene cards, and the relevant canon, and distill everything into THIS file. Compression matters: the prose agent shouldn't have to wade through the whole world bible to find what it needs.\\n\\n---\\n\\n## Quick Header\\n\\n- **Chapter**: ch<NN>\\n- **POV**: <character>\\n- **Target length**: <word / character count>\\n- **Style register**: <one phrase — e.g. \\\"wry restraint\\\", \\\"rising tension\\\", \\\"domestic warmth\\\">\\n\\n---\\n\\n## Active Canon (extracted, scene-scoped)\\n\\n### Characters in this chapter\\n\\nFor each character who appears: pull their essential facts from `character_bible.md` AND the relevant calling rules. The prose agent should be able to write every interaction without consulting the full bible.\\n\\n**<CHARACTER NAME>**\\n- Role: <one line>\\n- How they address others in this chapter: <calling rules for the specific pairings that appear>\\n- How others address them in this chapter: <same>\\n- MUST-INCLUDE facts (physical, behavioral): <e.g. \\\"missing left eye since ch5\\\", \\\"speaks formally to elders only\\\">\\n\\n**<CHARACTER NAME>**\\n(repeat for each)\\n\\n### Glossary terms in play\\n\\nPull only the glossary terms that will or may appear:\\n- **<TERM>**: <definition>\\n- **<TERM>**: <definition>\\n\\n### World rules in play\\n\\nPull only the world-bible facts that this chapter's events touch:\\n- <rule — e.g. \\\"magic at this academy is silent — no incantations spoken aloud\\\">\\n- <rule — e.g. \\\"travel from capital to academy takes 2 days by carriage\\\">\\n\\n---\\n\\n## Scene-by-Scene Instructions\\n\\nFor each scene, distill the scene card into action-oriented instructions for prose generation.\\n\\n### Scene 1\\n- **Goal**: <what this scene accomplishes>\\n- **Open with**: <specific opening beat>\\n- **Required beats**: <bullet list, in order>\\n- **Forbidden in this scene**: <bullet list>\\n- **End with**: <specific closing beat>\\n- **Approximate length**: <X% of chapter>\\n\\n### Scene 2\\n(repeat)\\n\\n### Scene 3\\n...\\n\\n---\\n\\n## Voice References\\n\\nVoice samples are loaded separately from `../92_style_engine/character_voice_samples.md`. Include only the samples for characters who SPEAK in this chapter.\\n\\n- <CHARACTER NAME> — see voice sample\\n- <CHARACTER NAME> — see voice sample\\n\\n---\\n\\n## Hard Constraints\\n\\nThe non-negotiables for this chapter. Anything that's a \\\"must\\\" or \\\"must not\\\" at the chapter level.\\n\\n- <MUST: e.g. \\\"POV character's internal narration uses 俺, never 私\\\">\\n- <MUST: e.g. \\\"Chapter must end on a hook of type X\\\">\\n- <MUST NOT: e.g. \\\"Antagonist's true name does not appear\\\">\\n- <MUST NOT: e.g. \\\"Em-dash count must stay under 5\\\">\\n\\n---\\n\\n## Style Targets (chapter-specific, on top of the global style guide)\\n\\n- <e.g. \\\"Dialogue density slightly elevated vs default — this is a conversation-heavy chapter\\\">\\n- <e.g. \\\"Description sparse — pacing is brisk\\\">\\n- <e.g. \\\"Internal monologue minimal — POV character is in shock\\\">\\n\\n---\\n\\n## What NOT to include in the prose\\n\\nDirect from scene cards' forbidden items, consolidated:\\n- <forbidden>\\n- <forbidden>\\n\\n---\\n\\n## How the Prose Agent Should Use This Brief\\n\\n- Read it once, fully, before writing.\\n- Treat \\\"Hard Constraints\\\" as inviolable.\\n- Treat \\\"Required beats\\\" as the structural skeleton — every one must land.\\n- Treat \\\"Forbidden in this scene\\\" / \\\"What NOT to include\\\" as veto rules.\\n- Follow scene order. Write each scene completely before moving to the next.\\n- Output the chapter as one continuous markdown file. No commentary, no meta-text.\\n\\n---\\n\\n## Notes (optional, for human reviewer)\\n\\n- <e.g. \\\"This is a tricky chapter — the misperception layer between the protagonist and the academy must stay visible without becoming explicit. Watch for accidental leakage in scene 3.\\\">\\n\\n\\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\\n# AI Roles Configuration\\n\\nagents:\\n  plot_agent:\\n    role: \\\"Plot specialist\\\"\\n    reads:\\n      - 04_chapter_design/arc_<NN>.md\\n      - 90_canon/canon.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 06_plot/epNNN_plot.md\\n\\n  scene_card_agent:\\n    role: \\\"Scene-level structure\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 05_scene_cards/epNNN_scene_cards.md\\n\\n  brief_agent:\\n    role: \\\"Prepare prose prompt\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 05_scene_cards/epNNN_scene_cards.md\\n      - 90_canon/character_bible.md\\n      - 92_style_engine/style_guide.md\\n    outputs:\\n      - 07_draft/epNNN_writing_brief.md\\n\\n  prose_agent:\\n    role: \\\"Write prose\\\"\\n    reads:\\n      - 07_draft/epNNN_writing_brief.md\\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\\n    outputs:\\n      - 07_draft/episodes/epNNN.md\\n\\n  # ... add review lenses, refine agent, etc.\\n\\n\\n[project_language_contract]\\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\\n\\n\\n[project_length_policy]\\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\\n\\n\\n[pinned_author_supplementary_reading: templates/90_canon/canon.template.md blob=b39055a63394ec8e738517a49160260ebb3b3e78]\\n# Canon\\n\\nThe master index and final-arbiter file for canonical facts about the story.\\n\\nIf something is contested across other canon files, the value in **this** file wins.\\nMost canonical facts should live in their specialized files (`character_bible.md`, `world_bible.md`, etc.). This file is for cross-cutting decisions, story-level facts, and the authoritative pointer to where everything else lives.\\n\\n---\\n\\n## Canonical Policy\\n\\n- **Canon-promoted decisions** are locked. Agents cannot override them. To change canon, a human author must edit the source file.\\n- **Provisional decisions** are decisions made during drafting that may still change. Use `Provisional (YYYY-MM-DD)` markers in the source files.\\n- **Source-of-truth precedence (high → low)**:\\n  1. This file (`canon.md`)\\n  2. Specialized canon files (`character_bible.md`, `world_bible.md`, `glossary.md`, `timeline.md`)\\n  3. Style engine (`style_guide.md`, `forbidden_patterns.md`)\\n  4. Per-arc design files\\n  5. Per-chapter scene cards and briefs\\n  6. The drafts themselves (lowest authority — drafts are output, not source)\\n\\n---\\n\\n## Story-Level Canon\\n\\nThe handful of facts that define what makes this story THIS story. If you change any of these, you're writing a different story.\\n\\n- **Genre / hybrid**: <e.g. \\\"reincarnation fantasy with misperception comedy\\\">\\n- **Core premise (one sentence)**: <the elevator pitch>\\n- **Protagonist's defining wound / drive**: <one sentence>\\n- **The promise to the reader**: <what you guarantee the story will deliver>\\n- **The thing you won't do**: <one or two anti-promises — what this story will NEVER become>\\n\\n---\\n\\n## Cross-File Indexing\\n\\nPointers to where specific canonical info lives:\\n\\n| Topic | Lives in |\\n|---|---|\\n| Character names, roles, calling rules | `character_bible.md` |\\n| Detailed character voice and speech | `../03_project_design/characters/<NAME>.md` (if exists) |\\n| Locations, magic system, institutions | `world_bible.md` |\\n| Terminology and proper nouns | `glossary.md` |\\n| In-world dates and event sequence | `timeline.md` |\\n| Prose style rules | `../92_style_engine/style_guide.md` |\\n| Banned constructions and AI-tells | `../92_style_engine/forbidden_patterns.md` |\\n\\n---\\n\\n## Canon Change Log\\n\\nEvery promotion from Provisional → Canon, every demotion, every contested-then-resolved decision goes here:\\n\\n| Date | Change | Reason |\\n|---|---|---|\\n| YYYY-MM-DD | <e.g. \\\"Character X's calling pattern in private with Y: promoted to Canon\\\"> | <reason> |\\n| YYYY-MM-DD | <change> | <reason> |\\n\\nThis log is for human review during arc-end canon passes. It is NOT loaded into agent context (would bloat too fast).\\n\\n---\\n\\n## Hard Rules (story-specific things agents must never do)\\n\\nThis section is where you encode the project's non-negotiables. Things that can't be expressed cleanly in `forbidden_patterns.md` (because they're not patterns, they're story facts).\\n\\nExamples:\\n\\n- \\\"Character X never reveals their true name in dialogue.\\\"\\n- \\\"The enemy faction's existence is not narrated directly in the protagonist's POV before chapter 60.\\\"\\n- \\\"Magic system rule: no character can use [specific ability] without paying [specific cost]. Any draft that does is wrong.\\\"\\n- \\\"[Character Y] is dead from chapter 15 onward and cannot appear except in flashback or as a corpse.\\\"\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **All agents** read `canon.md` first when given a task. It tells them which other files to consult and which non-negotiables apply.\\n- **Canon review lens** uses the Hard Rules section as a checklist against the draft.\\n- **Brief agent** uses the Story-Level Canon to keep every chapter aligned with the story's defining promises.\\n\\n\\n[pinned_author_supplementary_reading: templates/90_canon/timeline.template.md blob=88240b3720175123b59e48fda92941e22371d7c6]\\n# Timeline\\n\\nThe canonical sequence of events in the story, plus the time each chapter covers and when characters reach which milestones.\\n\\nWhy this file exists: continuity errors love long projects. If chapter 12 says the journey takes 3 days and chapter 28 says it took 5, you need a single source of truth that catches the contradiction.\\n\\n---\\n\\n## Story Timeline (in-world dates)\\n\\n| Date / Year | Event | Chapter |\\n|---|---|---:|\\n| Year 0 (story start) | <protagonist's age, world state> | ch1 |\\n| Year 0, Month 3 | <event> | ch5 |\\n| Year 1 | <event> | ch20 |\\n\\nUse relative dates (\\\"Year 0, Day 47\\\") rather than real-world dates unless your story explicitly uses them. Relative dates are easier to keep consistent.\\n\\n---\\n\\n## Per-Chapter Time Coverage\\n\\n| Chapter | Starts | Ends | Duration | POV |\\n|---|---|---|---:|---|\\n| ch1 | Year 0, Day 1, morning | Year 0, Day 1, evening | 1 day | <character> |\\n| ch2 | Year 0, Day 2, morning | Year 0, Day 5, night | 4 days | <character> |\\n| ch3 | Year 0, Day 6 | Year 0, Day 6 | 1 day | <character> |\\n\\nThis table is what the canon review lens uses to catch \\\"chapter 12 happens AFTER chapter 14 but references events from chapter 13\\\" errors.\\n\\n---\\n\\n## Character Ages / Milestones\\n\\n| Character | Age at ch1 | Age at ch20 | Age at ch50 | Notes |\\n|---|---:|---:|---:|---|\\n| <CHAR> | 10 | 12 | 15 | Birthday is in Month 4 |\\n| <CHAR> | 25 | 27 | 30 | |\\n\\nIf your story spans multiple in-world years, this is the table that prevents the \\\"wait, isn't she still 10?\\\" error in later chapters.\\n\\n---\\n\\n## Major Events (cross-chapter)\\n\\nFor events that have ripples across many chapters (a war, a death, a reveal), track them as anchored points:\\n\\n| Event | Happens in | Referenced in | Status |\\n|---|---|---|---|\\n| <EVENT> | ch15 | ch16, ch18, ch24, ch31 | Active reference |\\n| <EVENT> | ch7 | ch9, ch12 | Resolved by ch20 |\\n\\n---\\n\\n## Foreshadowing Ledger\\n\\nIf you do plant-and-payoff structure (especially important for mysteries and long-running series), track every planted seed here:\\n\\n| Seed | Planted in | Payoff target | Status |\\n|---|---|---|---|\\n| <SEED — one line> | ch3 | ch28 | Planted |\\n| <SEED> | ch7 | ch20 | Paid off in ch20 |\\n| <SEED> | ch12 | ch45 | Planted, needs reinforcement at ch30 |\\n\\nThe plot review lens checks this ledger and flags:\\n- Seeds that have been visible too long without movement (probably forgotten)\\n- Payoff chapters whose brief doesn't reference their planted seeds (will read as unmotivated)\\n\\nFor long series with deep foreshadowing, this is the most important table in the timeline file.\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **Brief agent** for chapter N reads the per-chapter time coverage of chapter N-1, ensuring the new chapter starts at a valid point in story-time.\\n- **Canon review lens** loads this whole file and catches date/age/duration contradictions.\\n- **Plot review lens** uses the foreshadowing ledger to verify setup and payoff land correctly.\\n\\nWhen a chapter is finalized, update this file: add its time coverage, age any characters whose birthdays passed, mark any seeds as paid off.\\n\\n\\n[pinned_author_supplementary_reading: templates/90_canon/world_bible.template.md blob=f8165ace427d0e46ae1d4b7dffd653b0060f943d]\\n# World Bible\\n\\nThe physical, social, and metaphysical laws of the story world.\\nIf something is true about how the world works — and any character in any chapter could be affected by it — it lives here.\\n\\n---\\n\\n## Setting Overview\\n\\n- **Genre**: <e.g. fantasy / sci-fi / mystery / contemporary>\\n- **Time period / equivalent**: <e.g. \\\"early industrial revolution analog\\\", \\\"Heian-era Japan analog\\\">\\n- **Geographic scope**: <e.g. \\\"single kingdom\\\", \\\"multi-continent\\\">\\n- **Tech / magic level**: <one paragraph summary>\\n\\n---\\n\\n## Geography\\n\\n| Place | Type | Notes |\\n|---|---|---|\\n| <PLACE NAME> | capital / town / region / continent | <role in story> |\\n| <PLACE NAME> | <type> | <notes> |\\n\\nTravel times between major locations (relevant if the timeline.md references them):\\n\\n| From → To | Method | Duration |\\n|---|---|---|\\n| <A> → <B> | <horse / train / portal> | <X days> |\\n\\n---\\n\\n## Political / Social Structure\\n\\n- **Government type**: <e.g. constitutional monarchy, federation, tribal council>\\n- **Class structure**: <e.g. nobility / commoner / slave; or none>\\n- **Currency**: <name and rough purchasing power>\\n- **Languages**: <number, who speaks what>\\n\\n---\\n\\n## Magic / Tech System (if applicable)\\n\\nDefine the rules. The clearer the rules, the harder it is for AI to violate them by accident.\\n\\n- **Source of power**: <where magic/tech comes from>\\n- **Cost**: <what does using it cost the user>\\n- **Limits**: <hard limits — what's impossible>\\n- **Common applications**: <typical everyday uses>\\n- **Rare / forbidden applications**: <what's possible but restricted>\\n\\n---\\n\\n## Institutions\\n\\nFor any organization that has its own rules, hierarchy, or culture (academies, guilds, churches, courts), give it a dedicated subsection:\\n\\n### <INSTITUTION NAME>\\n\\n- **Purpose**: <what it does>\\n- **Hierarchy**: <ranks, leadership>\\n- **Membership / access**: <who's in it, who's not>\\n- **Internal rules / culture**: <relevant for character behavior>\\n\\n---\\n\\n## Calendar / Time\\n\\n- **Year length**: <e.g. 360 days, 4 seasons>\\n- **Week / month structure**: <if it matters>\\n- **Notable annual events**: <festivals, ceremonies, anniversaries the plot might use>\\n\\n---\\n\\n## Material Culture (only what matters for prose)\\n\\nDon't write a complete anthropology. Document only what would surface in a scene:\\n\\n- **Clothing**: <enough that the prose agent doesn't invent silk dresses in a Bronze Age setting>\\n- **Food**: <staples, status foods, taboos>\\n- **Transport**: <relevant to pacing>\\n- **Architecture**: <enough to set a scene>\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **Brief agent** extracts the world details relevant to a chapter's setting (if the chapter is set in <PLACE X>, pull the geography + institution details for <PLACE X>).\\n- **Canon review lens** loads this whole file and checks the draft for contradictions: travel time errors, magic-rule violations, institution misuse, anachronisms.\\n- **Plot review lens** uses the calendar to verify timeline consistency across chapters.\\n\\nIf a rule established here is broken by a chapter, the canon lens should flag it before the chapter is finalized.\\n\\n\\n[pinned_author_supplementary_reading: templates/90_canon/glossary.template.md blob=6e7403fc6f93d82c1f7dbb6a2537348b39a5be81]\\n# Glossary\\n\\nEvery proper noun, in-world term, or specialized vocabulary item in the story, with its canonical definition.\\n\\nWhy this file exists: AI models will happily invent synonyms, alternate spellings, or \\\"creative\\\" rewordings of your terminology if you don't lock it down. The glossary is the lock.\\n\\n---\\n\\n## Format\\n\\n| Term | Definition | First Appearance | Notes |\\n|---|---|---:|---|\\n| <TERM> | <one-sentence canonical definition> | ch1 | <usage notes, e.g. \\\"always capitalized; never abbreviated\\\"> |\\n| <TERM> | <definition> | ch5 | <notes> |\\n\\n---\\n\\n## Suggested Categories\\n\\nFor long projects, group terms by category. Examples:\\n\\n### Places\\n| Term | Definition | First | Notes |\\n|---|---|---:|---|\\n\\n### Titles / Ranks\\n| Term | Definition | First | Notes |\\n|---|---|---:|---|\\n\\n### Magic / Tech Terms\\n| Term | Definition | First | Notes |\\n|---|---|---:|---|\\n\\n### Cultural / Religious Terms\\n| Term | Definition | First | Notes |\\n|---|---|---:|---|\\n\\n### In-World Slang / Idioms\\n| Term | Definition | First | Notes |\\n|---|---|---:|---|\\n\\n### Faction-Specific Vocabulary\\nDifferent factions may have different words for the same thing. Document the mapping:\\n\\n| Concept | Faction A calls it | Faction B calls it | Reader knows it as |\\n|---|---|---|---|\\n| <CONCEPT> | <TERM> | <TERM> | <TERM> |\\n\\nThis is critical for multi-faction stories — agents writing from Faction A's POV must use Faction A's vocabulary, not the reader-default term.\\n\\n---\\n\\n## Character-Specific Vocabulary\\n\\nSome characters have signature phrases or unique vocabulary tied to their voice. Document them here (or cross-reference to `character_voice_samples.md`):\\n\\n| Character | Signature term / phrase | Meaning / use |\\n|---|---|---|\\n| <CHAR> | <PHRASE> | <when they say it, what it conveys> |\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **Brief agent** scans the chapter outline, identifies which glossary terms will appear, and includes their definitions in the prose prompt.\\n- **Style review lens** flags any in-world term that doesn't appear in this glossary (could be a typo, could be an invented term that needs to be added or removed).\\n- **Canon review lens** flags any glossary term used with the wrong meaning.\\n\\nWhen a term is upgraded from invented-in-draft to canon, add it here. The glossary should grow with the story.\\n\\n\\n[project_output_contract]\\n请严格按作者模板的章节标题输出，至少包含这些标题：## Quick Header / ## Active Canon / ## Scene-by-Scene Instructions / ## Voice References / ## Hard Constraints / ## Style Targets / ## What NOT to include in the prose。\\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\\n\", \"role\": \"system\"}, {\"content\": \"{\\\"assignment\\\": {\\\"project_id\\\": \\\"TIDELINE\\\", \\\"story\\\": {\\\"arc_ref\\\": \\\"04_chapter_design/arc_01.md\\\", \\\"arc_sha256\\\": \\\"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\\\", \\\"chapter_context\\\": \\\"A small repair gives two neighbors a reason to speak plainly.\\\", \\\"character_knowledge_boundary_ref\\\": \\\"90_canon/canon.md\\\", \\\"characters_in_scene\\\": [\\\"Mira\\\", \\\"Keeper\\\"], \\\"entry_state\\\": \\\"The hinge is loose and Mira has not asked for help.\\\", \\\"exit_state\\\": \\\"The hinge works and Mira has made a specific next request.\\\", \\\"forbidden_future_revelations\\\": [\\\"Do not invent a family relationship or future secret.\\\"], \\\"reader_reward\\\": \\\"See a practical offer change the distance between neighbors.\\\", \\\"required_beats\\\": [{\\\"beat_id\\\": \\\"B01\\\", \\\"goal\\\": \\\"Mira asks for help and responds to the offer.\\\"}], \\\"role_in_story\\\": \\\"Adapt only the selected source moment into one playable scene.\\\", \\\"source_file\\\": \\\"_INBOX/originals/61f61b74038ace77_source-B.md\\\", \\\"source_selection\\\": {\\\"end_line\\\": 1, \\\"hash_semantics\\\": \\\"raw_line_span_sha256\\\", \\\"selected_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"start_line\\\": 1}, \\\"voice_sample_refs\\\": [\\\"Mira\\\", \\\"Keeper\\\"]}, \\\"unit\\\": {\\\"id\\\": \\\"ADAPT-HINGE-01\\\", \\\"kind\\\": \\\"scene\\\", \\\"language\\\": \\\"en-US\\\", \\\"language_locale\\\": \\\"en-US\\\", \\\"length_metric\\\": \\\"unicode_visible_code_points\\\", \\\"length_policy\\\": \\\"ADVISORY\\\", \\\"length_semantics\\\": \\\"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\\\", \\\"planning_mode\\\": \\\"author_plot\\\", \\\"policy_sha256\\\": \\\"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\\\", \\\"pov\\\": \\\"Mira\\\", \\\"target_visible_chars\\\": 150}}, \\\"materials\\\": {\\\"05_scene_cards/<work_id>_scene_cards.md\\\": \\\"### Identity\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Cast\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Start state\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### End state\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Required beats\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Forbidden items for this scene\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Sensory anchor\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Tone / pacing\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n### Connection to next scene\\\\nB01 Mira asks; the keeper responds with a screwdriver.\\\\n\\\\n## Scene S1\\\\n### Required beats\\\\n- Mira asks for a screwdriver.\\\\n\\\", \\\"06_plot/<work_id>_plot.md\\\": \\\"## Identity\\\\nSynthetic Plot context.\\\\n\\\\n## Role in the Arc\\\\nSynthetic Plot context.\\\\n\\\\n## Key Scenes\\\\n- S1 Mira asks for a screwdriver and steadies the public door.\\\\n\\\\n## Hook\\\\nSynthetic Plot context.\\\\n\\\\n## Required Story Beats\\\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\\\n\\\\n## Forbidden Items\\\\nSynthetic Plot context.\\\\n\\\\n## Connections\\\\nSynthetic Plot context.\\\\n\\\\n## Target Length\\\\nSynthetic Plot context.\\\", \\\"90_canon/canon.md\\\": \\\"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\\\", \\\"90_canon/character_bible.md\\\": \\\"Mira asks direct questions. The keeper answers briefly and offers practical help.\\\", \\\"90_canon/glossary.md\\\": \\\"Harbor door: the public entrance beside the workshop.\\\", \\\"90_canon/timeline.md\\\": \\\"The scene occurs on an ordinary afternoon.\\\", \\\"90_canon/world_bible.md\\\": \\\"A small fictional harbor has a public door with a loose hinge.\\\", \\\"92_style_engine/style_guide.md\\\": \\\"Use close third person, concrete action, and distinct dialogue.\\\"}, \\\"support\\\": {\\\"nk_perspective_reflection_support_only\\\": \\\"\\\\n\\\\n## NK Perspective Reflection (support only)\\\\n\\\\n- response_sha256: `e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896`\\\\n- source_status: `SIMULATED`\\\\n- provider_request_id: `SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9`\\\\n- scope: POV-boundary reminder only; not canon and not prose\\\\n\\\\n> MOCK_ONLY: Mira may observe the offered screwdriver, not hidden motives.\\\\n\\\"}}\", \"role\": \"user\"}], \"model\": \"deepseek-flash\", \"stream\": false, \"thinking\": {\"type\": \"disabled\"}}\r\n"
+    },
+    "artifacts/provider/nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.json": {
+      "sha256": "3b9a6c08d6a4a8d680f945dd71ce219a3851227d2c4e714dbbd49c9bc7a12131",
+      "utf8": "{\"request_id\": \"nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\", \"requested_model\": \"deepseek-flash\", \"response\": {\"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"{\\\"perspectives\\\": [{\\\"reflection\\\": \\\"MOCK_ONLY: Mira may observe the offered screwdriver, not hidden motives.\\\"}]}\"}}], \"fixture_only\": true, \"id\": \"SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"usage\": {\"completion_tokens\": 8, \"prompt_tokens\": 12}}, \"status\": 200}\r\n"
+    },
+    "artifacts/provider/nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9.request.json": {
+      "sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "utf8": "{\"customPrompt\": \"只输出简短、可执行的 POV 边界反思；限于当前事件中的亲历、亲闻和可观察事实。不得把 reflection 当正文、补写秘密或推断旁人内心。\", \"eventSequence\": [{\"description\": \"Mira asks for a screwdriver.\", \"label\": \"Scene S1-01\"}], \"perspectives\": [{\"characterSnapshots\": [{\"name\": \"Mira\", \"traits\": {\"physiology\": [], \"psychology\": [], \"sociology\": []}}, {\"name\": \"Keeper\", \"traits\": {\"physiology\": [], \"psychology\": [], \"sociology\": []}}], \"eventLabel\": \"Scene S1-01\", \"eventObjective\": \"POV=Mira. Scene scope: Adapt only the selected source moment into one playable scene. Reflect only on the narrator's own experience and directly observable or heard events. Do not infer other characters' unspoken motives or use protected future information.\", \"id\": \"ADAPT-HINGE-01-pov-01\", \"narrator\": \"Mira\"}]}\r\n"
+    },
+    "artifacts/support/nk-reflection.md": {
+      "sha256": "6c822374e2f085c750712511bf73da47f889c573d068c14283b55e4fe9623c74",
+      "utf8": "\r\n\r\n## NK Perspective Reflection (support only)\r\n\r\n- response_sha256: `e16579741d9276668c5211e56e172b510bba110da3a5f5bbb1e977665edf1896`\r\n- source_status: `SIMULATED`\r\n- provider_request_id: `SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9`\r\n- scope: POV-boundary reminder only; not canon and not prose\r\n\r\n> MOCK_ONLY: Mira may observe the offered screwdriver, not hidden motives.\r\n"
+    },
+    "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md": {
+      "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "utf8": "## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context."
+    },
+    "artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json": {
+      "sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6",
+      "utf8": "{\n  \"role\": \"plot\",\n  \"work_id\": \"ADAPT-HINGE-01\",\n  \"target_visible_chars\": 150,\n  \"min_visible_chars\": 100,\n  \"max_visible_chars\": 250,\n  \"planning_mode\": \"author_plot\",\n  \"beats\": [\n    {\n      \"beat_id\": \"B01\"\n    }\n  ],\n  \"plot_structure\": {\n    \"source\": \"plot_markdown\",\n    \"plot_sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\",\n    \"key_scenes\": [\n      \"S1 Mira asks for a screwdriver and steadies the public door.\"\n    ],\n    \"required_story_beats\": [\n      \"B01 Mira asks for help, accepts a practical offer, and chooses a next step.\"\n    ]\n  }\n}\n"
+    },
+    "artifacts/candidates/scene_cards/8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa.meta.json": {
+      "sha256": "8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa",
+      "utf8": "{\n  \"role\": \"cards\",\n  \"work_id\": \"ADAPT-HINGE-01\",\n  \"target_visible_chars\": 150,\n  \"min_visible_chars\": 100,\n  \"max_visible_chars\": 250,\n  \"planning_mode\": \"author_plot\",\n  \"beats\": [\n    {\n      \"beat_id\": \"B01\"\n    }\n  ]\n}\n"
+    },
+    "artifacts/candidates/scene_cards/90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874.md": {
+      "sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+      "utf8": "### Identity\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Cast\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Start state\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### End state\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Required beats\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Forbidden items for this scene\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Sensory anchor\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Tone / pacing\nB01 Mira asks; the keeper responds with a screwdriver.\n\n### Connection to next scene\nB01 Mira asks; the keeper responds with a screwdriver.\n\n## Scene S1\n### Required beats\n- Mira asks for a screwdriver.\n"
+    },
+    "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md": {
+      "sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "utf8": "## Quick Header\nSynthetic project constraints.\n\n## Active Canon\nSynthetic project constraints.\n\n## Scene-by-Scene Instructions\nOne scene; 100–250 visible characters; preserve B01.\n\n## Voice References\nMira: direct question. Keeper: brief practical offer.\n\n## Hard Constraints\nSynthetic project constraints.\n\n## Style Targets\nSynthetic project constraints.\n\n## What NOT to include in the prose\nSynthetic project constraints."
+    }
+  },
+  "actual_ledger": {
+    "schema": 1,
+    "campaign_id": "MOCK_ONLY",
+    "currency": "CNY",
+    "limit": null,
+    "pricing_snapshot": {
+      "requested_model": "deepseek-flash",
+      "currency": "CNY",
+      "input_cache_miss_usd_per_million_peak": 1,
+      "output_usd_per_million_peak": 2,
+      "usd_to_cny_estimate": 1
+    },
+    "created_at": "2026-10-13T20:52:06Z",
+    "requests": [
+      {
+        "request_id": "cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 CNW plot/plot_agent",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 11191,
+        "reserved_output_token_cap": 4000,
+        "reserved_cny": "0.019191",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T20:53:06Z",
+        "cost_context": {
+          "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "plot",
+          "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "e41085fbe13076b84ff5ba250b9261dcb0dff84d06804c8a13ffbfae0674e46b",
+          "owner_grant_sha256": "58dec84bc55844094c8ff18103dda0cc4a12de4c34371368d44ca9429ceee8f6",
+          "identity_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-8306f314115b461a81fc4301a07afc4e",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T20:53:13Z",
+        "usage": {
+          "input_tokens": 10,
+          "output_tokens": 10
+        },
+        "estimated_actual_cny": "0.000030",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 CNW scene_cards/scene_card_agent",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 7942,
+        "reserved_output_token_cap": 4000,
+        "reserved_cny": "0.015942",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T20:54:35Z",
+        "cost_context": {
+          "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "scene_cards",
+          "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "e41085fbe13076b84ff5ba250b9261dcb0dff84d06804c8a13ffbfae0674e46b",
+          "owner_grant_sha256": "58dec84bc55844094c8ff18103dda0cc4a12de4c34371368d44ca9429ceee8f6",
+          "identity_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-scene_cards-8a00628a384243eda1c5fda87568ee43",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T20:54:45Z",
+        "usage": {
+          "input_tokens": 10,
+          "output_tokens": 10
+        },
+        "estimated_actual_cny": "0.000030",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 NK generate-perspective",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 10000,
+        "reserved_output_token_cap": 1024,
+        "reserved_cny": "0.012048",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T20:56:11Z",
+        "cost_context": {
+          "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "support_hook",
+          "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "e41085fbe13076b84ff5ba250b9261dcb0dff84d06804c8a13ffbfae0674e46b",
+          "owner_grant_sha256": "58dec84bc55844094c8ff18103dda0cc4a12de4c34371368d44ca9429ceee8f6",
+          "identity_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "provider_request_id": "SIMULATED-NK-nk-SIGNED-ADAPT-RUN-f7e58e8a68b149fe811f9fb8d005dfd9",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T20:56:11Z",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 8
+        },
+        "estimated_actual_cny": "0.000028",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 CNW writing_brief/brief_agent",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 23568,
+        "reserved_output_token_cap": 4000,
+        "reserved_cny": "0.031568",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T20:57:30Z",
+        "cost_context": {
+          "project_instance_id": "6b31d3ed-8803-4126-885f-ea1791a567a6",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "writing_brief",
+          "binding_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "e41085fbe13076b84ff5ba250b9261dcb0dff84d06804c8a13ffbfae0674e46b",
+          "owner_grant_sha256": "58dec84bc55844094c8ff18103dda0cc4a12de4c34371368d44ca9429ceee8f6",
+          "identity_sha256": "940090767780c0584de9185042064b7b32cae04c111a49287231b105721d0820"
+        },
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-writing_brief-e532b1e941954e95b522b30952919a0c",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T20:57:42Z",
+        "usage": {
+          "input_tokens": 10,
+          "output_tokens": 10
+        },
+        "estimated_actual_cny": "0.000030",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      }
+    ]
+  }
+}

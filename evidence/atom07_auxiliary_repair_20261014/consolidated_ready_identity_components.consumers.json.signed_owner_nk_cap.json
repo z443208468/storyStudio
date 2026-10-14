@@ -1,0 +1,425 @@
+{
+  "scope": "CONTROLLED_BUDGET_COMPONENT_NOT_E2E",
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "actual_observations": [
+    {
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 1,
+        "actual_forwarded_bodies": [
+          {
+            "model": "deepseek-flash",
+            "response_format": {
+              "type": "json_object"
+            },
+            "reasoning_effort": "none",
+            "max_tokens": 512,
+            "messages": [
+              {
+                "role": "user",
+                "content": "{\"eventSequence\":[{\"label\":\"Scene S1-01\",\"description\":\"Mira asks for a screwdriver.\"}],\"perspectives\":[{\"id\":\"ADAPT-HINGE-01-pov-01\",\"narrator\":\"Mira\",\"eventLabel\":\"Scene S1-01\",\"eventObjective\":\"POV=Mira. Scene scope: Adapt only the selected source moment into one playable scene. Reflect only on the narrator's own experience and directly observable or heard events. Do not infer other characters' unspoken motives or use protected future information.\",\"characterSnapshots\":[{\"name\":\"Mira\",\"traits\":{\"physiology\":[],\"psychology\":[],\"sociology\":[]}},{\"name\":\"Keeper\",\"traits\":{\"physiology\":[],\"psychology\":[],\"sociology\":[]}}]}],\"customPrompt\":\"只输出简短、可执行的 POV 边界反思；限于当前事件中的亲历、亲闻和可观察事实。不得把 reflection 当正文、补写秘密或推断旁人内心。\"}"
+              }
+            ]
+          }
+        ],
+        "error": null
+      },
+      "service": {
+        "capture": "C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-su57ja6u/ExplicitTestDataHome/projects/b27e4ec0-1170-406e-94c9-e8079686bebb/runs/SIGNED-ADAPT-RUN/nk-provider-nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.jsonl",
+        "cap": "8000",
+        "request_id": "nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa"
+      }
+    },
+    {
+      "actual_node_result": {
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "real_provider_calls": 0,
+        "terminal_transport_calls": 0,
+        "actual_forwarded_bodies": [],
+        "error": "NK_LIVE_INPUT_LIMIT_EXCEEDED"
+      },
+      "service": {
+        "capture": "C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-su57ja6u/ExplicitTestDataHome/projects/b27e4ec0-1170-406e-94c9-e8079686bebb/runs/SIGNED-ADAPT-RUN/nk-provider-nk-SIGNED-ADAPT-RUN-cad0b83a9c4e4779949482165ca0a5e6.jsonl",
+        "cap": "8000",
+        "request_id": "nk-SIGNED-ADAPT-RUN-cad0b83a9c4e4779949482165ca0a5e6"
+      }
+    }
+  ],
+  "actual_run_state": {
+    "schema_version": "cnw_run_state_v1",
+    "run_id": "SIGNED-ADAPT-RUN",
+    "work_id": "ADAPT-HINGE-01",
+    "unit_kind": "scene",
+    "project_id": "TIDELINE",
+    "contract_path": "contracts/ADAPT-HINGE-01.json",
+    "contract_sha256": "229a2b2fc0320585e3086aa78ec90adfbfdfcc12c38729769a65ab0a9e5f8429",
+    "source_identity": {
+      "source_origin": "IMPORTED_PROJECT",
+      "project_instance_id": "b27e4ec0-1170-406e-94c9-e8079686bebb",
+      "source_id": "61f61b74038ace77",
+      "source_revision_id": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "source_file_sha256": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "manifest_file": "_INBOX/revisions/manifests/61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0.json",
+      "source_manifest_sha256": "61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0",
+      "manifest_revision_sha256": "61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0",
+      "source_index_file": "_INBOX/revisions/indexes/80f71edffbc2d91b0497c57f8b1404ed7f66e83fc0d40ec3c866e03f61a51968.json",
+      "source_index_sha256": "80f71edffbc2d91b0497c57f8b1404ed7f66e83fc0d40ec3c866e03f61a51968"
+    },
+    "fixture_only": false,
+    "created_at": "2026-10-13T21:37:46Z",
+    "updated_at": "2026-10-13T21:37:46Z",
+    "status": "RUNNING",
+    "mode": "live",
+    "workflow_template_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+    "cnw_method_source": {
+      "commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+      "workflow_blob": "146ea01a484cc0578cf290478b3941599ad7fb15"
+    },
+    "cnw_stages": [
+      "plot",
+      "scene_cards",
+      "writing_brief",
+      "prose",
+      "lint_layer1",
+      "lint_layer2",
+      "multi_lens_review",
+      "adversarial_verify",
+      "completeness_critic",
+      "refine",
+      "re_review"
+    ],
+    "support_hooks": {},
+    "next_stage": "plot",
+    "provider_requests": [],
+    "stages": {
+      "plot": {
+        "status": "NOT_RUN",
+        "dependencies": [],
+        "artifact": null
+      },
+      "scene_cards": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [
+          "plot"
+        ],
+        "artifact": {
+          "path": "artifacts/candidates/scene_cards/cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6.md",
+          "sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6"
+        },
+        "role_ids": []
+      },
+      "writing_brief": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards"
+        ],
+        "artifact": null
+      },
+      "prose": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief"
+        ],
+        "artifact": null
+      },
+      "lint_layer1": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose"
+        ],
+        "artifact": null
+      },
+      "lint_layer2": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1"
+        ],
+        "artifact": null
+      },
+      "multi_lens_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2"
+        ],
+        "artifact": null
+      },
+      "adversarial_verify": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review"
+        ],
+        "artifact": null
+      },
+      "completeness_critic": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify"
+        ],
+        "artifact": null
+      },
+      "refine": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic"
+        ],
+        "artifact": null
+      },
+      "re_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic",
+          "refine"
+        ],
+        "artifact": null
+      }
+    },
+    "max_in_flight": 5,
+    "literary_source_hashes": {
+      "project:94_runtime/current_state.md": "8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73",
+      "project:07_draft/manuscript_index.md": "6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73",
+      "project:04_chapter_design/arc_01.md": "666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea",
+      "project:04_chapter_design/arc_01_episode_details.md": "73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5",
+      "project:92_style_engine/character_voice_samples.md": "c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2",
+      "project:90_canon/character_bible.md": "dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29",
+      "project:selected_source_excerpt": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "project:selected_source_identity": "2592c00d44f518a855ff8b9361e183a580626b4df561ca8587dc6a3f2ffd4207",
+      "project:04_chapter_design/arc_index.md": "fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84",
+      "preparation:identity": "dee1908ed55e5cc8ca7eed8edb1d4751197998c3e4375f2701d8c5b892a4f2ee"
+    },
+    "literary_source_freeze_version": "literary_source_freeze_v2",
+    "provider_config_sha256": "3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519",
+    "cost_guard_runner_sha256": null,
+    "state_migrations": [
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases"
+    ]
+  },
+  "actual_files": {
+    "runs/SIGNED-ADAPT-RUN/nk-provider-nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.jsonl": {
+      "sha256": "9e8628264b15e715dcbe3aab39ddea729c1c7f0805c78e965d0239b24ef725c7",
+      "utf8": "{\"request_id\":\"nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa\",\"host\":\"https://api.deepseek.com\",\"path\":\"/v1/chat/completions\",\"status\":200,\"requested_model\":\"deepseek-flash\",\"response_format\":\"json_object\",\"reasoning_effort\":\"none\",\"max_output_tokens\":512,\"estimated_input_tokens\":1064,\"input_token_cap\":8000,\"reasoning_content_recorded\":false,\"response\":{\"id\":\"SIMULATED-NK-INPUT\",\"model\":\"deepseek-flash\",\"simulation_status\":\"SIMULATED\",\"fixture_only\":true,\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":8},\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"{\\\"perspectives\\\":[{\\\"reflection\\\":\\\"MOCK_ONLY controlled NK reflection\\\"}]}\"}}]}}\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/nk-service-nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.json": {
+      "sha256": "4ba3fb398d09aa3c2378a0de951f1a67fb8c6e74f6b776435b20d251ec364fa6",
+      "utf8": "{\r\n  \"request_id\": \"nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa\",\r\n  \"port\": 49127,\r\n  \"command\": [\r\n    \"fictional-node.exe\",\r\n    \"D:\\\\CangqiStudio\\\\StoryStudio\\\\runtime\\\\patched\\\\NK\\\\p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161\\\\node_modules\\\\next\\\\dist\\\\bin\\\\next\",\r\n    \"start\",\r\n    \"--hostname\",\r\n    \"127.0.0.1\",\r\n    \"--port\",\r\n    \"49127\"\r\n  ],\r\n  \"runtime_build_id\": \"p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161\",\r\n  \"status\": \"STOPPED\",\r\n  \"pid\": 4567\r\n}"
+    },
+    "runs/SIGNED-ADAPT-RUN/nk-service-nk-SIGNED-ADAPT-RUN-cad0b83a9c4e4779949482165ca0a5e6.json": {
+      "sha256": "1c789e5386b57fb84f8cd30f8e100af9641e3ab236d66c9e652131eba482884f",
+      "utf8": "{\r\n  \"request_id\": \"nk-SIGNED-ADAPT-RUN-cad0b83a9c4e4779949482165ca0a5e6\",\r\n  \"port\": 49127,\r\n  \"command\": [\r\n    \"fictional-node.exe\",\r\n    \"D:\\\\CangqiStudio\\\\StoryStudio\\\\runtime\\\\patched\\\\NK\\\\p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161\\\\node_modules\\\\next\\\\dist\\\\bin\\\\next\",\r\n    \"start\",\r\n    \"--hostname\",\r\n    \"127.0.0.1\",\r\n    \"--port\",\r\n    \"49127\"\r\n  ],\r\n  \"runtime_build_id\": \"p2-03-b857f34b-289d6e5ca63c-8d6ef80b3161\",\r\n  \"status\": \"STOPPED\",\r\n  \"pid\": 4567\r\n}"
+    },
+    "runs/SIGNED-ADAPT-RUN/run.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    "runs/SIGNED-ADAPT-RUN/run_state.json": {
+      "sha256": "4790ad054821dfb58ce3f9cdd2e542e886720feaebe37251964106607bd7bdb8",
+      "utf8": "{\r\n  \"schema_version\": \"cnw_run_state_v1\",\r\n  \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n  \"work_id\": \"ADAPT-HINGE-01\",\r\n  \"unit_kind\": \"scene\",\r\n  \"project_id\": \"TIDELINE\",\r\n  \"contract_path\": \"contracts/ADAPT-HINGE-01.json\",\r\n  \"contract_sha256\": \"229a2b2fc0320585e3086aa78ec90adfbfdfcc12c38729769a65ab0a9e5f8429\",\r\n  \"source_identity\": {\r\n    \"source_origin\": \"IMPORTED_PROJECT\",\r\n    \"project_instance_id\": \"b27e4ec0-1170-406e-94c9-e8079686bebb\",\r\n    \"source_id\": \"61f61b74038ace77\",\r\n    \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"source_file_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"manifest_file\": \"_INBOX/revisions/manifests/61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0.json\",\r\n    \"source_manifest_sha256\": \"61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0\",\r\n    \"manifest_revision_sha256\": \"61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0\",\r\n    \"source_index_file\": \"_INBOX/revisions/indexes/80f71edffbc2d91b0497c57f8b1404ed7f66e83fc0d40ec3c866e03f61a51968.json\",\r\n    \"source_index_sha256\": \"80f71edffbc2d91b0497c57f8b1404ed7f66e83fc0d40ec3c866e03f61a51968\"\r\n  },\r\n  \"fixture_only\": false,\r\n  \"created_at\": \"2026-10-13T21:37:46Z\",\r\n  \"updated_at\": \"2026-10-13T21:37:46Z\",\r\n  \"status\": \"RUNNING\",\r\n  \"mode\": \"live\",\r\n  \"workflow_template_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n  \"cnw_method_source\": {\r\n    \"commit\": \"97ad71fe5e5e76a82275c6c63d4add06fb60ab6e\",\r\n    \"workflow_blob\": \"146ea01a484cc0578cf290478b3941599ad7fb15\"\r\n  },\r\n  \"cnw_stages\": [\r\n    \"plot\",\r\n    \"scene_cards\",\r\n    \"writing_brief\",\r\n    \"prose\",\r\n    \"lint_layer1\",\r\n    \"lint_layer2\",\r\n    \"multi_lens_review\",\r\n    \"adversarial_verify\",\r\n    \"completeness_critic\",\r\n    \"refine\",\r\n    \"re_review\"\r\n  ],\r\n  \"support_hooks\": {},\r\n  \"next_stage\": \"plot\",\r\n  \"provider_requests\": [],\r\n  \"stages\": {\r\n    \"plot\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [],\r\n      \"artifact\": null\r\n    },\r\n    \"scene_cards\": {\r\n      \"status\": \"STAGE_MATERIALIZED\",\r\n      \"dependencies\": [\r\n        \"plot\"\r\n      ],\r\n      \"artifact\": {\r\n        \"path\": \"artifacts/candidates/scene_cards/cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6.md\",\r\n        \"sha256\": \"cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6\"\r\n      },\r\n      \"role_ids\": []\r\n    },\r\n    \"writing_brief\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"prose\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"lint_layer1\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"lint_layer2\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"multi_lens_review\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"adversarial_verify\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"completeness_critic\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"refine\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\",\r\n        \"completeness_critic\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"re_review\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\",\r\n        \"completeness_critic\",\r\n        \"refine\"\r\n      ],\r\n      \"artifact\": null\r\n    }\r\n  },\r\n  \"max_in_flight\": 5,\r\n  \"literary_source_hashes\": {\r\n    \"project:94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\",\r\n    \"project:07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\",\r\n    \"project:04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\",\r\n    \"project:04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\",\r\n    \"project:92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\",\r\n    \"project:90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\",\r\n    \"project:selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"project:selected_source_identity\": \"2592c00d44f518a855ff8b9361e183a580626b4df561ca8587dc6a3f2ffd4207\",\r\n    \"project:04_chapter_design/arc_index.md\": \"fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84\",\r\n    \"preparation:identity\": \"dee1908ed55e5cc8ca7eed8edb1d4751197998c3e4375f2701d8c5b892a4f2ee\"\r\n  },\r\n  \"literary_source_freeze_version\": \"literary_source_freeze_v2\",\r\n  \"provider_config_sha256\": \"3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519\",\r\n  \"cost_guard_runner_sha256\": null,\r\n  \"state_migrations\": [\r\n    \"P3.1-stage-aliases\"\r\n  ]\r\n}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/contract.json": {
+      "sha256": "229a2b2fc0320585e3086aa78ec90adfbfdfcc12c38729769a65ab0a9e5f8429",
+      "utf8": "{\"schema_version\": \"cnw_work_unit_v2\", \"project_id\": \"TIDELINE\", \"project_instance_id\": \"b27e4ec0-1170-406e-94c9-e8079686bebb\", \"status\": \"PROPOSED_FOR_HUMAN_PREFLIGHT\", \"work_intent\": \"ADAPT_SOURCE\", \"source\": {\"source_origin\": \"IMPORTED_PROJECT\", \"project_instance_id\": \"b27e4ec0-1170-406e-94c9-e8079686bebb\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_file_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"manifest_file\": \"_INBOX/revisions/manifests/61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0.json\", \"source_manifest_sha256\": \"61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0\", \"manifest_revision_sha256\": \"61c70d1b530a516070e4b05ec17c68be906118cecf3b49e32e7706191b0bb5c0\", \"source_index_file\": \"_INBOX/revisions/indexes/80f71edffbc2d91b0497c57f8b1404ed7f66e83fc0d40ec3c866e03f61a51968.json\", \"source_index_sha256\": \"80f71edffbc2d91b0497c57f8b1404ed7f66e83fc0d40ec3c866e03f61a51968\"}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"planning_mode\": \"author_plot\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"pov\": \"Mira\", \"target_visible_chars\": 150, \"min_visible_chars\": 100, \"max_visible_chars\": 250, \"length_policy\": \"ADVISORY\", \"policy_sha256\": \"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\"}, \"integrations\": {\"nk\": \"ENABLED\", \"critics\": \"DISABLED\"}, \"story\": {\"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1, \"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\"}, \"arc_ref\": \"04_chapter_design/arc_01.md\", \"arc_sha256\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"review\": {\"workflow_template_git_blob\": \"146ea01a484cc0578cf290478b3941599ad7fb15\", \"require_cnw_11_stages\": true, \"require_3_verifiers\": true, \"require_completeness_critic\": true, \"require_re_review\": true, \"fifth_lens\": {\"id\": \"harbor-reader-promise\", \"responsibility\": \"Check whether this project makes a practical offer feel emotionally earned.\", \"responsibility_sha256\": \"749d35ddc0964dddc81c528917317fce3106ec6a481a139f8bc104883cb90748\"}, \"cnw_reference_manifest_sha256\": \"e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983\"}}"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/provider/nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.json": {
+      "sha256": "26e30d2d507598c5f0da48bdd17affbbbee780e80b41f8b590158267d4d3f3e3",
+      "utf8": "{\"request_id\": \"nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa\", \"requested_model\": \"deepseek-flash\", \"response\": {\"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"{\\\"perspectives\\\":[{\\\"reflection\\\":\\\"MOCK_ONLY controlled NK reflection\\\"}]}\"}}], \"fixture_only\": true, \"id\": \"SIMULATED-NK-INPUT\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"usage\": {\"completion_tokens\": 8, \"prompt_tokens\": 12}}, \"status\": 200}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/provider/nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.request.json": {
+      "sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "utf8": "{\"customPrompt\": \"只输出简短、可执行的 POV 边界反思；限于当前事件中的亲历、亲闻和可观察事实。不得把 reflection 当正文、补写秘密或推断旁人内心。\", \"eventSequence\": [{\"description\": \"Mira asks for a screwdriver.\", \"label\": \"Scene S1-01\"}], \"perspectives\": [{\"characterSnapshots\": [{\"name\": \"Mira\", \"traits\": {\"physiology\": [], \"psychology\": [], \"sociology\": []}}, {\"name\": \"Keeper\", \"traits\": {\"physiology\": [], \"psychology\": [], \"sociology\": []}}], \"eventLabel\": \"Scene S1-01\", \"eventObjective\": \"POV=Mira. Scene scope: Adapt only the selected source moment into one playable scene. Reflect only on the narrator's own experience and directly observable or heard events. Do not infer other characters' unspoken motives or use protected future information.\", \"id\": \"ADAPT-HINGE-01-pov-01\", \"narrator\": \"Mira\"}]}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/provider/nk-SIGNED-ADAPT-RUN-cad0b83a9c4e4779949482165ca0a5e6.request.json": {
+      "sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "utf8": "{\"customPrompt\": \"只输出简短、可执行的 POV 边界反思；限于当前事件中的亲历、亲闻和可观察事实。不得把 reflection 当正文、补写秘密或推断旁人内心。\", \"eventSequence\": [{\"description\": \"Mira asks for a screwdriver.\", \"label\": \"Scene S1-01\"}], \"perspectives\": [{\"characterSnapshots\": [{\"name\": \"Mira\", \"traits\": {\"physiology\": [], \"psychology\": [], \"sociology\": []}}, {\"name\": \"Keeper\", \"traits\": {\"physiology\": [], \"psychology\": [], \"sociology\": []}}], \"eventLabel\": \"Scene S1-01\", \"eventObjective\": \"POV=Mira. Scene scope: Adapt only the selected source moment into one playable scene. Reflect only on the narrator's own experience and directly observable or heard events. Do not infer other characters' unspoken motives or use protected future information.\", \"id\": \"ADAPT-HINGE-01-pov-01\", \"narrator\": \"Mira\"}]}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/candidates/scene_cards/cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6.md": {
+      "sha256": "cc5bed403cbfe20a37e34e400822df1eef4c1380a599297cc4aeec95bb8ccff6",
+      "utf8": "## Scene S1\n### Required beats\n- Mira asks for a screwdriver.\n"
+    }
+  },
+  "actual_ledger": [
+    {
+      "request_id": "nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa",
+      "run_id": "SIGNED-ADAPT-RUN",
+      "purpose": "P3.1 NK generate-perspective",
+      "requested_model": "deepseek-flash",
+      "reserved_input_token_cap": 8000,
+      "reserved_output_token_cap": 1024,
+      "reserved_cny": "0.010048",
+      "status": "SETTLED",
+      "reserved_at": "2026-10-13T21:38:16Z",
+      "cost_context": {
+        "project_instance_id": "b27e4ec0-1170-406e-94c9-e8079686bebb",
+        "project_id": "TIDELINE",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "stage": "support_hook",
+        "binding_sha256": "a2685c59617df7d866efc29b8adebd7e3bdc9a6b54caa41c7f5a039602c04579"
+      },
+      "cost_policy_snapshot": {
+        "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+        "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+      },
+      "cost_pricing_snapshot": {
+        "requested_model": "deepseek-flash",
+        "currency": "CNY",
+        "input_cache_miss_usd_per_million_peak": 1,
+        "output_usd_per_million_peak": 2,
+        "usd_to_cny_estimate": 1
+      },
+      "live_authorization": {
+        "bundle_sha256": "f748c64156100e640b0bd4e9c893618e107177a65618ff81b20cf1d03b2bb080",
+        "owner_grant_sha256": "1c46173b945e8efdcb7984121890350f188cd0f6f2d66bef6b501ef48046f51a",
+        "identity_sha256": "a2685c59617df7d866efc29b8adebd7e3bdc9a6b54caa41c7f5a039602c04579"
+      },
+      "provider_request_id": "SIMULATED-NK-INPUT",
+      "returned_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "settled_at": "2026-10-13T21:38:22Z",
+      "usage": {
+        "input_tokens": 12,
+        "output_tokens": 8
+      },
+      "estimated_actual_cny": "0.000028",
+      "budget_exceeded": {
+        "token_caps": false,
+        "reservation": false,
+        "campaign_limit": false
+      }
+    },
+    {
+      "request_id": "nk-SIGNED-ADAPT-RUN-cad0b83a9c4e4779949482165ca0a5e6",
+      "run_id": "SIGNED-ADAPT-RUN",
+      "purpose": "P3.1 NK generate-perspective",
+      "requested_model": "deepseek-flash",
+      "reserved_input_token_cap": 8000,
+      "reserved_output_token_cap": 1024,
+      "reserved_cny": "0.010048",
+      "status": "UNKNOWN_NOT_ZERO",
+      "reserved_at": "2026-10-13T21:38:52Z",
+      "cost_context": {
+        "project_instance_id": "b27e4ec0-1170-406e-94c9-e8079686bebb",
+        "project_id": "TIDELINE",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "stage": "support_hook",
+        "binding_sha256": "a2685c59617df7d866efc29b8adebd7e3bdc9a6b54caa41c7f5a039602c04579"
+      },
+      "cost_policy_snapshot": {
+        "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+        "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+      },
+      "cost_pricing_snapshot": {
+        "requested_model": "deepseek-flash",
+        "currency": "CNY",
+        "input_cache_miss_usd_per_million_peak": 1,
+        "output_usd_per_million_peak": 2,
+        "usd_to_cny_estimate": 1
+      },
+      "live_authorization": {
+        "bundle_sha256": "f748c64156100e640b0bd4e9c893618e107177a65618ff81b20cf1d03b2bb080",
+        "owner_grant_sha256": "1c46173b945e8efdcb7984121890350f188cd0f6f2d66bef6b501ef48046f51a",
+        "identity_sha256": "a2685c59617df7d866efc29b8adebd7e3bdc9a6b54caa41c7f5a039602c04579"
+      },
+      "provider_request_id": null,
+      "returned_model": null,
+      "finish_reason": null,
+      "settled_at": "2026-10-13T21:38:59Z",
+      "usage": "UNKNOWN_NOT_ZERO"
+    }
+  ],
+  "actual_success_receipt": {
+    "stage": "support_hook",
+    "role_id": "nk_pov",
+    "request_id": "nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa",
+    "provider_request_id": "SIMULATED-NK-INPUT",
+    "model": "deepseek-flash",
+    "status": "SUCCEEDED",
+    "http_status": 200,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 12,
+      "completion_tokens": 8
+    },
+    "input_sha256": "484e03c1bd6eeeec35efe981cf244de5d73f49e309c0403897d80c72314adcc8",
+    "request_path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.request.json",
+    "request_sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+    "request_format": "native_nk_payload",
+    "output_sha256": "25781ec65206b4c70ba135ccede67a7c2bd061cdfdbfba6ac03ce5def15bad75",
+    "raw_response_path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa.json",
+    "raw_response_sha256": "26e30d2d507598c5f0da48bdd17affbbbee780e80b41f8b590158267d4d3f3e3",
+    "cost_cny": 2.8e-05,
+    "ledger_settlement": {
+      "status": "SETTLED",
+      "request_id": "nk-SIGNED-ADAPT-RUN-b24ff3132dcc44bab081fe51fcc27dfa",
+      "estimated_request_cny": "0.000028",
+      "campaign_committed_cny": "0.000028",
+      "limit_cny": null,
+      "cost_context": {
+        "project_instance_id": "b27e4ec0-1170-406e-94c9-e8079686bebb",
+        "project_id": "TIDELINE",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "stage": "support_hook",
+        "binding_sha256": "a2685c59617df7d866efc29b8adebd7e3bdc9a6b54caa41c7f5a039602c04579"
+      }
+    },
+    "mode": "MOCK_ONLY",
+    "fixture_only": true,
+    "simulation_status": "SIMULATED"
+  },
+  "wrong_accounts_refused": [
+    "legacy_guard",
+    "project_instance",
+    "run_id",
+    "run_path",
+    "stage",
+    "model"
+  ],
+  "ledger_unchanged_on_wrong_accounts": true
+}

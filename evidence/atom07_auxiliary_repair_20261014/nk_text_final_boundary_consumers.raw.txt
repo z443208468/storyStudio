@@ -1,0 +1,38 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 9 items
+
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_actual_shim_v1_astral_caps_and_invalid_messages 
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_actual_shim_v1_astral_caps_and_invalid_messages PASSED [ 11%]
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_isolated_shim_byte_change_invalidates_original_signature PASSED [ 22%]
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_signed_owner_lower_cap_reserve_shim_and_unknown FAILED [ 33%]
+tests/test_cnw_critics_text_input_bytes.py::CriticsTextInputBytesTests::test_v2_actual_hook_snapshot_and_native_preflight_share_canonical_bytes 
+tests/test_cnw_critics_text_input_bytes.py::CriticsTextInputBytesTests::test_v2_actual_hook_snapshot_and_native_preflight_share_canonical_bytes PASSED [ 44%]
+tests/test_cnw_runner.py::RunnerTests::test_critics_excerpt_limits_whole_scene_evidence_to_five_sentences PASSED [ 55%]
+tests/test_cnw_signed_auxiliary_consumers.py::SignedAuxiliaryConsumerTests::test_signed_nk_service_shared_account_brief_cache_and_mock_rejection PASSED [ 66%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signed_pre_run_and_real_existing_run_have_same_identity_without_provider PASSED [ 77%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signature_for_other_implementation_cannot_create_run PASSED [ 88%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [100%]
+
+================================== FAILURES ===================================
+_ NKInputLimitTests.test_real_signed_owner_lower_cap_reserve_shim_and_unknown _
+tests\test_cnw_nk_input_limits.py:198: in test_real_signed_owner_lower_cap_reserve_shim_and_unknown
+    self.assertEqual((s.run/'artifacts/cards.md').read_text(encoding='utf-8'),cards)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Program Files\Python313\Lib\pathlib\_local.py:537: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-iarwn8ag\\ExplicitTestDataHome\\projects\\447292bd-c5cf-44ce-a91f-1572dbcc296d\\runs\\SIGNED-ADAPT-RUN\\artifacts\\cards.md'
+=========================== short test summary info ===========================
+FAILED tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_signed_owner_lower_cap_reserve_shim_and_unknown - FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-iarwn8ag\\ExplicitTestDataHome\\projects\\447292bd-c5cf-44ce-a91f-1572dbcc296d\\runs\\SIGNED-ADAPT-RUN\\artifacts\\cards.md'
+========= 1 failed, 8 passed, 17 subtests passed in 671.10s (0:11:11) =========

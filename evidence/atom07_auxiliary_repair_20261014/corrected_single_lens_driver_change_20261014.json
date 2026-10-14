@@ -1,0 +1,9 @@
+{
+  "status": "EXTERNAL_DRIVER_CORRECTION_NOT_ACCEPTANCE",
+  "original_script_sha256": "49e36c36af0367259153c26b9b18cc3bf02f3805d115ead31991fcfa15d2e349",
+  "corrected_script_sha256": "e4020df264fc0054a23bfa251c17311e29d60b6e80dccdd58f4b4a9b48bfe975",
+  "only_change": "New observation label; select unique actual style candidate from complete legitimate five-Lens list.",
+  "production_source_changes": 0,
+  "cli_bound": 60000,
+  "wall_bound_seconds": 1200
+}

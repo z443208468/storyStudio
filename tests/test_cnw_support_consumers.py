@@ -56,6 +56,7 @@ class SupportConsumerTests(unittest.TestCase):
             Path(launch['env']['STORYSTUDIO_NK_LIVE_CAPTURE']).write_text(json.dumps({
                 'request_id': launch['env']['STORYSTUDIO_NK_LIVE_REQUEST_ID'],
                 'response': {'id':'SIMULATED_NK_RESPONSE', 'model':runner.MODEL,
+                    'simulation_status':'SIMULATED', 'fixture_only':True,
                     'usage':{'prompt_tokens':10,'completion_tokens':5},
                     'choices':[{'finish_reason':'stop','message':{'content':reflection}}]}}), encoding='utf-8')
             return SimpleNamespace(status_code=200, json=lambda: {'perspectives':[{'reflection':reflection}]})
@@ -91,8 +92,14 @@ class SupportConsumerTests(unittest.TestCase):
                 runner.execute_writing_brief(run)
             reflected.write_bytes(raw)
             receipt = next(r for r in state['provider_requests'] if r['role_id']=='nk_pov')
+            self.assertEqual(receipt['mode'], 'MOCK_ONLY')
+            self.assertEqual(receipt['simulation_status'], 'SIMULATED')
+            self.assertIs(receipt['fixture_only'], True)
+            self.assertEqual(hook['mapping']['source_status'], 'SIMULATED')
             response_path = run/receipt['raw_response_path']
             original_raw = response_path.read_bytes()
+            with self.assertRaises(ContractError):
+                runner._validate_raw_live_response(response_path, receipt, receipt['usage'], 1)
             response_path.write_bytes(b'{}')
             with self.assertRaisesRegex(ContractError, 'LIVE_RAW_RESPONSE_HASH_MISMATCH'):
                 runner.execute_writing_brief(run)

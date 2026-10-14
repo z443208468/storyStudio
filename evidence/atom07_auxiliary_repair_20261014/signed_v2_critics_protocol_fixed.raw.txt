@@ -1,0 +1,32 @@
+test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ERROR
+
+======================================================================
+ERROR: test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 96, in test_native_plot_text_shared_fees_pending_cache_and_refine_consumption
+    recovery.execute_checked(s.run, stage)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 340, in execute_checked
+    verify_evidence(run_dir, state)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 107, in verify_evidence
+    evidence = read_native_result(hook["run_name"], action=action, input_path=source)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_critics_adapter.py", line 86, in read_native_result
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\CangqiStudio\\StoryStudio\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-271593c0\\run_receipt.json'
+
+----------------------------------------------------------------------
+Ran 1 test in 244.591s
+
+FAILED (errors=1)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-ay_xn_b8\\ExplicitTestDataHome\\projects\\b1ffce05-2734-4cde-99ff-d57109674e4f\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-271593c0\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-ay_xn_b8\\ExplicitTestDataHome\\projects\\b1ffce05-2734-4cde-99ff-d57109674e4f\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-271593c0\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-ay_xn_b8\\ExplicitTestDataHome\\projects\\b1ffce05-2734-4cde-99ff-d57109674e4f\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-271593c0", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

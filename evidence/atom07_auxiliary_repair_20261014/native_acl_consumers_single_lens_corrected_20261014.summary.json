@@ -1,0 +1,155 @@
+{
+  "status": "OBSERVATION_SUMMARY_NOT_ACCEPTANCE",
+  "diagnostic_report_sha256": "5daa346970890b709129a5599a8e55f25faee525782a995bb9a161f9059455d5",
+  "commands": {
+    "whoami.exe": 15625,
+    "icacls.exe": 15630
+  },
+  "cli_returncodes": {
+    "0": 31255
+  },
+  "cli_error_types": {},
+  "duration_s": {
+    "mean": 0.016060246360585673,
+    "median": 0.0159999999741558,
+    "maximum": 0.5310000000172295,
+    "total": 501.96300000010524
+  },
+  "stack_outer_functions": {
+    "<module>": 159,
+    "setUp": 48,
+    "run_bounded_diagnosis": 22,
+    "create": 18,
+    "produce": 18,
+    "require_authorization": 18,
+    "_verify_bundle": 4,
+    "build_plot_request": 2560,
+    "execute_plot": 14,
+    "validate": 808,
+    "require_run_authorization": 2400,
+    "_compute_contract_preflight": 11448,
+    "build_run_contract_preflight": 8904,
+    "_cost_account": 64,
+    "cnw_live_call": 70,
+    "expected_requests": 42,
+    "_cnw_live_call_in_slot": 140,
+    "command_reserve": 40,
+    "response": 80,
+    "history": 2080,
+    "_critics_hook": 14,
+    "project_path": 28,
+    "main": 208,
+    "_validated_native_materials": 52,
+    "service": 42,
+    "_execute_native": 46,
+    "_verify_registered_invocation": 16,
+    "create_run_directory": 4,
+    "capture_send": 70,
+    "__init__": 136,
+    "read_native_result": 28,
+    "_read_native_result": 544,
+    "finish": 136,
+    "verify_evidence": 70,
+    "read_native_support_records": 924
+  },
+  "milestones": [
+    {
+      "kind": "milestone",
+      "label": "start",
+      "elapsed_s": 0.015000000013969839,
+      "python_threads": 1,
+      "own_process_handles": 309,
+      "cli_calls": 0,
+      "max_cli_inflight": 0
+    },
+    {
+      "kind": "milestone",
+      "label": "native_service_finished",
+      "elapsed_s": 187.32800000000861,
+      "python_threads": 1,
+      "own_process_handles": 792,
+      "cli_calls": 12093,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "before_one_lens",
+      "elapsed_s": 461.5,
+      "python_threads": 1,
+      "own_process_handles": 777,
+      "cli_calls": 26877,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "after_one_lens",
+      "elapsed_s": 544.2960000000021,
+      "python_threads": 1,
+      "own_process_handles": 777,
+      "cli_calls": 31255,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "terminal_before_cleanup",
+      "elapsed_s": 544.2960000000021,
+      "python_threads": 1,
+      "own_process_handles": 777,
+      "cli_calls": 31255,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "terminal_after_cleanup",
+      "elapsed_s": 544.3120000000054,
+      "python_threads": 1,
+      "own_process_handles": 777,
+      "cli_calls": 31255,
+      "max_cli_inflight": 1
+    }
+  ],
+  "terminal_stages": {
+    "plot": "STAGE_MATERIALIZED",
+    "scene_cards": "STAGE_MATERIALIZED",
+    "writing_brief": "STAGE_MATERIALIZED",
+    "prose": "STAGE_MATERIALIZED",
+    "lint_layer1": "STAGE_MATERIALIZED",
+    "lint_layer2": "STAGE_MATERIALIZED",
+    "multi_lens_review": "NOT_RUN",
+    "adversarial_verify": "NOT_RUN",
+    "completeness_critic": "NOT_RUN",
+    "refine": "NOT_RUN",
+    "re_review": "NOT_RUN"
+  },
+  "actual_provider_receipt_count": 5,
+  "actual_synthetic_ledger_rows": 10,
+  "original_bounded_observation": {
+    "commands": {
+      "whoami.exe": 998,
+      "icacls.exe": 1002
+    },
+    "duration_s": {
+      "mean": 0.019508499999879858,
+      "median": 0.0159999999741558,
+      "maximum": 1.9839999999967404,
+      "total": 39.01699999975972
+    },
+    "terminal_stages": {
+      "plot": "EXECUTION_INCOMPLETE",
+      "scene_cards": "NOT_RUN",
+      "writing_brief": "NOT_RUN",
+      "prose": "NOT_RUN",
+      "lint_layer1": "NOT_RUN",
+      "lint_layer2": "NOT_RUN",
+      "multi_lens_review": "NOT_RUN",
+      "adversarial_verify": "NOT_RUN",
+      "completeness_critic": "NOT_RUN",
+      "refine": "NOT_RUN",
+      "re_review": "NOT_RUN"
+    },
+    "limitations": "The explicit 2000-CLI safety bound was reached before Plot. No real CLI timeout was reproduced; repeated load is measured but not proven the timeout cause."
+  },
+  "comparison_limitations": "Different stopping points: original stopped before Plot at 2000 CLI calls; current explicitly bounds 60000 calls/1200 seconds. Counts/times are observations, not equivalent-work speedup or an explanation of the earlier timeouts. Function group counts are CLI event attribution, not full preflight invocation counts. No full-chain acceptance.",
+  "diagnostic_error": null,
+  "source_unchanged": true
+}

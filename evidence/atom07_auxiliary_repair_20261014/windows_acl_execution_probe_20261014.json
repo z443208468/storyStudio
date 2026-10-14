@@ -1,0 +1,111 @@
+{
+  "status": "BOUNDED_DIAGNOSIS_NOT_ACCEPTANCE",
+  "timestamp_utc": "2026-10-13T22:02:00.326323+00:00",
+  "source_sha256_before": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+  "source_sha256_after": "4f93a21cdce8cbbb4a75d92a0158a12536071f2d3a0f930f967f01cecfec5d10",
+  "records": [
+    {
+      "case": "main_create",
+      "elapsed_s": 0.28100000001722947,
+      "error": null,
+      "actual_commands": [
+        {
+          "executable": "whoami.exe",
+          "elapsed_s": 0.125,
+          "returncode": 0,
+          "stdout_sha256": "74d2cd29076fa97116b6dc3a39ccb2b48f87718aa5ee29a220e71da16658e00a",
+          "stdout_characters": 80,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "executable": "icacls.exe",
+          "elapsed_s": 0.14100000000325963,
+          "returncode": 0,
+          "stdout_sha256": "b23ef1f12a67d0743ceddef43dfc47fffde3d5c394dd97ae254ddaeba9f11377",
+          "stdout_characters": 172,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "executable": "icacls.exe",
+          "elapsed_s": 0.015000000013969839,
+          "returncode": 0,
+          "stdout_sha256": "daef1221fb45cc86eec4971871dbe1e327e82b45731d06876775c2766a302ea9",
+          "stdout_characters": 462,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "case": "main_read",
+      "elapsed_s": 0.046999999991385266,
+      "error": null,
+      "actual_commands": [
+        {
+          "executable": "whoami.exe",
+          "elapsed_s": 0.030999999988125637,
+          "returncode": 0,
+          "stdout_sha256": "74d2cd29076fa97116b6dc3a39ccb2b48f87718aa5ee29a220e71da16658e00a",
+          "stdout_characters": 80,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "executable": "icacls.exe",
+          "elapsed_s": 0.01600000000325963,
+          "returncode": 0,
+          "stdout_sha256": "daef1221fb45cc86eec4971871dbe1e327e82b45731d06876775c2766a302ea9",
+          "stdout_characters": 462,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "case": "worker_read_1",
+      "elapsed_s": 0.030999999988125637,
+      "error": null,
+      "actual_commands": [
+        {
+          "executable": "whoami.exe",
+          "elapsed_s": 0.01600000000325963,
+          "returncode": 0,
+          "stdout_sha256": "74d2cd29076fa97116b6dc3a39ccb2b48f87718aa5ee29a220e71da16658e00a",
+          "stdout_characters": 80,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "executable": "icacls.exe",
+          "elapsed_s": 0.014999999984866008,
+          "returncode": 0,
+          "stdout_sha256": "daef1221fb45cc86eec4971871dbe1e327e82b45731d06876775c2766a302ea9",
+          "stdout_characters": 462,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "case": "worker_read_2",
+      "elapsed_s": 0.0470000000204891,
+      "error": null,
+      "actual_commands": [
+        {
+          "executable": "whoami.exe",
+          "elapsed_s": 0.03200000000651926,
+          "returncode": 0,
+          "stdout_sha256": "74d2cd29076fa97116b6dc3a39ccb2b48f87718aa5ee29a220e71da16658e00a",
+          "stdout_characters": 80,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "executable": "icacls.exe",
+          "elapsed_s": 0.015000000013969839,
+          "returncode": 0,
+          "stdout_sha256": "daef1221fb45cc86eec4971871dbe1e327e82b45731d06876775c2766a302ea9",
+          "stdout_characters": 462,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "real_provider_calls": 0,
+  "original_project_or_ledger_changes": 0,
+  "limitations": "Four actual ACL checks in an owned temporary directory only; cannot explain the complete-chain timeout by itself."
+}

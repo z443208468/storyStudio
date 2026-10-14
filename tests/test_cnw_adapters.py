@@ -4,7 +4,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, call as mock_call
 
 from tools.cnw_contract import ContractError, load_contract, check_required_fields, validate_work_unit
 from tools.cnw_critics_adapter import build_plan_critique_command, verify_plan_receipt, read_native_result, native_templates, native_conversation_template, native_prompt_dependencies_match
@@ -136,7 +136,8 @@ class AdapterTests(unittest.TestCase):
                     critique_path=critique_path, parent_run_dir=parent, parent_stage="critics_plot")
                 self.assertEqual(result["status"], "SUCCEEDED")
                 self.assertEqual(result["run_dir"], str(child))
-                for_run.assert_called_once_with(parent, stage="critics_plot", model="deepseek-flash")
+                self.assertEqual(for_run.call_count, 2)
+                for_run.assert_has_calls([mock_call(parent, stage="critics_plot", model="deepseek-flash")] * 2)
                 with self.assertRaisesRegex(ContractError, "CRITICS_PARENT_RUN_BINDING_REQUIRED"):
                     read_native_result(child, action="plan-revise", input_path=source, critique_path=critique_path)
                 receipt["cost_binding"]["project_instance_id"] = "FOREIGN-INSTANCE"

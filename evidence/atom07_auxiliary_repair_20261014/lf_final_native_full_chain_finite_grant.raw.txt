@@ -1,0 +1,53 @@
+test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ERROR
+
+======================================================================
+ERROR: test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2546, in _critics_hook
+    completed = subprocess.run(command, cwd=str(ROOT), capture_output=True, text=True, timeout=600)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1124, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1128, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1189, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 107, in service
+    result = native.main(command[2:])
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\p2_06_critics_run.py", line 108, in main
+    verify_auxiliary_native_input(parent_run_dir, stage=args.parent_stage,
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 304, in verify_auxiliary_native_input
+    raise ContractError("CRITICS_INPUT_CHANGED", "native child input differs from the current parent material")
+tools.cnw_contract.ContractError: CRITICS_INPUT_CHANGED: native child input differs from the current parent material
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 116, in test_native_plot_text_shared_fees_pending_cache_and_refine_consumption
+    recovery.execute_checked(s.run, stage)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 373, in execute_checked
+    result = r._dispatch_cnw_stage(run_dir, stage)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1429, in _dispatch_cnw_stage
+    return execute_refine(run_dir)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2276, in execute_refine
+    supplement = _critics_hook(run_dir, "prose")  # support hook, never an additional CNW stage
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2551, in _critics_hook
+    raise ContractError("CRITICS_INVOCATION_FAILED", f"CritiCS {action} invocation failed ({type(exc).__name__})") from exc
+tools.cnw_contract.ContractError: CRITICS_INVOCATION_FAILED: CritiCS text-refine invocation failed (ContractError)
+
+----------------------------------------------------------------------
+Ran 1 test in 1834.374s
+
+FAILED (errors=1)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-ytop93fm\\ExplicitTestDataHome\\projects\\0e7aafaa-7564-46c7-bed5-9d30317e665e\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-5ca6df85\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-ytop93fm\\ExplicitTestDataHome\\projects\\0e7aafaa-7564-46c7-bed5-9d30317e665e\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-5ca6df85\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-ytop93fm\\ExplicitTestDataHome\\projects\\0e7aafaa-7564-46c7-bed5-9d30317e665e\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-5ca6df85", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

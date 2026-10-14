@@ -1,0 +1,12 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_cnw_native_input_limits.py::NativeInputLimitTests::test_registered_signed_native_capture_refuses_actual_oversize_before_fees 
+tests/test_cnw_native_input_limits.py::NativeInputLimitTests::test_registered_signed_native_capture_refuses_actual_oversize_before_fees PASSED [100%]
+
+============== 1 passed, 2 subtests passed in 111.93s (0:01:51) ===============

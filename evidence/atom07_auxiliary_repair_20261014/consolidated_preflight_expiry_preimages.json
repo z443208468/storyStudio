@@ -1,0 +1,23 @@
+{
+  "records": [
+    {
+      "relative_source": "tools/cnw_live_authorization.py",
+      "backup_file": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\preflight_expiry_preimages_20261014\\cnw_live_authorization.py",
+      "byte_count": 23042,
+      "sha256": "d3398a17a91e46b3bb86a1f24d30579bc9a7275198d451a86d47055721b931ac"
+    },
+    {
+      "relative_source": "tests/test_cnw_live_authorization.py",
+      "backup_file": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\preflight_expiry_preimages_20261014\\test_cnw_live_authorization.py",
+      "byte_count": 32191,
+      "sha256": "8b543be8bd8219c9c24a9a94d251c0416bd1df83563ce03f3490c6ebdb5f8982"
+    },
+    {
+      "relative_source": "tests/test_cnw_signed_operations.py",
+      "backup_file": "D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\preflight_expiry_preimages_20261014\\test_cnw_signed_operations.py",
+      "byte_count": 30237,
+      "sha256": "d28d992507db6c4fdfc8c923c579ff7d36ba1e43ab6dc23c3de5b85b4f2f7d2c"
+    }
+  ],
+  "purpose": "Controller approved repeated-preflight and terminal expiry fixes only"
+}

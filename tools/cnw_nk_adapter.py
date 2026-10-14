@@ -87,7 +87,11 @@ def map_reflection_to_brief(brief: str, response: dict[str, Any], provider_recei
         raise ContractError("NK_RESPONSE_INVALID", "reflection is empty")
     response_hash = hashlib.sha256(json.dumps(response, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     status = provider_receipt.get("status")
-    if status == "LIVE_ACCEPTED":
+    if status in {"LIVE_ACCEPTED", "SIMULATED"}:
+        if status == "SIMULATED" and (provider_receipt.get("mode") != "MOCK_ONLY"
+                or provider_receipt.get("simulation_status") != "SIMULATED"
+                or provider_receipt.get("fixture_only") is not True):
+            raise ContractError("NK_PROVIDER_RECEIPT_INVALID", "simulation requires explicit mock receipt markers")
         required = ("request_id", "provider_request_id", "model", "finish_reason", "usage", "http_status", "validated_response_sha256", "raw_response_sha256")
         missing = [key for key in required if provider_receipt.get(key) in (None, "", {})]
         if missing or provider_receipt.get("model") != "deepseek-flash" or provider_receipt.get("finish_reason") != "stop" or provider_receipt.get("http_status") != 200:

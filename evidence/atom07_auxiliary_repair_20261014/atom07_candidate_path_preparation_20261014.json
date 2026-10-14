@@ -1,0 +1,1078 @@
+{
+  "status": "PREPARATION_NOT_CANDIDATE_NOT_ACCEPTANCE",
+  "head": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+  "paths": [
+    {
+      "path": ".gitattributes",
+      "byte_count": 1919,
+      "sha256": "0ee9d399742184603a23177555917b27cf17ba00b5bef6c40004a49db36d05cd"
+    },
+    {
+      "path": "AGENTS.md",
+      "byte_count": 12889,
+      "sha256": "f6bffbc9cf442fbc67a5f94024c7b5a0df2f719a9bff39f7d3b3a2bdc7cc7f13"
+    },
+    {
+      "path": "evidence/ATOM07_AUXILIARY_REPAIR_WIP_20261014.md",
+      "byte_count": 54029,
+      "sha256": "9319ba51f889c6a6d33c8579bb0965c8c5564690de33654ae9e7977ecd2fe2b1"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_BYTE_REUSE_SCOPE_WIP_20261014.md",
+      "byte_count": 2578,
+      "sha256": "c97ca12de2e853971135d6f89d333c24d64ecd54bdf1ab354729c8a557607099"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_CONSOLIDATED_DIAGNOSIS_WIP_20261014.md",
+      "byte_count": 3700,
+      "sha256": "2b8a310a5d4900e33912d0e3d8c4c276366583eef437da7e28545d1e817facf2"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_CONSOLIDATED_PREFLIGHT_RETEST_WIP_20261014.md",
+      "byte_count": 2876,
+      "sha256": "278147190bdb2553b6d9b2b3b98874dea58d6b57082062add2afa1066dc7ab9d"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_CONSOLIDATED_RETEST_WIP_20261014.md",
+      "byte_count": 4327,
+      "sha256": "85e9617c604a497d4c6ac2ec7dc857848e27cbc5266147910dddcea04131144a"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_CONSOLIDATED_WIP_20261014.md",
+      "byte_count": 7015,
+      "sha256": "308f74eb804f34a0406ce050cf30992c4e6dfe3e75f041b711d656ca9ee89f04"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_FINAL_REUSE_WIP_20261014.md",
+      "byte_count": 4356,
+      "sha256": "fa0b5dec3779ebf25c05640861a9b8ee1bb3d1e277b111062eb962446b6f15fb"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_NK_ACCOUNT_SCOPE_WIP_20261014.md",
+      "byte_count": 1391,
+      "sha256": "7541139e745ebf604105fb85bf24203ca21b418ff4ad51cc1e3acacd2ddaa3d2"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_NK_FINAL_COMPONENT_WIP_20261014.md",
+      "byte_count": 1178,
+      "sha256": "68e6d7152b25aedb12a9b398daa8844f16a70a6e81e2998748a61e4b50ea14ea"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_NK_INPUT_SCOPE_WIP_20261014.md",
+      "byte_count": 1981,
+      "sha256": "a7b1730d808b110cb5f4bee394cdcf969af32d23e2e9f6f4cedeb81a64dd9e6f"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_RETEST_SCOPE_WIP_20261014.md",
+      "byte_count": 4672,
+      "sha256": "3025d7a80ec8dc8e97d5f2b89a86b9dfc63d990ed40a5d10623ac35027d584cd"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_RETURN_f8c72d5_20261014.md",
+      "byte_count": 5753,
+      "sha256": "7d831f6796e7246b53c5c70d17bbe353cd8d1f0f8edda41e1b3b3c67b5157ed9"
+    },
+    {
+      "path": "evidence/ATOM07_CONTROLLER_TEXT_BYTES_SCOPE_WIP_20261014.md",
+      "byte_count": 1320,
+      "sha256": "0cd992e9cae226ff2b1e2d7e42a6e283329d3fd30cacb72269ec4bd5ff383edf"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/archive_verification_harnesses_20261014.py",
+      "byte_count": 2176,
+      "sha256": "0c1b80fb568fe0a4ef41717238045bbcf841eb09e9b3a9d6de7551459d7ad4e7"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/audit_final_reuse_metadata_20261014.py",
+      "byte_count": 5296,
+      "sha256": "03f3bfee6ef4449af8249b674892cf1a632978c4f2a144543260ff8d59e927bd"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/audit_method_source_scope_20261014.py",
+      "byte_count": 3466,
+      "sha256": "71f5d6d929cbf4d2da5c3636377580b40e67441e1efa590863de9c1d52e3c355"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/audit_nk_legacy_cap_parse_20261014.ps1",
+      "byte_count": 2543,
+      "sha256": "73aa335c1bccaf477e3b1da555fcfbce765359c63fe552a968ebd03d24484dc4"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/audit_preflight_expiry_capture_20261014.py",
+      "byte_count": 2555,
+      "sha256": "5364157ca074526724bc3e43a1a4c19830940c4264d4ef1c3ecea021849d7fca"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/audit_preflight_retest_provenance_20261014.py",
+      "byte_count": 2697,
+      "sha256": "62671ce009d59776893d559caecd4cb0dbb0489b980491f8560b373b6e01de43"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/audit_studio_lf_parser.ps1",
+      "byte_count": 2972,
+      "sha256": "31ffbb69749e2708cfd2b9f3cdecab7eed1c49ecd3650323cbceaa77b051caa0"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/auxiliary_mock_receipt_corrected.check.json",
+      "byte_count": 10131,
+      "sha256": "94c3e1468681c7e7a1a0484b448df237d833f1e1453f2ba012e4ea107533c9f6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/auxiliary_mock_receipt_corrected.raw.txt",
+      "byte_count": 3485,
+      "sha256": "9f07c88f34a60db3931962057eba260ef485f4e2b629ed9f3dbe89bbecc23eb0"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/auxiliary_mock_receipt_regression.check.json",
+      "byte_count": 10133,
+      "sha256": "f3b4bb31dd8528cdfe0ba77fd9f021b47625c1f085212d1e1b32a5a6b1ee47e8"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/auxiliary_mock_receipt_regression.raw.txt",
+      "byte_count": 4976,
+      "sha256": "731aa10d7c41b04f66a4ac13eaab81077daf5b9f97645ce769b137a28b622e37"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/candidate_lf_normalization_20261014.json",
+      "byte_count": 20370,
+      "sha256": "a492919892e534355fdc40ed43d697ebfcb735da8a08af107db3b83a54346e23"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_final_native_full_chain_single_slot.byte_audit.json",
+      "byte_count": 13904,
+      "sha256": "b1143ee87462e64ee03652a310ebb9b823808365204aa63a5e6d71438bb028e7"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_final_native_full_chain_single_slot.check.json",
+      "byte_count": 14786,
+      "sha256": "d72b306a1719b0074c3deb611f3039b5992e2572ea132e6c9f32c4f269ced958"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_final_native_full_chain_single_slot.consumers.json.terminal_capture.json",
+      "byte_count": 209864,
+      "sha256": "a9cd4dc38e59a034e197ebbc1c3c447d2ea36ef2c65ceaa3619521a64f3ce382"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_final_native_full_chain_single_slot.raw.txt",
+      "byte_count": 8539,
+      "sha256": "6704911715609e9c71e1481983d4c9ae5578dd859a86999171706e32c5ae4ea8"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.check.json",
+      "byte_count": 32575,
+      "sha256": "465b8180e328610417993ffcc09da51857997d95fb9b57a3254ebb970d0ebd9b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.consumers.json",
+      "byte_count": 41706,
+      "sha256": "72cd2af33cbc03c914d9810446d28caa004b9a436e41487398b193ed92cafaa3"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.consumers.json.chapter_verification_expiry.json",
+      "byte_count": 598,
+      "sha256": "13fa5087cc94b83eea609fcd52bb6ab96cbca9ead3ba6e1a296874f12e8297a4"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.consumers.json.operation_verification_expiry.json",
+      "byte_count": 563,
+      "sha256": "5f16a99fcb2b5ac543f69f474973984efafa9fb7c9111fed6c9ea2dbae81271b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.raw.txt",
+      "byte_count": 1939,
+      "sha256": "3222b35428a0d47f0057e98281c1cc9031c9f11dc1da8abba26fc9628971c89d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_consumers.subset_audit.json",
+      "byte_count": 1801,
+      "sha256": "3e26eb22c77e807b25ac70d7150f6f1f1c8190012d04fab960451987015208d6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_preimages.json",
+      "byte_count": 1131,
+      "sha256": "562e8e4c99fcd69a69a4eb0f2343b16b04711494d0c1ba682cbab8a562b08b3c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_preflight_expiry_provenance.json",
+      "byte_count": 3851,
+      "sha256": "df0d3ff4e74ab35c25df48e1c9c00ebf389d9b24616f7a8c3e4a62a6af9454f3"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.check.json",
+      "byte_count": 32389,
+      "sha256": "ac9f38d33035a98d871337b3e87e9384e971a15299015e47feb64f7984b6dcba"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.consumers.json.nk_cap_terminal.json",
+      "byte_count": 28083,
+      "sha256": "0ca51d466c04acd238a2998237f9e79766283f0546a4acf6b77680a5cf75b81b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.consumers.json.nk_ready_drift.json",
+      "byte_count": 11552,
+      "sha256": "48f2f1566e976183b560f4753b9d19c12094dc79dbc67583f6c77d8c738546c1"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.consumers.json.nk_signed.json",
+      "byte_count": 172030,
+      "sha256": "893d314fb6791988b6d1dbca8b29bdb23206df61b53f6b15a988c97faf294c0e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.consumers.json.node_input_boundaries.json",
+      "byte_count": 5933,
+      "sha256": "a5d2c807de0916e902ef1684ada328b6178b7b5bafc46408ea07abca5701b9f5"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.consumers.json.signed_owner_nk_cap.json",
+      "byte_count": 32047,
+      "sha256": "af042d6f579a280b9d51ba9aab02cac60c45be12a912c7dd68d3a05df7f50a64"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.nk_signed.byte_audit.json",
+      "byte_count": 9528,
+      "sha256": "c275ba90e069120b117b98961945cc0b8bef6e91964bff021d4bf628262213e0"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.owner_cap.byte_audit.json",
+      "byte_count": 6116,
+      "sha256": "6eda246823156c33a65d4715fb741479d8664af68faa8f0bce9a939dc0713a76"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_identity_components.raw.txt",
+      "byte_count": 1834,
+      "sha256": "e3b351fe518f9038691db1dd09be783b1f977c9ab7b0f3b62542ec4e8b89210b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/consolidated_ready_preimages.json",
+      "byte_count": 1041,
+      "sha256": "95cb8a30c94065a837b94e19dc9fb379d42c88d44e76765b8817bc50e828ab1d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/corrected_single_lens_driver_change_20261014.json",
+      "byte_count": 467,
+      "sha256": "531f291d9d78f6225d18ab5c6124aaf5877930ca69359bf2d299e241c17fe6ce"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/critics_mock_boundary_fast_regression.check.json",
+      "byte_count": 10383,
+      "sha256": "fe77646daf4b4d33922450b0dcdf038e65e28f8ec6f19eef5b6a0272acc55d39"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/critics_mock_boundary_fast_regression.raw.txt",
+      "byte_count": 3485,
+      "sha256": "c8c66cdbee95aa924fb8d7bf08ea23b08d2bee36de52e2c4170cb3503cc9853f"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/diagnose_native_acl_consumers_20261014.py",
+      "byte_count": 7571,
+      "sha256": "f124f626f24abe5e3c9c93b3c13b8796ec33d14fa3af6d5d84fb95c6b49c2516"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/diagnose_native_acl_consumers_after_preflight_20261014.py",
+      "byte_count": 7995,
+      "sha256": "49e36c36af0367259153c26b9b18cc3bf02f3805d115ead31991fcfa15d2e349"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/diagnose_native_acl_consumers_single_lens_corrected_20261014.py",
+      "byte_count": 8284,
+      "sha256": "e4020df264fc0054a23bfa251c17311e29d60b6e80dccdd58f4b4a9b48bfe975"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_operation_consumers_batch.byte_audit.json",
+      "byte_count": 18342,
+      "sha256": "3ab423ebac29d7f5744d796eb19ef8834bc5e2bfee06473f75a8afd8cd9b77b1"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_operation_consumers_batch.check.json",
+      "byte_count": 29912,
+      "sha256": "6aa42973730d011b759fce89927f85428490824de58f8b15dc8e388eda26a029"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_operation_consumers_batch.consumers.json",
+      "byte_count": 1562854,
+      "sha256": "fab996cbfd6e245f92bcbba0acfb79c4bd21ccbc5b75e669aaeaec3e0b696849"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_operation_consumers_batch.raw.txt",
+      "byte_count": 1665,
+      "sha256": "ead5a4675026986a62fa2087a16eee1d51c71221bb6d3ef1c261cd6064044526"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_reuse_metadata_20261014.json",
+      "byte_count": 102345,
+      "sha256": "8cc747ebf9be2896bcdfa55ca57bdae525da39d92cd983ab15f3f865da70f358"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.check.json",
+      "byte_count": 30034,
+      "sha256": "ad90917ef86a2ddd80e7f6fe78819c3056f849fe620d9e0aab93d7980bc2d173"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.changed_predecessor.json",
+      "byte_count": 66938,
+      "sha256": "4c8de2228e0d34eab7e3e770ba813014f33dd03684dcccd2f117082840090cff"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.cli_plot.json",
+      "byte_count": 40971,
+      "sha256": "047b64c3d7974624a5643bbf3c049daf58858ea68f65a3f3be3f587378c59d0d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.high.json",
+      "byte_count": 37462,
+      "sha256": "e0d9ff966ae88dfc1753083d3a5d34f9dd99f9744c568bedec1fc918ae1535d6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.low.json",
+      "byte_count": 37462,
+      "sha256": "a405e65be6d01fbd4f69596b222bd91b456afea9bf778485389f2c08ca3e2de4"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.prose_continuation.json",
+      "byte_count": 16584,
+      "sha256": "839f1e7e3c12d0c0f65599211d12e809bc51eca1afc1accc590cf45b45eaa741"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.prose_overlimit.json",
+      "byte_count": 16966,
+      "sha256": "5746655f936ba809f10d7716ba9bf9231ab11e9529d594e49089147303c0a05c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.consumers.json.refine_restoration.json",
+      "byte_count": 21417,
+      "sha256": "1ceece9b1be395556b869c77407c679b897544263218835b64cc9cb62716c985"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/final_shared_consumers_batch.raw.txt",
+      "byte_count": 3659,
+      "sha256": "700b2bdecaa9b21bc4e467c53adfbeda847e97ff9ab438ecea8a68eaa6ac1fe6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/freeze_nk_text_boundary_preimages_20261014.py",
+      "byte_count": 1304,
+      "sha256": "10e5d0a483fc68fe84d0467d289ceb952faff28352f42e37a2d7af4c599ee857"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/frozen_atom06_controller_original.md",
+      "byte_count": 5941,
+      "sha256": "6e2ec3ffed2bad6fbbb1f2409b9752c511aa260b6c05f8b8c448114d76f08055"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/frozen_atom06_record_original.json",
+      "byte_count": 1374,
+      "sha256": "834add33d4c2b2f1744d92dd17631aa0d20e735c3ea0938688b47e1b5eef4c0f"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/identity_bytes_preimages_20261014.json",
+      "byte_count": 25492,
+      "sha256": "a15b78b9932c6de79dd4c829160e42469df62b8d98cda8cbd268beadb6b791a2"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/legacy_native_export_compat_final.check.json",
+      "byte_count": 29003,
+      "sha256": "3ae1ed50e9ec03b76d7626bebaeb6a069efefeb842bb41cb1afc87470f2b620d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/legacy_native_export_compat_final.raw.txt",
+      "byte_count": 4797,
+      "sha256": "2f5faa367d1c25b425a97536bcbd3829c4846e3497a2884a38a8dfe538f6fbbe"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_identity_revision_consumers.check.json",
+      "byte_count": 29783,
+      "sha256": "dc038402b43dd1356e32cc22b10e95de9a75d321622a7df9758ce754eb9aae20"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_identity_revision_consumers.consumers.json",
+      "byte_count": 41706,
+      "sha256": "1208098edd7f7be89618e578cf48f4d2b62b4dab0aa5b8cc54e7c18f7f06750f"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_identity_revision_consumers.consumers.json.signed_revision.json",
+      "byte_count": 389715,
+      "sha256": "42d3e694cfafb3658ee70d4311b2fd87c4e0a00b0f6be528d8b87ee1c2819731"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_identity_revision_consumers.raw.txt",
+      "byte_count": 1424,
+      "sha256": "687521c632bec2bd25c84d2f88da21b45fc55728c9f40eff738e18d872ec827d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_identity_revision_consumers.signed_revision.byte_audit.json",
+      "byte_count": 4254,
+      "sha256": "3b8e663f807cd28d2eea86289f9062c4dbe1d094d1bf3ec5a7ebff74d01d1d65"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_native_full_chain_finite_grant.byte_audit.json",
+      "byte_count": 24898,
+      "sha256": "9d88389b3418949aee3cb0629919ca37ced448e0c2ff3a8818793e48f3b1b986"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_native_full_chain_finite_grant.check.json",
+      "byte_count": 11737,
+      "sha256": "ca2b6e2a69729542611cfeb3e3a29a064982565b7181ac5155cd3d486b2e916c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_native_full_chain_finite_grant.consumers.json.terminal_capture.json",
+      "byte_count": 341581,
+      "sha256": "99f9c1a589cdd8b51cc5abca41d4ab3d0c6dff63bec4380b2058313f234a04e9"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/lf_final_native_full_chain_finite_grant.raw.txt",
+      "byte_count": 5089,
+      "sha256": "23adf3cdb67b57a6569bd4968c536a302c4a8a13d5816ef8dd4b2a2af9ad938b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/method_source_scope_20261014.json",
+      "byte_count": 34682,
+      "sha256": "5688fe9f73f0c4cddae916e8acc2710c691507d2b78eb3dd683f5dbfe2871671"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_after_preflight_20261014.audit.json",
+      "byte_count": 13891,
+      "sha256": "3f6ab7edd926b0a2ee7c7b80bae3c2b80fc7b3a77e094c137f57ef41fa18bf97"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_after_preflight_20261014.consumers.json.terminal_capture.json",
+      "byte_count": 209180,
+      "sha256": "6bf55e918df27b3eaaa68a87b0861c64ed63b374cce600be12d85e4a2e93e330"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_after_preflight_20261014.driver.py",
+      "byte_count": 4491,
+      "sha256": "3e684d515090142292f6a6eb8b153aa5130c601dab0b2a98c8bf70e2589b43ff"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_after_preflight_20261014.events.jsonl",
+      "byte_count": 33223076,
+      "sha256": "47e32a26138019514c617c1df953ab54b547b0c136faf7edc1a6021af003559e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_after_preflight_20261014.json",
+      "byte_count": 15639,
+      "sha256": "c5be5bc3a5145d483dc09488cd16327e024ab351755f6db5cd77a55c11a427ac"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_after_preflight_20261014.summary.json",
+      "byte_count": 5158,
+      "sha256": "5ce14da2c8954d22be35cb2a53eb3e8725b7acbba9f2f552d36c66326da2f4ee"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_diagnosis_20261014.consumers.json.terminal_capture.json",
+      "byte_count": 21660,
+      "sha256": "cb247eef95ed418a4c7d7f76dd1cf98a5c0de7045a20b2c80034d51b4afa2c60"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_diagnosis_20261014.driver.py",
+      "byte_count": 4491,
+      "sha256": "3e684d515090142292f6a6eb8b153aa5130c601dab0b2a98c8bf70e2589b43ff"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_diagnosis_20261014.events.jsonl",
+      "byte_count": 2471431,
+      "sha256": "b67ec99575b387d492bb224c2c22fc331022fc1d20fdcca28311523de0307bf3"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_diagnosis_20261014.json",
+      "byte_count": 23497,
+      "sha256": "30d08b5abc10ab27fa10a6a66a0ed277ea67f7aa4f5cd657d9758fbddea19fb2"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_diagnosis_20261014.summary.json",
+      "byte_count": 2370,
+      "sha256": "36464e6b5b70f0ab69a14d6f2781a2dbe3a3d8cc075c2da5aa8423ff69cf2679"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_single_lens_corrected_20261014.audit.json",
+      "byte_count": 14619,
+      "sha256": "24292f67c2b1c249daf5070834ad0b1debfd6337167b93f06dc62d1baab1f012"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_single_lens_corrected_20261014.consumers.json.terminal_capture.json",
+      "byte_count": 219007,
+      "sha256": "46ee86d080d175b93a3567ca911280bcb48f1c00734e907da89e4faa0508f85f"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_single_lens_corrected_20261014.driver.py",
+      "byte_count": 4614,
+      "sha256": "9cdd81a7b75b0c41dabf0987981e1415cbd8097f78ae7fd204b2dbaa4b94c6bd"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_single_lens_corrected_20261014.events.jsonl",
+      "byte_count": 38753712,
+      "sha256": "cfdc95f51a768ce9a989e73dcdbc59b438272e78f82d2008000f69ca177a96f1"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_single_lens_corrected_20261014.json",
+      "byte_count": 15011,
+      "sha256": "5daa346970890b709129a5599a8e55f25faee525782a995bb9a161f9059455d5"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_acl_consumers_single_lens_corrected_20261014.summary.json",
+      "byte_count": 4773,
+      "sha256": "a5d7cb1791e3107e3816bb1dc0b2ec4aab04dce2f9bd2ed709f706502509e46b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_actual_input_limit_negative.check.json",
+      "byte_count": 10148,
+      "sha256": "85afc2523a011e099c9f09f3a1d3eb3f243bad58f021a2394363c80c921f358b"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_actual_input_limit_negative.raw.txt",
+      "byte_count": 828,
+      "sha256": "1d5f302195b475ce8f1ea9973c428a1fd8dff94cdb818a7d78d7b48588b9d7ff"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_batch_direct_read_compat.check.json",
+      "byte_count": 29061,
+      "sha256": "929ec404cb1517b076b3188fd8b0815a02425e94e9aea804a6f8d6298840388f"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_batch_direct_read_compat.raw.txt",
+      "byte_count": 1516,
+      "sha256": "f56cb3f4394ecc36dca267b4618919a241b83545d0f5ec319c367d686d47eaab"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_batch_direct_read_compat_fixed.check.json",
+      "byte_count": 29067,
+      "sha256": "4677ba071f833ff0a6e8da8d3770ffbf44630b6054639973e3a994cd747437e8"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_batch_direct_read_compat_fixed.raw.txt",
+      "byte_count": 783,
+      "sha256": "76559711b2c23727c71f8c040147c43d5f05d072d690dfcc1b1e61287c718f32"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_batch_legacy_smoke.check.json",
+      "byte_count": 29344,
+      "sha256": "80887b8b5e638e875d255622a0ca53ae93388d6cae2cfbbd6108f4249a6457eb"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_batch_legacy_smoke.raw.txt",
+      "byte_count": 1086,
+      "sha256": "7af1b676625b8840f1e1dec696efed1775cd95611bbb1e03e40b2c692ead0306"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_action_guard_fixed.byte_audit.json",
+      "byte_count": 9006,
+      "sha256": "f96915d41532a849e27aa49bfe9c5c759236a73c02276034b3baf5afb7e1f1ba"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_action_guard_fixed.check.json",
+      "byte_count": 11740,
+      "sha256": "15d7790620ca420918e0361a190eaa50b54e5fffeb2c2f90f4f0e303878679bc"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_action_guard_fixed.consumers.json.native_boundary.json",
+      "byte_count": 140975,
+      "sha256": "c7824332d67e20864baf7d75bee24bb7f34c490df0ee53b8ee774de875791201"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_action_guard_fixed.raw.txt",
+      "byte_count": 1772,
+      "sha256": "b0ca73b499723abf09386d67d069dea7fd861d4b9d6e72f0b0222340a861c5bc"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_batch_reader.check.json",
+      "byte_count": 11734,
+      "sha256": "0605041e66c3b40c8e767def184e6bd5649576180df19884de6285ceddcf4c09"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_batch_reader.consumers.json.native_boundary.json",
+      "byte_count": 60850,
+      "sha256": "b76ce240d89de20f275a7b5ad791edd5cdd3b7b9d7264d06d41766b6baa23120"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_batch_reader.raw.txt",
+      "byte_count": 2700,
+      "sha256": "8be5eee168aafd3d3471116425a48596076689d83fa375b4e537d3fe4b57a8ac"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_dedup_final.check.json",
+      "byte_count": 11733,
+      "sha256": "1229d375409558c2833e77433ede89f1534e4e64fbc9916b6e2023be1974cfb2"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_dedup_final.consumers.json.native_boundary.json",
+      "byte_count": 137717,
+      "sha256": "4255e98919c0b0135186995e51d25c514871c848ad0628b3bed44fc3da8f4000"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_mock_boundaries_dedup_final.raw.txt",
+      "byte_count": 6043,
+      "sha256": "3415db3d50186ee4e410fb8a7d763a096d6479228b93c3b8147f013c367a0d4c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_record_enumeration_regression.check.json",
+      "byte_count": 28987,
+      "sha256": "54b9866da9c17242f861236e32b4183fec92fb0f43538d51b62d3979a6e620f8"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/native_record_enumeration_regression.raw.txt",
+      "byte_count": 696,
+      "sha256": "d0ffe49a2257b95c6f2cb51dadeec0b88378112f92602773bd17494b65e57e7a"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.check.json",
+      "byte_count": 32288,
+      "sha256": "b953b46349db856068f06ac7203fd6d681c450f8941d954775cee9742bfc57bc"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.consumers.json",
+      "byte_count": 41706,
+      "sha256": "db543837b5fb155904c1e011824df0fdcf645ab66b7ad45b4e74f1a7f55d8317"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.consumers.json.nk_cap_terminal.json",
+      "byte_count": 28083,
+      "sha256": "e7beb94a3141362368af25857e8e3d2305da3ef5703fc03885995830280befc0"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.consumers.json.nk_signed.json",
+      "byte_count": 172030,
+      "sha256": "3a67fb82c459eab39b0c2fc345535feafc4f5826cb44982e0581c7a52e7caef2"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.consumers.json.signed_owner_nk_cap.json",
+      "byte_count": 32047,
+      "sha256": "bcbfe734021124a54c589938309d86703be8cc7222903cdabfc9e6b4fd908dfd"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.nk_signed.byte_audit.json",
+      "byte_count": 9528,
+      "sha256": "806feb5d45b9605ff8478e4d3c840db1deac11c8e01a086f67ad5c92095dbe70"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.raw.txt",
+      "byte_count": 1384,
+      "sha256": "ea55ad9f6eb600327dfb5bcf77a8f94164f0c1759e0337ccc03ed538bb00f3ea"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_account_final_consumers.signed_owner_nk_cap.byte_audit.json",
+      "byte_count": 6116,
+      "sha256": "2e9c3d4663a63674b217df8dd5d961b394b099f18a799a5b0b9d2b1f154b7027"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_legacy_cap_parse_20261014.json",
+      "byte_count": 1452,
+      "sha256": "579a4ebee638e2378dd0f122925e8160ab639f92127af2738002629685102038"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_boundary_preimages_20261014.json",
+      "byte_count": 2321,
+      "sha256": "8595af40acb3c37ed39a09bc723414eb9b1e0fd87b063035c91952bedede4761"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.check.json",
+      "byte_count": 32380,
+      "sha256": "21e24b239b4c987e6bb4025aa1e16cef195e9b75f04670b810620067935511b0"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.consumers.json",
+      "byte_count": 41706,
+      "sha256": "32c4b0b08eb7ed2d43282b5afb62c8af0165ac9b00babdf95dc070a7bcddf681"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.consumers.json.nk_signed.json",
+      "byte_count": 172030,
+      "sha256": "83646dd6c981b373d62e06a366f6703d19cd4e6fc11a01d91517208db4ce63b2"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.consumers.json.node_input_boundaries.json",
+      "byte_count": 5933,
+      "sha256": "a5d2c807de0916e902ef1684ada328b6178b7b5bafc46408ea07abca5701b9f5"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.consumers.json.text_input_bytes.json",
+      "byte_count": 25331,
+      "sha256": "4c857e1ab67246646cd11b58d7163dcb1f2e38904b1e43781751711ebc4159bb"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_boundary_consumers.raw.txt",
+      "byte_count": 3843,
+      "sha256": "0089442fc4fb3e5cdc617264f661c5379af531c15630f1150631e568888b2b1a"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_native_full_chain.byte_audit.json",
+      "byte_count": 14632,
+      "sha256": "0f37bcf2e3d8e12e39362cc54325fb2b66f03e62d41257dbe66d9099aca37f34"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_native_full_chain.check.json",
+      "byte_count": 14769,
+      "sha256": "13d3edb28fceb195c3e2bbedafb5f882764ecbde79c6ead498affdc8eceb43f9"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_native_full_chain.consumers.json.terminal_capture.json",
+      "byte_count": 219745,
+      "sha256": "da9f630499590edc5af538231c146fa36fec70529d0e0f2431e95612fe5f944c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_final_native_full_chain.raw.txt",
+      "byte_count": 10182,
+      "sha256": "753805070f9fb8a505d8f79baa5a6a8c266376e5f1175a9897f7ead2003a5b30"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/nk_text_source_readiness_20261014.json",
+      "byte_count": 22172,
+      "sha256": "fcf1a590d7da59b85f44ff3fbe277af4f9b60d8797ac104a1ea9baa38daf9f35"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/normalize_frozen_candidate_bytes.py",
+      "byte_count": 2838,
+      "sha256": "d4939a62c56d2497891c9c3438443553f8676eb30681b3104768fb45ba306f87"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/old_account_only_admission_refusal.check.json",
+      "byte_count": 29220,
+      "sha256": "0e3aca4a72cdbd2536d00e8c249aad26d4d3b95716c3350ca1fc85db29dfd6a6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/old_account_only_admission_refusal.raw.txt",
+      "byte_count": 691,
+      "sha256": "fd27386c72ea68a008db4c818aa2baeb70cda4dde51ca9b56a6417f88b31ef45"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/prepare_corrected_single_lens_diagnosis_20261014.py",
+      "byte_count": 1783,
+      "sha256": "f60fd0e85291a0b42f9340a7cd51e0857bf3857b9bab84a9611c23e328c37407"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/prepare_nk_text_source_readiness_20261014.py",
+      "byte_count": 2806,
+      "sha256": "95e8c14d028444a6a732aaade2e0ac962b34c8adc866e4cd78b94def5d8d028d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/prepare_preflight_retest_evidence_20261014.py",
+      "byte_count": 2680,
+      "sha256": "7cc9e6b9f2ea3005f09e2e8bf37f1915f389cabeee843c52ae5f23c171de0cce"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/probe_windows_acl_execution_20261014.py",
+      "byte_count": 3427,
+      "sha256": "00556c78e8161962ce32c6efffdbaca69c1093e18480f6b26711328c9280d1ad"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/shared_fanout_capacity_regression.check.json",
+      "byte_count": 29068,
+      "sha256": "b6ea14151c63eeca1f266667c7e2f2c3df6ccc70c938ab90ce631a75458de8fc"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/shared_fanout_capacity_regression.raw.txt",
+      "byte_count": 788,
+      "sha256": "d870aa113faab0d3401b313508c3a8dd6383513618cd5e38ac74bdec5f4a03ae"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_full_chain_shared_fanout_fixed.byte_audit.json",
+      "byte_count": 11602,
+      "sha256": "83f11d46d8fab6ebd4854b8f131ebd6e53799ce023de21dce47b7a5ae4863cfb"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_full_chain_shared_fanout_fixed.check.json",
+      "byte_count": 11742,
+      "sha256": "94a3905e77e375a12655d7b508555ebf3a0ed29e433d43ce57c3cbe2fd117936"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_full_chain_shared_fanout_fixed.consumers.json.terminal_capture.json",
+      "byte_count": 179955,
+      "sha256": "dc7bbb84e198bdba3b599c2b14f93f9e676a376636023cacd7ec1bc9bc700d6c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_full_chain_shared_fanout_fixed.raw.txt",
+      "byte_count": 4753,
+      "sha256": "f4208c0029ce69bb1d772f9281b3545cd1afa1a81b6b5943f976cb0d19c52846"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_shared_account_unknown.check.json",
+      "byte_count": 11741,
+      "sha256": "b2e9a0f08ec9cf4649088ccc868e15a35f922263d63bbe99a58fbafad46437a6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_shared_account_unknown.consumers.json.critics_accounting.json",
+      "byte_count": 199799,
+      "sha256": "ab7b49504cf0ece0ae1677c7790ce63611bf314192ec7e9b50bc3176955b28d9"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_shared_account_unknown.consumers.json.critics_accounting.terminal.json",
+      "byte_count": 172801,
+      "sha256": "5c96e1657f143d1b30d86b700e2ae4a201f95fbddeaa76a2b98c481ba1ec8250"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_native_shared_account_unknown.raw.txt",
+      "byte_count": 2158,
+      "sha256": "4767b69d5b93112fa1f8c6d45301a8d170b33e7c6714aa5437210436bc0b5387"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_operations_before_positive_20261014.py",
+      "byte_count": 23419,
+      "sha256": "e45fadfc2cad37a6b5d3e876e89200009fa0f9125dbaa20acea29936cd7d9536"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_consumer_first.check.json",
+      "byte_count": 11539,
+      "sha256": "0d8e3dfee988a38f4eacac9e495679b75220224f9e0ffe9dd0cbe52840232e7c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_consumer_first.raw.txt",
+      "byte_count": 2714,
+      "sha256": "15f646f7535b7f652c6385e6e048a66fddb8771234d7a80380d7be4c92076a85"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_markers_recovery_fixed.byte_audit.json",
+      "byte_count": 14632,
+      "sha256": "b57d52b4c0928404a1343383a79008973bbced773e06f28ef65af3819dcddca6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_markers_recovery_fixed.check.json",
+      "byte_count": 11547,
+      "sha256": "116effc7f91970675f5cfd856960c4f3f21f34184e14a279504f96343cd41827"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_markers_recovery_fixed.consumers.json.terminal_capture.json",
+      "byte_count": 219920,
+      "sha256": "72939ac3ce782fb778bbc70e3f67b2d4fcc8e2ab22b8c0c2b6d4f29ddcd523f6"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_markers_recovery_fixed.raw.txt",
+      "byte_count": 4536,
+      "sha256": "963fe1832cb512246b12d65e06c59728cd1d7097ed204fd095bb192d6b5f3fb3"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_protocol_fixed.check.json",
+      "byte_count": 11539,
+      "sha256": "96a84c4bff6f661a104164faeb98a2ed4506178189b71ecd2a00208e0f429c0e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_protocol_fixed.partial.json",
+      "byte_count": 38389,
+      "sha256": "f508fa8c3e6025dd03818e0214f2ae09bb85cda6911a1b6472eb4ae925e15408"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_critics_protocol_fixed.raw.txt",
+      "byte_count": 3711,
+      "sha256": "0d2ddcfae68f3f0b16ff155248c36493a2d25153a638c5ca0d2b83028443019e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_first.check.json",
+      "byte_count": 10150,
+      "sha256": "25a5149676a7774d1456bb3121949edb8bdc9d8d60f833620aae40bb5e8d8bcf"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_first.raw.txt",
+      "byte_count": 1006,
+      "sha256": "5b69927e664dd46198bc7cec4a03c45098f59b3a2ee3637fa76e329ac0c66bd3"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_launcher_fixed.byte_audit.json",
+      "byte_count": 6597,
+      "sha256": "7db24b0a9f7bbca7c8ec90f838b535108badd03c8559b0b6ab7ad217b325bf8e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_launcher_fixed.check.json",
+      "byte_count": 10259,
+      "sha256": "d2873d497952b2db0bdb86510e166dd1c7d2be6da58584bafc58d2bac80614ec"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_launcher_fixed.consumers.json.nk_signed.json",
+      "byte_count": 172030,
+      "sha256": "aaa8163cf322f49d880f732268724c21e3d3153ca71e698aa69d65a1dc5bb9b3"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_launcher_fixed.raw.txt",
+      "byte_count": 699,
+      "sha256": "5ddfad3e14e670c3adaee81c8b0e1b09047b5d8c0029bcbfad1504316477f57d"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_scoped.check.json",
+      "byte_count": 10243,
+      "sha256": "ea4bb3b8a9e84810168d327a8d023ccfc76450a1d8d107d27ab606576781c699"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/signed_v2_nk_consumer_scoped.raw.txt",
+      "byte_count": 2660,
+      "sha256": "2503a2d47789cfd91fbed0595eae83be91d2b53d47a126dc5562f4ef0de5f10e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/studio_ps1_lf_parser_equivalence_20261014.json",
+      "byte_count": 535,
+      "sha256": "be26ca2e6e1ff12720609c061f296781a162ff03b62c1c5cead2622a89b9139c"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/summarize_corrected_single_lens_diagnosis_20261014.py",
+      "byte_count": 594,
+      "sha256": "63969da9b833c5dfb14d1b40383b051f75927a773c90bde8b07013ff799c3819"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/summarize_native_acl_after_preflight_20261014.py",
+      "byte_count": 2603,
+      "sha256": "19393f21af5800313f003d5148cafcee8a2fa8c869bceda70aa215677e16eb23"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/summarize_native_acl_diagnosis_20261014.py",
+      "byte_count": 2075,
+      "sha256": "dee42a22dd56b22e637fb74b291d8849129b274161d603570201924e4623134e"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/test_bytes_preimages_20261014.json",
+      "byte_count": 6210,
+      "sha256": "caaeba3bce796423dc10ab579bbe61df42183f29c94aa93aa3e1dcb9bdd24093"
+    },
+    {
+      "path": "evidence/atom07_auxiliary_repair_20261014/windows_acl_execution_probe_20261014.json",
+      "byte_count": 4358,
+      "sha256": "ff076b3c0460d6cf5d951580ccdbe35573c73129ccbb824f3d024cb4ef71abc6"
+    },
+    {
+      "path": "tests/test_cnw_adapters.py",
+      "byte_count": 24507,
+      "sha256": "0ffe25550106819cdf494790683cbceb92393a8db1b622c9811d26e289c3a633"
+    },
+    {
+      "path": "tests/test_cnw_critics_text_input_bytes.py",
+      "byte_count": 5294,
+      "sha256": "e542da93cebcb89afae1cb2dd83bc68a4b997b9d903f58dbcdbc0a74afe031e6"
+    },
+    {
+      "path": "tests/test_cnw_live_authorization.py",
+      "byte_count": 35920,
+      "sha256": "ea80286cd51da44baed6fef539eed8aada85d3dadd12b2bc0334fa4b99fb748c"
+    },
+    {
+      "path": "tests/test_cnw_native_input_limits.py",
+      "byte_count": 4042,
+      "sha256": "2d89d8327d576a9ff4802f8c676f4ede9aefdc4a2fe77d547ab1d01cb6b6e33f"
+    },
+    {
+      "path": "tests/test_cnw_native_mock_live_boundary.py",
+      "byte_count": 14071,
+      "sha256": "c2478f288f902ca65834c6ee1417c076383b57140ea69685605e88579d204344"
+    },
+    {
+      "path": "tests/test_cnw_nk_input_limits.py",
+      "byte_count": 24858,
+      "sha256": "4e5be36e2d7b6731cc43b9968a2395be1b8a4a23606aa3f815d718d96f3498e9"
+    },
+    {
+      "path": "tests/test_cnw_nk_request_identity.py",
+      "byte_count": 7598,
+      "sha256": "4e37e65fbd6e2219b56358c8bd332b8ef868b8b9945511297e97808d0d3dbba9"
+    },
+    {
+      "path": "tests/test_cnw_operation_authorization.py",
+      "byte_count": 29511,
+      "sha256": "5f5ab2ca11228f06429e30f2aad03acd884d9567bd8813ffdc500a6e56702d47"
+    },
+    {
+      "path": "tests/test_cnw_runner.py",
+      "byte_count": 62354,
+      "sha256": "1b602aaef475872315e85451d6ca83bf5411c76aab9e1da295abb891c5486188"
+    },
+    {
+      "path": "tests/test_cnw_signed_auxiliary_consumers.py",
+      "byte_count": 9537,
+      "sha256": "47a4fa0476aca0aeaf6a49c60389de3dda47437c29719a51ea207eab4f5cb7da"
+    },
+    {
+      "path": "tests/test_cnw_signed_critics_accounting.py",
+      "byte_count": 11210,
+      "sha256": "e5a5eb7566ae697a3a49a7c12e29b3937f8ac91594e9c631d57aad1acbf07f60"
+    },
+    {
+      "path": "tests/test_cnw_signed_critics_consumers.py",
+      "byte_count": 9651,
+      "sha256": "b4e728997f0560316b5d947642aaaffce781ad77f08b973c459291574e99d1aa"
+    },
+    {
+      "path": "tests/test_cnw_signed_operations.py",
+      "byte_count": 32026,
+      "sha256": "a8fb3bb2fb00116cd04d8fc27c1785c85c7e3587b285b294e37f78e1fd3c0438"
+    },
+    {
+      "path": "tests/test_cnw_support_consumers.py",
+      "byte_count": 7074,
+      "sha256": "b0bb336eb852044aa656e49a621318895026bc71f1ac3b1e74f9f0987a77c833"
+    },
+    {
+      "path": "tests/test_critics_bridge_datahome.py",
+      "byte_count": 24681,
+      "sha256": "1fe56ae4727a9463c95368a6d7e2bff52cd40b885ef8a57d94eb0a5d8cda3b84"
+    },
+    {
+      "path": "tools/cnw_critics_adapter.py",
+      "byte_count": 22801,
+      "sha256": "02ec549128f8a811b937e9ba3e540f4504051fd431fbec89f9ed1f203a036477"
+    },
+    {
+      "path": "tools/cnw_live_authorization.py",
+      "byte_count": 23530,
+      "sha256": "4451cdd42c479b51c84cae1005aef597379e132eaff4db3e94cdeed3b2444f74"
+    },
+    {
+      "path": "tools/cnw_nk_adapter.py",
+      "byte_count": 6769,
+      "sha256": "9355ce5936fea662fa2995be303fea6a9a0f7970be63787a73a434e202745063"
+    },
+    {
+      "path": "tools/cnw_recovery.py",
+      "byte_count": 34434,
+      "sha256": "41ca90a7c57d75c45d6c4151d9d69daa1209bbade0665b9c861905011bf4913a"
+    },
+    {
+      "path": "tools/cnw_request_identity.py",
+      "byte_count": 18283,
+      "sha256": "667cbbf060de7b8a0971ef0cc13e1b7309cc32e7588dc337bcebb57a403f7490"
+    },
+    {
+      "path": "tools/cnw_runner.py",
+      "byte_count": 202756,
+      "sha256": "28b0d57d7136af74d989c444f2bf6dac7f44d86d44e40ec27906e95d576f338f"
+    },
+    {
+      "path": "tools/cnw_w10_nk_live.ps1",
+      "byte_count": 12419,
+      "sha256": "7eb8e49112c75b6986e55fb9bbd484f23b0e2ecdf20102d0139e71ce6796548f"
+    },
+    {
+      "path": "tools/nk-live-fetch.cjs",
+      "byte_count": 3131,
+      "sha256": "206653b347536399734dd8fa24342a6ed3ca6e5df16f55bd9420b0ba59447c0c"
+    },
+    {
+      "path": "tools/p2_06_critics_run.py",
+      "byte_count": 16460,
+      "sha256": "4a155894bbf387f1bd9df641d949b881074f33f2e81b2aa336edd6b825318706"
+    },
+    {
+      "path": "tools/p2_06_nk_live_probe.ps1",
+      "byte_count": 7857,
+      "sha256": "ebcbee4b6d3e19f4286c35c6a9ac64a6bbb3da5fbdfa4ae9b7a053ff3ba2e8f8"
+    },
+    {
+      "path": "tools/p2_nk_live_probe.ps1",
+      "byte_count": 6941,
+      "sha256": "74b3963a5953314ee46e0ee992f34699e87f5d901d11c814e877e0c695283b93"
+    }
+  ],
+  "path_count": 210,
+  "total_bytes": 82109786,
+  "sensitive_shape_flags": [],
+  "preserved_untracked_outside_selection": [
+    "evidence/ATOM05_CURRENT_FIX_RETEST_20261013.txt",
+    "evidence/ATOM05_PROMOTION_RECOVERY_RETEST2_20261013.txt",
+    "evidence/ATOM05_PROMOTION_RECOVERY_RETEST_20261013.txt",
+    "evidence/ATOM05_PUBLICATION_AUXILIARY_RETEST2_20261013.txt",
+    "evidence/ATOM05_PUBLICATION_AUXILIARY_RETEST3_20261013.txt",
+    "evidence/ATOM05_PUBLICATION_AUXILIARY_RETEST_20261013.txt",
+    "evidence/ATOM06_CONTROLLER_ACCEPT_84e022d_20261013.md",
+    "evidence/ATOM06_FREEZE_84e022d_20261013.json",
+    "evidence/atom07_auxiliary_repair_20261014/verification_harness_archive_20261014/current-verify_current_v2.py",
+    "evidence/atom07_auxiliary_repair_20261014/verification_harness_archive_20261014/current-verify_native_v2.py",
+    "evidence/atom07_auxiliary_repair_20261014/verification_harness_archive_20261014/manifest.json",
+    "evidence/atom07_auxiliary_repair_20261014/verification_harness_archive_20261014/sha-verified-prior-verify_current_v2.py",
+    "evidence/atom07_auxiliary_repair_20261014/verification_harness_archive_20261014/sha-verified-prior-verify_native_v2.py",
+    "tests/_isolated_workspace/provider-slots/slot-0.lock"
+  ],
+  "source_staged": false,
+  "tests_run_by_inventory": 0,
+  "limits": "The full-chain result is pending and its new evidence is not in this snapshot. Pattern scanning is only a flag check; fixture provenance and independent Controller privacy/scope review remain required. Nothing staged, committed or pushed."
+}

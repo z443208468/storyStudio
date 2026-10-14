@@ -1,0 +1,905 @@
+{
+  "status": "TERMINAL_CAPTURE_NOT_ACCEPTANCE",
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "actual_native_requests": [
+    {
+      "messages": [
+        {
+          "content": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\nHuman: \nI have to improve the storyline of my novel. \nI need experts to give your current storyline a critical evaluation so I can develop it.\nThese experts are someone who is relevant to the storyline I've presented. \nCreate three persona for these experts, including their occupation, age and Brief background \nAlso create a persona of a leader who checks the opinions of three experts and adopts the opinion of one.\n\nFollowing below persona format.\n============================================================================================================================================\n<persona>\nExpert 1.\n\tProfession: // ... Profession ... //\n    Feedback Focus: // ... Feedback Focus ... //\n    Feedback Focus Details: //... Expert 1's Feedback Focus Details... //\n<<persona_split>>\nExpert 2.\n    Profession: // ... Profession ... //\n    Feedback Focus: // ... Feedback Focus ... //\n    Feedback Focus Details: //... Expert 2's Feedback Focus Details... //\n<<persona_split>>\nExpert 3.\n    Profession: // ... Profession ... //\n    Feedback Focus: // ... Feedback Focus ... //\n    Feedback Focus Details: //... Expert 3's Feedback Focus Details... //\n<<persona_split>>\nLeader.\n    Profession: // ... Profession ... //\n    Feedback Focus: // ... Feedback Focus ... //\n    Feedback Focus Details: //... Expert 4's Feedback Focus Details... //\n<persona/>\n============================================================================================================================================\nMy storyline)\n============================================================================================================================================\n## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context.\n\nAI:",
+          "role": "user"
+        }
+      ],
+      "model": "deepseek-flash",
+      "logprobs": false,
+      "n": 1,
+      "stop": [
+        "<persona/>"
+      ],
+      "stream": false,
+      "temperature": 1.0,
+      "thinking": {
+        "type": "disabled"
+      },
+      "max_tokens": 2048
+    },
+    {
+      "messages": [
+        {
+          "content": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\nHuman: \n============================================================================================================================================\nRole:\nAs a Structure persona, \nyour task is to critically analyze and provide constructive feedback on a presented storyline. Your focus should be on assessing and enhancing the originality of a story's structure.\n============================================================================================================================================\nstoryline)\n## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context.\n====================================================================================================================================================================================\n\nLook at my storyline above and do two requests\n1. First Request - Originality Questions for Storyline: \nYou are seeking three questions that this storyline has \n\n\"\n(1) Non-linear timeline: Stories do not have to unfold in a straightforward, chronological manner. Experiment with flashbacks, time skips, and non-linear timelines to make the narrative more unexpected. \n\n(2) Shifting perspectives: Altering the narrative perspective throughout the story can provide fresh insights and create intrigue. This can include alternating between first-person and third-person views, or switching between different characters' perspectives. \n\n(3) Intertextuality: Include references to other works, stories within stories, or use allegory as a structural device. This can create layers of meanings and associations that enrich the narrative. \n\n(4) Metafiction: Break the fourth wall by having characters acknowledge they're part of a story or by discussing elements of storytelling within the plot. This can create a self-aware story that directly engages with readers. \n\". \n\nThese questions should encourage thinking about unique elements or perspectives that can be added to the story. Remember to align your suggestions and critiques with your \"professional background\" and \"expertise\", focusing on aspects that would realistically occur or be relevant in your field. \n\n2. Second Request - Evaluation and Selection of the Best Question: Out of the three questions provided, you want to identify the best one that improves the originality of the story. This evaluation will be based on three factors:\n    \n\t- Originality: Does altering the storyline in response to this question enhance its originality by integrating \"\n(1) Non-linear timeline: Stories do not have to unfold in a straightforward, chronological manner. Experiment with flashbacks, time skips, and non-linear timelines to make the narrative more unexpected. \n\n(2) Shifting perspectives: Altering the narrative perspective throughout the story can provide fresh insights and create intrigue. This can include alternating between first-person and third-person views, or switching between different characters' perspectives. \n\n(3) Intertextuality: Include references to other works, stories within stories, or use allegory as a structural device. This can create layers of meanings and associations that enrich the narrative. \n\n(4) Metafiction: Break the fourth wall by having characters acknowledge they're part of a story or by discussing elements of storytelling within the plot. This can create a self-aware story that directly engages with readers. \n\" into the narrative?\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\n\nThe selected question will then be evaluated using these criteria.\n\"Note: When formulating questions, ensure they are as detailed as possible, closely related to the storyline.\"\nAnswer Format)\n============================================================================================================================================\n<question>\n[First request]\n--------------------------\n1. ...\n2. ...\n3. ...\n--------------------------\n[Second request]\nQuestion : \n....\nWhy:\n<question/>\n\nAI:",
+          "role": "user"
+        }
+      ],
+      "model": "deepseek-flash",
+      "logprobs": false,
+      "n": 1,
+      "stop": [
+        "<question/>"
+      ],
+      "stream": false,
+      "temperature": 1.0,
+      "thinking": {
+        "type": "disabled"
+      },
+      "max_tokens": 2048
+    },
+    {
+      "messages": [
+        {
+          "content": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\nHuman: \n============================================================================================================================================\nRole:\nAs a \"Ending persona\",\nyour task is to critically analyze and provide constructive feedback on a presented storyline. Your focus should be on assessing and enhancing originality of the unusal ending.\n============================================================================================================================================\nStoryline)\n## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context.\n====================================================================================================================================================================================\n\nLook at my storyline above and do two requests\n1. First Request - Originality Questions for Storyline: \nYou are seeking three questions that this storyline has \n\n\"\n(1) Unexpected Conclusions: This aspect includes sentences that wind up in an unusual or surprising way, challenging the reader's expectations set by the initial part of the sentence. \n\n(2) Humorous or Witty Conclusions: These are endings that incorporate humor or clever plays on words lending an element of surprise and entertainment. This feature contributes substantially to the overall unique voice of the writer. \n\n(3) Provocative or Intriguing Statements: This characteristic includes endings that are provocative or mysterious, prompting the reader to think deeper, question, and engage more with the content. \n\". \n\nThese questions should encourage thinking about unique elements or perspectives that can be added to the story. Remember to align your suggestions and critiques with your \"professional background\" and \"expertise\", focusing on aspects that would realistically occur or be relevant in your field. \n\n2. Second Request - Evaluation and Selection of the Best Question: Out of the three questions provided, you want to identify the best one that improves the originality of the story. This evaluation will be based on three factors:\n    \n\t- Originality: Does altering the storyline in response to this question enhance its originality by integrating \"\n(1) Unexpected Conclusions: This aspect includes sentences that wind up in an unusual or surprising way, challenging the reader's expectations set by the initial part of the sentence. \n\n(2) Humorous or Witty Conclusions: These are endings that incorporate humor or clever plays on words lending an element of surprise and entertainment. This feature contributes substantially to the overall unique voice of the writer. \n\n(3) Provocative or Intriguing Statements: This characteristic includes endings that are provocative or mysterious, prompting the reader to think deeper, question, and engage more with the content. \n\" into the narrative?\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\n\nThe selected question will then be evaluated using these criteria.\n\"Note: When formulating questions, ensure they are as detailed as possible, closely related to the storyline.\"\nAnswer Format)\n============================================================================================================================================\n<question>\n[First request]\n--------------------------\n1. ...\n2. ...\n3. ...\n--------------------------\n[Second request]\nQuestion : \n....\nWhy:\n<question/>\n\nAI:",
+          "role": "user"
+        }
+      ],
+      "model": "deepseek-flash",
+      "logprobs": false,
+      "n": 1,
+      "stop": [
+        "<question/>"
+      ],
+      "stream": false,
+      "temperature": 1.0,
+      "thinking": {
+        "type": "disabled"
+      },
+      "max_tokens": 2048
+    },
+    {
+      "messages": [
+        {
+          "content": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\nHuman: \n============================================================================================================================================\nRole: \nAs a Original persona, \nyour task is to critically analyze and provide constructive feedback on a presented storyline. Your focus should be on assessing and enhancing the originality of the plot, setting, and themes.\n============================================================================================================================================\nstoryline)\n## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context.\n====================================================================================================================================================================================\n\nLook at my storyline above and do two requests\n1. First Request - Originality Questions for Storyline: \nYou are seeking three questions that this storyline has \n\n\"\n(1) Unconventional Themes: This category includes themes that are not typically encountered in everyday discourse. This could include themes from different cultures, underground societies, or niche hobbies and interests.\n   \n(2) Unique Plot: Succinct plots that deviate from standard, commonly seen narratives score higher in this category. This could involve unexpected plot twists, unconventional story progression, or atypical character development.\n\n(3) Diverse Settings: Diverse settings refer to the use of unfamiliar or striking locations and times - past, future, or entirely imaginative locations. These could range from sci-fi cityscapes, historical periods, to unique micro-settings such as a single room or a mystical forest.\n\n(4) Authenticity: This feature measures the realness of the theme/plot/setting for the reader. The use of vivid descriptions, consistent details, and emotionally engaging elements can contribute to a more authentic feel. \n\". \n\nThese questions should encourage thinking about unique elements or perspectives that can be added to the story. Remember to align your suggestions and critiques with your \"professional background\" and \"expertise\", focusing on aspects that would realistically occur or be relevant in your field. \n\n2. Second Request - Evaluation and Selection of the Best Question: Out of the three questions provided, you want to identify the best one that improves the originality of the story. This evaluation will be based on three factors:\n    \n\t- Originality: Does altering the storyline in response to this question enhance its originality by integrating \"\n(1) Unconventional Themes: This category includes themes that are not typically encountered in everyday discourse. This could include themes from different cultures, underground societies, or niche hobbies and interests.\n   \n(2) Unique Plot: Succinct plots that deviate from standard, commonly seen narratives score higher in this category. This could involve unexpected plot twists, unconventional story progression, or atypical character development.\n\n(3) Diverse Settings: Diverse settings refer to the use of unfamiliar or striking locations and times - past, future, or entirely imaginative locations. These could range from sci-fi cityscapes, historical periods, to unique micro-settings such as a single room or a mystical forest.\n\n(4) Authenticity: This feature measures the realness of the theme/plot/setting for the reader. The use of vivid descriptions, consistent details, and emotionally engaging elements can contribute to a more authentic feel. \n\" into the narrative?\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\n\nThe selected question will then be evaluated using these criteria.\n\"Note: When formulating questions, ensure they are as detailed as possible, closely related to the storyline.\"\nAnswer Format)\n============================================================================================================================================\n<question>\n[First request]\n--------------------------\n1. ...\n2. ...\n3. ...\n--------------------------\n[Second request]\nQuestion : \n....\nWhy:\n<question/>\n\nAI:",
+          "role": "user"
+        }
+      ],
+      "model": "deepseek-flash",
+      "logprobs": false,
+      "n": 1,
+      "stop": [
+        "<question/>"
+      ],
+      "stream": false,
+      "temperature": 1.0,
+      "thinking": {
+        "type": "disabled"
+      },
+      "max_tokens": 2048
+    },
+    {
+      "messages": [
+        {
+          "content": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\nHuman: \n============================================================================================================================================\nRole:\nI would like you to act as \"Leader persona\" to evaluate the \"originality\" of a story. \n============================================================================================================================================\n\n====================================================================================================================================================================================\n\n[Information]\n--------------------------\n<3 Questions>\n    1) \n    Is the repair visible?\n    2) \n    Is the offer earned?\n    3)\n    Does Mira choose?\n<Critiqued Storylines>\n    ## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context.\n--------------------------\n[Request]\nMy request is \"\"Of the '3 questions' I posed , which are the best question to improve the Creativity of the 'Critiqued Storylines'? \nThe story line should be original and creative, but it need to keep a consistent story.\nPlease score based on the evaluation factors below.\"\"\n\n    - Originality: Does altering the storyline in response to this question enhance its originality by integrating \"original plot/setting/themes,\" \"unusual story structure,\" and \"unusual ending\" into the narrative?\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\n    \nChoose one best question and ask answer use below Answer Format.\nKey Point: \"Exclude questions that are not relevant to the genre of the original story. For example, exclude questions that change from a romance storyline to a fantasy novel story.\"\nAnswer Format)\n============================================================================================================================================\n<answer>\nQuestion : // ... one question ... //\nOriginality: // ... Originality Score ... // , Coherence: // ... Coherent story ... //, Interesting: // ... Interesting story ... //\nWhy: // ... Why you choose this question? ... //\n<answer/>\n============================================================================================================================================\nexample)\n<answer>\nQuestion : \nWhat if Gabriel finds out that his apartment is haunted?\nWhy:\nThis question is quite eccentric because it is not a common occurrence for an apartment to be haunted. It is also odd because it is not something that is typically seen in stories about apartment living. The question is novel because it is a new take on the traditional story of a young man moving out of his parents' house and into his own apartment. Finally, the question is innovative because it introduces the element of ghosts into the story, which is something that is not typically seen in stories about apartment living.\n<answer/>\n\nAI:",
+          "role": "user"
+        }
+      ],
+      "model": "deepseek-flash",
+      "logprobs": false,
+      "n": 1,
+      "stop": [
+        "<answer/>"
+      ],
+      "stream": false,
+      "temperature": 1.0,
+      "thinking": {
+        "type": "disabled"
+      },
+      "max_tokens": 2048
+    }
+  ],
+  "actual_refusals": [
+    {
+      "variant": "cache_hook_action",
+      "code": "CRITICS_RECEIPT_INVALID",
+      "message": "CRITICS_RECEIPT_INVALID: native receipt action mismatch"
+    },
+    {
+      "variant": "cache_input_sha",
+      "code": "CRITICS_INPUT_CHANGED",
+      "message": "CRITICS_INPUT_CHANGED: critics_plot"
+    },
+    {
+      "variant": "cache_input_path",
+      "code": "CRITICS_INPUT_CHANGED",
+      "message": "CRITICS_INPUT_CHANGED: critics_plot"
+    },
+    {
+      "variant": "end_raw",
+      "code": "CRITICS_EVIDENCE_CHANGED",
+      "message": "CRITICS_EVIDENCE_CHANGED: C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\\provider-calls.json"
+    },
+    {
+      "variant": "end_receipt",
+      "code": "CRITICS_EVIDENCE_CHANGED",
+      "message": "CRITICS_EVIDENCE_CHANGED: C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\\run_receipt.json"
+    },
+    {
+      "variant": "end_output",
+      "code": "CRITICS_EVIDENCE_CHANGED",
+      "message": "CRITICS_EVIDENCE_CHANGED: C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\\critique.json"
+    },
+    {
+      "variant": "end_input",
+      "code": "CRITICS_EVIDENCE_CHANGED",
+      "message": "CRITICS_EVIDENCE_CHANGED: C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN\\artifacts\\support\\critics-input-bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md"
+    },
+    {
+      "variant": "end_run_binding",
+      "code": "RUN_BINDINGS_MISMATCH",
+      "message": "RUN_BINDINGS_MISMATCH: Run, project instance and exact contract must agree"
+    },
+    {
+      "variant": "end_registration",
+      "code": "CRITICS_COST_CONTEXT_MISMATCH",
+      "message": "CRITICS_COST_CONTEXT_MISMATCH: SIGNED-ADAPT-RUN"
+    },
+    {
+      "variant": "current",
+      "code": "MOCK_RECEIPT_CANNOT_PROVE_LIVE",
+      "message": "MOCK_RECEIPT_CANNOT_PROVE_LIVE: critics_plot"
+    },
+    {
+      "variant": "attempt",
+      "code": "MOCK_RECEIPT_CANNOT_PROVE_LIVE",
+      "message": "MOCK_RECEIPT_CANNOT_PROVE_LIVE: critics_plot"
+    },
+    {
+      "variant": "pending",
+      "code": "MOCK_RECEIPT_CANNOT_PROVE_LIVE",
+      "message": "MOCK_RECEIPT_CANNOT_PROVE_LIVE: critics_plot"
+    },
+    {
+      "variant": "relabel",
+      "code": "MOCK_RECEIPT_CANNOT_PROVE_LIVE",
+      "message": "MOCK_RECEIPT_CANNOT_PROVE_LIVE: SIGNED-ADAPT-RUN-critics-plan-critique-1b853585"
+    }
+  ],
+  "actual_run_state": {
+    "schema_version": "cnw_run_state_v1",
+    "run_id": "SIGNED-ADAPT-RUN",
+    "work_id": "ADAPT-HINGE-01",
+    "unit_kind": "scene",
+    "project_id": "TIDELINE",
+    "contract_path": "contracts/ADAPT-HINGE-01.json",
+    "contract_sha256": "4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097",
+    "source_identity": {
+      "source_origin": "IMPORTED_PROJECT",
+      "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+      "source_id": "61f61b74038ace77",
+      "source_revision_id": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "source_file_sha256": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "manifest_file": "_INBOX/revisions/manifests/7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7.json",
+      "source_manifest_sha256": "7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7",
+      "manifest_revision_sha256": "7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7",
+      "source_index_file": "_INBOX/revisions/indexes/6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902.json",
+      "source_index_sha256": "6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902"
+    },
+    "fixture_only": false,
+    "created_at": "2026-10-13T18:30:26Z",
+    "updated_at": "2026-10-13T18:34:39Z",
+    "status": "RUNNING",
+    "mode": "live",
+    "workflow_template_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+    "cnw_method_source": {
+      "commit": "97ad71fe5e5e76a82275c6c63d4add06fb60ab6e",
+      "workflow_blob": "146ea01a484cc0578cf290478b3941599ad7fb15"
+    },
+    "cnw_stages": [
+      "plot",
+      "scene_cards",
+      "writing_brief",
+      "prose",
+      "lint_layer1",
+      "lint_layer2",
+      "multi_lens_review",
+      "adversarial_verify",
+      "completeness_critic",
+      "refine",
+      "re_review"
+    ],
+    "support_hooks": {
+      "critics_plot": {
+        "status": "SUCCEEDED",
+        "mode": "MOCK_ONLY",
+        "simulation_status": "SIMULATED",
+        "fixture_only": true,
+        "action": "plan-critique",
+        "run_name": "SIGNED-ADAPT-RUN-critics-plan-critique-1b853585",
+        "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585",
+        "input_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+        "result": {
+          "structure": "Question: Is the repair visible?\nWhy: mock.",
+          "ending": "Question: Is the offer earned?\nWhy: mock.",
+          "original": "Question: Does Mira choose?\nWhy: mock.",
+          "inspector": "Is the offer earned?"
+        },
+        "provider_request_ids": [
+          "SIMULATED-NATIVE-0",
+          "SIMULATED-NATIVE-1",
+          "SIMULATED-NATIVE-2",
+          "SIMULATED-NATIVE-3",
+          "SIMULATED-NATIVE-4"
+        ],
+        "evidence_files": [
+          {
+            "path": "external:C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-t08sumh4/ExplicitTestDataHome/projects/9deef572-fea0-40ec-8c68-6f79d6cf4f9b/runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/critique.json",
+            "sha256": "e00e60e2b0de39bb9307d3e472cf51b10ff379eb4f8eee0723b4a6eaabde7433"
+          },
+          {
+            "path": "external:C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-t08sumh4/ExplicitTestDataHome/projects/9deef572-fea0-40ec-8c68-6f79d6cf4f9b/runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/run_receipt.json",
+            "sha256": "e37c8ff536dce4ce64311df01df6307cdc2f1a1b35f7c83a1dccfa1765918db2"
+          },
+          {
+            "path": "external:C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-t08sumh4/ExplicitTestDataHome/projects/9deef572-fea0-40ec-8c68-6f79d6cf4f9b/runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/provider-calls.json",
+            "sha256": "583c5f145c9c30b07e2bd0d1306335f505d4915cec7d4eb4bf57a0b197f42c95"
+          }
+        ],
+        "input_artifact": {
+          "path": "artifacts/support/critics-input-bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+          "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd"
+        }
+      }
+    },
+    "next_stage": "scene_cards",
+    "provider_requests": [
+      {
+        "stage": "plot",
+        "role_id": "plot_agent",
+        "request_id": "cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb",
+        "request_fingerprint": "29699448cb173a160b713b7cd5f25f12dc3a3493a099cbe47c257e56227f556d",
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb",
+        "model": "deepseek-flash",
+        "status": "SUCCEEDED",
+        "http_status": 200,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 10,
+          "completion_tokens": 10
+        },
+        "input_sha256": "66211de49f5e1d2f08d6da91d2a6bd875b23e4d3028e00665f319a5ff60efd43",
+        "request_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb.request.json",
+        "request_sha256": "1ebe5dd231d542b118a4b7b4ab9fe7a6312b8397268978d7fefc1c2176292c55",
+        "output_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+        "raw_response_path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb.json",
+        "raw_response_sha256": "6ea26e74233747f59b1e3afc5bb9c595f451898146e7e9816bc292f22d764850",
+        "cost_cny": 3e-05,
+        "ledger_settlement": {
+          "status": "SETTLED",
+          "request_id": "cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb",
+          "estimated_request_cny": "0.000030",
+          "campaign_committed_cny": "0.000030",
+          "limit_cny": null,
+          "cost_context": {
+            "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+            "project_id": "TIDELINE",
+            "run_id": "SIGNED-ADAPT-RUN",
+            "stage": "plot",
+            "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+          }
+        },
+        "mode": "MOCK_ONLY",
+        "fixture_only": true,
+        "simulation_status": "SIMULATED"
+      }
+    ],
+    "stages": {
+      "plot": {
+        "status": "STAGE_MATERIALIZED",
+        "dependencies": [],
+        "artifact": {
+          "path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+          "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd"
+        },
+        "meta": {
+          "path": "artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json",
+          "sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6"
+        },
+        "role_ids": [
+          "plot_agent"
+        ],
+        "provider_request_ids": [
+          "cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb"
+        ],
+        "execution_input_identity": {
+          "version": 1,
+          "stage": "plot",
+          "contract_sha256": "4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097",
+          "input_sha256": "53d800e4d2a4142437c63918763af556a0ad9c382c8ecf6e68768cf779d573b0",
+          "input_hashes": {
+            "messages": "66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1"
+          },
+          "message_sha256": "66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1",
+          "builder_sha256": "9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "5c0669fbc00e9c33ca76576b12e1f227e5ec3bfade2c54c059f097182aa34b5a",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "e50486b35f68bbc60b43a22af1cc08e2286a7b57fc8863a97de0946403ad0ac2"
+        },
+        "execution_identity": {
+          "version": 1,
+          "stage": "plot",
+          "contract_sha256": "4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097",
+          "input_sha256": "53d800e4d2a4142437c63918763af556a0ad9c382c8ecf6e68768cf779d573b0",
+          "input_hashes": {
+            "messages": "66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1"
+          },
+          "message_sha256": "66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1",
+          "builder_sha256": "9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0",
+          "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+          "model": "deepseek-flash",
+          "api_url": "https://api.deepseek.com/v1/chat/completions",
+          "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+          "authorization_boundary_sha256": "5c0669fbc00e9c33ca76576b12e1f227e5ec3bfade2c54c059f097182aa34b5a",
+          "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+          "sha256": "e50486b35f68bbc60b43a22af1cc08e2286a7b57fc8863a97de0946403ad0ac2"
+        }
+      },
+      "scene_cards": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot"
+        ],
+        "artifact": null
+      },
+      "writing_brief": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards"
+        ],
+        "artifact": null
+      },
+      "prose": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief"
+        ],
+        "artifact": null
+      },
+      "lint_layer1": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose"
+        ],
+        "artifact": null
+      },
+      "lint_layer2": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1"
+        ],
+        "artifact": null
+      },
+      "multi_lens_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2"
+        ],
+        "artifact": null
+      },
+      "adversarial_verify": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review"
+        ],
+        "artifact": null
+      },
+      "completeness_critic": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify"
+        ],
+        "artifact": null
+      },
+      "refine": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic"
+        ],
+        "artifact": null
+      },
+      "re_review": {
+        "status": "NOT_RUN",
+        "dependencies": [
+          "plot",
+          "scene_cards",
+          "writing_brief",
+          "prose",
+          "lint_layer1",
+          "lint_layer2",
+          "multi_lens_review",
+          "adversarial_verify",
+          "completeness_critic",
+          "refine"
+        ],
+        "artifact": null
+      }
+    },
+    "max_in_flight": 5,
+    "literary_source_hashes": {
+      "project:94_runtime/current_state.md": "8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73",
+      "project:07_draft/manuscript_index.md": "6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73",
+      "project:04_chapter_design/arc_01.md": "666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea",
+      "project:04_chapter_design/arc_01_episode_details.md": "73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5",
+      "project:92_style_engine/character_voice_samples.md": "c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2",
+      "project:90_canon/character_bible.md": "dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29",
+      "project:selected_source_excerpt": "61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd",
+      "project:selected_source_identity": "4f9b3e134f552725980c10a557cdd161a2b8ae6f1ef141e8099ad901ea7d60f3",
+      "project:04_chapter_design/arc_index.md": "fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84",
+      "preparation:identity": "1052bdae06f646877b938ee59ceaeb93dac22516140cf0a464c956426ae592df"
+    },
+    "literary_source_freeze_version": "literary_source_freeze_v2",
+    "provider_config_sha256": "3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519",
+    "cost_guard_runner_sha256": null,
+    "state_migrations": [
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases",
+      "P3.1-stage-aliases"
+    ],
+    "production_preparation": {
+      "path": "artifacts/production_preparation.json",
+      "sha256": "9738c83fb7bdff8e9f79882fa9120896e84d9dcc7831e7c08016debf3dc2a405"
+    },
+    "support_hook_attempts": [
+      {
+        "hook": "critics_plot",
+        "evidence": {
+          "status": "NATIVE_RESULT_PENDING",
+          "action": "plan-critique",
+          "run_name": "SIGNED-ADAPT-RUN-critics-plan-critique-1b853585",
+          "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-t08sumh4\\ExplicitTestDataHome\\projects\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585",
+          "returncode": 0,
+          "input_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+          "input_artifact": {
+            "path": "artifacts/support/critics-input-bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+            "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd"
+          }
+        },
+        "superseded_at": "2026-10-13T19:08:06Z"
+      }
+    ]
+  },
+  "actual_files": {
+    "runs/SIGNED-ADAPT-RUN/run.lock": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    },
+    "runs/SIGNED-ADAPT-RUN/run_state.json": {
+      "sha256": "d7248a0be55fa0b10ed2ddaa31bf0582b886f2c625c60978c9e64e64853653d2",
+      "utf8": "{\r\n  \"schema_version\": \"cnw_run_state_v1\",\r\n  \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n  \"work_id\": \"ADAPT-HINGE-01\",\r\n  \"unit_kind\": \"scene\",\r\n  \"project_id\": \"TIDELINE\",\r\n  \"contract_path\": \"contracts/ADAPT-HINGE-01.json\",\r\n  \"contract_sha256\": \"4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097\",\r\n  \"source_identity\": {\r\n    \"source_origin\": \"IMPORTED_PROJECT\",\r\n    \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n    \"source_id\": \"61f61b74038ace77\",\r\n    \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"source_file_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"manifest_file\": \"_INBOX/revisions/manifests/7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7.json\",\r\n    \"source_manifest_sha256\": \"7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7\",\r\n    \"manifest_revision_sha256\": \"7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7\",\r\n    \"source_index_file\": \"_INBOX/revisions/indexes/6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902.json\",\r\n    \"source_index_sha256\": \"6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902\"\r\n  },\r\n  \"fixture_only\": false,\r\n  \"created_at\": \"2026-10-13T18:30:26Z\",\r\n  \"updated_at\": \"2026-10-13T18:34:39Z\",\r\n  \"status\": \"RUNNING\",\r\n  \"mode\": \"live\",\r\n  \"workflow_template_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n  \"cnw_method_source\": {\r\n    \"commit\": \"97ad71fe5e5e76a82275c6c63d4add06fb60ab6e\",\r\n    \"workflow_blob\": \"146ea01a484cc0578cf290478b3941599ad7fb15\"\r\n  },\r\n  \"cnw_stages\": [\r\n    \"plot\",\r\n    \"scene_cards\",\r\n    \"writing_brief\",\r\n    \"prose\",\r\n    \"lint_layer1\",\r\n    \"lint_layer2\",\r\n    \"multi_lens_review\",\r\n    \"adversarial_verify\",\r\n    \"completeness_critic\",\r\n    \"refine\",\r\n    \"re_review\"\r\n  ],\r\n  \"support_hooks\": {\r\n    \"critics_plot\": {\r\n      \"status\": \"SUCCEEDED\",\r\n      \"mode\": \"MOCK_ONLY\",\r\n      \"simulation_status\": \"SIMULATED\",\r\n      \"fixture_only\": true,\r\n      \"action\": \"plan-critique\",\r\n      \"run_name\": \"SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\",\r\n      \"run_dir\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-t08sumh4\\\\ExplicitTestDataHome\\\\projects\\\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\\\runs\\\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\",\r\n      \"input_sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\",\r\n      \"result\": {\r\n        \"structure\": \"Question: Is the repair visible?\\nWhy: mock.\",\r\n        \"ending\": \"Question: Is the offer earned?\\nWhy: mock.\",\r\n        \"original\": \"Question: Does Mira choose?\\nWhy: mock.\",\r\n        \"inspector\": \"Is the offer earned?\"\r\n      },\r\n      \"provider_request_ids\": [\r\n        \"SIMULATED-NATIVE-0\",\r\n        \"SIMULATED-NATIVE-1\",\r\n        \"SIMULATED-NATIVE-2\",\r\n        \"SIMULATED-NATIVE-3\",\r\n        \"SIMULATED-NATIVE-4\"\r\n      ],\r\n      \"evidence_files\": [\r\n        {\r\n          \"path\": \"external:C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-t08sumh4/ExplicitTestDataHome/projects/9deef572-fea0-40ec-8c68-6f79d6cf4f9b/runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/critique.json\",\r\n          \"sha256\": \"e00e60e2b0de39bb9307d3e472cf51b10ff379eb4f8eee0723b4a6eaabde7433\"\r\n        },\r\n        {\r\n          \"path\": \"external:C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-t08sumh4/ExplicitTestDataHome/projects/9deef572-fea0-40ec-8c68-6f79d6cf4f9b/runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/run_receipt.json\",\r\n          \"sha256\": \"e37c8ff536dce4ce64311df01df6307cdc2f1a1b35f7c83a1dccfa1765918db2\"\r\n        },\r\n        {\r\n          \"path\": \"external:C:/Users/Administrator/AppData/Local/Temp/storystudio-early-cnw-e2e-t08sumh4/ExplicitTestDataHome/projects/9deef572-fea0-40ec-8c68-6f79d6cf4f9b/runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/provider-calls.json\",\r\n          \"sha256\": \"583c5f145c9c30b07e2bd0d1306335f505d4915cec7d4eb4bf57a0b197f42c95\"\r\n        }\r\n      ],\r\n      \"input_artifact\": {\r\n        \"path\": \"artifacts/support/critics-input-bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md\",\r\n        \"sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\"\r\n      }\r\n    }\r\n  },\r\n  \"next_stage\": \"scene_cards\",\r\n  \"provider_requests\": [\r\n    {\r\n      \"stage\": \"plot\",\r\n      \"role_id\": \"plot_agent\",\r\n      \"request_id\": \"cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb\",\r\n      \"request_fingerprint\": \"29699448cb173a160b713b7cd5f25f12dc3a3493a099cbe47c257e56227f556d\",\r\n      \"provider_request_id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"status\": \"SUCCEEDED\",\r\n      \"http_status\": 200,\r\n      \"finish_reason\": \"stop\",\r\n      \"usage\": {\r\n        \"prompt_tokens\": 10,\r\n        \"completion_tokens\": 10\r\n      },\r\n      \"input_sha256\": \"66211de49f5e1d2f08d6da91d2a6bd875b23e4d3028e00665f319a5ff60efd43\",\r\n      \"request_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb.request.json\",\r\n      \"request_sha256\": \"1ebe5dd231d542b118a4b7b4ab9fe7a6312b8397268978d7fefc1c2176292c55\",\r\n      \"output_sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\",\r\n      \"raw_response_path\": \"artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb.json\",\r\n      \"raw_response_sha256\": \"6ea26e74233747f59b1e3afc5bb9c595f451898146e7e9816bc292f22d764850\",\r\n      \"cost_cny\": 3e-05,\r\n      \"ledger_settlement\": {\r\n        \"status\": \"SETTLED\",\r\n        \"request_id\": \"cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb\",\r\n        \"estimated_request_cny\": \"0.000030\",\r\n        \"campaign_committed_cny\": \"0.000030\",\r\n        \"limit_cny\": null,\r\n        \"cost_context\": {\r\n          \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n          \"project_id\": \"TIDELINE\",\r\n          \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n          \"stage\": \"plot\",\r\n          \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n        }\r\n      },\r\n      \"mode\": \"MOCK_ONLY\",\r\n      \"fixture_only\": true,\r\n      \"simulation_status\": \"SIMULATED\"\r\n    }\r\n  ],\r\n  \"stages\": {\r\n    \"plot\": {\r\n      \"status\": \"STAGE_MATERIALIZED\",\r\n      \"dependencies\": [],\r\n      \"artifact\": {\r\n        \"path\": \"artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md\",\r\n        \"sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\"\r\n      },\r\n      \"meta\": {\r\n        \"path\": \"artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json\",\r\n        \"sha256\": \"d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6\"\r\n      },\r\n      \"role_ids\": [\r\n        \"plot_agent\"\r\n      ],\r\n      \"provider_request_ids\": [\r\n        \"cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb\"\r\n      ],\r\n      \"execution_input_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"plot\",\r\n        \"contract_sha256\": \"4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097\",\r\n        \"input_sha256\": \"53d800e4d2a4142437c63918763af556a0ad9c382c8ecf6e68768cf779d573b0\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1\"\r\n        },\r\n        \"message_sha256\": \"66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1\",\r\n        \"builder_sha256\": \"9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"5c0669fbc00e9c33ca76576b12e1f227e5ec3bfade2c54c059f097182aa34b5a\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"e50486b35f68bbc60b43a22af1cc08e2286a7b57fc8863a97de0946403ad0ac2\"\r\n      },\r\n      \"execution_identity\": {\r\n        \"version\": 1,\r\n        \"stage\": \"plot\",\r\n        \"contract_sha256\": \"4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097\",\r\n        \"input_sha256\": \"53d800e4d2a4142437c63918763af556a0ad9c382c8ecf6e68768cf779d573b0\",\r\n        \"input_hashes\": {\r\n          \"messages\": \"66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1\"\r\n        },\r\n        \"message_sha256\": \"66f08b78fca6a787ef1939c97c980103f543f6d496ea403727372db3b38f45f1\",\r\n        \"builder_sha256\": \"9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0\",\r\n        \"workflow_sha256\": \"613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f\",\r\n        \"model\": \"deepseek-flash\",\r\n        \"api_url\": \"https://api.deepseek.com/v1/chat/completions\",\r\n        \"transport_sha256\": \"de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4\",\r\n        \"authorization_boundary_sha256\": \"5c0669fbc00e9c33ca76576b12e1f227e5ec3bfade2c54c059f097182aa34b5a\",\r\n        \"cost_boundary_sha256\": \"c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d\",\r\n        \"sha256\": \"e50486b35f68bbc60b43a22af1cc08e2286a7b57fc8863a97de0946403ad0ac2\"\r\n      }\r\n    },\r\n    \"scene_cards\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"writing_brief\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"prose\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"lint_layer1\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"lint_layer2\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"multi_lens_review\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"adversarial_verify\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"completeness_critic\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"refine\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\",\r\n        \"completeness_critic\"\r\n      ],\r\n      \"artifact\": null\r\n    },\r\n    \"re_review\": {\r\n      \"status\": \"NOT_RUN\",\r\n      \"dependencies\": [\r\n        \"plot\",\r\n        \"scene_cards\",\r\n        \"writing_brief\",\r\n        \"prose\",\r\n        \"lint_layer1\",\r\n        \"lint_layer2\",\r\n        \"multi_lens_review\",\r\n        \"adversarial_verify\",\r\n        \"completeness_critic\",\r\n        \"refine\"\r\n      ],\r\n      \"artifact\": null\r\n    }\r\n  },\r\n  \"max_in_flight\": 5,\r\n  \"literary_source_hashes\": {\r\n    \"project:94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\",\r\n    \"project:07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\",\r\n    \"project:04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\",\r\n    \"project:04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\",\r\n    \"project:92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\",\r\n    \"project:90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\",\r\n    \"project:selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"project:selected_source_identity\": \"4f9b3e134f552725980c10a557cdd161a2b8ae6f1ef141e8099ad901ea7d60f3\",\r\n    \"project:04_chapter_design/arc_index.md\": \"fb853907ae4a76a3e404631dc03ffb586232823550321c86d6a9c32289a10a84\",\r\n    \"preparation:identity\": \"1052bdae06f646877b938ee59ceaeb93dac22516140cf0a464c956426ae592df\"\r\n  },\r\n  \"literary_source_freeze_version\": \"literary_source_freeze_v2\",\r\n  \"provider_config_sha256\": \"3eddb3945e14466c099be6be897fdd088c0afc83d62baeae229bd17736565519\",\r\n  \"cost_guard_runner_sha256\": null,\r\n  \"state_migrations\": [\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\",\r\n    \"P3.1-stage-aliases\"\r\n  ],\r\n  \"production_preparation\": {\r\n    \"path\": \"artifacts/production_preparation.json\",\r\n    \"sha256\": \"9738c83fb7bdff8e9f79882fa9120896e84d9dcc7831e7c08016debf3dc2a405\"\r\n  },\r\n  \"support_hook_attempts\": [\r\n    {\r\n      \"hook\": \"critics_plot\",\r\n      \"evidence\": {\r\n        \"status\": \"NATIVE_RESULT_PENDING\",\r\n        \"action\": \"plan-critique\",\r\n        \"run_name\": \"SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\",\r\n        \"run_dir\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-t08sumh4\\\\ExplicitTestDataHome\\\\projects\\\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\\\runs\\\\SIGNED-ADAPT-RUN-critics-plan-critique-1b853585\",\r\n        \"returncode\": 0,\r\n        \"input_sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\",\r\n        \"input_artifact\": {\r\n          \"path\": \"artifacts/support/critics-input-bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md\",\r\n          \"sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\"\r\n        }\r\n      },\r\n      \"superseded_at\": \"2026-10-13T19:08:06Z\"\r\n    }\r\n  ]\r\n}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/contract.json": {
+      "sha256": "4ff5944116ca4aa9715bad82461912551849b98b11b33641d3f7de1e2a3de097",
+      "utf8": "{\"schema_version\": \"cnw_work_unit_v2\", \"project_id\": \"TIDELINE\", \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\", \"status\": \"PROPOSED_FOR_HUMAN_PREFLIGHT\", \"work_intent\": \"ADAPT_SOURCE\", \"source\": {\"source_origin\": \"IMPORTED_PROJECT\", \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\", \"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"source_file_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"manifest_file\": \"_INBOX/revisions/manifests/7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7.json\", \"source_manifest_sha256\": \"7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7\", \"manifest_revision_sha256\": \"7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7\", \"source_index_file\": \"_INBOX/revisions/indexes/6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902.json\", \"source_index_sha256\": \"6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902\"}, \"unit\": {\"id\": \"ADAPT-HINGE-01\", \"kind\": \"scene\", \"planning_mode\": \"author_plot\", \"language\": \"en-US\", \"language_locale\": \"en-US\", \"length_metric\": \"unicode_visible_code_points\", \"length_semantics\": \"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\", \"pov\": \"Mira\", \"target_visible_chars\": 150, \"min_visible_chars\": 100, \"max_visible_chars\": 250, \"length_policy\": \"ADVISORY\", \"policy_sha256\": \"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\"}, \"integrations\": {\"nk\": \"DISABLED\", \"critics\": \"ENABLED\"}, \"story\": {\"source_file\": \"_INBOX/originals/61f61b74038ace77_source-B.md\", \"source_selection\": {\"source_id\": \"61f61b74038ace77\", \"source_revision_id\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\", \"start_line\": 1, \"end_line\": 1, \"hash_semantics\": \"raw_line_span_sha256\", \"selected_sha256\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\"}, \"arc_ref\": \"04_chapter_design/arc_01.md\", \"arc_sha256\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\", \"chapter_context\": \"A small repair gives two neighbors a reason to speak plainly.\", \"role_in_story\": \"Adapt only the selected source moment into one playable scene.\", \"reader_reward\": \"See a practical offer change the distance between neighbors.\", \"entry_state\": \"The hinge is loose and Mira has not asked for help.\", \"exit_state\": \"The hinge works and Mira has made a specific next request.\", \"required_beats\": [{\"beat_id\": \"B01\", \"goal\": \"Mira asks for help and responds to the offer.\"}], \"characters_in_scene\": [\"Mira\", \"Keeper\"], \"character_knowledge_boundary_ref\": \"90_canon/canon.md\", \"forbidden_future_revelations\": [\"Do not invent a family relationship or future secret.\"], \"voice_sample_refs\": [\"Mira\", \"Keeper\"]}, \"review\": {\"workflow_template_git_blob\": \"146ea01a484cc0578cf290478b3941599ad7fb15\", \"require_cnw_11_stages\": true, \"require_3_verifiers\": true, \"require_completeness_critic\": true, \"require_re_review\": true, \"fifth_lens\": {\"id\": \"harbor-reader-promise\", \"responsibility\": \"Check whether this project makes a practical offer feel emotionally earned.\", \"responsibility_sha256\": \"749d35ddc0964dddc81c528917317fce3106ec6a481a139f8bc104883cb90748\"}, \"cnw_reference_manifest_sha256\": \"e9b989c52c66ab9be8c73f09e84bc5bd7d2ecc92f9f1cbfc61ba300dc6cd3983\"}}"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/production_preparation.json": {
+      "sha256": "9738c83fb7bdff8e9f79882fa9120896e84d9dcc7831e7c08016debf3dc2a405",
+      "utf8": "{\r\n  \"documents\": {\r\n    \"94_runtime/current_state.md\": \"Mira and the keeper are neighbors; their relationship is not familial.\",\r\n    \"07_draft/manuscript_index.md\": \"No prior story chapter has been accepted.\",\r\n    \"04_chapter_design/arc_01.md\": \"Mira chooses whether to ask her neighbor for help with the harbor door.\",\r\n    \"04_chapter_design/arc_01_episode_details.md\": \"Keep the action to one hinge repair and its immediate social consequence.\",\r\n    \"92_style_engine/character_voice_samples.md\": \"## Mira\\n'I would rather ask than guess.'\\n\\n## Keeper\\n'Try this screwdriver.'\\n\",\r\n    \"90_canon/character_bible.md\": \"Mira asks direct questions. The keeper answers briefly and offers practical help.\",\r\n    \"selected_source_excerpt\": \"Mira asks the keeper to help with a loose hinge.\\r\\n\",\r\n    \"selected_source_identity\": \"{\\\"canonical_selected_value_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"manifest_revision_sha256\\\": \\\"7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_index_sha256\\\": \\\"6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"wire_excerpt_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\"}\"\r\n  },\r\n  \"source_hashes\": {\r\n    \"94_runtime/current_state.md\": \"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\",\r\n    \"07_draft/manuscript_index.md\": \"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\",\r\n    \"04_chapter_design/arc_01.md\": \"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\",\r\n    \"04_chapter_design/arc_01_episode_details.md\": \"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\",\r\n    \"92_style_engine/character_voice_samples.md\": \"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\",\r\n    \"90_canon/character_bible.md\": \"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\",\r\n    \"selected_source_excerpt\": \"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\",\r\n    \"selected_source_identity\": \"4f9b3e134f552725980c10a557cdd161a2b8ae6f1ef141e8099ad901ea7d60f3\"\r\n  },\r\n  \"source_method\": \"example_project/00_meta/episode_production_manual.md#production-reading-order\",\r\n  \"previous_episode\": \"SCENE_SOURCE_ANCHORS\"\r\n}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md": {
+      "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "utf8": "## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context."
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json": {
+      "sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6",
+      "utf8": "{\n  \"role\": \"plot\",\n  \"work_id\": \"ADAPT-HINGE-01\",\n  \"target_visible_chars\": 150,\n  \"min_visible_chars\": 100,\n  \"max_visible_chars\": 250,\n  \"planning_mode\": \"author_plot\",\n  \"beats\": [\n    {\n      \"beat_id\": \"B01\"\n    }\n  ],\n  \"plot_structure\": {\n    \"source\": \"plot_markdown\",\n    \"plot_sha256\": \"bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd\",\n    \"key_scenes\": [\n      \"S1 Mira asks for a screwdriver and steadies the public door.\"\n    ],\n    \"required_story_beats\": [\n      \"B01 Mira asks for help, accepts a practical offer, and chooses a next step.\"\n    ]\n  }\n}\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb.json": {
+      "sha256": "6ea26e74233747f59b1e3afc5bb9c595f451898146e7e9816bc292f22d764850",
+      "utf8": "{\"request_id\": \"cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb\", \"requested_model\": \"deepseek-flash\", \"response\": {\"choices\": [{\"finish_reason\": \"stop\", \"message\": {\"content\": \"## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\"}}], \"fixture_only\": true, \"id\": \"SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb\", \"model\": \"deepseek-flash\", \"simulation_status\": \"SIMULATED\", \"usage\": {\"completion_tokens\": 10, \"prompt_tokens\": 10}}, \"status\": 200}\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb.request.json": {
+      "sha256": "1ebe5dd231d542b118a4b7b4ab9fe7a6312b8397268978d7fefc1c2176292c55",
+      "utf8": "{\"max_tokens\": 4000, \"messages\": [{\"content\": \"[pinned_author_template: templates/06_plot/plot.template.md blob=8eb22fa6221351c2b614a3ae7d5dc4a53d3e8688]\\n# Chapter Plot — ch<NN>\\n\\nThe structured plot for a single chapter. The first agent in the per-chapter pipeline produces this; the scene card agent expands it; the brief agent narrows it; the prose agent writes from the brief.\\n\\nThis file is the macro layer. It answers: \\\"What is this chapter about, and what must it accomplish?\\\"\\n\\n---\\n\\n## Identity\\n\\n- **Chapter number**: <NN>\\n- **Working title**: <title>\\n- **Arc**: <which arc this chapter belongs to (e.g. \\\"Arc 2, chapter 5 of 20\\\")>\\n- **POV**: <character>\\n\\n---\\n\\n## Role in the Arc\\n\\nOne paragraph: what does this chapter exist to do at the arc level?\\n\\n- Is it a setup chapter (planting seeds)?\\n- A payoff chapter (resolving prior setups)?\\n- A pivot chapter (changing the direction of the arc)?\\n- A breather chapter (character beat / world detail)?\\n- A climactic chapter (arc-level resolution)?\\n\\nIf the chapter doesn't have a clear role, the chapter shouldn't exist yet — go back to the arc design.\\n\\n---\\n\\n## Key Scenes (3–6 typical)\\n\\nBullet list of the scenes this chapter must include, in order. Each scene gets one line at this stage; the scene card agent will expand each one.\\n\\n1. <scene one — one-line summary>\\n2. <scene two — one-line summary>\\n3. <scene three — one-line summary>\\n4. ...\\n\\n---\\n\\n## Hook (chapter ending)\\n\\nThe last beat of the chapter. What makes the reader want to read the next one?\\n\\n- **Hook type**: <cliffhanger / revelation / atmospheric / character-moment / question-raised>\\n- **Specific hook**: <one sentence>\\n\\nThe hook should match the arc-level pacing target. Not every chapter needs a cliffhanger; not every chapter can afford a quiet ending.\\n\\n---\\n\\n## Required Story Beats (must land in this chapter)\\n\\nThings that MUST happen, regardless of how the prose develops:\\n\\n- <beat — e.g. \\\"Character X learns Character Y is alive\\\">\\n- <beat — e.g. \\\"The reader sees the antagonist make decision Z\\\">\\n- <beat>\\n\\nThese are non-negotiable. The plot review lens checks for them.\\n\\n---\\n\\n## Forbidden Items (must NOT appear in this chapter)\\n\\nThings that must NOT show up:\\n\\n- <forbidden — e.g. \\\"No mention of [future plot element] yet\\\">\\n- <forbidden — e.g. \\\"Character X's true name must not be spoken aloud\\\">\\n- <forbidden — e.g. \\\"The reader must not learn fact Y until chapter NN+3\\\">\\n\\nThese are the per-scene/per-chapter forbidden items, distinct from the global `forbidden_patterns.md` (which is about prose style, not story disclosure).\\n\\n---\\n\\n## Foreshadowing — plant / payoff\\n\\nIf this chapter plants a seed for later payoff, or pays off a seed planted earlier, document it:\\n\\n- **Planting**: <seed planted in this chapter, target payoff chapter>\\n- **Paying off**: <seed planted in ch<NN>, paid off here>\\n\\nUpdate `../90_canon/timeline.md` foreshadowing ledger to match.\\n\\n---\\n\\n## Connections\\n\\n- **Previous chapter (ch<NN-1>) ended with**: <one sentence>\\n- **This chapter starts at**: <time gap from previous? location change?>\\n- **Next chapter (ch<NN+1>) will need to receive from this one**: <what must be true at chapter end>\\n\\n---\\n\\n## Target Length\\n\\n<word count or character count target>\\n\\n---\\n\\n## Notes for the Scene Card Agent\\n\\nAnything the next stage of the pipeline needs to know that doesn't fit above:\\n\\n- <note>\\n- <note>\\n\\n---\\n\\n## How Agents Use This File\\n\\n- **Scene card agent** reads this and expands each \\\"key scene\\\" into a structured scene card.\\n- **Brief agent** reads this for the macro view, then narrows it to per-scene instructions.\\n- **Plot review lens** checks the drafted chapter against the \\\"Required Story Beats\\\" and \\\"Forbidden Items\\\" sections.\\n\\n\\n[pinned_author_reading_contract: templates/config/ai_roles.template.yml]\\n# AI Roles Configuration\\n\\nagents:\\n  plot_agent:\\n    role: \\\"Plot specialist\\\"\\n    reads:\\n      - 04_chapter_design/arc_<NN>.md\\n      - 90_canon/canon.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 06_plot/epNNN_plot.md\\n\\n  scene_card_agent:\\n    role: \\\"Scene-level structure\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 90_canon/character_bible.md\\n    outputs:\\n      - 05_scene_cards/epNNN_scene_cards.md\\n\\n  brief_agent:\\n    role: \\\"Prepare prose prompt\\\"\\n    reads:\\n      - 06_plot/epNNN_plot.md\\n      - 05_scene_cards/epNNN_scene_cards.md\\n      - 90_canon/character_bible.md\\n      - 92_style_engine/style_guide.md\\n    outputs:\\n      - 07_draft/epNNN_writing_brief.md\\n\\n  prose_agent:\\n    role: \\\"Write prose\\\"\\n    reads:\\n      - 07_draft/epNNN_writing_brief.md\\n      - 92_style_engine/character_voice_samples.md (relevant chars only)\\n    outputs:\\n      - 07_draft/episodes/epNNN.md\\n\\n  # ... add review lenses, refine agent, etc.\\n\\n\\n[project_language_contract]\\nWrite this work unit in English (en-US). Length is measured as visible Unicode code points after NFC normalization and removal of Markdown control syntax and whitespace; it is not a word count.\\n\\n\\n[project_length_policy]\\n字数仅为创作目标，不是最低或最高验收线。优先完整呈现情节、动作、回应和对白；不得为了凑字数、压字数而重复、删减或重写。Length figures are creative guidance, not minimum/maximum acceptance gates. Preserve complete story actions, responses and dialogue; do not pad, cut or rewrite merely to meet a count.\\n\\n\\n[project_output_contract]\\n请严格按作者模板的章节标题输出，至少包含这些标题：## Identity / ## Role in the Arc / ## Key Scenes / ## Hook / ## Required Story Beats / ## Forbidden Items / ## Connections / ## Target Length。\\n每个合同必需节拍必须以其 ID 出现于正文结构：B01。\\n只输出该角色的 Markdown 产物，不要输出解释或 JSON 包装。\\n\\n[plot_design_responsibility]\\n依据 Arc、Canon、人物资料和创作前准备，实际设计 Key Scenes、因果推进、Required Story Beats、Hook、伏笔与章节衔接。已有必需节拍是必须覆盖的要求，不构成完整结构；可以设计额外的动作、反应与节拍。不要仅把输入换成模板标题。遵守明确的事实、知识边界、入场和出场条件、全篇篇幅及本次工作范围。scene 工作单元仍限于同一场；episode 的场景安排由章节设计需要决定。按作者模板区分 Key Scenes（场景概要）与 Required Story Beats（必须发生的事件），本次叙事范围由工作单元及来源约束决定，不能仅用列表条目数判定是否越范围。输入 required_beats 为空仅表示没有预先指定节拍，仍必须由 Plot 设计具体 Required Story Beats；不能只列‘不越界’‘不解决线索’等合规条件来代替实际发生的故事事件。仅依据合同明确选定的来源修订与选段设计改编；保留选段中可确认的来源事实，不把未选来源或未选范围当作事实。他人的动机、等待什么、故意给谁台阶等，不能仅凭可见动作写成 POV 已知事实。不得从执行器的记账元数据推导创作要求。\\n\", \"role\": \"system\"}, {\"content\": \"{\\\"assignment\\\": {\\\"project_id\\\": \\\"TIDELINE\\\", \\\"story\\\": {\\\"arc_ref\\\": \\\"04_chapter_design/arc_01.md\\\", \\\"arc_sha256\\\": \\\"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\\\", \\\"chapter_context\\\": \\\"A small repair gives two neighbors a reason to speak plainly.\\\", \\\"character_knowledge_boundary_ref\\\": \\\"90_canon/canon.md\\\", \\\"characters_in_scene\\\": [\\\"Mira\\\", \\\"Keeper\\\"], \\\"entry_state\\\": \\\"The hinge is loose and Mira has not asked for help.\\\", \\\"exit_state\\\": \\\"The hinge works and Mira has made a specific next request.\\\", \\\"forbidden_future_revelations\\\": [\\\"Do not invent a family relationship or future secret.\\\"], \\\"reader_reward\\\": \\\"See a practical offer change the distance between neighbors.\\\", \\\"required_beats\\\": [{\\\"beat_id\\\": \\\"B01\\\", \\\"goal\\\": \\\"Mira asks for help and responds to the offer.\\\"}], \\\"role_in_story\\\": \\\"Adapt only the selected source moment into one playable scene.\\\", \\\"source_file\\\": \\\"_INBOX/originals/61f61b74038ace77_source-B.md\\\", \\\"source_selection\\\": {\\\"end_line\\\": 1, \\\"hash_semantics\\\": \\\"raw_line_span_sha256\\\", \\\"selected_sha256\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"source_id\\\": \\\"61f61b74038ace77\\\", \\\"source_revision_id\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"start_line\\\": 1}, \\\"voice_sample_refs\\\": [\\\"Mira\\\", \\\"Keeper\\\"]}, \\\"unit\\\": {\\\"id\\\": \\\"ADAPT-HINGE-01\\\", \\\"kind\\\": \\\"scene\\\", \\\"language\\\": \\\"en-US\\\", \\\"language_locale\\\": \\\"en-US\\\", \\\"length_metric\\\": \\\"unicode_visible_code_points\\\", \\\"length_policy\\\": \\\"ADVISORY\\\", \\\"length_semantics\\\": \\\"NFC normalized; Markdown control syntax and whitespace excluded; remaining Unicode code points counted, not word-count units.\\\", \\\"planning_mode\\\": \\\"author_plot\\\", \\\"policy_sha256\\\": \\\"c0e6355fd55cf450a34aa5209d7809000a9bbf8defa933a25f4c730af362221f\\\", \\\"pov\\\": \\\"Mira\\\", \\\"target_visible_chars\\\": 150}}, \\\"materials\\\": {\\\"04_chapter_design/arc_<NN>.md\\\": \\\"Mira chooses whether to ask her neighbor for help with the harbor door.\\\", \\\"90_canon/canon.md\\\": \\\"Mira and the keeper are neighbors. They are not related. The harbor door has a loose hinge.\\\", \\\"90_canon/character_bible.md\\\": \\\"Mira asks direct questions. The keeper answers briefly and offers practical help.\\\"}, \\\"support\\\": {\\\"production_preparation\\\": {\\\"documents\\\": {\\\"04_chapter_design/arc_01.md\\\": \\\"Mira chooses whether to ask her neighbor for help with the harbor door.\\\", \\\"04_chapter_design/arc_01_episode_details.md\\\": \\\"Keep the action to one hinge repair and its immediate social consequence.\\\", \\\"07_draft/manuscript_index.md\\\": \\\"No prior story chapter has been accepted.\\\", \\\"90_canon/character_bible.md\\\": \\\"Mira asks direct questions. The keeper answers briefly and offers practical help.\\\", \\\"92_style_engine/character_voice_samples.md\\\": \\\"## Mira\\\\n'I would rather ask than guess.'\\\\n\\\\n## Keeper\\\\n'Try this screwdriver.'\\\\n\\\", \\\"94_runtime/current_state.md\\\": \\\"Mira and the keeper are neighbors; their relationship is not familial.\\\", \\\"selected_source_excerpt\\\": \\\"Mira asks the keeper to help with a loose hinge.\\\\r\\\\n\\\", \\\"selected_source_identity\\\": \\\"{\\\\\\\"canonical_selected_value_sha256\\\\\\\": \\\\\\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\\\\\", \\\\\\\"manifest_revision_sha256\\\\\\\": \\\\\\\"7ca8faa6da4a36d5fd3b15c8a54a814ab4a4361b62e186875233ef740aaac6f7\\\\\\\", \\\\\\\"source_id\\\\\\\": \\\\\\\"61f61b74038ace77\\\\\\\", \\\\\\\"source_index_sha256\\\\\\\": \\\\\\\"6fe32c69798810aac13a4d0adf55e580602c0f996a2f1909557d2b7e45417902\\\\\\\", \\\\\\\"source_revision_id\\\\\\\": \\\\\\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\\\\\", \\\\\\\"wire_excerpt_sha256\\\\\\\": \\\\\\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\\\\\"}\\\"}, \\\"previous_episode\\\": \\\"SCENE_SOURCE_ANCHORS\\\", \\\"source_hashes\\\": {\\\"04_chapter_design/arc_01.md\\\": \\\"666aff450a9c946a3236778df267bc04a42f8c448ea69595cdd87daac5c1f8ea\\\", \\\"04_chapter_design/arc_01_episode_details.md\\\": \\\"73a89ef35f9d64175338a42ad7dce917e4064c37d8bd9b894979f2a33248ebd5\\\", \\\"07_draft/manuscript_index.md\\\": \\\"6ce2f8466bb577c8a34262c7cced0a8ece3739c3ca761b4ca46c5b69ff301b73\\\", \\\"90_canon/character_bible.md\\\": \\\"dbe85c46fd38947097b7b679bdcc1ed3645438bc182327e8e432c1c7f2787d29\\\", \\\"92_style_engine/character_voice_samples.md\\\": \\\"c9459d2af6acd7df47cd9aceabd475a39afb25fd3ffd8fdafa05c7963a0e3bf2\\\", \\\"94_runtime/current_state.md\\\": \\\"8d2cbe71028f68f32fe5b57f149ea65fed990ac9c9601099e04492ac5dcfdc73\\\", \\\"selected_source_excerpt\\\": \\\"61f61b74038ace77f6de3d904b9a9f078bf0c6e828749e062d3ebba6f809c1dd\\\", \\\"selected_source_identity\\\": \\\"4f9b3e134f552725980c10a557cdd161a2b8ae6f1ef141e8099ad901ea7d60f3\\\"}, \\\"source_method\\\": \\\"example_project/00_meta/episode_production_manual.md#production-reading-order\\\"}}}\", \"role\": \"user\"}], \"model\": \"deepseek-flash\", \"stream\": false, \"thinking\": {\"type\": \"disabled\"}}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/support/critics-input-bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md": {
+      "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "utf8": "## Identity\nSynthetic Plot context.\n\n## Role in the Arc\nSynthetic Plot context.\n\n## Key Scenes\n- S1 Mira asks for a screwdriver and steadies the public door.\n\n## Hook\nSynthetic Plot context.\n\n## Required Story Beats\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\n\n## Forbidden Items\nSynthetic Plot context.\n\n## Connections\nSynthetic Plot context.\n\n## Target Length\nSynthetic Plot context."
+    },
+    "runs/SIGNED-ADAPT-RUN/artifacts/support/wrong-input.md": {
+      "sha256": "20e98822baab954b989f7afc6a728a5f3f9c52b408915ecacefd2d16204b7a0c",
+      "utf8": "A different fictional input."
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/critique.json": {
+      "sha256": "e00e60e2b0de39bb9307d3e472cf51b10ff379eb4f8eee0723b4a6eaabde7433",
+      "utf8": "{\n  \"structure\": \"Question: Is the repair visible?\\nWhy: mock.\",\n  \"ending\": \"Question: Is the offer earned?\\nWhy: mock.\",\n  \"original\": \"Question: Does Mira choose?\\nWhy: mock.\",\n  \"inspector\": \"Is the offer earned?\"\n}\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/p2-cost-ledger.json": {
+      "sha256": "275d331ea41e164b2977efdeaf9ec943e43492d9855bb03feecd18fe3e4bc35a",
+      "utf8": "{\r\n  \"cost_context\": {\r\n    \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n    \"project_id\": \"TIDELINE\",\r\n    \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n    \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n    \"stage\": \"critics_plot\"\r\n  },\r\n  \"requests\": [\r\n    {\r\n      \"budget_exceeded\": {\r\n        \"campaign_limit\": false,\r\n        \"reservation\": false,\r\n        \"token_caps\": false\r\n      },\r\n      \"cost_context\": {\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\"\r\n      },\r\n      \"cost_policy_snapshot\": {\r\n        \"config_sha256\": \"a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489\",\r\n        \"pricing_sha256\": \"3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe\"\r\n      },\r\n      \"cost_pricing_snapshot\": {\r\n        \"currency\": \"CNY\",\r\n        \"input_cache_miss_usd_per_million_peak\": 1,\r\n        \"output_usd_per_million_peak\": 2,\r\n        \"requested_model\": \"deepseek-flash\",\r\n        \"usd_to_cny_estimate\": 1\r\n      },\r\n      \"estimated_actual_cny\": \"0.000028\",\r\n      \"finish_reason\": \"stop\",\r\n      \"live_authorization\": {\r\n        \"bundle_sha256\": \"66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99\",\r\n        \"identity_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"owner_grant_sha256\": \"808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a\"\r\n      },\r\n      \"provider_request_id\": \"SIMULATED-NATIVE-0\",\r\n      \"purpose\": \"P2-06 native CritiCS plan-critique provider call\",\r\n      \"request_id\": \"p206-plan-critique-37c2703b6ece48cd98e3624f90128d85\",\r\n      \"requested_model\": \"deepseek-flash\",\r\n      \"reserved_at\": \"2026-10-13T18:45:33Z\",\r\n      \"reserved_cny\": \"0.016096\",\r\n      \"reserved_input_token_cap\": 12000,\r\n      \"reserved_output_token_cap\": 2048,\r\n      \"returned_model\": \"deepseek-flash\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"settled_at\": \"2026-10-13T18:45:33Z\",\r\n      \"status\": \"SETTLED\",\r\n      \"usage\": {\r\n        \"input_tokens\": 12,\r\n        \"output_tokens\": 8\r\n      }\r\n    },\r\n    {\r\n      \"budget_exceeded\": {\r\n        \"campaign_limit\": false,\r\n        \"reservation\": false,\r\n        \"token_caps\": false\r\n      },\r\n      \"cost_context\": {\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\"\r\n      },\r\n      \"cost_policy_snapshot\": {\r\n        \"config_sha256\": \"a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489\",\r\n        \"pricing_sha256\": \"3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe\"\r\n      },\r\n      \"cost_pricing_snapshot\": {\r\n        \"currency\": \"CNY\",\r\n        \"input_cache_miss_usd_per_million_peak\": 1,\r\n        \"output_usd_per_million_peak\": 2,\r\n        \"requested_model\": \"deepseek-flash\",\r\n        \"usd_to_cny_estimate\": 1\r\n      },\r\n      \"estimated_actual_cny\": \"0.000028\",\r\n      \"finish_reason\": \"stop\",\r\n      \"live_authorization\": {\r\n        \"bundle_sha256\": \"66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99\",\r\n        \"identity_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"owner_grant_sha256\": \"808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a\"\r\n      },\r\n      \"provider_request_id\": \"SIMULATED-NATIVE-1\",\r\n      \"purpose\": \"P2-06 native CritiCS plan-critique provider call\",\r\n      \"request_id\": \"p206-plan-critique-8e65ff356c7e4c1db959dae35074601a\",\r\n      \"requested_model\": \"deepseek-flash\",\r\n      \"reserved_at\": \"2026-10-13T18:50:26Z\",\r\n      \"reserved_cny\": \"0.016096\",\r\n      \"reserved_input_token_cap\": 12000,\r\n      \"reserved_output_token_cap\": 2048,\r\n      \"returned_model\": \"deepseek-flash\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"settled_at\": \"2026-10-13T18:50:26Z\",\r\n      \"status\": \"SETTLED\",\r\n      \"usage\": {\r\n        \"input_tokens\": 12,\r\n        \"output_tokens\": 8\r\n      }\r\n    },\r\n    {\r\n      \"budget_exceeded\": {\r\n        \"campaign_limit\": false,\r\n        \"reservation\": false,\r\n        \"token_caps\": false\r\n      },\r\n      \"cost_context\": {\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\"\r\n      },\r\n      \"cost_policy_snapshot\": {\r\n        \"config_sha256\": \"a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489\",\r\n        \"pricing_sha256\": \"3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe\"\r\n      },\r\n      \"cost_pricing_snapshot\": {\r\n        \"currency\": \"CNY\",\r\n        \"input_cache_miss_usd_per_million_peak\": 1,\r\n        \"output_usd_per_million_peak\": 2,\r\n        \"requested_model\": \"deepseek-flash\",\r\n        \"usd_to_cny_estimate\": 1\r\n      },\r\n      \"estimated_actual_cny\": \"0.000028\",\r\n      \"finish_reason\": \"stop\",\r\n      \"live_authorization\": {\r\n        \"bundle_sha256\": \"66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99\",\r\n        \"identity_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"owner_grant_sha256\": \"808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a\"\r\n      },\r\n      \"provider_request_id\": \"SIMULATED-NATIVE-2\",\r\n      \"purpose\": \"P2-06 native CritiCS plan-critique provider call\",\r\n      \"request_id\": \"p206-plan-critique-46e97a9a65b246bf8c72a27e41d399d7\",\r\n      \"requested_model\": \"deepseek-flash\",\r\n      \"reserved_at\": \"2026-10-13T18:56:08Z\",\r\n      \"reserved_cny\": \"0.016096\",\r\n      \"reserved_input_token_cap\": 12000,\r\n      \"reserved_output_token_cap\": 2048,\r\n      \"returned_model\": \"deepseek-flash\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"settled_at\": \"2026-10-13T18:56:08Z\",\r\n      \"status\": \"SETTLED\",\r\n      \"usage\": {\r\n        \"input_tokens\": 12,\r\n        \"output_tokens\": 8\r\n      }\r\n    },\r\n    {\r\n      \"budget_exceeded\": {\r\n        \"campaign_limit\": false,\r\n        \"reservation\": false,\r\n        \"token_caps\": false\r\n      },\r\n      \"cost_context\": {\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\"\r\n      },\r\n      \"cost_policy_snapshot\": {\r\n        \"config_sha256\": \"a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489\",\r\n        \"pricing_sha256\": \"3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe\"\r\n      },\r\n      \"cost_pricing_snapshot\": {\r\n        \"currency\": \"CNY\",\r\n        \"input_cache_miss_usd_per_million_peak\": 1,\r\n        \"output_usd_per_million_peak\": 2,\r\n        \"requested_model\": \"deepseek-flash\",\r\n        \"usd_to_cny_estimate\": 1\r\n      },\r\n      \"estimated_actual_cny\": \"0.000028\",\r\n      \"finish_reason\": \"stop\",\r\n      \"live_authorization\": {\r\n        \"bundle_sha256\": \"66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99\",\r\n        \"identity_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"owner_grant_sha256\": \"808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a\"\r\n      },\r\n      \"provider_request_id\": \"SIMULATED-NATIVE-3\",\r\n      \"purpose\": \"P2-06 native CritiCS plan-critique provider call\",\r\n      \"request_id\": \"p206-plan-critique-61c3a35611814cf49ce7100e4e86376d\",\r\n      \"requested_model\": \"deepseek-flash\",\r\n      \"reserved_at\": \"2026-10-13T19:01:52Z\",\r\n      \"reserved_cny\": \"0.016096\",\r\n      \"reserved_input_token_cap\": 12000,\r\n      \"reserved_output_token_cap\": 2048,\r\n      \"returned_model\": \"deepseek-flash\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"settled_at\": \"2026-10-13T19:01:52Z\",\r\n      \"status\": \"SETTLED\",\r\n      \"usage\": {\r\n        \"input_tokens\": 12,\r\n        \"output_tokens\": 8\r\n      }\r\n    },\r\n    {\r\n      \"budget_exceeded\": {\r\n        \"campaign_limit\": false,\r\n        \"reservation\": false,\r\n        \"token_caps\": false\r\n      },\r\n      \"cost_context\": {\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\"\r\n      },\r\n      \"cost_policy_snapshot\": {\r\n        \"config_sha256\": \"a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489\",\r\n        \"pricing_sha256\": \"3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe\"\r\n      },\r\n      \"cost_pricing_snapshot\": {\r\n        \"currency\": \"CNY\",\r\n        \"input_cache_miss_usd_per_million_peak\": 1,\r\n        \"output_usd_per_million_peak\": 2,\r\n        \"requested_model\": \"deepseek-flash\",\r\n        \"usd_to_cny_estimate\": 1\r\n      },\r\n      \"estimated_actual_cny\": \"0.000028\",\r\n      \"finish_reason\": \"stop\",\r\n      \"live_authorization\": {\r\n        \"bundle_sha256\": \"66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99\",\r\n        \"identity_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n        \"owner_grant_sha256\": \"808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a\"\r\n      },\r\n      \"provider_request_id\": \"SIMULATED-NATIVE-4\",\r\n      \"purpose\": \"P2-06 native CritiCS plan-critique provider call\",\r\n      \"request_id\": \"p206-plan-critique-07a4f11fb6c540c7a64e53811d5a3510\",\r\n      \"requested_model\": \"deepseek-flash\",\r\n      \"reserved_at\": \"2026-10-13T19:07:33Z\",\r\n      \"reserved_cny\": \"0.016096\",\r\n      \"reserved_input_token_cap\": 12000,\r\n      \"reserved_output_token_cap\": 2048,\r\n      \"returned_model\": \"deepseek-flash\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"settled_at\": \"2026-10-13T19:07:33Z\",\r\n      \"status\": \"SETTLED\",\r\n      \"usage\": {\r\n        \"input_tokens\": 12,\r\n        \"output_tokens\": 8\r\n      }\r\n    }\r\n  ],\r\n  \"schema\": \"cnw_critics_scoped_cost_evidence_v1\"\r\n}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/provider-calls.json": {
+      "sha256": "583c5f145c9c30b07e2bd0d1306335f505d4915cec7d4eb4bf57a0b197f42c95",
+      "utf8": "[\r\n  {\r\n    \"local_request_id\": \"p206-plan-critique-37c2703b6ece48cd98e3624f90128d85\",\r\n    \"request\": {\r\n      \"messages\": [\r\n        {\r\n          \"content\": \"The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\\n\\nCurrent conversation:\\n\\nHuman: \\nI have to improve the storyline of my novel. \\nI need experts to give your current storyline a critical evaluation so I can develop it.\\nThese experts are someone who is relevant to the storyline I've presented. \\nCreate three persona for these experts, including their occupation, age and Brief background \\nAlso create a persona of a leader who checks the opinions of three experts and adopts the opinion of one.\\n\\nFollowing below persona format.\\n============================================================================================================================================\\n<persona>\\nExpert 1.\\n\\tProfession: // ... Profession ... //\\n    Feedback Focus: // ... Feedback Focus ... //\\n    Feedback Focus Details: //... Expert 1's Feedback Focus Details... //\\n<<persona_split>>\\nExpert 2.\\n    Profession: // ... Profession ... //\\n    Feedback Focus: // ... Feedback Focus ... //\\n    Feedback Focus Details: //... Expert 2's Feedback Focus Details... //\\n<<persona_split>>\\nExpert 3.\\n    Profession: // ... Profession ... //\\n    Feedback Focus: // ... Feedback Focus ... //\\n    Feedback Focus Details: //... Expert 3's Feedback Focus Details... //\\n<<persona_split>>\\nLeader.\\n    Profession: // ... Profession ... //\\n    Feedback Focus: // ... Feedback Focus ... //\\n    Feedback Focus Details: //... Expert 4's Feedback Focus Details... //\\n<persona/>\\n============================================================================================================================================\\nMy storyline)\\n============================================================================================================================================\\n## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\\n\\nAI:\",\r\n          \"role\": \"user\"\r\n        }\r\n      ],\r\n      \"model\": \"deepseek-flash\",\r\n      \"logprobs\": false,\r\n      \"n\": 1,\r\n      \"stop\": [\r\n        \"<persona/>\"\r\n      ],\r\n      \"stream\": false,\r\n      \"temperature\": 1.0,\r\n      \"thinking\": {\r\n        \"type\": \"disabled\"\r\n      },\r\n      \"max_tokens\": 2048\r\n    },\r\n    \"max_output_tokens_enforced\": 2048,\r\n    \"ledger_settlement\": {\r\n      \"status\": \"SETTLED\",\r\n      \"request_id\": \"p206-plan-critique-37c2703b6ece48cd98e3624f90128d85\",\r\n      \"estimated_request_cny\": \"0.000028\",\r\n      \"campaign_committed_cny\": \"0.000058\",\r\n      \"limit_cny\": null,\r\n      \"cost_context\": {\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\",\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n      }\r\n    },\r\n    \"cost_context\": {\r\n      \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n      \"project_id\": \"TIDELINE\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"stage\": \"critics_plot\",\r\n      \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n    },\r\n    \"response\": {\r\n      \"id\": \"SIMULATED-NATIVE-0\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"object\": \"chat.completion\",\r\n      \"created\": 0,\r\n      \"simulation_status\": \"SIMULATED\",\r\n      \"fixture_only\": true,\r\n      \"choices\": [\r\n        {\r\n          \"index\": 0,\r\n          \"finish_reason\": \"stop\",\r\n          \"message\": {\r\n            \"role\": \"assistant\",\r\n            \"content\": \"Expert 1\\nStructure persona\\nExpert 2\\nEnding persona\\nExpert 3\\nOriginal persona\\nLeader\\nLeader persona\"\r\n          }\r\n        }\r\n      ],\r\n      \"usage\": {\r\n        \"prompt_tokens\": 12,\r\n        \"completion_tokens\": 8,\r\n        \"total_tokens\": 20\r\n      }\r\n    },\r\n    \"http_status\": 200,\r\n    \"estimated_cost_cny\": \"0.000028\"\r\n  },\r\n  {\r\n    \"local_request_id\": \"p206-plan-critique-8e65ff356c7e4c1db959dae35074601a\",\r\n    \"request\": {\r\n      \"messages\": [\r\n        {\r\n          \"content\": \"The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\\n\\nCurrent conversation:\\n\\nHuman: \\n============================================================================================================================================\\nRole:\\nAs a Structure persona, \\nyour task is to critically analyze and provide constructive feedback on a presented storyline. Your focus should be on assessing and enhancing the originality of a story's structure.\\n============================================================================================================================================\\nstoryline)\\n## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\\n====================================================================================================================================================================================\\n\\nLook at my storyline above and do two requests\\n1. First Request - Originality Questions for Storyline: \\nYou are seeking three questions that this storyline has \\n\\n\\\"\\n(1) Non-linear timeline: Stories do not have to unfold in a straightforward, chronological manner. Experiment with flashbacks, time skips, and non-linear timelines to make the narrative more unexpected. \\n\\n(2) Shifting perspectives: Altering the narrative perspective throughout the story can provide fresh insights and create intrigue. This can include alternating between first-person and third-person views, or switching between different characters' perspectives. \\n\\n(3) Intertextuality: Include references to other works, stories within stories, or use allegory as a structural device. This can create layers of meanings and associations that enrich the narrative. \\n\\n(4) Metafiction: Break the fourth wall by having characters acknowledge they're part of a story or by discussing elements of storytelling within the plot. This can create a self-aware story that directly engages with readers. \\n\\\". \\n\\nThese questions should encourage thinking about unique elements or perspectives that can be added to the story. Remember to align your suggestions and critiques with your \\\"professional background\\\" and \\\"expertise\\\", focusing on aspects that would realistically occur or be relevant in your field. \\n\\n2. Second Request - Evaluation and Selection of the Best Question: Out of the three questions provided, you want to identify the best one that improves the originality of the story. This evaluation will be based on three factors:\\n    \\n\\t- Originality: Does altering the storyline in response to this question enhance its originality by integrating \\\"\\n(1) Non-linear timeline: Stories do not have to unfold in a straightforward, chronological manner. Experiment with flashbacks, time skips, and non-linear timelines to make the narrative more unexpected. \\n\\n(2) Shifting perspectives: Altering the narrative perspective throughout the story can provide fresh insights and create intrigue. This can include alternating between first-person and third-person views, or switching between different characters' perspectives. \\n\\n(3) Intertextuality: Include references to other works, stories within stories, or use allegory as a structural device. This can create layers of meanings and associations that enrich the narrative. \\n\\n(4) Metafiction: Break the fourth wall by having characters acknowledge they're part of a story or by discussing elements of storytelling within the plot. This can create a self-aware story that directly engages with readers. \\n\\\" into the narrative?\\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\\n\\nThe selected question will then be evaluated using these criteria.\\n\\\"Note: When formulating questions, ensure they are as detailed as possible, closely related to the storyline.\\\"\\nAnswer Format)\\n============================================================================================================================================\\n<question>\\n[First request]\\n--------------------------\\n1. ...\\n2. ...\\n3. ...\\n--------------------------\\n[Second request]\\nQuestion : \\n....\\nWhy:\\n<question/>\\n\\nAI:\",\r\n          \"role\": \"user\"\r\n        }\r\n      ],\r\n      \"model\": \"deepseek-flash\",\r\n      \"logprobs\": false,\r\n      \"n\": 1,\r\n      \"stop\": [\r\n        \"<question/>\"\r\n      ],\r\n      \"stream\": false,\r\n      \"temperature\": 1.0,\r\n      \"thinking\": {\r\n        \"type\": \"disabled\"\r\n      },\r\n      \"max_tokens\": 2048\r\n    },\r\n    \"max_output_tokens_enforced\": 2048,\r\n    \"ledger_settlement\": {\r\n      \"status\": \"SETTLED\",\r\n      \"request_id\": \"p206-plan-critique-8e65ff356c7e4c1db959dae35074601a\",\r\n      \"estimated_request_cny\": \"0.000028\",\r\n      \"campaign_committed_cny\": \"0.000086\",\r\n      \"limit_cny\": null,\r\n      \"cost_context\": {\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\",\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n      }\r\n    },\r\n    \"cost_context\": {\r\n      \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n      \"project_id\": \"TIDELINE\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"stage\": \"critics_plot\",\r\n      \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n    },\r\n    \"response\": {\r\n      \"id\": \"SIMULATED-NATIVE-1\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"object\": \"chat.completion\",\r\n      \"created\": 0,\r\n      \"simulation_status\": \"SIMULATED\",\r\n      \"fixture_only\": true,\r\n      \"choices\": [\r\n        {\r\n          \"index\": 0,\r\n          \"finish_reason\": \"stop\",\r\n          \"message\": {\r\n            \"role\": \"assistant\",\r\n            \"content\": \"Question: Is the repair visible?\\nWhy: mock.\"\r\n          }\r\n        }\r\n      ],\r\n      \"usage\": {\r\n        \"prompt_tokens\": 12,\r\n        \"completion_tokens\": 8,\r\n        \"total_tokens\": 20\r\n      }\r\n    },\r\n    \"http_status\": 200,\r\n    \"estimated_cost_cny\": \"0.000028\"\r\n  },\r\n  {\r\n    \"local_request_id\": \"p206-plan-critique-46e97a9a65b246bf8c72a27e41d399d7\",\r\n    \"request\": {\r\n      \"messages\": [\r\n        {\r\n          \"content\": \"The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\\n\\nCurrent conversation:\\n\\nHuman: \\n============================================================================================================================================\\nRole:\\nAs a \\\"Ending persona\\\",\\nyour task is to critically analyze and provide constructive feedback on a presented storyline. Your focus should be on assessing and enhancing originality of the unusal ending.\\n============================================================================================================================================\\nStoryline)\\n## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\\n====================================================================================================================================================================================\\n\\nLook at my storyline above and do two requests\\n1. First Request - Originality Questions for Storyline: \\nYou are seeking three questions that this storyline has \\n\\n\\\"\\n(1) Unexpected Conclusions: This aspect includes sentences that wind up in an unusual or surprising way, challenging the reader's expectations set by the initial part of the sentence. \\n\\n(2) Humorous or Witty Conclusions: These are endings that incorporate humor or clever plays on words lending an element of surprise and entertainment. This feature contributes substantially to the overall unique voice of the writer. \\n\\n(3) Provocative or Intriguing Statements: This characteristic includes endings that are provocative or mysterious, prompting the reader to think deeper, question, and engage more with the content. \\n\\\". \\n\\nThese questions should encourage thinking about unique elements or perspectives that can be added to the story. Remember to align your suggestions and critiques with your \\\"professional background\\\" and \\\"expertise\\\", focusing on aspects that would realistically occur or be relevant in your field. \\n\\n2. Second Request - Evaluation and Selection of the Best Question: Out of the three questions provided, you want to identify the best one that improves the originality of the story. This evaluation will be based on three factors:\\n    \\n\\t- Originality: Does altering the storyline in response to this question enhance its originality by integrating \\\"\\n(1) Unexpected Conclusions: This aspect includes sentences that wind up in an unusual or surprising way, challenging the reader's expectations set by the initial part of the sentence. \\n\\n(2) Humorous or Witty Conclusions: These are endings that incorporate humor or clever plays on words lending an element of surprise and entertainment. This feature contributes substantially to the overall unique voice of the writer. \\n\\n(3) Provocative or Intriguing Statements: This characteristic includes endings that are provocative or mysterious, prompting the reader to think deeper, question, and engage more with the content. \\n\\\" into the narrative?\\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\\n\\nThe selected question will then be evaluated using these criteria.\\n\\\"Note: When formulating questions, ensure they are as detailed as possible, closely related to the storyline.\\\"\\nAnswer Format)\\n============================================================================================================================================\\n<question>\\n[First request]\\n--------------------------\\n1. ...\\n2. ...\\n3. ...\\n--------------------------\\n[Second request]\\nQuestion : \\n....\\nWhy:\\n<question/>\\n\\nAI:\",\r\n          \"role\": \"user\"\r\n        }\r\n      ],\r\n      \"model\": \"deepseek-flash\",\r\n      \"logprobs\": false,\r\n      \"n\": 1,\r\n      \"stop\": [\r\n        \"<question/>\"\r\n      ],\r\n      \"stream\": false,\r\n      \"temperature\": 1.0,\r\n      \"thinking\": {\r\n        \"type\": \"disabled\"\r\n      },\r\n      \"max_tokens\": 2048\r\n    },\r\n    \"max_output_tokens_enforced\": 2048,\r\n    \"ledger_settlement\": {\r\n      \"status\": \"SETTLED\",\r\n      \"request_id\": \"p206-plan-critique-46e97a9a65b246bf8c72a27e41d399d7\",\r\n      \"estimated_request_cny\": \"0.000028\",\r\n      \"campaign_committed_cny\": \"0.000114\",\r\n      \"limit_cny\": null,\r\n      \"cost_context\": {\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\",\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n      }\r\n    },\r\n    \"cost_context\": {\r\n      \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n      \"project_id\": \"TIDELINE\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"stage\": \"critics_plot\",\r\n      \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n    },\r\n    \"response\": {\r\n      \"id\": \"SIMULATED-NATIVE-2\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"object\": \"chat.completion\",\r\n      \"created\": 0,\r\n      \"simulation_status\": \"SIMULATED\",\r\n      \"fixture_only\": true,\r\n      \"choices\": [\r\n        {\r\n          \"index\": 0,\r\n          \"finish_reason\": \"stop\",\r\n          \"message\": {\r\n            \"role\": \"assistant\",\r\n            \"content\": \"Question: Is the offer earned?\\nWhy: mock.\"\r\n          }\r\n        }\r\n      ],\r\n      \"usage\": {\r\n        \"prompt_tokens\": 12,\r\n        \"completion_tokens\": 8,\r\n        \"total_tokens\": 20\r\n      }\r\n    },\r\n    \"http_status\": 200,\r\n    \"estimated_cost_cny\": \"0.000028\"\r\n  },\r\n  {\r\n    \"local_request_id\": \"p206-plan-critique-61c3a35611814cf49ce7100e4e86376d\",\r\n    \"request\": {\r\n      \"messages\": [\r\n        {\r\n          \"content\": \"The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\\n\\nCurrent conversation:\\n\\nHuman: \\n============================================================================================================================================\\nRole: \\nAs a Original persona, \\nyour task is to critically analyze and provide constructive feedback on a presented storyline. Your focus should be on assessing and enhancing the originality of the plot, setting, and themes.\\n============================================================================================================================================\\nstoryline)\\n## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\\n====================================================================================================================================================================================\\n\\nLook at my storyline above and do two requests\\n1. First Request - Originality Questions for Storyline: \\nYou are seeking three questions that this storyline has \\n\\n\\\"\\n(1) Unconventional Themes: This category includes themes that are not typically encountered in everyday discourse. This could include themes from different cultures, underground societies, or niche hobbies and interests.\\n   \\n(2) Unique Plot: Succinct plots that deviate from standard, commonly seen narratives score higher in this category. This could involve unexpected plot twists, unconventional story progression, or atypical character development.\\n\\n(3) Diverse Settings: Diverse settings refer to the use of unfamiliar or striking locations and times - past, future, or entirely imaginative locations. These could range from sci-fi cityscapes, historical periods, to unique micro-settings such as a single room or a mystical forest.\\n\\n(4) Authenticity: This feature measures the realness of the theme/plot/setting for the reader. The use of vivid descriptions, consistent details, and emotionally engaging elements can contribute to a more authentic feel. \\n\\\". \\n\\nThese questions should encourage thinking about unique elements or perspectives that can be added to the story. Remember to align your suggestions and critiques with your \\\"professional background\\\" and \\\"expertise\\\", focusing on aspects that would realistically occur or be relevant in your field. \\n\\n2. Second Request - Evaluation and Selection of the Best Question: Out of the three questions provided, you want to identify the best one that improves the originality of the story. This evaluation will be based on three factors:\\n    \\n\\t- Originality: Does altering the storyline in response to this question enhance its originality by integrating \\\"\\n(1) Unconventional Themes: This category includes themes that are not typically encountered in everyday discourse. This could include themes from different cultures, underground societies, or niche hobbies and interests.\\n   \\n(2) Unique Plot: Succinct plots that deviate from standard, commonly seen narratives score higher in this category. This could involve unexpected plot twists, unconventional story progression, or atypical character development.\\n\\n(3) Diverse Settings: Diverse settings refer to the use of unfamiliar or striking locations and times - past, future, or entirely imaginative locations. These could range from sci-fi cityscapes, historical periods, to unique micro-settings such as a single room or a mystical forest.\\n\\n(4) Authenticity: This feature measures the realness of the theme/plot/setting for the reader. The use of vivid descriptions, consistent details, and emotionally engaging elements can contribute to a more authentic feel. \\n\\\" into the narrative?\\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\\n\\nThe selected question will then be evaluated using these criteria.\\n\\\"Note: When formulating questions, ensure they are as detailed as possible, closely related to the storyline.\\\"\\nAnswer Format)\\n============================================================================================================================================\\n<question>\\n[First request]\\n--------------------------\\n1. ...\\n2. ...\\n3. ...\\n--------------------------\\n[Second request]\\nQuestion : \\n....\\nWhy:\\n<question/>\\n\\nAI:\",\r\n          \"role\": \"user\"\r\n        }\r\n      ],\r\n      \"model\": \"deepseek-flash\",\r\n      \"logprobs\": false,\r\n      \"n\": 1,\r\n      \"stop\": [\r\n        \"<question/>\"\r\n      ],\r\n      \"stream\": false,\r\n      \"temperature\": 1.0,\r\n      \"thinking\": {\r\n        \"type\": \"disabled\"\r\n      },\r\n      \"max_tokens\": 2048\r\n    },\r\n    \"max_output_tokens_enforced\": 2048,\r\n    \"ledger_settlement\": {\r\n      \"status\": \"SETTLED\",\r\n      \"request_id\": \"p206-plan-critique-61c3a35611814cf49ce7100e4e86376d\",\r\n      \"estimated_request_cny\": \"0.000028\",\r\n      \"campaign_committed_cny\": \"0.000142\",\r\n      \"limit_cny\": null,\r\n      \"cost_context\": {\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\",\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n      }\r\n    },\r\n    \"cost_context\": {\r\n      \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n      \"project_id\": \"TIDELINE\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"stage\": \"critics_plot\",\r\n      \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n    },\r\n    \"response\": {\r\n      \"id\": \"SIMULATED-NATIVE-3\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"object\": \"chat.completion\",\r\n      \"created\": 0,\r\n      \"simulation_status\": \"SIMULATED\",\r\n      \"fixture_only\": true,\r\n      \"choices\": [\r\n        {\r\n          \"index\": 0,\r\n          \"finish_reason\": \"stop\",\r\n          \"message\": {\r\n            \"role\": \"assistant\",\r\n            \"content\": \"Question: Does Mira choose?\\nWhy: mock.\"\r\n          }\r\n        }\r\n      ],\r\n      \"usage\": {\r\n        \"prompt_tokens\": 12,\r\n        \"completion_tokens\": 8,\r\n        \"total_tokens\": 20\r\n      }\r\n    },\r\n    \"http_status\": 200,\r\n    \"estimated_cost_cny\": \"0.000028\"\r\n  },\r\n  {\r\n    \"local_request_id\": \"p206-plan-critique-07a4f11fb6c540c7a64e53811d5a3510\",\r\n    \"request\": {\r\n      \"messages\": [\r\n        {\r\n          \"content\": \"The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\\n\\nCurrent conversation:\\n\\nHuman: \\n============================================================================================================================================\\nRole:\\nI would like you to act as \\\"Leader persona\\\" to evaluate the \\\"originality\\\" of a story. \\n============================================================================================================================================\\n\\n====================================================================================================================================================================================\\n\\n[Information]\\n--------------------------\\n<3 Questions>\\n    1) \\n    Is the repair visible?\\n    2) \\n    Is the offer earned?\\n    3)\\n    Does Mira choose?\\n<Critiqued Storylines>\\n    ## Identity\\nSynthetic Plot context.\\n\\n## Role in the Arc\\nSynthetic Plot context.\\n\\n## Key Scenes\\n- S1 Mira asks for a screwdriver and steadies the public door.\\n\\n## Hook\\nSynthetic Plot context.\\n\\n## Required Story Beats\\n- B01 Mira asks for help, accepts a practical offer, and chooses a next step.\\n\\n## Forbidden Items\\nSynthetic Plot context.\\n\\n## Connections\\nSynthetic Plot context.\\n\\n## Target Length\\nSynthetic Plot context.\\n--------------------------\\n[Request]\\nMy request is \\\"\\\"Of the '3 questions' I posed , which are the best question to improve the Creativity of the 'Critiqued Storylines'? \\nThe story line should be original and creative, but it need to keep a consistent story.\\nPlease score based on the evaluation factors below.\\\"\\\"\\n\\n    - Originality: Does altering the storyline in response to this question enhance its originality by integrating \\\"original plot/setting/themes,\\\" \\\"unusual story structure,\\\" and \\\"unusual ending\\\" into the narrative?\\n    - Coherence: Will adjustments made to the storyline based on this question improve its overall coherence and consistency?\\n    - Interesting: Does revising the storyline according to this question amplify the storyline's appeal and keep the readers more engaged?\\n    \\nChoose one best question and ask answer use below Answer Format.\\nKey Point: \\\"Exclude questions that are not relevant to the genre of the original story. For example, exclude questions that change from a romance storyline to a fantasy novel story.\\\"\\nAnswer Format)\\n============================================================================================================================================\\n<answer>\\nQuestion : // ... one question ... //\\nOriginality: // ... Originality Score ... // , Coherence: // ... Coherent story ... //, Interesting: // ... Interesting story ... //\\nWhy: // ... Why you choose this question? ... //\\n<answer/>\\n============================================================================================================================================\\nexample)\\n<answer>\\nQuestion : \\nWhat if Gabriel finds out that his apartment is haunted?\\nWhy:\\nThis question is quite eccentric because it is not a common occurrence for an apartment to be haunted. It is also odd because it is not something that is typically seen in stories about apartment living. The question is novel because it is a new take on the traditional story of a young man moving out of his parents' house and into his own apartment. Finally, the question is innovative because it introduces the element of ghosts into the story, which is something that is not typically seen in stories about apartment living.\\n<answer/>\\n\\nAI:\",\r\n          \"role\": \"user\"\r\n        }\r\n      ],\r\n      \"model\": \"deepseek-flash\",\r\n      \"logprobs\": false,\r\n      \"n\": 1,\r\n      \"stop\": [\r\n        \"<answer/>\"\r\n      ],\r\n      \"stream\": false,\r\n      \"temperature\": 1.0,\r\n      \"thinking\": {\r\n        \"type\": \"disabled\"\r\n      },\r\n      \"max_tokens\": 2048\r\n    },\r\n    \"max_output_tokens_enforced\": 2048,\r\n    \"ledger_settlement\": {\r\n      \"status\": \"SETTLED\",\r\n      \"request_id\": \"p206-plan-critique-07a4f11fb6c540c7a64e53811d5a3510\",\r\n      \"estimated_request_cny\": \"0.000028\",\r\n      \"campaign_committed_cny\": \"0.000170\",\r\n      \"limit_cny\": null,\r\n      \"cost_context\": {\r\n        \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n        \"project_id\": \"TIDELINE\",\r\n        \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n        \"stage\": \"critics_plot\",\r\n        \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n      }\r\n    },\r\n    \"cost_context\": {\r\n      \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n      \"project_id\": \"TIDELINE\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"stage\": \"critics_plot\",\r\n      \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\"\r\n    },\r\n    \"response\": {\r\n      \"id\": \"SIMULATED-NATIVE-4\",\r\n      \"model\": \"deepseek-flash\",\r\n      \"object\": \"chat.completion\",\r\n      \"created\": 0,\r\n      \"simulation_status\": \"SIMULATED\",\r\n      \"fixture_only\": true,\r\n      \"choices\": [\r\n        {\r\n          \"index\": 0,\r\n          \"finish_reason\": \"stop\",\r\n          \"message\": {\r\n            \"role\": \"assistant\",\r\n            \"content\": \"Question: Is the offer earned?\\nWhy: mock.\"\r\n          }\r\n        }\r\n      ],\r\n      \"usage\": {\r\n        \"prompt_tokens\": 12,\r\n        \"completion_tokens\": 8,\r\n        \"total_tokens\": 20\r\n      }\r\n    },\r\n    \"http_status\": 200,\r\n    \"estimated_cost_cny\": \"0.000028\"\r\n  }\r\n]\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/run_receipt.json": {
+      "sha256": "e37c8ff536dce4ce64311df01df6307cdc2f1a1b35f7c83a1dccfa1765918db2",
+      "utf8": "{\r\n  \"action\": \"plan-critique\",\r\n  \"base_url\": \"https://api.deepseek.com/v1\",\r\n  \"build\": \"runtime/patched/CritiCS/p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\",\r\n  \"cost_binding\": {\r\n    \"cost_context\": {\r\n      \"binding_sha256\": \"470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632\",\r\n      \"project_id\": \"TIDELINE\",\r\n      \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n      \"run_id\": \"SIGNED-ADAPT-RUN\",\r\n      \"stage\": \"critics_plot\"\r\n    },\r\n    \"parent_run_id\": \"SIGNED-ADAPT-RUN\",\r\n    \"parent_run_path\": \"C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Temp\\\\storystudio-early-cnw-e2e-t08sumh4\\\\ExplicitTestDataHome\\\\projects\\\\9deef572-fea0-40ec-8c68-6f79d6cf4f9b\\\\runs\\\\SIGNED-ADAPT-RUN\",\r\n    \"project_id\": \"TIDELINE\",\r\n    \"project_instance_id\": \"9deef572-fea0-40ec-8c68-6f79d6cf4f9b\",\r\n    \"stage\": \"critics_plot\"\r\n  },\r\n  \"fixture_only\": true,\r\n  \"input_sha256\": \"BFE1F4BAC9D45E2B12D7924F897CBDA51639CCDAA67DB0C2D14810977D16DCBD\",\r\n  \"mode\": \"MOCK_ONLY\",\r\n  \"model\": \"deepseek-flash\",\r\n  \"output_sha256\": \"E00E60E2B0DE39BB9307D3E472CF51B10FF379EB4F8EEE0723B4A6EAABDE7433\",\r\n  \"simulation_status\": \"SIMULATED\",\r\n  \"status\": \"SUCCEEDED\"\r\n}\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/output/persona.txt": {
+      "sha256": "579decc49bd4559495524904e1f9f1632697f549ae758271e714d26c25f8753a",
+      "utf8": "Expert 1\r\nStructure persona\r\nExpert 2\r\nEnding persona\r\nExpert 3\r\nOriginal persona\r\nLeader\r\nLeader persona\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/output/same_criteria/question/ending.txt": {
+      "sha256": "b603f26f50accf263ee7307da6eef40d58f4a7978be87ce37b191e24beb3216b",
+      "utf8": "Question: Is the offer earned?\r\nWhy: mock.\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/output/same_criteria/question/leader.txt": {
+      "sha256": "7734613f2a460aa04c5c414c999fde01ad6aa28c67e714e51b1bad2752745bda",
+      "utf8": "Is the offer earned?\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/output/same_criteria/question/original.txt": {
+      "sha256": "ddef58627041dbf6d56bf19d16bbd023af8c0599c023d812d574703bf40b08c6",
+      "utf8": "Question: Does Mira choose?\r\nWhy: mock.\r\n"
+    },
+    "runs/SIGNED-ADAPT-RUN-critics-plan-critique-1b853585/output/same_criteria/question/structure.txt": {
+      "sha256": "777326f94e858c42e98dd499797790929ffd4fedc7da7744e7d99d5e8e40e62b",
+      "utf8": "Question: Is the repair visible?\r\nWhy: mock.\r\n"
+    }
+  },
+  "actual_synthetic_ledger": {
+    "schema": 1,
+    "campaign_id": "MOCK_ONLY",
+    "currency": "CNY",
+    "limit": null,
+    "pricing_snapshot": {
+      "requested_model": "deepseek-flash",
+      "currency": "CNY",
+      "input_cache_miss_usd_per_million_peak": 1,
+      "output_usd_per_million_peak": 2,
+      "usd_to_cny_estimate": 1
+    },
+    "created_at": "2026-10-13T18:30:26Z",
+    "requests": [
+      {
+        "request_id": "cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P3.1 CNW plot/plot_agent",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 11191,
+        "reserved_output_token_cap": 4000,
+        "reserved_cny": "0.019191",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T18:33:59Z",
+        "cost_context": {
+          "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "plot",
+          "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99",
+          "owner_grant_sha256": "808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a",
+          "identity_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-plot-063422ada2d8408ea3856d575853eceb",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T18:34:39Z",
+        "usage": {
+          "input_tokens": 10,
+          "output_tokens": 10
+        },
+        "estimated_actual_cny": "0.000030",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "p206-plan-critique-37c2703b6ece48cd98e3624f90128d85",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P2-06 native CritiCS plan-critique provider call",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 12000,
+        "reserved_output_token_cap": 2048,
+        "reserved_cny": "0.016096",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T18:45:33Z",
+        "cost_context": {
+          "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "critics_plot",
+          "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99",
+          "owner_grant_sha256": "808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a",
+          "identity_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "provider_request_id": "SIMULATED-NATIVE-0",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T18:45:33Z",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 8
+        },
+        "estimated_actual_cny": "0.000028",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "p206-plan-critique-8e65ff356c7e4c1db959dae35074601a",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P2-06 native CritiCS plan-critique provider call",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 12000,
+        "reserved_output_token_cap": 2048,
+        "reserved_cny": "0.016096",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T18:50:26Z",
+        "cost_context": {
+          "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "critics_plot",
+          "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99",
+          "owner_grant_sha256": "808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a",
+          "identity_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "provider_request_id": "SIMULATED-NATIVE-1",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T18:50:26Z",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 8
+        },
+        "estimated_actual_cny": "0.000028",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "p206-plan-critique-46e97a9a65b246bf8c72a27e41d399d7",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P2-06 native CritiCS plan-critique provider call",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 12000,
+        "reserved_output_token_cap": 2048,
+        "reserved_cny": "0.016096",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T18:56:08Z",
+        "cost_context": {
+          "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "critics_plot",
+          "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99",
+          "owner_grant_sha256": "808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a",
+          "identity_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "provider_request_id": "SIMULATED-NATIVE-2",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T18:56:08Z",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 8
+        },
+        "estimated_actual_cny": "0.000028",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "p206-plan-critique-61c3a35611814cf49ce7100e4e86376d",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P2-06 native CritiCS plan-critique provider call",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 12000,
+        "reserved_output_token_cap": 2048,
+        "reserved_cny": "0.016096",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T19:01:52Z",
+        "cost_context": {
+          "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "critics_plot",
+          "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99",
+          "owner_grant_sha256": "808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a",
+          "identity_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "provider_request_id": "SIMULATED-NATIVE-3",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T19:01:52Z",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 8
+        },
+        "estimated_actual_cny": "0.000028",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      },
+      {
+        "request_id": "p206-plan-critique-07a4f11fb6c540c7a64e53811d5a3510",
+        "run_id": "SIGNED-ADAPT-RUN",
+        "purpose": "P2-06 native CritiCS plan-critique provider call",
+        "requested_model": "deepseek-flash",
+        "reserved_input_token_cap": 12000,
+        "reserved_output_token_cap": 2048,
+        "reserved_cny": "0.016096",
+        "status": "SETTLED",
+        "reserved_at": "2026-10-13T19:07:33Z",
+        "cost_context": {
+          "project_instance_id": "9deef572-fea0-40ec-8c68-6f79d6cf4f9b",
+          "project_id": "TIDELINE",
+          "run_id": "SIGNED-ADAPT-RUN",
+          "stage": "critics_plot",
+          "binding_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "cost_policy_snapshot": {
+          "config_sha256": "a283a12d228ee9207e1af2c451cd6141cdcf592fe9d1f50c0635fd374c834489",
+          "pricing_sha256": "3429424ff2d88e515a7fbffd560eb8de41b753cfe0c0252fc3f46be0ac335fbe"
+        },
+        "cost_pricing_snapshot": {
+          "requested_model": "deepseek-flash",
+          "currency": "CNY",
+          "input_cache_miss_usd_per_million_peak": 1,
+          "output_usd_per_million_peak": 2,
+          "usd_to_cny_estimate": 1
+        },
+        "live_authorization": {
+          "bundle_sha256": "66915675f77458a3c0df7daf040004aa5ff8fc05d8755ce9355be1cb0c884b99",
+          "owner_grant_sha256": "808d87868ac7c404614c13bfe404b138f1aefe09fb0b24af618bb80398b9049a",
+          "identity_sha256": "470750ece0ac271c6a8c48c2b3eb51074d344f43662ab5cf0fb4015e5cd64632"
+        },
+        "provider_request_id": "SIMULATED-NATIVE-4",
+        "returned_model": "deepseek-flash",
+        "finish_reason": "stop",
+        "settled_at": "2026-10-13T19:07:33Z",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 8
+        },
+        "estimated_actual_cny": "0.000028",
+        "budget_exceeded": {
+          "token_caps": false,
+          "reservation": false,
+          "campaign_limit": false
+        }
+      }
+    ]
+  }
+}

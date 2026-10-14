@@ -1,0 +1,43 @@
+{
+  "status": "SUBSET_BYTE_AUDIT_NOT_ACCEPTANCE",
+  "source_sha256": "72cd2af33cbc03c914d9810446d28caa004b9a436e41487398b193ed92cafaa3",
+  "simulation_status": "SIMULATED",
+  "mode": "MOCK_ONLY",
+  "files": [
+    {
+      "path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+      "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "byte_hash_matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-0d911044e7de436299469db4511d94fd.request.json",
+      "sha256": "7e385ad41d1fd56a9bdda94a9431f5506e2283da83cc54faa72fe8819e074101",
+      "byte_hash_matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-0d911044e7de436299469db4511d94fd.json",
+      "sha256": "5f64a43abfe1c03b6e43c35cd78f3e0ad17e821d767501d24e6e9035254dcd52",
+      "byte_hash_matches": true
+    }
+  ],
+  "plot_matches": true,
+  "request_matches": true,
+  "raw_response_matches": true,
+  "ledger_rows": 1,
+  "ledger_statuses": [
+    "SETTLED"
+  ],
+  "expiry_observations": {
+    "chapter": {
+      "sha256": "13fa5087cc94b83eea609fcd52bb6ab96cbca9ead3ba6e1a296874f12e8297a4",
+      "two_entries_with_terminal_expiry": true,
+      "actual_transport_calls": 0
+    },
+    "operation": {
+      "sha256": "5f16a99fcb2b5ac543f69f474973984efafa9fb7c9111fed6c9ea2dbae81271b",
+      "two_entries_with_terminal_expiry": true,
+      "actual_transport_calls": 0
+    }
+  },
+  "limitations": "The generic whole-Run capture audit raised KeyError because this pre-existing Plot capture contains exactly artifact/request/raw response, not the contract. No whole-Run or contract-byte audit is claimed. Production assertions and raw test log remain unchanged."
+}

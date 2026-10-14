@@ -1,0 +1,43 @@
+test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ERROR
+
+======================================================================
+ERROR: test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 112, in test_native_plot_text_shared_fees_pending_cache_and_refine_consumption
+    recovery.execute_checked(s.run, stage)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 373, in execute_checked
+    result = r._dispatch_cnw_stage(run_dir, stage)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1419, in _dispatch_cnw_stage
+    return execute_prose(run_dir)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1875, in execute_prose
+    content, receipt = cnw_live_call(run_dir, stage="prose", role_id=f"prose_agent_{attempt + 1}", messages=messages, output_cap=output_cap)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 762, in cnw_live_call
+    operation_binding = _require_generic_provider_authorization(run_dir, stage=stage, allow_operation_simulation=True)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 758, in _require_generic_provider_authorization
+    require_run_authorization(run_dir, stage=stage)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 262, in require_run_authorization
+    grant = require_authorization(run.parent.parent, state["contract_path"], run_id=run.name,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 177, in require_authorization
+    return _verify_bundle(request, path, rebuild=lambda: build_request(project, contract_path, run_id=run_id),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 189, in _verify_bundle
+    terms = _terms(value["terms"], allowed_stages=allowed_stages)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 157, in _terms
+    raise ContractError("LIVE_GRANT_EXPIRED", "owner grant is not currently valid")
+tools.cnw_contract.ContractError: LIVE_GRANT_EXPIRED: owner grant is not currently valid
+
+----------------------------------------------------------------------
+Ran 1 test in 3617.371s
+
+FAILED (errors=1)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-j0w6icyz\\ExplicitTestDataHome\\projects\\3904f3fc-4bd5-4d4c-985a-3a7411126a5d\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-873ffd57\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-j0w6icyz\\ExplicitTestDataHome\\projects\\3904f3fc-4bd5-4d4c-985a-3a7411126a5d\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-873ffd57\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-j0w6icyz\\ExplicitTestDataHome\\projects\\3904f3fc-4bd5-4d4c-985a-3a7411126a5d\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-873ffd57", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

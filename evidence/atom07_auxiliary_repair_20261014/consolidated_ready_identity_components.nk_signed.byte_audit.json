@@ -1,0 +1,222 @@
+{
+  "status": "BYTE_AUDIT_NOT_ACCEPTANCE",
+  "source_sha256": "893d314fb6791988b6d1dbca8b29bdb23206df61b53f6b15a988c97faf294c0e",
+  "mode": "MOCK_ONLY",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "file_count": 20,
+  "mismatches": 0,
+  "contract_matches_run": true,
+  "rows": [
+    {
+      "path": "nk-provider-nk-SIGNED-ADAPT-RUN-29604fe982714c3aa753f4b72f95a980.jsonl",
+      "stored_sha256": "c0952a4547aedb79a902051156126201ed0d1b5dbb2d36c7d80dd259ec25060a",
+      "computed_sha256": "c0952a4547aedb79a902051156126201ed0d1b5dbb2d36c7d80dd259ec25060a",
+      "matches": true
+    },
+    {
+      "path": "nk-service-nk-SIGNED-ADAPT-RUN-29604fe982714c3aa753f4b72f95a980.json",
+      "stored_sha256": "e84c1adca394eab92c9654fb343a43eeccd72218852c909ea55fc0983be1d464",
+      "computed_sha256": "e84c1adca394eab92c9654fb343a43eeccd72218852c909ea55fc0983be1d464",
+      "matches": true
+    },
+    {
+      "path": "run.lock",
+      "stored_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "computed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "matches": true
+    },
+    {
+      "path": "run_state.json",
+      "stored_sha256": "f66ed0577ea537ec6436abd1c2e38f7722209d3bc779c98a1a9c9d4e8e950e91",
+      "computed_sha256": "f66ed0577ea537ec6436abd1c2e38f7722209d3bc779c98a1a9c9d4e8e950e91",
+      "matches": true
+    },
+    {
+      "path": "artifacts/contract.json",
+      "stored_sha256": "d0850af369d5c427176c1af1d8d90bb4f89ec0810ce5d7654e570a9dc750e8dd",
+      "computed_sha256": "d0850af369d5c427176c1af1d8d90bb4f89ec0810ce5d7654e570a9dc750e8dd",
+      "matches": true
+    },
+    {
+      "path": "artifacts/production_preparation.json",
+      "stored_sha256": "e506640f9dfc21ab2da5aa0a53e90ab8fffac3941b81c3d4d657a3243356707e",
+      "computed_sha256": "e506640f9dfc21ab2da5aa0a53e90ab8fffac3941b81c3d4d657a3243356707e",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-b05cdc9f66684dcaae8b95e733e95f7f.json",
+      "stored_sha256": "ba6d5b5d1c88a89c18820838efd811783ff20a291943c96d9ecdb3e0ac9b168c",
+      "computed_sha256": "ba6d5b5d1c88a89c18820838efd811783ff20a291943c96d9ecdb3e0ac9b168c",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-plot-b05cdc9f66684dcaae8b95e733e95f7f.request.json",
+      "stored_sha256": "cf3329cf76364a8b9347ef556698abe1bbeabe6d93dd373d666659db166ee5c6",
+      "computed_sha256": "cf3329cf76364a8b9347ef556698abe1bbeabe6d93dd373d666659db166ee5c6",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-b5263f739cc8408c9cf76a263248a55e.json",
+      "stored_sha256": "ddc6fedf7f73697a8ce6bb1a95d08ee94ef9c6ea6c7bb80ca7134e56641a4fa5",
+      "computed_sha256": "ddc6fedf7f73697a8ce6bb1a95d08ee94ef9c6ea6c7bb80ca7134e56641a4fa5",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-scene_cards-b5263f739cc8408c9cf76a263248a55e.request.json",
+      "stored_sha256": "fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e",
+      "computed_sha256": "fd352f957f5837c97d2a3844e3e5ad30c0bf422dfbc06a60e014bf0650a3fd5e",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-a2a9281289c347a088cc4cbb6dcb31e4.json",
+      "stored_sha256": "0c735404a88912ca4d0c69048481a72727c1e103677142a8e713285713c18069",
+      "computed_sha256": "0c735404a88912ca4d0c69048481a72727c1e103677142a8e713285713c18069",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/cnw-SIGNED-ADAPT-RUN-writing_brief-a2a9281289c347a088cc4cbb6dcb31e4.request.json",
+      "stored_sha256": "ac2c145bf63031f056a9dada267f97c7fd1f741bdb0ab64f267e3cfe0b452f74",
+      "computed_sha256": "ac2c145bf63031f056a9dada267f97c7fd1f741bdb0ab64f267e3cfe0b452f74",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-29604fe982714c3aa753f4b72f95a980.json",
+      "stored_sha256": "ca6376e648f8dfcdc4c7b6612461597e94ae13bc1363d0d6ed23a74a871982ec",
+      "computed_sha256": "ca6376e648f8dfcdc4c7b6612461597e94ae13bc1363d0d6ed23a74a871982ec",
+      "matches": true
+    },
+    {
+      "path": "artifacts/provider/nk-SIGNED-ADAPT-RUN-29604fe982714c3aa753f4b72f95a980.request.json",
+      "stored_sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "computed_sha256": "ef6aae3c5d7fb0873ae114d6cd9f2a46883e936a68bfac6b933cace844396422",
+      "matches": true
+    },
+    {
+      "path": "artifacts/support/nk-reflection.md",
+      "stored_sha256": "3ec83cbaba08dd3f862cc3df3c00686c031a75950831a20ddd9c0c08884e1377",
+      "computed_sha256": "3ec83cbaba08dd3f862cc3df3c00686c031a75950831a20ddd9c0c08884e1377",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+      "stored_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "computed_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/plot/d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6.meta.json",
+      "stored_sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6",
+      "computed_sha256": "d63535bbe52a80bb50b58468ca56f3b54dc6720c435eca324d3798f54b12bbe6",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/scene_cards/8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa.meta.json",
+      "stored_sha256": "8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa",
+      "computed_sha256": "8a27260f5e309f3737d32dfc16cff23505dda72a07a49b2d146f551010a11daa",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/scene_cards/90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874.md",
+      "stored_sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+      "computed_sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+      "matches": true
+    },
+    {
+      "path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
+      "stored_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "computed_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "matches": true
+    }
+  ],
+  "stage_artifact_observations": [
+    {
+      "stage": "plot",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+      "artifact_sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "captured_artifact_matches": true,
+      "artifact_nonempty": true
+    },
+    {
+      "stage": "scene_cards",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/scene_cards/90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874.md",
+      "artifact_sha256": "90fdcc7b2d0b8f1ad610a66e478b668e78c0681e7972d894ebe2b81278dca874",
+      "captured_artifact_matches": true,
+      "artifact_nonempty": true
+    },
+    {
+      "stage": "writing_brief",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
+      "artifact_sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "captured_artifact_matches": true,
+      "artifact_nonempty": true
+    },
+    {
+      "stage": "prose",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "lint_layer1",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "lint_layer2",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "multi_lens_review",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "adversarial_verify",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "completeness_critic",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "refine",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    },
+    {
+      "stage": "re_review",
+      "status": "NOT_RUN",
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "captured_artifact_matches": false,
+      "artifact_nonempty": false
+    }
+  ]
+}

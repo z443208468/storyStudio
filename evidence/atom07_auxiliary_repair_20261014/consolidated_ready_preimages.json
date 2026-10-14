@@ -1,0 +1,12 @@
+{
+  "status": "PUBLIC_SOURCE_PREIMAGES_BEFORE_CONSOLIDATED_REPAIR",
+  "head": "f8c72d59b070a3544047189de0fb31f3b138e6df",
+  "production_edits_after_this_backup": "NOT_YET_STARTED_AT_CAPTURE",
+  "files": [
+    {"repository_path": "tools/cnw_runner.py", "backup": "cnw_runner.py", "sha256": "c9203f1b0675e6e6da099864f7a6f64d617ce776774d0c32f8cca557b66bc210"},
+    {"repository_path": "tests/test_cnw_nk_input_limits.py", "backup": "test_cnw_nk_input_limits.py", "sha256": "62a75e554752efd843aed31e2139220278721555e11047f50fb23c23720cd679"},
+    {"repository_path": "tests/test_cnw_signed_critics_consumers.py", "backup": "test_cnw_signed_critics_consumers.py", "sha256": "1f6c0ed1fd55d8c70fb78e48af4f95f3fe2e2fef70c917498fd235e89a6b743f"},
+    {"repository_path": "tools/cnw_live_authorization.py", "backup": "cnw_live_authorization.py", "sha256": "e4a88ca6eb3aa649793150a16389d898cd442b2edb7b3ec7fcdf10682ffdefcc"}
+  ],
+  "limits": "Backup identity only; not a test result, Controller verdict, push permission or production authorization."
+}

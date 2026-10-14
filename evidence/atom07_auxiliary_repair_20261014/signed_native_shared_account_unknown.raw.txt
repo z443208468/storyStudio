@@ -1,0 +1,11 @@
+test_signed_instances_share_slots_settle_and_keep_unknown_without_replay (tests.test_cnw_signed_critics_accounting.SignedCriticsAccountingTests.test_signed_instances_share_slots_settle_and_keep_unknown_without_replay) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 780.909s
+
+OK
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-3fipuhf1\\ExplicitTestDataHome\\projects\\0966f1d5-d1a2-4b7a-9495-44b33386c48a\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3ee16e00\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-3fipuhf1\\ExplicitTestDataHome\\projects\\0966f1d5-d1a2-4b7a-9495-44b33386c48a\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3ee16e00\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-3fipuhf1\\ExplicitTestDataHome\\projects\\0966f1d5-d1a2-4b7a-9495-44b33386c48a\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3ee16e00", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}
+{"status": "FAILED_OR_UNKNOWN", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-3fipuhf1\\ExplicitTestDataHome\\projects\\650eac5e-3bdd-4e8d-85bc-bd41deb50d54\\runs\\SIGNED-OTHER-RUN-critics-plan-critique-b22492c9", "provider_call_count": 1, "provider_request_ids": [null], "error_type": "APIConnectionError"}

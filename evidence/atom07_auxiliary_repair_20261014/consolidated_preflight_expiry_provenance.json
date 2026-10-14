@@ -1,0 +1,89 @@
+{
+  "status": "ROUND_PROVENANCE_NOT_ACCEPTANCE",
+  "changed_production_functions": [
+    "_verify_bundle",
+    "build_request"
+  ],
+  "copies": [
+    {
+      "name": "consolidated_preflight_expiry_consumers.check.json",
+      "sha256": "465b8180e328610417993ffcc09da51857997d95fb9b57a3254ebb970d0ebd9b",
+      "exact_public_copy": true
+    },
+    {
+      "name": "consolidated_preflight_expiry_consumers.consumers.json",
+      "sha256": "72cd2af33cbc03c914d9810446d28caa004b9a436e41487398b193ed92cafaa3",
+      "exact_public_copy": true
+    },
+    {
+      "name": "consolidated_preflight_expiry_consumers.consumers.json.chapter_verification_expiry.json",
+      "sha256": "13fa5087cc94b83eea609fcd52bb6ab96cbca9ead3ba6e1a296874f12e8297a4",
+      "exact_public_copy": true
+    },
+    {
+      "name": "consolidated_preflight_expiry_consumers.consumers.json.operation_verification_expiry.json",
+      "sha256": "5f16a99fcb2b5ac543f69f474973984efafa9fb7c9111fed6c9ea2dbae81271b",
+      "exact_public_copy": true
+    },
+    {
+      "name": "consolidated_preflight_expiry_consumers.raw.txt",
+      "sha256": "3222b35428a0d47f0057e98281c1cc9031c9f11dc1da8abba26fc9628971c89d",
+      "exact_public_copy": true
+    },
+    {
+      "name": "consolidated_preflight_expiry_consumers.subset_audit.json",
+      "sha256": "3e26eb22c77e807b25ac70d7150f6f1f1c8190012d04fab960451987015208d6",
+      "exact_public_copy": true
+    },
+    {
+      "name": "native_acl_consumers_after_preflight_20261014.audit.json",
+      "sha256": "3f6ab7edd926b0a2ee7c7b80bae3c2b80fc7b3a77e094c137f57ef41fa18bf97",
+      "exact_public_copy": true
+    },
+    {
+      "name": "native_acl_consumers_after_preflight_20261014.consumers.json.terminal_capture.json",
+      "sha256": "6bf55e918df27b3eaaa68a87b0861c64ed63b374cce600be12d85e4a2e93e330",
+      "exact_public_copy": true
+    },
+    {
+      "name": "native_acl_consumers_after_preflight_20261014.driver.py",
+      "sha256": "3e684d515090142292f6a6eb8b153aa5130c601dab0b2a98c8bf70e2589b43ff",
+      "exact_public_copy": true
+    },
+    {
+      "name": "native_acl_consumers_after_preflight_20261014.events.jsonl",
+      "sha256": "47e32a26138019514c617c1df953ab54b547b0c136faf7edc1a6021af003559e",
+      "exact_public_copy": true
+    },
+    {
+      "name": "native_acl_consumers_after_preflight_20261014.json",
+      "sha256": "c5be5bc3a5145d483dc09488cd16327e024ab351755f6db5cd77a55c11a427ac",
+      "exact_public_copy": true
+    },
+    {
+      "name": "native_acl_consumers_after_preflight_20261014.summary.json",
+      "sha256": "5ce14da2c8954d22be35cb2a53eb3e8725b7acbba9f2f552d36c66326da2f4ee",
+      "exact_public_copy": true
+    }
+  ],
+  "source_observations": [
+    {
+      "report": "consolidated_preflight_expiry_consumers.check.json",
+      "source_unchanged_during_run": true,
+      "source_current_matches_report": true
+    },
+    {
+      "report": "native_acl_consumers_after_preflight_20261014.json",
+      "source_unchanged_during_run": true,
+      "source_current_matches_report": true
+    }
+  ],
+  "actual_test_exit_code": 0,
+  "diagnosis_error": {
+    "type": "RuntimeError",
+    "message": "DIAGNOSTIC_EXPECTED_ONE_LEGITIMATE_LENS",
+    "traceback": "Traceback (most recent call last):\n  File \"D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\diagnose_native_acl_consumers_after_preflight_20261014.py\", line 145, in <module>\n    namespace['run_bounded_diagnosis'](case)\n  File \"D:\\CangqiStudio\\StoryStudio_R5_Atom07_Current_20261013\\native_acl_consumers_after_preflight_20261014.driver.py\", line 64, in run_bounded_diagnosis\n    raise RuntimeError('DIAGNOSTIC_EXPECTED_ONE_LEGITIMATE_LENS')\nRuntimeError: DIAGNOSTIC_EXPECTED_ONE_LEGITIMATE_LENS\n"
+  },
+  "tests_run_by_audit": 0,
+  "real_provider_calls": 0
+}

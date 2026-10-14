@@ -1,0 +1,84 @@
+{
+  "status": "OBSERVATION_SUMMARY_NOT_ACCEPTANCE",
+  "diagnostic_report_sha256": "30d08b5abc10ab27fa10a6a66a0ed277ea67f7aa4f5cd657d9758fbddea19fb2",
+  "commands": {
+    "whoami.exe": 998,
+    "icacls.exe": 1002
+  },
+  "cli_returncodes": {
+    "0": 2000
+  },
+  "cli_error_types": {},
+  "duration_s": {
+    "mean": 0.019508499999879858,
+    "median": 0.0159999999741558,
+    "maximum": 1.9839999999967404,
+    "total": 39.01699999975972
+  },
+  "stack_outer_functions": {
+    "<module>": 159,
+    "setUp": 48,
+    "run_bounded_diagnosis": 22,
+    "create": 18,
+    "produce": 18,
+    "require_authorization": 18,
+    "_verify_bundle": 4,
+    "build_plot_request": 176,
+    "execute_plot": 14,
+    "validate": 24,
+    "require_run_authorization": 96,
+    "_compute_contract_preflight": 740,
+    "build_request": 168,
+    "build_run_contract_preflight": 413,
+    "_cost_account": 8,
+    "cnw_live_call": 14,
+    "expected_requests": 28,
+    "_cnw_live_call_in_slot": 28,
+    "command_reserve": 4
+  },
+  "milestones": [
+    {
+      "kind": "milestone",
+      "label": "start",
+      "elapsed_s": 0.0,
+      "python_threads": 1,
+      "own_process_handles": 312,
+      "cli_calls": 0,
+      "max_cli_inflight": 0
+    },
+    {
+      "kind": "milestone",
+      "label": "terminal_before_cleanup",
+      "elapsed_s": 42.625,
+      "python_threads": 1,
+      "own_process_handles": 323,
+      "cli_calls": 2000,
+      "max_cli_inflight": 1
+    },
+    {
+      "kind": "milestone",
+      "label": "terminal_after_cleanup",
+      "elapsed_s": 42.625,
+      "python_threads": 1,
+      "own_process_handles": 323,
+      "cli_calls": 2000,
+      "max_cli_inflight": 1
+    }
+  ],
+  "terminal_stages": {
+    "plot": "EXECUTION_INCOMPLETE",
+    "scene_cards": "NOT_RUN",
+    "writing_brief": "NOT_RUN",
+    "prose": "NOT_RUN",
+    "lint_layer1": "NOT_RUN",
+    "lint_layer2": "NOT_RUN",
+    "multi_lens_review": "NOT_RUN",
+    "adversarial_verify": "NOT_RUN",
+    "completeness_critic": "NOT_RUN",
+    "refine": "NOT_RUN",
+    "re_review": "NOT_RUN"
+  },
+  "actual_provider_receipt_count": 0,
+  "actual_synthetic_ledger_rows": 0,
+  "limitations": "The explicit 2000-CLI safety bound was reached before Plot. No real CLI timeout was reproduced; repeated load is measured but not proven the timeout cause."
+}

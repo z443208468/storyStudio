@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signed_pre_run_and_real_existing_run_have_same_identity_without_provider PASSED [ 20%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [ 40%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signature_for_other_implementation_cannot_create_run PASSED [ 60%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run 
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_forgery_wrong_roles_type_alias_expiry_and_source_change_reject_before_run PASSED [ 80%]
+tests/test_cnw_signed_operations.py::SignedOperationTests::test_signed_approved_revision_publishes_only_copy_and_reuses_receipt PASSED [100%]
+
+============== 5 passed, 5 subtests passed in 169.73s (0:02:49) ===============

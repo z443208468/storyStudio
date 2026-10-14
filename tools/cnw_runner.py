@@ -729,8 +729,12 @@ def _require_generic_provider_authorization(run_dir: Path, *, stage: str, allow_
     state = load_state(run_dir)
     operation_owner = _operation_owner(run_dir, state)
     if operation_owner is not None:
-        return _require_project_operation_authorization(operation_owner, allow_simulated=allow_operation_simulation,
-                                                        run_dir=run_dir, stage=stage)
+        binding = _require_project_operation_authorization(operation_owner,
+            allow_simulated=allow_operation_simulation, run_dir=run_dir, stage=stage)
+        if stage == "project_revision_apply" and binding is None:
+            raise ContractError("LIVE_AUTHORIZATION_REQUIRED",
+                                "creative approval does not grant Provider or fee permission")
+        return binding
     if stage == "project_revision_apply":
         raise ContractError("LIVE_AUTHORIZATION_REQUIRED", "creative approval does not grant Provider or fee permission")
     snapshot = run_dir / "artifacts/contract.json"
@@ -1579,7 +1583,10 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
         if native_response != reflection_response:
             raise ContractError("NK_NATIVE_RESPONSE_MISMATCH", "native route and actual Provider response differ")
     mapped, mapping = map_reflection_to_brief("", reflection_response, {
-        "status": "LIVE_ACCEPTED", "request_id": receipt["request_id"], "provider_request_id": receipt["provider_request_id"],
+        "status": "SIMULATED" if receipt.get("mode") == "MOCK_ONLY" else "LIVE_ACCEPTED",
+        "mode": receipt.get("mode"), "simulation_status": receipt.get("simulation_status"),
+        "fixture_only": receipt.get("fixture_only"),
+        "request_id": receipt["request_id"], "provider_request_id": receipt["provider_request_id"],
         "model": receipt["model"], "finish_reason": receipt["finish_reason"], "usage": receipt["usage"],
         "http_status": receipt["http_status"], "validated_response_sha256": sha(json.dumps(reflection_response, ensure_ascii=False, sort_keys=True).encode("utf-8")),
         "raw_response_sha256": receipt["raw_response_sha256"]})
@@ -1597,18 +1604,92 @@ def _nk_pov(run_dir: Path, state: dict, contract: dict) -> dict:
     return {"status": "MATERIALIZED", "path": "artifacts/support/nk-reflection.md", "mapping": mapping}
 
 
+def _verify_current_nk_payload(run_dir: Path, payload: dict) -> None:
+    contract = _contract_for(run_dir)
+    if contract.get("schema_version") != "cnw_work_unit_v2":
+        return
+    if _support_integration_mode(contract, "nk") != "ENABLED":
+        raise ContractError("LIVE_AUXILIARY_DISABLED", "NK is not enabled by this Run contract")
+    try:
+        from .cnw_nk_adapter import build_nk_payload
+    except ImportError:
+        from cnw_nk_adapter import build_nk_payload
+    state = load_state(run_dir)
+    cards = _read_stage_text(run_dir, state, "scene_cards")
+    expected = build_nk_payload(contract, cards, _role_meta("cards", contract))
+    if json.dumps(payload, ensure_ascii=False, sort_keys=True) != json.dumps(expected, ensure_ascii=False, sort_keys=True):
+        raise ContractError("NK_CURRENT_CARDS_MISMATCH", "actual NK payload differs from current Cards")
+
+
 def _invoke_nk_service(run_dir: Path, payload: dict) -> dict:
+    _verify_current_nk_payload(run_dir, payload)
     _require_generic_provider_authorization(run_dir, stage="writing_brief")
+    _require_generic_provider_authorization(run_dir, stage="support_hook")
     account = _cost_account(run_dir, "support_hook")
     guard = account or _p2_guard()
     with guard.provider_slot():
         return _invoke_nk_service_in_slot(run_dir, payload, guard)
 
 
+def _nk_input_token_cap(run_dir: Path) -> int:
+    if _contract_for(run_dir).get("schema_version") != "cnw_work_unit_v2":
+        return 10000
+    try:
+        from .cnw_live_authorization import require_run_authorization
+    except ImportError:
+        from cnw_live_authorization import require_run_authorization
+    grant = require_run_authorization(run_dir, stage="support_hook")
+    return min(10000, grant["terms"]["max_input_tokens"])
+
+
+def _verify_nk_send_authorization(run_dir: Path, payload: dict, guard, request_id: str, input_token_cap: int) -> None:
+    """Recheck the original V2 reservation after readiness, before generation."""
+    try:
+        from .cost_guard import RunAccount, accounting, verify_row
+        from .cnw_live_authorization import require_run_authorization
+    except ImportError:
+        from cost_guard import RunAccount, accounting, verify_row
+        from cnw_live_authorization import require_run_authorization
+    _verify_current_nk_payload(run_dir, payload)
+    grant = require_run_authorization(run_dir, stage="support_hook")
+    current = _cost_account(run_dir, "support_hook")
+    if not isinstance(guard, RunAccount) or current is None or current != guard:
+        raise ContractError("COST_BINDINGS_CHANGED", "NK account changed while waiting for readiness")
+    if min(10000, grant["terms"]["max_input_tokens"]) != input_token_cap:
+        raise ContractError("NK_RESERVATION_BINDING_CHANGED", "NK input limit changed after reservation")
+    rows = [row for row in accounting.read_ledger_snapshot()["requests"]
+            if row.get("request_id") == request_id]
+    if len(rows) != 1:
+        raise ContractError("NK_RESERVATION_BINDING_CHANGED", "expected one original NK reservation")
+    row = rows[0]
+    verify_row(row, guard, request_id=request_id, provider_request_id=None)
+    expected_grant = {name: grant[name] for name in
+                      ("bundle_sha256", "owner_grant_sha256", "identity_sha256")}
+    if (row.get("status") != "PENDING" or row.get("live_authorization") != expected_grant
+            or row.get("requested_model") != guard.model
+            or row.get("reserved_input_token_cap") != input_token_cap
+            or row.get("reserved_output_token_cap") != 1024
+            or row.get("cost_policy_snapshot") != grant["cost_policy"]):
+        raise ContractError("NK_RESERVATION_BINDING_CHANGED", "NK send differs from its original reservation")
+
+
 def _invoke_nk_service_in_slot(run_dir: Path, payload: dict, guard) -> dict:
     import socket
     import shutil
     import subprocess
+    _verify_current_nk_payload(run_dir, payload)
+    _require_generic_provider_authorization(run_dir, stage="support_hook")
+    is_v2 = _contract_for(run_dir).get("schema_version") == "cnw_work_unit_v2"
+    if is_v2:
+        try:
+            from .cost_guard import RunAccount
+        except ImportError:
+            from cost_guard import RunAccount
+        derived_account = _cost_account(run_dir, "support_hook")
+        if not isinstance(guard, RunAccount) or derived_account is None or guard != derived_account:
+            raise ContractError("COST_BINDINGS_CHANGED", "NK transport account differs from the current Run")
+        guard = derived_account
+    input_token_cap = _nk_input_token_cap(run_dir)
     index = json.loads((ROOT / "patches/nk/PATCH_INDEX.json").read_text(encoding="utf-8"))
     build = ROOT / "runtime/patched/NK" / index["runtime_build_id"]
     if not (build / "node_modules").is_dir():
@@ -1622,7 +1703,7 @@ def _invoke_nk_service_in_slot(run_dir: Path, payload: dict, guard) -> dict:
         raise ContractError("DEEPSEEK_API_KEY_REQUIRED", "nk")
     request_id = f"nk-{run_dir.name}-{uuid.uuid4().hex}"
     reservation = guard.command_reserve(argparse.Namespace(request_id=request_id, run_id=run_dir.name,
-        purpose="P3.1 NK generate-perspective", input_token_cap=10000, output_token_cap=1024), emit=False)
+        purpose="P3.1 NK generate-perspective", input_token_cap=input_token_cap, output_token_cap=1024), emit=False)
     if reservation.get("status") != "RESERVED":
         raise ContractError("NK_COST_RESERVATION_FAILED", request_id)
     capture = run_dir / f"nk-provider-{request_id}.jsonl"
@@ -1630,6 +1711,7 @@ def _invoke_nk_service_in_slot(run_dir: Path, payload: dict, guard) -> dict:
     env["DEEPSEEK_API_KEY"] = key
     env["STORYSTUDIO_NK_LIVE_CAPTURE"] = str(capture).replace("\\", "/")
     env["STORYSTUDIO_NK_LIVE_REQUEST_ID"] = request_id
+    env["STORYSTUDIO_NK_MAX_INPUT_TOKENS"] = str(input_token_cap)
     env["NODE_OPTIONS"] = f"--require={(ROOT / 'tools/nk-live-fetch.cjs').as_posix()}"
     # A fixed port can reach a previous run's server and capture under its ID.
     # Launch Next directly so the PID we terminate is the actual server.
@@ -1666,6 +1748,8 @@ def _invoke_nk_service_in_slot(run_dir: Path, payload: dict, guard) -> dict:
                 time.sleep(0.5)
         if not ready:
             raise ContractError("NK_SERVER_NOT_READY", str(port))
+        if is_v2:
+            _verify_nk_send_authorization(run_dir, payload, guard, request_id, input_token_cap)
         response = httpx.post(f"http://127.0.0.1:{port}/api/generate-perspective", json=payload, timeout=180.0)
         http_status = int(response.status_code)
         body = response.json()
@@ -1729,6 +1813,8 @@ def _invoke_nk_service_in_slot(run_dir: Path, payload: dict, guard) -> dict:
         "cost_cny": float(cost.quantize(Decimal("0.000001"), rounding=ROUND_CEILING)),
         "ledger_settlement": settlement,
         "mode": "LIVE", "fixture_only": False}
+    if provider_response.get("simulation_status") == "SIMULATED" or provider_response.get("fixture_only") is True:
+        receipt.update(mode="MOCK_ONLY", simulation_status="SIMULATED", fixture_only=True)
     return {"response": body, "receipt": receipt}
 
 
@@ -1960,6 +2046,13 @@ def _parallel_provider_calls(run_dir: Path, calls: list[dict]) -> list[tuple[str
         raise ContractError("MAX_IN_FLIGHT_POLICY_MISMATCH", str(limit))
     if not calls:
         return []
+    # The Run ceiling does not expand the shared account's admission capacity.
+    # Keep every independent request, but avoid local workers waiting behind
+    # this same Run's long, fully validated request inside a single shared slot.
+    shared_limit = json.loads(_p2_guard().CONFIG.read_text(encoding="utf-8-sig"))["provider"]["max_in_flight"]
+    if type(shared_limit) is not int or not 1 <= shared_limit <= 5:
+        raise ContractError("MAX_IN_FLIGHT_POLICY_MISMATCH", str(shared_limit))
+    limit = min(limit, shared_limit)
     with ThreadPoolExecutor(max_workers=min(limit, len(calls))) as pool:
         from contextvars import copy_context
         futures = [pool.submit(copy_context().run, cnw_live_call, run_dir, **call) for call in calls]
@@ -2384,8 +2477,8 @@ def execute_re_review(run_dir: Path, *, remaining_passes: int = 3) -> dict:
     return {"stage": "re_review", "lenses": len(results), "status": "CLEAN", "revision_number": revision_number}
 
 
-def _critics_excerpt(run_dir: Path, state: dict) -> Path | None:
-    """Select a short, source-referenced excerpt for CritiCS text-refine."""
+def _critics_excerpt_selection(run_dir: Path, state: dict) -> tuple[str, list[dict]] | None:
+    """Compute the current source-referenced excerpt without publishing it."""
     prose = _read_stage_text(run_dir, state, "prose")
     ranges = []
     findings = _confirmed_findings(run_dir, state)
@@ -2410,9 +2503,23 @@ def _critics_excerpt(run_dir: Path, state: dict) -> Path | None:
     if not selected:
         return None
     excerpt = "\n".join(item["text"] for item in selected)
+    return excerpt.rstrip() + "\n", selected
+
+
+def _critics_excerpt(run_dir: Path, state: dict) -> Path | None:
+    """Select a short, source-referenced excerpt for CritiCS text-refine."""
+    selection = _critics_excerpt_selection(run_dir, state)
+    if selection is None:
+        return None
+    excerpt, selected = selection
     target = run_dir / "artifacts/support/critics-excerpt.md"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(excerpt.rstrip() + "\n", encoding="utf-8")
+    if _contract_for(run_dir).get("schema_version") == "cnw_work_unit_v2":
+        target.write_bytes(excerpt.encode("utf-8"))
+    else:
+        target.write_text(excerpt, encoding="utf-8")
+    state = load_state(run_dir)
+    prose = _read_stage_text(run_dir, state, "prose")
     target.with_suffix(".sources.json").write_text(json.dumps({"prose_sha256": sha(prose.encode("utf-8")),
         "offset_unit": "decoded Unicode character index", "selected_sentences": selected,
         "excerpt_sha256": sha(target.read_bytes())}, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -2426,7 +2533,9 @@ def _critics_hook(run_dir: Path, stage: str) -> dict:
         evidence = {"status": "DISABLED", "provider_call": "none"}
         _record_hook(run_dir, "critics_plot" if stage == "plot" else "critics_text", evidence)
         return evidence
-    _require_generic_provider_authorization(run_dir, stage=stage)
+    parent_stage = "plot" if stage == "plot" else "refine"
+    _require_generic_provider_authorization(run_dir, stage=parent_stage)
+    _require_generic_provider_authorization(run_dir, stage="critics_plot" if stage == "plot" else "critics_text")
     import subprocess
     try:
         from .cnw_critics_adapter import read_native_result
@@ -2933,6 +3042,28 @@ def verify_live(args) -> dict:
         raise ContractError("LIVE_PROVIDER_EVIDENCE_MISSING", args.run_id)
     if any(receipt.get("mode") == "MOCK_ONLY" or receipt.get("fixture_only") is True for receipt in state["provider_requests"]):
         raise ContractError("MOCK_RECEIPT_CANNOT_PROVE_LIVE", args.run_id)
+    try:
+        from .cnw_critics_adapter import read_native_result, read_native_support_records
+        from .cnw_recovery import iter_native_support_records
+    except ImportError:
+        from cnw_critics_adapter import read_native_result, read_native_support_records
+        from cnw_recovery import iter_native_support_records
+    native_records = []
+    for name, hook in iter_native_support_records(state):
+        artifact = hook.get("input_artifact", {})
+        if not artifact.get("path"):
+            raise ContractError("CRITICS_NATIVE_RUN_IDENTITY_MISSING", name)
+        native_records.append((name, hook, assert_output_within_root(run_root, artifact["path"])))
+    account = _cost_account(run_root, native_records[0][0]) if native_records else None
+    if account:
+        native_results = read_native_support_records(run_root, native_records)
+    else:
+        native_results = [(name, hook, read_native_result(hook["run_name"],
+            action="plan-critique" if name == "critics_plot" else "text-refine", input_path=path))
+            for name, hook, path in native_records]
+    for name, hook, result in native_results:
+        if result.get("mode") == "MOCK_ONLY":
+            raise ContractError("MOCK_RECEIPT_CANNOT_PROVE_LIVE", name)
     for stage in CNW_STAGES:
         record = state["stages"].get(stage, {})
         if record.get("status") not in _MATERIALIZED:

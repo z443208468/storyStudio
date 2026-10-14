@@ -1,0 +1,407 @@
+{
+  "status": "CAPTURED_CONSUMER_INDEX_NOT_ACCEPTANCE",
+  "capture_sha256": "8a691eadf5e9e15dc6632170129d18288790a90b83bb7e2876a61b0a260df026",
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "stages": [
+    {
+      "stage": "plot",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/plot/bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd.md",
+      "sha256": "bfe1f4bac9d45e2b12d7924f897cbda51639ccdaa67db0c2d14810977d16dcbd",
+      "byte_count": 419,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "plot",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "a1522ae06248cd054394a128fbe93bf220fb8e4c18c49a86db3d28486177bf3b",
+        "input_hashes": {
+          "messages": "a511739104cd6ef67d5f1d1faaa6c18164bb4b71cb1cd60d4f028ed1aead2994"
+        },
+        "message_sha256": "a511739104cd6ef67d5f1d1faaa6c18164bb4b71cb1cd60d4f028ed1aead2994",
+        "builder_sha256": "9deb42132b9d1dc824881a56e01114c5b7498394c7a44d7592555bbb6f0e03e0",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "00b781984214a8a759deb5299a042a740d97a30e4e6745f36bca15629602a82a"
+      }
+    },
+    {
+      "stage": "scene_cards",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/scene_cards/2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf.md",
+      "sha256": "2f2dac78f782d282d8da7b4ae4700105aa8f60d0f878fc34578b78586ceddcaf",
+      "byte_count": 674,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "scene_cards",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "3bba46446f8b76baaa98934570de4030ac880fc6342a346e01d01cd2fd8a14f9",
+        "input_hashes": {
+          "messages": "61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18"
+        },
+        "message_sha256": "61962324a90719c4e4a4df5ed3dfc7f3ddbb1c02991c32b5d2d7c6ba92553e18",
+        "builder_sha256": "6e60e3d7a7e49dca5a8ad6c30a84f4c6353f5b9e04bbde2fe3514d15a3d50c4a",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "167691ca8299b39e30238a791b9f665c990be8436092e2416f31773aa7045a88"
+      }
+    },
+    {
+      "stage": "writing_brief",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/writing_brief/8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963.md",
+      "sha256": "8246daa585196e3ceeb8f029b8599f6fb824b5b519fbfa309da5a70d5aa90963",
+      "byte_count": 425,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "writing_brief",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "4b787afce03334134a5300d9f2b5c29164c3d7b69aad4edc9ec4034f7296e026",
+        "input_hashes": {
+          "messages": "bbec201d181202915a3e34d96e8534db67eff8a2e78d597d6202b3e6f4716204"
+        },
+        "message_sha256": "bbec201d181202915a3e34d96e8534db67eff8a2e78d597d6202b3e6f4716204",
+        "builder_sha256": "3630ac62de4fed58c0092374880f4774a2f2813863f3b8dc3a322193e4e6f389",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "e54fa36500481d0fd2f64bb4fa7d617a1a8a0cb15b36ac277b79213f07d507df"
+      }
+    },
+    {
+      "stage": "prose",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/prose/0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709.md",
+      "sha256": "0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709",
+      "byte_count": 246,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "prose",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "a3e9fbc43fe011cb7aab88018d7a517d1a2c78604a1317e4c472243a6f9bd48a",
+        "input_hashes": {
+          "messages": "380a3d24c842de81e6b164d391f26939d09d8e558cf2bf2f94b241426b4562d9"
+        },
+        "message_sha256": "380a3d24c842de81e6b164d391f26939d09d8e558cf2bf2f94b241426b4562d9",
+        "builder_sha256": "8c131f504eed3c5c8b45b7534045996fef742aa3bcade6382209babac9e1bbfb",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "f8a1bd69a64d08639035416c323057900a6c454c8014c6cbbe749f605e33bc76"
+      }
+    },
+    {
+      "stage": "lint_layer1",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/lint_layer1/79e9cc042859323072c96c4f90b9d534939f097b8256e9d9fc0e8afccf0dc38a.json",
+      "sha256": "79e9cc042859323072c96c4f90b9d534939f097b8256e9d9fc0e8afccf0dc38a",
+      "byte_count": 617,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "lint_layer1",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "d51691324070435ffad027b9efe25e9983cd8381f4939238be9b08b9b7112059",
+        "input_hashes": {
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
+          "rules": "0646e61cab4e34bcabb56df6ac6e317a40ef143fc6576642f58f711652cf364d"
+        },
+        "builder_sha256": "9de525acdab3b8811b47eb351d95c7392a468e00b463c9cb5189020f012569aa",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "8c42bacb50e1c766156d838755e88f1556af660a704985b663b69953e77199f2"
+      }
+    },
+    {
+      "stage": "lint_layer2",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/lint_layer2/7eef85e3bcb7968b35f59fe100597219db4f3a7ffa09e57f147a9432dd488d7b.json",
+      "sha256": "7eef85e3bcb7968b35f59fe100597219db4f3a7ffa09e57f147a9432dd488d7b",
+      "byte_count": 620,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "lint_layer2",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "d51691324070435ffad027b9efe25e9983cd8381f4939238be9b08b9b7112059",
+        "input_hashes": {
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
+          "rules": "0646e61cab4e34bcabb56df6ac6e317a40ef143fc6576642f58f711652cf364d"
+        },
+        "builder_sha256": "9de525acdab3b8811b47eb351d95c7392a468e00b463c9cb5189020f012569aa",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "42d293144c80d7f6966b6260e5bbfc8368b8336c70f47d216d412d1dca04a5e0"
+      }
+    },
+    {
+      "stage": "multi_lens_review",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/multi_lens_review/fd30c9c18a57671d747324b941a7d0d515ba0400471a6c85d3eb08e5cc5511e2.json",
+      "sha256": "fd30c9c18a57671d747324b941a7d0d515ba0400471a6c85d3eb08e5cc5511e2",
+      "byte_count": 1352,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "multi_lens_review",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "80c080cb6c6bf638ce9131c44dddd4e550991ca1b13853bf208b4f4bbdb48bba",
+        "input_hashes": {
+          "lens_messages": "8ecad856017e2e648635326643a5d0fcb902d82b1c928708fd7ff615800672c1",
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931"
+        },
+        "builder_sha256": "f2f035e61d32b8469f2dac0fa12a033a54b4c9645fd6d2e010229d599b79a799",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "73d0661456d7ad63364f15acf5078cac8f9b928b304e40851d45f9fb3f20f94b"
+      }
+    },
+    {
+      "stage": "adversarial_verify",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/adversarial_verify/f384a96c28bb7ded0219126d583817b7ea572f531a5037a56cc8943213a13dd3.json",
+      "sha256": "f384a96c28bb7ded0219126d583817b7ea572f531a5037a56cc8943213a13dd3",
+      "byte_count": 1792,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "adversarial_verify",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "0619f3add5f7f92f451ac142b6a8de12d689d26d520eae433e8b3a8cb843ff63",
+        "input_hashes": {
+          "evidence": "31aed5548d2063a2cbe1220d5ff3fa4bb795875eb840eb851e35646b4b6e5e2d",
+          "lint2": "755c997863674c936b1c7e5414edafffc1e930a97f08097f524adf137e1e6bf1",
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
+          "review": "65b544bba20d277d837c3f6cf166ccf77763a711ab9622952ca191241aa9ff8b",
+          "verifier_goals": "c6a82c90ead37b3345e9ceb749a977fe573c198a009bf964590473bf4b6c7c47"
+        },
+        "builder_sha256": "19a530782f3b71ad5204532b9f446235196046a017f09134a51f5b61ce744c4c",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "b98a8cb4c248f89decd9660c378ebdc3c4513eb072d19d9fc57a9e917704acac"
+      }
+    },
+    {
+      "stage": "completeness_critic",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/completeness_critic/1b57ce4aa04f65d212bd37cff5a211d196280f11621ebcdb537f1d0ccb3615fe.json",
+      "sha256": "1b57ce4aa04f65d212bd37cff5a211d196280f11621ebcdb537f1d0ccb3615fe",
+      "byte_count": 559,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "completeness_critic",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "3ddc2f25b9e3c614bf07e076d95a0fdde785981090f515d98814e5f0d8c5446c",
+        "input_hashes": {
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
+          "sources": "5c73cb24b8681c50f83f592f1601fcf66b09db17b24f707321afb7c09f20ceca",
+          "verify": "f4d321ed2df9409698a20b2b9fe745cace27afa039c37eb1996fca220cb98dc4"
+        },
+        "builder_sha256": "27b18648b3e2cd994466b0479cda8f6f31f02dd1bf1aa4679ec5263a510178b5",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "9429541e404491223bfd9d737b3bec173cdc570b56ab7640d3090cc85c4cf12d"
+      }
+    },
+    {
+      "stage": "refine",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/refine/f1cef658a245548e9dc5d7f57f2a1144b536bafa94e94ba15cdc7969337d77a1.md",
+      "sha256": "f1cef658a245548e9dc5d7f57f2a1144b536bafa94e94ba15cdc7969337d77a1",
+      "byte_count": 235,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "refine",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "f1b0b4263063e56f7bb5524fe9bf64cc4a965b6ae03fb61b9ec6e61c12742a6e",
+        "input_hashes": {
+          "brief": "2ca978186d00325e03f31a9bb534df36ca5d49a35ce57f25ca4cbf0e81cf281b",
+          "completeness": "d71d8b78d59dfe7e9396e5e9921dc4a7a2e3e9c83014547b51aab05c18e8d01a",
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
+          "verify": "f4d321ed2df9409698a20b2b9fe745cace27afa039c37eb1996fca220cb98dc4"
+        },
+        "builder_sha256": "d3a84b8e5da753d5b3dcfb4d7e5d89bdb5501d2f01e28a67aa8bba853e03330f",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "91711d79aa241e07b60784db85160332a9627b230971b716ad9a68ed38115c07"
+      }
+    },
+    {
+      "stage": "re_review",
+      "status": "STAGE_MATERIALIZED",
+      "artifact_path": "artifacts/candidates/re_review/ac6c51f7c33ca15616608cd121c430e30f40b17fc06d6162a299f95d0ff059bc.json",
+      "sha256": "ac6c51f7c33ca15616608cd121c430e30f40b17fc06d6162a299f95d0ff059bc",
+      "byte_count": 598,
+      "execution_input_identity": {
+        "version": 1,
+        "stage": "re_review",
+        "contract_sha256": "d5aa17ff46ceb38591024e934b9be1ad9f536e6e23fff1fcd4253bc95eebfae0",
+        "input_sha256": "b20ec01e01d2863c4f87ddc8ae8102fad743fd9d1566a18301f7d591d5ffebba",
+        "input_hashes": {
+          "affected": "b4a929ecfd92ae77ec65279138cd9dd0ce36dc697daabd0e058b767d9e72fba6",
+          "lens_goals": "9a2aea48c37a31c4449bdd59015e6f409c5d14df2cfc084f12f6e73ba8808e92",
+          "prose": "f530618b1433a27c4e0f282dd06640a8a9bfd1001355521885250e364b665931",
+          "refine": "a696035d2f946d5ae6abf4fea8bd413d0f92a3f13668907ed8113b9d34d0732c",
+          "sources": "d7d774fd5b1768ffb92489db24d0f7abfd25bbf89030e68e10a8194ac6700ff0",
+          "verifier_goals": "c6a82c90ead37b3345e9ceb749a977fe573c198a009bf964590473bf4b6c7c47"
+        },
+        "builder_sha256": "36f2dcf61a9f55ec5554c51b5ecc0857c6ff9fbd6af521bfb470eaa3c6b32e82",
+        "workflow_sha256": "613770163a03ee9c6f00063b6b284d75636f48d662420967ee6189d1e473f68f",
+        "model": "deepseek-flash",
+        "api_url": "https://api.deepseek.com/v1/chat/completions",
+        "transport_sha256": "de6aded4e70ea03ad2556970fc52338ea3cf5d5af1b96772c5b3e6b544977ae4",
+        "authorization_boundary_sha256": "0b26210b0f9c5e87493cb44fc7b3cb6db7f6966936a19e1b87a61f3c92ce5488",
+        "cost_boundary_sha256": "c3b1335bba01fc143aa873499f2e7988d5778c276ac7369726c4744bc1a9819d",
+        "sha256": "e611c6158e6d10c4633fb5cd5e5599c057d52cc01e795f9d9924e4c121860b90"
+      }
+    }
+  ],
+  "actual_cnw_request_counts": {
+    "plot": 1,
+    "scene_cards": 1,
+    "writing_brief": 1,
+    "prose": 1,
+    "multi_lens_review": 5,
+    "adversarial_verify": 3,
+    "completeness_critic": 1,
+    "refine": 1,
+    "re_review": 2
+  },
+  "actual_lens_roles": [
+    "style",
+    "character",
+    "plot",
+    "canon",
+    "story_specific"
+  ],
+  "actual_verifier_subjects": [
+    {
+      "finding_id": "canon-1",
+      "verifier_id": "correctness"
+    },
+    {
+      "finding_id": "canon-1",
+      "verifier_id": "character_consistency"
+    },
+    {
+      "finding_id": "canon-1",
+      "verifier_id": "continuity_plausibility"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "canon-1",
+      "severity": "P1",
+      "issue": "The draft invents a family relationship contradicted by project Canon.",
+      "evidence": "the keeper was her brother",
+      "recommendation": "Remove the invented relation.",
+      "lens_id": "canon",
+      "lens_finding_id": "FALSE-CANON-01",
+      "lens_finding_index": 1,
+      "lens_provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-multi_lens_review-c01a9f1c5d7342349496fb74df343318"
+    }
+  ],
+  "actual_aggregated_verdicts": {
+    "canon-1": {
+      "votes": {
+        "correctness": "not_refuted",
+        "character_consistency": "not_refuted",
+        "continuity_plausibility": "refuted"
+      },
+      "status": "CONFIRMED"
+    }
+  },
+  "completeness_candidate_findings": [
+    {
+      "finding_id": "OMITTED-READER-PAYOFF",
+      "lens_id": "story_specific",
+      "category": "reader_reward",
+      "issue": "The next request should earn a concrete response.",
+      "evidence": "The initial draft ends without a follow-up choice.",
+      "recommendation": "Add a small, observable next request.",
+      "prompt_update": "Check that a practical offer leads to a concrete next request."
+    }
+  ],
+  "refine_contains_native_selected_expression": true,
+  "refine_contains_completeness_id": true,
+  "selected_b_in_plot": true,
+  "unselected_a_absent": true,
+  "prose_direct_canon_canary_absent": true,
+  "prose_sha256": "0bed2ec13aadbb4a93caf45aef8bc4e199294cea840865c33f2da55877ab0709",
+  "refine_sha256": "f1cef658a245548e9dc5d7f57f2a1144b536bafa94e94ba15cdc7969337d77a1",
+  "rereview_report": {
+    "stage": "re_review",
+    "status": "CLEAN",
+    "affected_lenses": [
+      "canon",
+      "story_specific"
+    ],
+    "lenses": {
+      "canon": {
+        "findings": [],
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-re_review-8f42c8819bd946f88cd42359b10e0381"
+      },
+      "story_specific": {
+        "findings": [],
+        "provider_request_id": "SIMULATED-cnw-SIGNED-ADAPT-RUN-re_review-e4831d96fc884ab28a7a8a2139245ef6"
+      }
+    },
+    "revision_number": 1,
+    "candidate_sha256": "f1cef658a245548e9dc5d7f57f2a1144b536bafa94e94ba15cdc7969337d77a1",
+    "dispositions": [],
+    "confirmed_findings": []
+  },
+  "rereview_consumes_refined_sha": true,
+  "actual_native_requests": 8,
+  "actual_native_service_calls": 2,
+  "actual_ledger_rows_by_stage": {
+    "plot": 1,
+    "critics_plot": 5,
+    "scene_cards": 1,
+    "writing_brief": 1,
+    "prose": 1,
+    "multi_lens_review": 5,
+    "adversarial_verify": 3,
+    "completeness_critic": 1,
+    "critics_text": 3,
+    "refine": 1,
+    "re_review": 2
+  },
+  "ledger_all_settled": true,
+  "all_cnw_receipts_mock_only": true,
+  "limits": "This indexes the actual enabled-native eleven-stage Run; it does not run Export. Existing disabled EARLY gate/export evidence and exact unchanged-source reuse require separate Controller review. No Live, migration, Atom acceptance or next-stage permission."
+}

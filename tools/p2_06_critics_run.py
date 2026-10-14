@@ -100,9 +100,13 @@ def main(argv=None) -> int:
             raise SystemExit("CRITICS_PARENT_RUN_BINDING_INVALID")
         try:
             from .cnw_runner import _require_generic_provider_authorization
+            from .cnw_live_authorization import verify_auxiliary_native_input
         except ImportError:
             from cnw_runner import _require_generic_provider_authorization
+            from cnw_live_authorization import verify_auxiliary_native_input
         _require_generic_provider_authorization(parent_run_dir, stage=args.parent_stage)
+        verify_auxiliary_native_input(parent_run_dir, stage=args.parent_stage,
+                                      action=args.action, input_path=critics_bridge.project_path(args.input))
         account = cost_guard.for_run(parent_run_dir, stage=args.parent_stage, model=MODEL)
         if not isinstance(account, cost_guard.RunAccount):
             raise SystemExit("CRITICS_COST_CONTEXT_NOT_REGISTERED")
@@ -150,6 +154,21 @@ def _execute_native(args, run_dir: Path, *, account=None, parent_run_dir: Path |
             raise RuntimeError("CRITICS_PROVIDER_REQUEST_NOT_JSON") from exc
         if body.get("model") != MODEL:
             raise RuntimeError("CRITICS_PROVIDER_MODEL_MISMATCH")
+        try:
+            from .cnw_runner import _estimate_input_tokens
+            from .cnw_live_authorization import require_run_authorization
+        except ImportError:
+            from cnw_runner import _estimate_input_tokens
+            from cnw_live_authorization import require_run_authorization
+        messages = body.get("messages")
+        if not isinstance(messages, list) or not messages:
+            raise RuntimeError("CRITICS_PROVIDER_MESSAGES_INVALID")
+        actual_input = _estimate_input_tokens(messages)
+        if actual_input > CAP_INPUT:
+            raise RuntimeError("CRITICS_PROVIDER_INPUT_LIMIT_EXCEEDED")
+        if account and actual_input > require_run_authorization(
+                parent_run_dir, stage=args.parent_stage)["terms"]["max_input_tokens"]:
+            raise RuntimeError("CRITICS_PROVIDER_INPUT_LIMIT_EXCEEDED")
         if body.get("max_tokens") is None or int(body["max_tokens"]) > CAP_OUTPUT:
             body["max_tokens"] = CAP_OUTPUT
 
@@ -171,6 +190,13 @@ def _execute_native(args, run_dir: Path, *, account=None, parent_run_dir: Path |
         call = {"local_request_id": request_id, "request": strip_key(body), "max_output_tokens_enforced": CAP_OUTPUT}
         try:
             with guard.provider_slot():
+                if account:
+                    try:
+                        from .cnw_live_authorization import verify_auxiliary_native_input
+                    except ImportError:
+                        from cnw_live_authorization import verify_auxiliary_native_input
+                    verify_auxiliary_native_input(parent_run_dir, stage=args.parent_stage,
+                                                  action=args.action, input_path=input_path)
                 if account:
                     reservation = account.command_reserve(reserve, emit=False)
                 else:
@@ -270,6 +296,9 @@ def _execute_native(args, run_dir: Path, *, account=None, parent_run_dir: Path |
                 "project_instance_id": account.context.project_instance_id,
                 "parent_run_id": account.context.run_id, "parent_run_path": str(parent_run_dir),
                 "stage": args.parent_stage, "cost_context": account.context.record()}
+            if any(call.get("response", {}).get("simulation_status") == "SIMULATED"
+                   or call.get("response", {}).get("fixture_only") is True for call in calls):
+                receipt.update(mode="MOCK_ONLY", simulation_status="SIMULATED", fixture_only=True)
             receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     if failure:
         (run_dir / "runner-error.json").write_text(json.dumps({"status": "FAILED_OR_UNKNOWN", "error_type": failure}, indent=2) + "\n", encoding="utf-8")

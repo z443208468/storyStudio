@@ -23,6 +23,19 @@ from tools import cnw_w10_policy as policy, cnw_recovery as recovery, cost_guard
 from tools.cnw_contract import ContractError
 
 
+def verification_expiry_clock(terms):
+    """Deterministic clock only; signatures and binding consumers stay real."""
+    end = datetime.fromisoformat(terms["expires_at"])
+    class VerificationClock(datetime):
+        observations = []
+        @classmethod
+        def now(cls, tz=None):
+            value = end - timedelta(seconds=1) if not cls.observations else end
+            cls.observations.append(value.isoformat())
+            return value.astimezone(tz) if tz is not None else value.replace(tzinfo=None)
+    return VerificationClock
+
+
 class LiveAuthorizationTests(unittest.TestCase):
     def setUp(self):
         self.fixture = early.EarlyCNWE2EGateTests()
@@ -107,13 +120,64 @@ class LiveAuthorizationTests(unittest.TestCase):
     def test_signed_pre_run_and_real_existing_run_have_same_identity_without_provider(self):
         before = auth.build_request(self.root, self.contract, run_id=self.run_id)
         self.create()
-        self.assertEqual(before, auth.build_request(self.root, self.contract, run_id=self.run_id))
+        with patch.object(auth.cnw_project, "_compute_contract_preflight",
+                wraps=auth.cnw_project._compute_contract_preflight) as compute:
+            self.assertEqual(before, auth.build_request(self.root, self.contract, run_id=self.run_id))
+        self.assertEqual(compute.call_count, 2)  # Real report's before/after checks.
+        self.assertTrue(all(call.kwargs["existing_run"] is True for call in compute.call_args_list))
         grant = auth.require_run_authorization(self.run, stage="plot")
         self.assertEqual(grant["status"], "LIVE_AND_FEES_AUTHORIZED")
         self.assertEqual(runner.load_state(self.run)["provider_requests"], [])
         self.assertEqual(self.http, [])
         self.assertFalse(self.fees.ledger.exists())
         self.assertEqual(cnw_live_provider.verify_run_preflight(self.run)["run_id"], self.run_id)
+
+    def test_existing_run_rejects_identity_and_provider_drift(self):
+        self.create()
+        state_path = self.run / "run_state.json"
+        original = state_path.read_bytes()
+        cases = {"run_id": "OTHER-RUN", "source_identity": {"source_id": "foreign"},
+            "provider_config_sha256": "0" * 64, "workflow_template_sha256": "0" * 64}
+        for field, value in cases.items():
+            changed = json.loads(original)
+            changed[field] = value
+            try:
+                state_path.write_bytes(policy._canonical_bytes(changed))
+                with self.subTest(field=field), self.assertRaises(ContractError):
+                    auth.build_request(self.root, self.contract, run_id=self.run_id)
+            finally:
+                state_path.write_bytes(original)
+        with patch.object(runner, "MODEL", "foreign-model"), self.assertRaisesRegex(
+                ContractError, "LIVE_AUTHORIZATION_PROVIDER_MISMATCH"):
+            auth.build_request(self.root, self.contract, run_id=self.run_id)
+        self.assertEqual(state_path.read_bytes(), original)
+        self.assertEqual(self.http, [])
+        self.assertFalse(self.fees.ledger.exists())
+
+    def test_verification_expiry_rejects_chapter_before_slot_or_reservation(self):
+        self.create()
+        from tools import cnw_request_identity
+        request = cnw_request_identity.expected_requests(self.run, stage="plot", role_id="plot_agent")[0]
+        original = (self.run / "run_state.json").read_bytes()
+        observations = []
+        for entry in (runner.cnw_live_call, runner._cnw_live_call_in_slot):
+            clock = verification_expiry_clock(self.terms)
+            with self.subTest(entry=entry.__name__), patch.object(auth, "datetime", clock), \
+                    patch.object(cost_guard.accounting, "provider_slot",
+                        side_effect=AssertionError("expired grant cannot open slot")), \
+                    self.assertRaisesRegex(ContractError, "LIVE_GRANT_EXPIRED"):
+                entry(self.run, **request)
+            self.assertEqual(len(clock.observations), 2)
+            observations.append({"entry": entry.__name__, "clock": clock.observations})
+        self.assertEqual((self.run / "run_state.json").read_bytes(), original)
+        self.assertEqual(self.http, [])
+        self.assertFalse(self.fees.ledger.exists())
+        target = os.environ.get("CNW_LIVE_GRANT_TEST_EVIDENCE")
+        if target:
+            Path(target + ".chapter_verification_expiry.json").write_text(json.dumps({
+                "simulation_status": "SIMULATED", "real_provider_calls": 0,
+                "observations": observations, "unchanged_run_state_sha256": hashlib.sha256(original).hexdigest(),
+                "synthetic_reservations": 0, "actual_transport_calls": self.http}, indent=2), encoding="utf-8")
 
     def test_archived_simulated_receipt_cannot_escape_owned_context(self):
         self.create()
@@ -126,6 +190,118 @@ class LiveAuthorizationTests(unittest.TestCase):
             auth.require_run_authorization(self.run, stage="plot")
         self.assertEqual(self.http, [])
         self.assertFalse(self.fees.ledger.exists())
+
+    def test_disabled_auxiliary_cannot_use_signed_hook_scope(self):
+        terms = self.full_terms()
+        terms["stages"].append("support_hook")
+        terms["roles"]["support_hook"] = ["nk_pov"]
+        self.sign(terms=terms)
+        self.create()
+        runner._persist_stage(self.run, "scene_cards", "artifacts/scene_cards.md",
+                              "## Scene 1\n### Required beats\n- Ada repairs the bell.\n")
+        with self.assertRaisesRegex(ContractError, "LIVE_AUXILIARY_DISABLED"):
+            auth.require_run_authorization(self.run, stage="support_hook")
+        self.assertEqual(self.http, [])
+        self.assertFalse(self.fees.ledger.exists())
+
+    def test_enabled_auxiliary_grants_bind_parent_material_action_and_shared_fees(self):
+        # Targeted authorization fixture: materialize only the prerequisites
+        # needed to inspect each auxiliary boundary; this is not an E2E run.
+        self.fixture.contract["integrations"] = {"nk": "ENABLED", "critics": "ENABLED"}
+        self.contract.write_text(json.dumps(self.fixture.contract, ensure_ascii=False), encoding="utf-8")
+        roles = {"plot": ["plot_agent"], "writing_brief": ["brief_agent"],
+            "refine": ["refine"], "support_hook": ["nk_pov"],
+            "critics_plot": ["critics_plot"], "critics_text": ["critics_text"]}
+        terms = self.full_terms()
+        terms.update(stages=list(roles), roles=roles)
+        self.sign(terms=terms)
+        with patch.object(runner, "_assert_support_components_available", return_value=None):
+            self.create()
+        runner._persist_stage(self.run, "plot", "artifacts/plot.md", "A fictional bell plan.\n")
+        runner._persist_stage(self.run, "scene_cards", "artifacts/scene_cards.md",
+                              "## Scene 1\n### Required beats\n- Ada repairs the bell.\n")
+        runner._persist_stage(self.run, "prose", "artifacts/prose.md", "Ada repairs the bell. Then it rings.\n")
+        runner._persist_stage(self.run, "adversarial_verify", "artifacts/verify.json",
+                              json.dumps({"findings": [], "verdicts": {}}))
+        runner._persist_stage(self.run, "completeness_critic", "artifacts/completeness.json",
+                              json.dumps({"candidate_findings": [{"evidence": "Then it rings."}]}))
+        from tools.cnw_nk_adapter import build_nk_payload
+        state = runner.load_state(self.run)
+        cards = runner._read_stage_text(self.run, state, "scene_cards")
+        payload = build_nk_payload(self.fixture.contract, cards, runner._role_meta("cards", self.fixture.contract))
+        runner._verify_current_nk_payload(self.run, payload)
+        with self.assertRaisesRegex(ContractError, "NK_CURRENT_CARDS_MISMATCH"):
+            runner._verify_current_nk_payload(self.run, {**payload, "fictional_tamper": True})
+        for stage in ("support_hook", "critics_plot", "critics_text"):
+            with self.subTest(stage=stage):
+                self.assertEqual(auth.require_run_authorization(self.run, stage=stage)["status"],
+                                 "LIVE_AND_FEES_AUTHORIZED")
+        with cost_guard.accounting.locked_ledger():
+            pass
+        for stage in ("support_hook", "critics_plot", "critics_text"):
+            account = cost_guard.for_run(self.run, stage=stage, model=runner.MODEL)
+            receipt = account.command_reserve(SimpleNamespace(request_id="SIMULATED-" + stage,
+                run_id=self.run_id, purpose="fictional auxiliary reserve",
+                input_token_cap=100, output_token_cap=100), emit=False)
+            self.assertEqual(receipt["status"], "RESERVED")
+        rows = cost_guard.accounting.read_ledger_snapshot()["requests"]
+        self.assertEqual({row["cost_context"]["stage"] for row in rows},
+                         {"support_hook", "critics_plot", "critics_text"})
+        self.assertEqual({row["cost_context"]["run_id"] for row in rows}, {self.run_id})
+        self.assertEqual(self.http, [])
+
+        plot_raw = (self.run / state["stages"]["plot"]["artifact"]["path"]).read_bytes()
+        plot_sha = hashlib.sha256(plot_raw).hexdigest()
+        plot_input = self.run / "artifacts/support" / ("critics-input-" + plot_sha + ".md")
+        plot_input.parent.mkdir(parents=True, exist_ok=True)
+        plot_input.write_bytes(plot_raw)
+        self.assertEqual(auth.verify_auxiliary_native_input(self.run, stage="critics_plot",
+            action="plan-critique", input_path=plot_input)["input_sha256"], plot_sha)
+        with self.assertRaisesRegex(ContractError, "ACTION_MISMATCH"):
+            auth.verify_auxiliary_native_input(self.run, stage="critics_plot",
+                action="text-refine", input_path=plot_input)
+        selection = runner._critics_excerpt_selection(self.run, runner.load_state(self.run))
+        self.assertIsNotNone(selection)
+        excerpt_raw = selection[0].encode("utf-8")
+        excerpt_sha = hashlib.sha256(excerpt_raw).hexdigest()
+        text_input = self.run / "artifacts/support" / ("critics-input-" + excerpt_sha + ".md")
+        text_input.write_bytes(excerpt_raw)
+        self.assertEqual(auth.verify_auxiliary_native_input(self.run, stage="critics_text",
+            action="text-refine", input_path=text_input)["input_sha256"], excerpt_sha)
+        text_input.write_bytes(b"foreign material\n")
+        with self.assertRaisesRegex(ContractError, "CRITICS_INPUT_CHANGED"):
+            auth.verify_auxiliary_native_input(self.run, stage="critics_text",
+                action="text-refine", input_path=text_input)
+        from tools import p2_06_critics_run as critics
+        child = self.root / "runs" / "fictional-critics-child"
+        child.mkdir()
+        with self.assertRaisesRegex(ContractError, "CRITICS_INPUT_CHANGED"):
+            critics.main(["--action", "text-refine", "--input", str(text_input),
+                "--run-dir", str(child), "--ledger-run-id", self.run_id,
+                "--parent-run-dir", str(self.run), "--parent-stage", "critics_text"])
+        self.assertEqual(self.http, [])
+        ledger_before = self.fees.ledger.read_bytes()
+        quota = copy.deepcopy(terms)
+        quota["max_requests"] = 3
+        self.sign(terms=quota)
+        account = cost_guard.for_run(self.run, stage="critics_text", model=runner.MODEL)
+        with self.assertRaisesRegex(ContractError, "REQUEST_LIMIT_EXCEEDED"):
+            account.command_reserve(SimpleNamespace(request_id="SIMULATED-fourth",
+                run_id=self.run_id, purpose="fictional fourth hook reserve",
+                input_token_cap=100, output_token_cap=100), emit=False)
+        self.assertEqual(self.fees.ledger.read_bytes(), ledger_before)
+        for changed in ("missing_parent", "wrong_role"):
+            invalid = copy.deepcopy(terms)
+            if changed == "missing_parent":
+                invalid["stages"].remove("refine")
+                invalid["roles"].pop("refine")
+            else:
+                invalid["roles"]["critics_text"] = ["foreign_hook"]
+            self.sign(terms=invalid)
+            with self.subTest(changed=changed), self.assertRaisesRegex(
+                    ContractError, "LIVE_GRANT_TERMS_INVALID"):
+                auth.require_run_authorization(self.run, stage="critics_text")
+        self.assertEqual(self.fees.ledger.read_bytes(), ledger_before)
 
     def test_actual_checked_plot_consumes_signed_b_and_records_original_accounting(self):
         self.create()

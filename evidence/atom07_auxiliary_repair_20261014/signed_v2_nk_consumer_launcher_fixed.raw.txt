@@ -1,0 +1,11 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_cnw_signed_auxiliary_consumers.py::SignedAuxiliaryConsumerTests::test_signed_nk_service_shared_account_brief_cache_and_mock_rejection PASSED [100%]
+
+======================== 1 passed in 286.79s (0:04:46) ========================

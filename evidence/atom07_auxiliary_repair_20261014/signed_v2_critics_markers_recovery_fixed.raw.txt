@@ -1,0 +1,48 @@
+test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ERROR
+
+======================================================================
+ERROR: test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 112, in test_native_plot_text_shared_fees_pending_cache_and_refine_consumption
+    recovery.execute_checked(s.run, stage)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 361, in execute_checked
+    result = r._dispatch_cnw_stage(run_dir, stage)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1423, in _dispatch_cnw_stage
+    return execute_five_lenses(run_dir)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2020, in execute_five_lenses
+    results = _parallel_provider_calls(run_dir, [dict(stage="multi_lens_review", role_id=lens_id,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1997, in _parallel_provider_calls
+    return [future.result() for future in futures]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1997, in <listcomp>
+    return [future.result() for future in futures]
+            ^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 769, in cnw_live_call
+    with (account or _p2_guard()).provider_slot():
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\p2_cost_guard.py", line 105, in provider_slot
+    raise TimeoutError("PROVIDER_SLOT_TIMEOUT")
+TimeoutError: PROVIDER_SLOT_TIMEOUT
+
+----------------------------------------------------------------------
+Ran 1 test in 1818.881s
+
+FAILED (errors=1)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-75dsj4g2\\ExplicitTestDataHome\\projects\\52fcd319-c5e7-4f85-a9fd-5746a5d2807d\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-5be0e682\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-75dsj4g2\\ExplicitTestDataHome\\projects\\52fcd319-c5e7-4f85-a9fd-5746a5d2807d\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-5be0e682\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-75dsj4g2\\ExplicitTestDataHome\\projects\\52fcd319-c5e7-4f85-a9fd-5746a5d2807d\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-5be0e682", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

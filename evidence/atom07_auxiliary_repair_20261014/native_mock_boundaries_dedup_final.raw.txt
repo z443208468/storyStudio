@@ -1,0 +1,56 @@
+test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+
+  test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse) (cache_variant='hook_action') ... ERROR
+test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse) ... ERROR
+
+======================================================================
+ERROR: test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse) (cache_variant='hook_action')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_native_mock_live_boundary.py", line 132, in test_native_current_attempt_pending_relabel_and_context_exit_refuse
+    adapter.read_native_support_records(s.run, [
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_critics_adapter.py", line 153, in read_native_support_records
+    cache[key] = _read_native_result(hook["run_dir"], action=action,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1124, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1128, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1201, in _execute_mock_call
+    return self._mock_wraps(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_critics_adapter.py", line 203, in _read_native_result
+    originals = {path: (batch.snapshot(path) if batch is not None else path.read_bytes())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_critics_adapter.py", line 203, in <dictcomp>
+    originals = {path: (batch.snapshot(path) if batch is not None else path.read_bytes())
+                        ^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_critics_adapter.py", line 102, in snapshot
+    raw = path.read_bytes()
+          ^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\pathlib.py", line 1050, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-aufjra9h\\ExplicitTestDataHome\\projects\\91005c68-e4ae-4108-8dd6-6d613c9df1a0\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3902ec59\\text_refinement.json'
+
+======================================================================
+ERROR: test_native_current_attempt_pending_relabel_and_context_exit_refuse (tests.test_cnw_native_mock_live_boundary.NativeMockLiveBoundaryTests.test_native_current_attempt_pending_relabel_and_context_exit_refuse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_native_mock_live_boundary.py", line 135, in test_native_current_attempt_pending_relabel_and_context_exit_refuse
+    refusals.append({'variant': 'cache_' + variant, 'code': rejected.exception.code,
+                                                            ^^^^^^^^^^^^^^^^^^
+AttributeError: '_AssertRaisesContext' object has no attribute 'exception'
+
+----------------------------------------------------------------------
+Ran 1 test in 731.939s
+
+FAILED (errors=2)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-aufjra9h\\ExplicitTestDataHome\\projects\\91005c68-e4ae-4108-8dd6-6d613c9df1a0\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3902ec59\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-aufjra9h\\ExplicitTestDataHome\\projects\\91005c68-e4ae-4108-8dd6-6d613c9df1a0\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3902ec59\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-aufjra9h\\ExplicitTestDataHome\\projects\\91005c68-e4ae-4108-8dd6-6d613c9df1a0\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-3902ec59", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

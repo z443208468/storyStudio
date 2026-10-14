@@ -1,0 +1,115 @@
+test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption) ... D:\CangqiStudio\StoryStudio\runtime\patched\CritiCS\p2-02-fbf66cbc-1a36a1120449-c4edecd8d4a1\critics\setting\chatsetting\gptsetting.py:47: LangChainDeprecationWarning: The class `ConversationChain` was deprecated in LangChain 0.2.7 and will be removed in 1.0. Use RunnableWithMessageHistory: https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html instead.
+  conversation = ConversationChain(llm=llm, memory=memory, verbose=False)
+ERROR
+
+======================================================================
+ERROR: test_native_plot_text_shared_fees_pending_cache_and_refine_consumption (tests.test_cnw_signed_critics_consumers.SignedCriticsConsumerTests.test_native_plot_text_shared_fees_pending_cache_and_refine_consumption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tools\project_paths.py", line 103, in _windows_private_acl
+    result = subprocess.run([icacls, str(path)], capture_output=True, text=True, timeout=10, check=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1124, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1128, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\unittest\mock.py", line 1189, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 101, in service
+    return real_run(command, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\subprocess.py", line 1630, in _communicate
+    raise TimeoutExpired(self.args, orig_timeout)
+subprocess.TimeoutExpired: Command '['C:\\Windows\\system32\\icacls.exe', 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-w8a6jnu6\\ExplicitTestDataHome']' timed out after 10 seconds
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_project.py", line 367, in _registered_project_identity
+    registration = resolve_project(root, data_home=root.parent.parent)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\project_paths.py", line 455, in resolve_project
+    root = resolve_data_home(explicit=data_home, env=env, pointer_path=pointer_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\project_paths.py", line 306, in resolve_data_home
+    _assert_private_permissions(canonical)
+  File "D:\CangqiStudio\StoryStudio\tools\project_paths.py", line 135, in _assert_private_permissions
+    _windows_private_acl(path, create=False, require_independent=require_independent_acl)
+  File "D:\CangqiStudio\StoryStudio\tools\project_paths.py", line 105, in _windows_private_acl
+    raise PathResolutionError("DATA_HOME_PERMISSION_CHECK_UNAVAILABLE", "Windows ACL inspection failed") from exc
+tools.project_paths.PathResolutionError: DATA_HOME_PERMISSION_CHECK_UNAVAILABLE: Windows ACL inspection failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\CangqiStudio\StoryStudio\tests\test_cnw_signed_critics_consumers.py", line 116, in test_native_plot_text_shared_fees_pending_cache_and_refine_consumption
+    recovery.execute_checked(s.run, stage)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_recovery.py", line 373, in execute_checked
+    result = r._dispatch_cnw_stage(run_dir, stage)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1423, in _dispatch_cnw_stage
+    return execute_five_lenses(run_dir)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2049, in execute_five_lenses
+    results = _parallel_provider_calls(run_dir, [dict(stage="multi_lens_review", role_id=lens_id,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2026, in _parallel_provider_calls
+    return [future.result() for future in futures]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 2026, in <listcomp>
+    return [future.result() for future in futures]
+            ^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\concurrent\futures\_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "D:\CangqiStudio\StoryStudio\runtime\python\cpython-3.11-windows-x86_64-none\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 770, in cnw_live_call
+    return _cnw_live_call_in_slot(run_dir, stage=stage, role_id=role_id, messages=messages, output_cap=output_cap, extra=extra)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 790, in _cnw_live_call_in_slot
+    account.verify_request(messages=messages, role_id=role_id, output_cap=output_cap, extra=extra)
+  File "D:\CangqiStudio\StoryStudio\tools\cost_guard.py", line 209, in verify_request
+    verify_request(self.run, stage=self.context.stage, role_id=role_id,
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 314, in verify_request
+    grant = require_run_authorization(run, stage=stage)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_live_authorization.py", line 243, in require_run_authorization
+    session.history(run, rows, ledger=_locked_ledger)
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_test_live_transport.py", line 93, in history
+    account = cost_guard.for_run(run, stage=rows[0]["stage"], model=runner.MODEL)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cost_guard.py", line 346, in for_run
+    report = build_run_contract_preflight(root, state["contract_path"], run_id=run.name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_project.py", line 915, in build_run_contract_preflight
+    or _compute_contract_preflight(root, selected, run_id=planned["run_id"], existing_run=True) != planned):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_project.py", line 796, in _compute_contract_preflight
+    plot_request = build_plot_request(root, contract)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_runner.py", line 1468, in build_plot_request
+    registered = _registered_project_identity(project)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\CangqiStudio\StoryStudio\tools\cnw_project.py", line 369, in _registered_project_identity
+    raise ContractError("PROJECT_INSTANCE_ID_REQUIRED", "registered project identity or registry could not be verified") from exc
+tools.cnw_contract.ContractError: PROJECT_INSTANCE_ID_REQUIRED: registered project identity or registry could not be verified
+
+----------------------------------------------------------------------
+Ran 1 test in 1068.306s
+
+FAILED (errors=1)
+{"status": "SUCCEEDED", "output": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-w8a6jnu6\\ExplicitTestDataHome\\projects\\6c42faff-217c-4755-bcfa-f2357da6fafe\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-87df4f99\\critique.json", "receipt": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-w8a6jnu6\\ExplicitTestDataHome\\projects\\6c42faff-217c-4755-bcfa-f2357da6fafe\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-87df4f99\\run_receipt.json"}
+{"status": "SUCCEEDED", "action": "plan-critique", "run_dir": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\storystudio-early-cnw-e2e-w8a6jnu6\\ExplicitTestDataHome\\projects\\6c42faff-217c-4755-bcfa-f2357da6fafe\\runs\\SIGNED-ADAPT-RUN-critics-plan-critique-87df4f99", "provider_call_count": 5, "provider_request_ids": ["SIMULATED-NATIVE-0", "SIMULATED-NATIVE-1", "SIMULATED-NATIVE-2", "SIMULATED-NATIVE-3", "SIMULATED-NATIVE-4"], "error_type": null}

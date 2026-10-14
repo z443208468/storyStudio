@@ -1,0 +1,23 @@
+{
+  "simulation_status": "SIMULATED",
+  "real_provider_calls": 0,
+  "observations": [
+    {
+      "entry": "cnw_live_call",
+      "clock": [
+        "2026-10-13T23:36:57.230855+00:00",
+        "2026-10-13T23:36:58.230855+00:00"
+      ]
+    },
+    {
+      "entry": "_cnw_live_call_in_slot",
+      "clock": [
+        "2026-10-13T23:36:57.230855+00:00",
+        "2026-10-13T23:36:58.230855+00:00"
+      ]
+    }
+  ],
+  "unchanged_run_state_sha256": "c1c11c290f8e295376d71d2934ae78a2caf015d992a1b74441bd70b84517487c",
+  "synthetic_reservations": 0,
+  "actual_transport_calls": []
+}

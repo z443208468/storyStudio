@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.1.1, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: D:\CangqiStudio\StoryStudio
+plugins: anyio-4.14.1, asyncio-1.4.0, respx-0.23.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_signed_owner_lower_cap_reserve_shim_and_unknown 
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_signed_owner_lower_cap_reserve_shim_and_unknown PASSED [ 20%]
+tests/test_cnw_signed_auxiliary_consumers.py::SignedAuxiliaryConsumerTests::test_signed_nk_service_shared_account_brief_cache_and_mock_rejection PASSED [ 40%]
+tests/test_cnw_nk_input_limits.py::NKInputLimitTests::test_real_isolated_shim_byte_change_invalidates_original_signature PASSED [ 60%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_signed_pre_run_and_real_existing_run_have_same_identity_without_provider PASSED [ 80%]
+tests/test_cnw_live_authorization.py::LiveAuthorizationTests::test_actual_checked_plot_consumes_signed_b_and_records_original_accounting PASSED [100%]
+
+============== 5 passed, 6 subtests passed in 609.72s (0:10:09) ===============
