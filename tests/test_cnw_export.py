@@ -152,6 +152,55 @@ class ExportTests(unittest.TestCase):
         self.assertIn("First instance output.", (first_dir / "01_初稿.md").read_text(encoding="utf-8"))
         self.assertIn("Second instance output.", (second_dir / "01_初稿.md").read_text(encoding="utf-8"))
 
+    def _managed_formatting_fixture(self, *, run_id, mode, receipts):
+        # Export formatting only: this minimal fixture is not an accepted
+        # stage/Provider receipt and does not represent a complete Run.
+        project = self._registered_project("FORMATEX")
+        contract = self._v2_original_contract(project)
+        run, state = self._make_v2_run(project, run_id, contract)
+        state.update(mode=mode, provider_requests=receipts,
+                     contract_sha256=hashlib.sha256((run / "artifacts/contract.json").read_bytes()).hexdigest())
+        state["stages"]["prose"]["execution_identity"] = "UNTRUSTED_EXPORT_FORMATTING_FIXTURE"
+        result = cnw_export.export_reading_package(run, state, project_root=project,
+            job_id="00000000-0000-0000-0000-000000000008")
+        directory = Path(result["deliverables"])
+        manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+        for name, expected in manifest["file_sha256"].items():
+            self.assertEqual(hashlib.sha256((directory / name).read_bytes()).hexdigest(), expected)
+        self.assertEqual((directory / "01_初稿.md").read_bytes(), (run / "artifacts/prose.md").read_bytes())
+        self.assertFalse(manifest["user_creative_accepted"])
+        self.assertEqual(result["provider_call"], "none")
+        return manifest, (directory / "05_复用操作说明.md").read_text(encoding="utf-8"), directory
+
+    def test_managed_simulation_export_retains_mock_labels_and_offline_resume(self):
+        manifest, instructions, _ = self._managed_formatting_fixture(run_id="MOCK-FORMAT", mode="offline",
+            receipts=[{"mode": "MOCK_ONLY", "simulation_status": "SIMULATED", "fixture_only": True}])
+        self.assertEqual(manifest["execution_mode"], "MOCK_ONLY")
+        self.assertEqual(manifest["simulation_status"], "SIMULATED")
+        self.assertEqual(manifest["live_validation_status"], "NOT_LIVE_VALIDATED")
+        self.assertIn("-Mode offline -ExecuteJob", instructions)
+        self.assertNotIn("-Mode live", instructions)
+
+    def test_live_mode_alone_does_not_claim_live_validation_or_simulation(self):
+        manifest, instructions, directory = self._managed_formatting_fixture(
+            run_id="UNVERIFIED-LIVE-FORMAT", mode="live", receipts=[])
+        self.assertEqual(manifest["execution_mode"], "LIVE_REQUESTED")
+        self.assertEqual(manifest["live_validation_status"], "NOT_CHECKED_BY_EXPORT")
+        self.assertEqual(manifest["simulation_status"], "NOT_EXECUTED")
+        self.assertIn("-Mode live -ExecuteJob", instructions)
+        self.assertNotIn("-Mode offline", instructions)
+        self.assertNotIn("MOCK_ONLY", instructions)
+        self.assertNotIn("LIVE_EVIDENCE_VALIDATED", instructions)
+        self.assertIn("NOT_CHECKED_BY_EXPORT", (directory / "03_前后文连读.html").read_text(encoding="utf-8"))
+
+    def test_simulated_receipts_are_still_labeled_when_run_mode_claims_live(self):
+        manifest, instructions, _ = self._managed_formatting_fixture(run_id="RELABEL-FORMAT", mode="live",
+            receipts=[{"mode": "MOCK_ONLY", "simulation_status": "SIMULATED", "fixture_only": True}])
+        self.assertEqual(manifest["execution_mode"], "MOCK_ONLY")
+        self.assertEqual(manifest["live_validation_status"], "NOT_LIVE_VALIDATED")
+        self.assertIn("-Mode offline -ExecuteJob", instructions)
+        self.assertNotIn("-Mode live", instructions)
+
 
 if __name__ == "__main__":
     unittest.main()

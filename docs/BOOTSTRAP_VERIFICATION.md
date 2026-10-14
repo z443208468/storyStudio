@@ -1,10 +1,10 @@
 # 干净克隆：离线 CNW 验证环境
 
-这是 R5 §09.2 的可复现准备步骤。它准备源代码、固定方法参考与验证所需的 CritiCS 依赖；不选择真实 DataHome、不导入旧项目、不调用 Provider、不授权费用、迁移、生产或正式晋升。当前 V2 原生 Live 入口仍未开放，不能据此启动真实创作。
+这是 R5 的干净克隆准备步骤。它准备源代码、固定方法参考与验证所需的 CritiCS 依赖；不选择真实 DataHome、不导入旧项目、不调用 Provider、不授权费用、迁移、生产或正式晋升。V2 受检执行接口已有当期 ATOM07 离线工程验收；生产信任尚未部署，实际输入包生产未验收，不能凭 bootstrap 启动真实创作。当前顺序为08安全工程施工，09待当前候选验收。
 
 ## 1. 声明工具与源代码
 
-已验证工具：Windows PowerShell 7、Git、Python 3.13（验证套件）、Python 3.11（锁定 CritiCS 依赖）、uv。Python 3.13 须安装 `httpx==0.28.1`、`pytest==9.1.1`；pytest 9.1.1 自带 subtests 支持。CritiCS 全部依赖由 `requirements/critics-api.lock` 指定。无需常驻 NK 服务。
+所需工具：Windows PowerShell 7、Git、Python 3.13（验证套件）、Python 3.11（锁定 CritiCS 依赖）、uv、Node.js。本机08盘点实际 `node --version` 为 `v24.13.1`；NK 输入限制测试需要真正执行 Node preload/shim，缺 Node 必须失败，不能跳过当成通过。无需常驻 NK 服务不等于无需 Node。Python 3.13 须安装 `httpx==0.28.1`、`pytest==9.1.1`；pytest 9.1.1 自带 subtests 支持。CritiCS 全部依赖由 `requirements/critics-api.lock` 指定。
 
 联网取得代码时，使用一个**新空目录**：
 
@@ -70,9 +70,10 @@ pwsh -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File tools/boot
 
 ```powershell
 $env:PYTHONUTF8 = '1'
+Remove-Item Env:DEEPSEEK_API_KEY -ErrorAction SilentlyContinue
 $env:PYTHONPATH = (Get-Location).Path + [IO.Path]::PathSeparator + (Join-Path (Get-Location).Path 'tests')
 & <python-3.13-executable> -m pytest tests -q
 git status --porcelain
 ```
 
-套件使用自包含虚构项目与临时 DataHome。模型传输模拟输出标 `MOCK_ONLY / SIMULATED`；完整阶段、工作流、读取、持久化、恢复与导出运行真实消费者。保留命令/退出码、完整 stdout、源码 SHA、阶段请求及非空文件 SHA；`git status` 应为空，模拟不得过 Live/正式晋升门。README、脚本成功或测试数量不替代精确候选 Controller 签收。
+套件使用自包含虚构项目与临时 DataHome。模型传输模拟输出标 `MOCK_ONLY / SIMULATED`；完整阶段、工作流、读取、持久化、恢复与导出必须有对应真实消费者证据。上述 pytest 命令本身没有隔离网络：各离线测试/harness 须在最后模型/HTTP/辅助服务边界安装拒绝真实传输或确定性替身，并约束可能联网的子进程；单独清 Key 也不等于系统断网。不把本机全系统网络宣称为已禁用。保留命令/退出码、完整 stdout、源码 SHA、实际隔离边界、阶段请求及非空文件 SHA；`git status` 应为空，模拟不得过 Live/正式晋升门。README、脚本成功或测试数量不替代精确候选 Controller 签收。

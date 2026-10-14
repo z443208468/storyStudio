@@ -10,7 +10,7 @@ StoryStudio is being separated into a reusable writing application that can host
 
 ## Intended application model
 
-The app is intended to keep generic engine code and the pinned CNW method in the repository while storing project identities, contracts, source snapshots, runs, exports, and shared runtime state under an explicitly selected private data home. Different projects must remain isolated. The app must reject project writes when the user has not selected and registered the relevant data and project roots; it must not infer a default Cangqi/J19 project.
+The app keeps generic engine code and the pinned CNW method in the repository. New project identities, contracts, source snapshots, runs, exports, and shared accounting use an explicitly selected private DataHome. Project writes require the selected registered instance; there is no default story. Legacy private data remains protected in place until its separate relocation and cutover gates pass.
 
 The CNW public method includes its eleven ordered stages, source-bound role inputs, layered lint, five independent review lenses, per-finding verification, completeness feedback, refinement, affected-item re-review, canon approval, and sprint gates. The exact invariants and migration checks are in the active plan and source-to-code map. The refactor does not claim these requirements are already satisfied by current runtime behavior.
 
@@ -30,9 +30,10 @@ the application owns the CNW workflow and internal project/contract/Run identiti
 
 The app discovers declared tasks, preserves their requirements, verifies and
 seals the selected sources, creates separate registered project instances and
-contracts, then prepares actual offline Runs. The current legacy scene-pack
-adapter supports explicitly declared author-designed insertion tasks; its
-supported format is documented in [input adaptation](docs/INPUT_PACK_ADAPTATION.md).
+contracts, then prepares actual offline Runs. The legacy scene-pack adapter
+supports declared insertion tasks. Native V2 packages declare project groups,
+selected sources, INSERT/ADAPT tasks and dependent ORIGINAL episodes; supported
+formats are documented in [input adaptation](docs/INPUT_PACK_ADAPTATION.md).
 Use `-SourceRepository '<local pinned Git repository>' -Offline` for local objects
 with no network fallback. Otherwise the package's exact declared public Git source
 can be acquired in the chosen DataHome cache. This is source acquisition only.
@@ -44,22 +45,25 @@ using the returned path, without supplying a contract, Run ID or SHA:
 .\tools\studio.ps1 project-pack -JobFile '<returned job record>' -DataHome '<same absolute DataHome>' -Offline
 ```
 
-`RUNS_PREPARED_PENDING_AUTHORIZATION` means that inputs and actual Runs are ready
-for later gates. Atom-09's isolated fixture path has been accepted for offline
-simulated production/review/export; this does not prove the supplied owner package
-can run through Live production. The exact owner package has not yet been shown to
-produce a real story. The generic V2 Live route and project-bound fee/authorization
-handoff remain implementation work. Repeating ZIP import creates new instances;
-`-JobFile` rechecks the existing job and retains its progress.
+`RUNS_PREPARED_PENDING_AUTHORIZATION` means input and Run preparation only.
+Existing V2 Live interfaces require independently trusted Controller attestation
+and Owner Live/fee permission for the exact current request. Their offline
+engineering acceptance does not deploy production trust or prove this ZIP's
+real story output. Repeating ZIP import creates new instances; `-JobFile`
+rechecks the existing job and retains its progress. Offline execution requires
+an isolated test transport and produces `MOCK_ONLY / SIMULATED` receipts.
 
 ### Evidence and remaining work
 
-The current code has offline evidence for source-bound and original contracts,
-role consumers, review/revision, recovery and export. Atom-07's operation
-and cache repair received an independent limited offline acceptance at
-[`08b4fa4`](https://github.com/z443208468/storyStudio/commit/08b4fa44292809ce8553849945ee5a1eaf3236fa),
-with a source-only cold clone passing 68 tests and 83 subtests. That scope does
-not establish the package-to-story product gate or real model production.
+The current sequential closure is 00–07, within each original frozen scope.
+Atom07's complete current offline engineering verdict binds
+[`b93d0094`](https://github.com/z443208468/storyStudio/commit/b93d0094003ca93428ab18fd5def6d29119543d0)
+and tree `8c4b97ac61092c9522a674c67625b88df19b8db7`;
+[the original verdict](evidence/ATOM07_CONTROLLER_ACCEPT_b93d009_20261014.md)
+and [freeze/readback record](evidence/ATOM07_FREEZE_b93d009_20261014.json)
+state the evidence and limits. Atom08 safe engineering is in progress and has
+not been accepted. Atom09 awaits its current sequential review; historical
+fixture results do not constitute a current Atom09 ACCEPT.
 
 `GENERIC_LIVE_PRODUCTION=NOT_RUN`; trusted production attestation and separate
 Live/fee authorization checks remain required by the accepted R5 plan. The owner
@@ -69,10 +73,12 @@ from the actual package through the fixed CNW workflow; internal JSON fields and
 manual stage commands belong to diagnostics. Offline acceptance and an available
 credential do not substitute for the reviewed production path.
 
-Legacy interfaces and historical engineering records remain available within
-their explicit scopes. Keep private drafts, credentials, Provider traffic and
-private runtime data outside Git. No real production API call has yet been made
-for the generic package flow; private-project migration remains separately blocked.
+Legacy interfaces and historical engineering records retain their original
+identities within explicit compatibility scopes. Keep private drafts,
+credentials, Provider traffic and private runtime data outside Git. No real
+production API call has yet been made for the generic package flow;
+private-project migration remains separately blocked. The package-to-story
+product gate is not completed and user creative acceptance remains separate.
 
 ## Project documentation
 

@@ -1,41 +1,12 @@
-# P2 设计核对与旧版问题处置
+# Historical source index — P2_DESIGN_REVIEW.md
 
-性质：方案作者的静态自审，不是独立 Controller 签收，不是本机部署成功证明。
+This path is an inactive historical index. Its original plan, story scope, Controller wording and verdicts remain byte-preserved in the external archive; they are not current execution authorization. No historical RETURN is changed.
 
-## 逐项处理
+- Source commit: `b93d0094003ca93428ab18fd5def6d29119543d0`
+- Original path/archive member: `reviews/P2_DESIGN_REVIEW.md`
+- Original physical SHA256: `26370b34c893cca3a826d4dffa392c3fa7e27ab86a1cef3e4e727e64769954cd`
+- Original Git blob SHA256: `f8f7092fa9d276c2b7042b909770fd5396f1413d9edb13330046d413f0955719`
+- External archive: `atom08_public_originals_b93d009.zip`
+- Archive SHA256: `35e404e3e85cff7700af2dee2cc285e7b016a8cfe5d3aa4c643cf6f7258cb4b8`
 
-| 旧版问题 | P2 已作出的具体决定 | 落地位置 |
-|---|---|---|
-| 把保留方法写成字节不许改 | 参考源保留，带补丁生产；语法/输入/依赖/接口正常修 | AGENTS、GOVERNANCE、T1/T3 |
-| 改一条补充，其他文件仍用旧禁令 | 同次替换根入口、两份治理和旧总计划，旧入口跳转 | P2-00、MASTER_PLAN_FROM_EMPTY |
-| 让用户反复充当阶段审批员 | 同一独立验收 agent 就是 Controller，ACCEPT 直接推进 | CODEX_START、Controller prompt |
-| 相同候选一直签 C/T、状态无法自包含 | 对已冻结 C/T 签收；下一记录提交引用此前对象；私有产物另绑 manifest | 治理§7、A4 |
-| G00/G01 已完成却又重做 | 现场检查并复用既有版本/事实，继续当前 WIP | P2-00、接续表 |
-| 已知 CritiCS SyntaxError，计划却禁止修 | C01 明确删多余字符并验证原入口 | T3/C01 |
-| 只修语法看起来能启动，Voice 仍没正文 | C03 给 Voice 模板补 story 占位，最终请求标记验证 | T3/C03、V04 |
-| 格式解析可能截空问题/截坏 persona | C04 按原输出标题边界修解析，添加多行/数字负例 | T3/C04、V05/V07 |
-| old/new OpenAI 依赖互斥 | 最小 API 环境、修兼容版本、实际解析后锁定 | T2.2 |
-| 为不用的研究模块装 vLLM/CUDA/Ray | 以所选生产调用图为范围；不安装未触达支路依赖 | P2-02、T2.2 |
-| 硬编码 GPT，只准改外部网关 | 直接改 provider/base/model/明确 Chat，实际出站是 Flash | P2-03、T4 |
-| 以 SDK 构建成功当 Flash JSON 兼容 | 离线与实际 API 分开；真实 NK 路由+原 schema 验证 | P2-03/04、V07/08 |
-| 完全没调用不能证兼容，但不兼容又不准调用 | P2-04 授权小型无敏感真实联调，之后才写项目正文 | P2-04 |
-| 源 ZIP 定位被无关工具 bug 锁住 | 源导入与两个工具修复是独立前置支路 | 依赖表、P2-01 |
-| 把 CNW 当无需填写内容的自动程序 | 允许通用模板项目实例化和薄调用入口；保留原阶段职责 | T6、生产规范 |
-| 工具只调用一下，输出没进正文 | 固定 Plot批评→改Plot、NK→Brief、句段批评→Revision 的实际依赖 | P2-06、V11/12 |
-| 局部批评被说成整场质量通过 | CritiCS 句段范围明示；Controller 必须全文连读 | 生产P6、V13 |
-| 元数据身份丢失导致重复收费 | 输入/配置/补丁/锁+输出 hash checkpoint，成功阶段可复用 | T5.4、V14 |
-| 有限重试和旧不准重试矛盾 | 本版显式有限网络/格式修复，SDK 内层不叠加 | T5.1/5.2 |
-| 费用写成预估即结算，或默认无限花 | 10元本轮估计支出保护、价格快照、usage与账单分开 | T5 |
-| 只交环境/报告不给故事 | 完整初稿、修订、连读、修改说明和复用入口 | P2-07、生产P8 |
-| 上来要求整章审稿多重扇出 | 先一场；保留所选工具原角色链，不扩章/扩场 | P2-06、本次范围 |
-| user没看就声称满意 | 工程完成与用户创作接受分开 | 治理§9、A7 |
-
-## 仍需现场验证的真实事项
-
-当前 Windows 的实际 WIP；源 ZIP 当前路径和内容；选定的完整依赖锁是否可在本机安装；补丁是否覆盖全部真实路径；Key 与账户；真实模型调用；完整作品效果。
-
-这些都是执行任务，不是被藏起来的“保证成功”。本版给出了实现与验证路线；尚未现场发生的内容不得填成已通过。由 Controller 对实现和作品进行独立接受。
-
-## 不声称的事情
-
-不声称三上游项目原生已经整合成现成一键产品；不声称换 Flash 后复现原论文分数；不声称只修掉一个字符就解决全部缺陷；不声称能凭工程设计保证用户一定觉得好看；不把上述限制作为不执行已授权修复的理由。
+See [archive and consumer mapping](../docs/HISTORICAL_ARCHIVE.md). The only active plan is [R5](../plans/MASTER_PLAN_GENERIC_APP_R5.md). Current review/frozen-function protection is defined in [AGENTS](../AGENTS.md), [Controller rules](../reviews/CONTROLLER_PROMPT.md), and [acceptance requirements](../implementation/ACCEPTANCE_SPEC.md). Historical method/source references can be recovered from the archive or the exact Git commit; they do not override fixed CNW or current R5 requirements.

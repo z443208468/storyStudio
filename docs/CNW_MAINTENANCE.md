@@ -4,7 +4,7 @@
 
 入口使用实际项目材料和固定官方方法。拥有 `DEEPSEEK_API_KEY` 不表示已获运行或费用授权；工程 Controller 签收、可信生产签收、用户 Live/费用权限各自独立。
 
-当前注册项目的维护和缓存恢复必须先经过共同授权门；本轮未部署通用生产授权适配，真实请求仍拒绝。已验证的注册项目路径使用临时虚构项目和明确模拟回执，只替换最终模型边界。下列命令是实际接口说明，本轮文档核对不执行它们。旧显式 V1 路径继续遵守其原身份和费用政策，新项目不继承旧 campaign 授权。来源、请求、回执和恢复事务保留在私有项目目录，密钥不进入请求存档或 Git。
+当前注册项目的维护和缓存恢复必须先经过共同授权门。`cnw_operation_authorization` 已实现实际 operation Run 的请求绑定、可信 Controller 预检和独立 Owner Live/费用许可消费；生产信任尚未部署。没有有效许可仍在 Key、slot、reserve、HTTP 前拒绝。已验证的注册项目路径使用临时虚构项目和明确模拟回执，只替换最终模型边界。下列命令是实际接口说明，本轮文档核对不执行它们。旧显式 V1 路径继续遵守其原身份和费用政策，新项目不继承旧 campaign 授权。来源、请求、回执和恢复事务保留在私有项目目录，密钥不进入请求存档或 Git。
 
 ## Canon Audit
 
@@ -31,6 +31,8 @@ python tools/cnw_project.py handoff --project-root '<selected absolute project r
 PowerShell 同步入口：`tools/studio.ps1 canon-audit -ProjectRoot '<selected absolute project root>' -AuditScope light -AuditChapter '<project-relative prose path>'`；定点用 `-AuditScope targeted -AuditTarget timeline`。交接用 `handoff -ProjectRoot '<selected absolute project root>' -Pipeline`。
 
 ## 重入与证据
+
+`cnw_maintenance.run_maintenance(..., prepare_only=True)` 是实际 Python 准备接口，冻结请求及其 RunAccount 并发布授权请求，不执行文学模型。PowerShell 没有同名开关。生产消费须重建真实请求、资料/实现身份、stage/role/cap/extra 与许可绑定，并使用同一费用账本及并发 slot；普通 JSON、创意批准或工程签收不能代替可信许可。
 
 项目锁、完整文件快照、原请求/raw 回执、preimage/postimage journal 和 pending 指针支持同一事务恢复。来源或目标在执行中被外部修改时报告冲突；适配身份改变后不按新方法恢复旧 pending。
 

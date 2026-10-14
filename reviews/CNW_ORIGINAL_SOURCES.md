@@ -5,16 +5,16 @@
 - 项目：`MintoTsukino/claude-novel-workflow`
 - 固定 Commit：`97ad71fe5e5e76a82275c6c63d4add06fb60ab6e`
 - StoryStudio 当前固定 Git 子模块：`third_party/claude-novel-workflow`，Gitlink = 上述 commit。
-- StoryStudio 比对基线：`z443208468/storyStudio@939eca90c030cf726b1879e2b1115f0e07ed6f6c`，主分支 `main`。本地 Writer 在执行前必须再读 HEAD/WIP；新提交优先复用，不以本表强制回退。
+- 重构前StoryStudio回归基线：`26b72cea21dce45eede21cffddd4e75307d75652`，Tree `535496ba3b8a331e12d0e5e161b15bf21a25393e`。冻结副本只读；当前候选以实际main及独立精确签收为准，不回退工作树。
 - 参考资料必须通过 `tools/capture_cnw_reference.py` **从本机固定子模块按字节复制**至 `runtime/reference/cnw_97ad71fe5e5e/`，输出逐文件 Git blob、SHA256、字节数、manifest 的 SHA256。不复制作者小说正文到公开仓库。
-- 这些材料目前在 ChatGPT 审查中通过公开 GitHub 接口逐项核对过；**尚未在用户电脑 D 盘执行提取脚本**。Codex 的 W00 负责执行、记录并用本机实际结果校验下表。
+- 下表保存固定原件blob身份。实际本地提取/验证由capture工具、manifest及当期证据证明；干净clone须重新bootstrap。本文不是生产或最终包验收。原历史措辞在08修改前原字节归档中保留。
 
 ## A. 权威级别和用途
 
 | 优先领域 | 权威原文件 | 已核查的源文职责 | 在 StoryStudio 应产生的功能 |
 |---|---|---|---|
 | 作者总体定位 | `README.md` | 公开的是方法、模板、示范项目和文档，不承诺开箱即用的自动小说工厂 | 实现自己的驱动器；不能假装拿到了作者的私有 89-agent 工具链 |
-| 原作者实际单话 SOP | `example_project/00_meta/episode_production_manual.md` | 单话 Plot、Scene Cards、Brief、正文、Review、必要 Revision、状态/索引；作者日文项目普通一话约 5,000 字，短约 4,000，长约 8,000；不凑字数 | 为《苍歧》的 **scene/episode** 各自明确规模、节拍分配、作品验收；日文字数不是直接套用的中文字数 |
+| 原作者实际单话 SOP | `example_project/00_meta/episode_production_manual.md` | 单话 Plot、Scene Cards、Brief、正文、Review、必要 Revision、状态/索引；作者日文项目普通一话约 5,000 字，短约 4,000，长约 8,000；不凑字数 | 为当前项目的 **scene/episode** 各自明确规模、节拍分配、作品验收；日文字数不是直接套用的中文字数 |
 | 通用角色职责 | `templates/config/ai_roles.template.yml` | Plot Agent / Scene Card Agent / Brief Agent / Prose Agent 读什么、写什么，审稿岗位留待项目扩充 | 分离生产阶段与模型上下文，Prose 只接 Brief + 需要的声音样本 |
 | **完整通用流水线** | `templates/config/workflow.template.yml` | `plot → scene_cards → writing_brief → prose → lint_layer1 → lint_layer2 → multi_lens_review → adversarial_verify → completeness_critic → refine → re_review`；5 lenses；3 verifier；阈值 2 | 作为 W04–W09 的执行状态机合同，不删关键阶段 |
 | 章 Plot 数据设计 | `templates/06_plot/plot.template.md` | 章节角色、3–6 key scenes、hook、required beats、forbidden items、foreshadowing、前后衔接、target length | `plot.md` 带任务长度与必须发生事件；先检查 Plot 再下传 |
@@ -24,10 +24,10 @@
 | 三层审稿 | `docs/THREE_LAYER_REVIEW.md` | Layer1 简单 lint，Layer2 带上下文 lint，Layer3 五独立 lenses；随后三方反证、Completeness、Refine、受影响部分 Re-review | CritiCS 是**新增插件**，不替代 CNW 原审稿岗位 |
 | 批量验收 | `templates/08_review/batch_review.template.md` | 每 5 话批评和分数/发现/反证/漏项/下批注意事项 | 实际支持 5 话批次合同与批量审阅，第一轮只做离线验证，不越权生成五话 |
 | 修订与晋升 | `templates/_workflows/03_revision.md` + `templates/09_revision/*` | P0–P3、保留旧稿、单独保存修订稿、经审核再晋升正本、日志 | 不用删掉动作/缩到百字的方式“修复”，不覆盖旧版本；章节正本在 `07_draft/episodes/` |
-| Canon 校核 | `templates/_workflows/04_canon_audit.md` | 冲突/模糊/缺项，提供源行，不自动发明冲突的“真相” | 主审 lens 严格引用《苍歧》原稿，而不是凭故事猜测补设定 |
-| 质量判定示例 | `example_project/00_meta/manuscript_review_rubric.md` | 致命问题→100 分→pass/revise/rewrite；80 分及以上通过、65–79 返修、低于 65 重写，为作者个人日文故事的标准 | 复用评审结构，但《苍歧》的评分指标/Reader Reward 必须按本项目剧情落地，不能套作者主人公专属指标 |
-| 导入与交接 | `docs/EXISTING_PROJECT_IMPORT.md`、`templates/_workflows/01_first_import.md`、`05_handoff.md` | 保留源稿，CONFIRMED/INFERRED/TODO_CONFIRM，handoff 只记录事实 | 保留已完成《苍歧》Canon 导入与旧 P2 证据，续接下一个 run |
-| 作者实际样板（仅本机私用） | `example_project/00_meta/sprint_goal_arc02_production.md`、`example_project/07_draft/ep001_writing_brief.md`、`example_project/05_scene_cards/ep001_scene_cards.md` | 看实例如何做篇幅和分镜分配；内容专属其他小说 | **仅学字段粒度和方法**，不得把人物/世界观/句子复制成《苍歧》内容 |
+| Canon 校核 | `templates/_workflows/04_canon_audit.md` | 冲突/模糊/缺项，提供源行，不自动发明冲突的“真相” | 主审 lens 严格引用当前项目原稿，而不是凭故事猜测补设定 |
+| 质量判定示例 | `example_project/00_meta/manuscript_review_rubric.md` | 致命问题→100 分→pass/revise/rewrite；80 分及以上通过、65–79 返修、低于 65 重写，为作者个人日文故事的标准 | 复用评审结构，但当前项目的评分指标/Reader Reward 必须按本项目剧情落地，不能套作者主人公专属指标 |
+| 导入与交接 | `docs/EXISTING_PROJECT_IMPORT.md`、`templates/_workflows/01_first_import.md`、`05_handoff.md` | 保留源稿，CONFIRMED/INFERRED/TODO_CONFIRM，handoff 只记录事实 | 保留已完成当前项目Canon 导入与旧 P2 证据，续接下一个 run |
+| 作者实际样板（仅本机私用） | `example_project/00_meta/sprint_goal_arc02_production.md`、`example_project/07_draft/ep001_writing_brief.md`、`example_project/05_scene_cards/ep001_scene_cards.md` | 看实例如何做篇幅和分镜分配；内容专属其他小说 | **仅学字段粒度和方法**，不得把人物/世界观/句子复制成当前项目内容 |
 
 ## B. 已核对的重点 Git blob 身份
 
@@ -70,7 +70,7 @@
 3. **作者的五个 `_workflows/` 只负责导入/增量维护/修订/Canon 审计/交接，不等同于生产 Pipeline**。真正生产角色在 `templates/config/ai_roles.template.yml` 和 `workflow.template.yml`，审稿职责在 `docs/THREE_LAYER_REVIEW.md`。
 4. **五个 lens 是独立看原文的评审角色**，不是 Writer 或工程 Controller 在一条消息里连续列五个观点；Verifier 3 个独立裁决来源，默认优先证伪主审发现。
 5. **原作者不要求一直写到正好达到某个字数**：适用的安全语义是写作之前有分量规划、写作后检查欠产量与所需节拍、允许有预先依据的例外，不以水文凑数。
-6. **JET 是可选的故事设计系统**（`docs/HOW_TO_ADAPT.md` 与 `docs/ARCHITECTURE.md` 都明确可以不用），不得把示例小说 JET 的人物心理模型未经适配直接装进《苍歧》。
+6. **JET 是可选的故事设计系统**（`docs/HOW_TO_ADAPT.md` 与 `docs/ARCHITECTURE.md` 都明确可以不用），不得把示例小说 JET 的人物心理模型未经适配直接装进当前项目。
 7. **原项目以 Claude Code 为常见环境**，而当前 StoryStudio 的创作 API 限定 DeepSeek Flash：可以按公开操作方法构造“实现”，但不能宣称复现作者原运行器内部调度性能与文学成绩。
 
 ## D. 关键文本位置（行号固定于上述 commit）
@@ -95,4 +95,4 @@
 
 ## E. 原文资料使用限制
 
-原始源码/公开文档按各自 LICENSE 保留署名、固定来源、SHA，并只在本地私有 `runtime/reference/` 给开发系统读取。不要把其他作者 `example_project/` 的故事 Canon、对白、章节正文复制到《苍歧》生产内容。供用户交付的 ZIP 只含**本次编写的执行工单与提取器**，不随包再分发示例小说。
+原始源码/公开文档按各自 LICENSE 保留署名、固定来源、SHA，并只在本地私有 `runtime/reference/` 给开发系统读取。不要把其他作者 `example_project/` 的故事 Canon、对白、章节正文复制到当前项目生产内容。方法参考与示例小说内容分开；不把作者示例人物/正文安装成新项目模板或随故事交付再分发。用户输入包及最终产物的范围以实际声明任务和R5终验为准。

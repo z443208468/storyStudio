@@ -1,22 +1,12 @@
-# 受委任 Controller 必读：按“原作者方法是否真正运行”验收 P3
+# Historical source index — P3_CONTROLLER.md
 
-控制器独立只读：不得代 Writer 编辑文件，不能自行模拟请求并签成功。读原作者 W00 本地参考件、所有目标代码、契约、实际原稿/工作产物、raw、测试结果与远端 C/T；用户最高约束优先。
+This path is an inactive historical index. Its original plan, story scope, Controller wording and verdicts remain byte-preserved in the external archive; they are not current execution authorization. No historical RETURN is changed.
 
-**P2 曾签收过的实际成果**：NK/CritiCS/Flash 链路成功、运行环境与费用守卫有效、初版《苍歧》短场景的实际生成、旧 EP001 冷启动/恢复/导出成功。它们不需重做，但也不意味着作者生产流已完成。
+- Source commit: `b93d0094003ca93428ab18fd5def6d29119543d0`
+- Original path/archive member: `reviews/P3_CONTROLLER.md`
+- Original physical SHA256: `5cf602e29ea54f5cff0ae64f740094dccf270ae2fb60c21c5e550a42ab030c3c`
+- Original Git blob SHA256: `5cf602e29ea54f5cff0ae64f740094dccf270ae2fb60c21c5e550a42ab030c3c`
+- External archive: `atom08_public_originals_b93d009.zip`
+- Archive SHA256: `35e404e3e85cff7700af2dee2cc285e7b016a8cfe5d3aa4c643cf6f7258cb4b8`
 
-**P3 已知的不合格根因**：`tools/p2_06_draft_run.py` 写死 `500–700 中文字符`；`config/production.example.json` 的目标为 null；旧 `studio.ps1` 的 `scene` 只回放 EP001，`export` 写死 J19；完整 CNW 三层审稿（五 lens+3 verifier+completeness/refine/re-review）没有真正实现。不得因为这些 P2 文件已有 ACCEPT 就跳过改造。
-
-**验收要点**：
-
-1. W00 是否真实复制了原作者原字节文件到用户本地？源码 Git blob/文件 SHA256/忽略目录都实测？
-2. W01 是否把全部原方法落实到现有代码/新函数，避免“模板内容存在就算方法可执行”的错觉？
-3. W03/04 是否由正式 Plot→Card→Brief 决定场数和长度，Prose Agent 只执行，不由单次脚本临时决定？
-4. W05/06 是否产生**新的**可复用内容，不是旧 run 重导出？对于很短稿，合同长度/完整 required beats 会实际否决吗？
-5. W07/08 的五 Lens、三反证、遗漏 Critic、Refine/Re-review 是否有独立请求与审稿结果？CritiCS 不得充当假 lens。
-6. W09 的两个虚构新 ID、不同来源、不同长度都能离线跑成，长 chapter 多场和五话 batch-review 可以模拟；不新增真实《苍歧》第二场。
-7. W10 的单场《苍歧》真实正文有行动、受阻、回应、结果、角色区分、自然节奏、前后文和明确的实际长度，而不只是合规的 100 字梗概；适用的英文/日文 style 规则不能直接套中文。
-8. W11 实际真实可复用入口可读，费用/Key/原稿私有，用户亲读之前不得代签创意满意。
-
-**两个不能混淆的“作者工作流”**：原作者公开仓库提供工作方法、模板与实例，未提供所有内部私有生产脚本。因此按原公开方法写通用薄编排是合规目标；不必伪称原有可执行 89-agent 系统已经原样部署。原作者自有作品评分阈值和 JET 思维模型不是《苍歧》的固有理论；项目专属标准必须由真实来源决定。
-
-**退回规范**：`RETURN` 必须写出文件、当前行为、为什么不符合原方法、该改成什么、下一次仅需验证哪些影响范围。对路径拼写、静态文档排版等 Writer 可自行修复的事项不得多轮无限驳回；对真实功能/文学欠产量却不得给 ACCEPT。所有新验收签精确 C/T，独立证据标识，不拿 Writer 自评顶替独立判断。
+See [archive and consumer mapping](../docs/HISTORICAL_ARCHIVE.md). The only active plan is [R5](../plans/MASTER_PLAN_GENERIC_APP_R5.md). Current review/frozen-function protection is defined in [AGENTS](../AGENTS.md), [Controller rules](../reviews/CONTROLLER_PROMPT.md), and [acceptance requirements](../implementation/ACCEPTANCE_SPEC.md). Historical method/source references can be recovered from the archive or the exact Git commit; they do not override fixed CNW or current R5 requirements.

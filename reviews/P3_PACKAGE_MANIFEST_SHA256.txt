@@ -1,10 +1,12 @@
-1FDD5512F1062743A0C53126B7C35A6245A3452AD38739CA2207DA19BC77BCC6  CODEX_START.md
-5CF602E29EA54F5CFF0AE64F740094DCCF270AE2FB60C21C5E550A42AB030C3C  CONTROLLER.md
-DB2E584C424075125C1CB51E8E5F5E7A56F250E743DB88188A358E59724B62A6  MASTER_PLAN_P3.md
-203ACA82F2B0EA350481460CE45672BBCFC55348158B40287827CC44048F8EF7  README.md
-62684909C9BF1FA9A4865DA2B2E660B80D8D56AEE9DEE0EB30F02B4A34174F46  mapping/P3_SOURCE_TO_CODE_MATRIX.md
-112F30F67BF039A00D68B0F816F3E2A54FC2EACCBEAD14696B183E11FF83E9F1  reference/CNW_ORIGINAL_SOURCES.md
-E3D8CEB3DDA364CEFABAC3DE018A5B2538901C8EF59C04654980732EA9919FEA  spec/CNW_PROMPT_CONTRACTS.md
-CACE1C797CA6C6808955CBB4226CFB426A93E73B75949F1DB4E74B2E4138AD14  spec/CNW_ROLE_INPUT_OUTPUT.md
-6F7B782F68DA050DFEBA6AEE0B4501E37E44AC30A092CF3A5C91CDB749F9B4E4  tests/P3_ACCEPTANCE_TESTS.md
-FF4CEA9D518DA369A923A50050475F872F4C97F480567AE9DEBBDDB0FAD3A0C8  tools/capture_cnw_reference.py
+# Historical source index — P3_PACKAGE_MANIFEST_SHA256.txt
+
+This path is an inactive historical index. Its original plan, story scope, Controller wording and verdicts remain byte-preserved in the external archive; they are not current execution authorization. No historical RETURN is changed.
+
+- Source commit: `b93d0094003ca93428ab18fd5def6d29119543d0`
+- Original path/archive member: `reviews/P3_PACKAGE_MANIFEST_SHA256.txt`
+- Original physical SHA256: `1fe2fcf39160693787c7591a70730d43f788d64e43c703fe45bbc4d5ebb47cdf`
+- Original Git blob SHA256: `1fe2fcf39160693787c7591a70730d43f788d64e43c703fe45bbc4d5ebb47cdf`
+- External archive: `atom08_public_originals_b93d009.zip`
+- Archive SHA256: `35e404e3e85cff7700af2dee2cc285e7b016a8cfe5d3aa4c643cf6f7258cb4b8`
+
+See [archive and consumer mapping](../docs/HISTORICAL_ARCHIVE.md). The only active plan is [R5](../plans/MASTER_PLAN_GENERIC_APP_R5.md). Current review/frozen-function protection is defined in [AGENTS](../AGENTS.md), [Controller rules](../reviews/CONTROLLER_PROMPT.md), and [acceptance requirements](../implementation/ACCEPTANCE_SPEC.md). Historical method/source references can be recovered from the archive or the exact Git commit; they do not override fixed CNW or current R5 requirements.

@@ -6,7 +6,7 @@ provider request; `setup` persists an explicitly selected DataHome.
 
 `SUPPORTED` means that a generic route resolves to tracked code. It does not
 claim a complete workflow result; full command semantics and the 11-stage
-offline consumer chain are verified in Atom-09. `LEGACY_ONLY` routes are kept
+offline product acceptance remain current Atom-09 gates. `LEGACY_ONLY` routes are kept
 as explicit compatibility affordances and are not required in a clean clone.
 The refactor's route checks and fictional model simulations perform no real
 Provider call. A tracked route or available Key does not authorize production.
@@ -40,9 +40,9 @@ Provider call. A tracked route or available Key does not authorize production.
 | sprint | `tools/cnw_runner.py:sprint` → `tools/cnw_sprint.py` / `tools/cnw_sprint_live.py` | YES | YES | SUPPORTED | `test_live_sprint_accepts_registered_root_before_plan_validation` |
 | prepare | `tools/studio.ps1:Assert-Prepared` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | verify | `tools/studio.ps1` (legacy offline patch check; live delegates to run-bound `verify-live`) | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| prepare-live | `tools/cnw_live_executor.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| live-call | `tools/cnw_live_executor.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
-| accept-role | `tools/cnw_live_executor.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
+| prepare-live | `tools/cnw_live_executor.py` (V1 packets; V2 checked stage preparation) | YES | V2 branch | SUPPORTED_WITH_AUTHORIZATION_GATES | `test_cnw_w10_v2_consumers.py` |
+| live-call | `tools/cnw_live_executor.py` (V1 packets; V2 checked whole-stage execution) | YES | V2 branch | SUPPORTED_WITH_AUTHORIZATION_GATES | `test_cnw_w10_v2_consumers.py` |
+| accept-role | `tools/cnw_live_executor.py` (manual legacy output; V2 rejects downgrade) | YES | NO | LEGACY_ONLY; V2_REFUSED | `test_cnw_w10_v2_consumers.py` |
 | w10-nk-live | `tools/cnw_w10_nk_live.ps1` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | w10-critics-live | `tools/cnw_w10_critics.py` | YES | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
 | nk-start | pinned NK build under `runtime/patched/NK` | NO (local runtime build) | NO | LEGACY_ONLY | `NOT_APPLICABLE` |
@@ -103,12 +103,32 @@ Run preparation:
 instances; it is not a shortcut for resuming an existing job.
 
 `RUNS_PREPARED_PENDING_AUTHORIZATION` records actual offline Runs, with Provider
-permission false. Capacity-pending tasks remain pending and create no Run.
-Identity conflicts return a blocking code while retaining prior progress.
-Atom-09's fixture chain is accepted for offline simulated production,
-review/revision and export. It does not establish that the owner-supplied package
-can run through Live production. The generic V2 Live route and project-bound
-fee/authorization handoff remain implementation work; the exact package-to-real-
-story acceptance has not run. Simulated receipts cannot satisfy Live gates.
+permission false. Identity conflicts retain prior progress. Old capacity-pending
+records are not rewritten; new V2 contracts freeze ADVISORY length semantics.
+Current Atom07 offline engineering is closed at `b93d0094`; Atom08 safe engineering
+is in progress and current Atom09 acceptance is pending. V2 checked execution,
+request-bound authorization and shared accounting are implemented interfaces;
+production trust deployment and the actual package-to-real-story acceptance
+have not run. Simulated receipts cannot satisfy Live gates.
 The final application flow must handle internal identities and stages from the
 supplied package; low-level diagnostic commands do not complete that flow.
+
+## Explicit execution mode and independent Live attempts
+
+```powershell
+.\tools\studio.ps1 project-pack -JobFile '<job record>' -DataHome '<same absolute DataHome>' -Offline -Mode offline -ExecuteJob
+.\tools\studio.ps1 project-pack -JobFile '<job record>' -DataHome '<same absolute DataHome>' -Mode live -ExecuteJob
+```
+
+`-Offline` controls Git source acquisition. `-Mode` controls execution intent;
+Live never falls back to simulated output. A Live job uses an independent bound
+attempt and real reviewed request grants; it does not relabel an offline Run.
+`-NewAttempt` requires `-ExecuteJob -Mode live`, preserves old attempts and their
+fees, and does not itself grant a Provider call. Existing jobs keep their
+contracts, requests, stage artifacts and failures on interruption.
+
+The V2 `prepare-live/live-call` branches use actual `execute_checked` stages.
+The manual `accept-role` path cannot supply a substitute V2 stage receipt.
+Maintenance's `prepare_only=True` is a Python API; no matching PowerShell
+parameter is declared. Source preparation, creative approval, Controller
+attestation, Owner Live/fee permission and Key availability remain separate.

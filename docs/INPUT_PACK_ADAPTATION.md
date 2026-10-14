@@ -1,10 +1,12 @@
-# Legacy scene input adaptation (R5 Atom-03/04 repairs)
+# Writing package adaptation and application-owned execution
 
 `tools.cnw_input_pack.prepare_scene_input` adapts the declared V5 scene-pack
 format into a private registered project and a V2 draft. The package describes
 the materials and writing requirements; the pinned CNW engine owns the workflow.
-This API is the input/contract layer. `studio.ps1 project-pack` provides its
-formal package entry and processes all declared tasks in separate instances.
+This API is the legacy input/contract layer. `studio.ps1 project-pack` is the
+formal package entry. Legacy scene tasks use separate registered instances;
+native V2 tasks share their declared project group and remain isolated from
+other groups.
 
 ```powershell
 .\tools\studio.ps1 project-pack -InputFile <ZIP> -DataHome <absolute-path>
@@ -22,16 +24,57 @@ The normal CLI does not expose a user-selectable mock-response switch; without
 an explicitly isolated test transport, generic V2 Provider stages fail closed.
 In tests, the existing final model boundary may be replaced by a fixture-bound
 simulated transport, whose receipts remain marked `SIMULATED`/`MOCK_ONLY`.
-`-Mode live` preserves Live intent and currently returns `LIVE_ROUTE_NOT_READY`;
-it does not silently fall back to offline, call a Provider, or reserve fees.
-Live becomes available only after its project-bound trusted-review,
-authorization and fee adapters pass their own gates.
+`-Mode live` preserves Live intent in an independent execution attempt; it never
+silently falls back to offline or relabels a simulated Run. The real checked
+stages, request-bound Controller/Owner interfaces and shared accounting have
+current07 offline engineering acceptance. Production trust deployment is still
+pending. Missing or invalid grants refuse before Key, slot, reserve and HTTP;
+an available Key, an engineering ACCEPT or ZIP import is not a grant.
+`-NewAttempt` requires explicit Live execution and preserves all older attempts,
+contracts, histories and fees. The actual owner package's full story delivery
+has not been accepted.
 
 Use `-SourceRepository <local-Git-repository> -Offline` for a local source.
 Without a local repository the app uses a private DataHome cache for the exact
 declared GitHub commit. `-Offline` forbids network fallback, including implicit
 Git partial-clone fetches. Source repositories are never checked out or modified.
 Temporary source staging is also under the selected DataHome.
+
+## Native V2 packages
+
+`workpack_index.json` uses `schema="cnw_workpack_index_v2"` with nonempty
+`projects` and `tasks` arrays. `PACK_MANIFEST.json` binds archive bytes. Each
+project declares an `alias`, display `project_id`, CNW `materials` directory,
+explicit `fifth_lens.id/responsibility`, and optional source declarations.
+An alias is a portable package-local name, not a copied instance identity.
+The app generates and registers the instance and internal task/Run IDs.
+
+Each source declares a distinct alias, `format` (`md`, `txt`, or `json`) and
+either a package `file` or a pinned Git `authority`. Materials are writing
+inputs, never installed registry, run_state, receipts, ledger, Key or executable
+instructions. Each task points to a writing `requirements` JSON; requirements
+cannot supply internal permissions, Policy, Provider, source/instance identities
+or overwrite reserved contract fields. They preserve explicit locale, POV,
+target/reference bounds and story requirements.
+
+| Intent | Explicit source/dependency | Actual interpretation |
+|---|---|---|
+| `INSERT_BETWEEN` | Project's source alias and selection containing ordered anchors | Use the frozen real anchors; preserve required entry/exit and original route |
+| `ADAPT_SOURCE` | Project's source alias and line-range or JSON Pointer selection | Consume the selected revision/value; no fabricated before/after anchors |
+| `ORIGINAL_EPISODE` | No source/selection; `kind="episode"`, boolean `first_episode` | First episode uses its Canon/Arc; continuation selects `previous_task` in the same project |
+
+The parser orders dependencies, rejects cycles, missing/foreign predecessors
+and ambiguous sources, and retains original declarations. JSON canonical value
+identity and actual wire excerpt bytes have separate hashes. A continuation
+materializes only from a qualifying predecessor in its execution mode; simulated
+carry-forward is a fixture identity and cannot enter production continuity.
+Project/task imports and interruption histories are not overwritten on retry.
+
+Native bindings use `cnw_native_input_binding_v1` and independent-attempt
+`cnw_native_input_binding_v2`. Jobs use `cnw_input_pack_job_v2`; legacy jobs keep
+their original format. These are StoryStudio interfaces, not CNW upstream schemas.
+
+## Legacy scene packages
 
 The app derives the fifth Lens from explicit project policy or the seed's
 Story-specific Lens row in `00_meta/OUTPUT_REQUIREMENTS.md`, preserving the
@@ -110,21 +153,22 @@ SHAs in the private job record and require a new input or authorized difference.
 Different prose wording, additional fields, unknown values and distinct explicit
 time scopes do not imply a contradiction and are not silently merged.
 
-The original `2200 / 3100 / 4700` bounds are preserved. The Atom-06 implementation
-adds a versioned 4700 capacity snapshot; old contracts continue to validate
-against their own immutable 4000 snapshot. Values above the supported bound
-still return `UNIT_CAPACITY_UNVALIDATED`, retaining the draft as `CAPACITY_PENDING`.
-Offline tests exercise continuation, complete rewrites, truncation rejection,
-full-length review, separate revisions, new-text re-review and byte-preserving
-exports. These are deterministic mock consumers, not evidence of live model
-capacity or a signed package-to-story result. Candidate review remains required.
+Original numeric goals/reference bounds are preserved. New V2 contracts freeze
+`unit.length_policy="ADVISORY"`: being above/below the reference does not trigger
+length-only continuation, rewriting or rejection. Actual required events,
+omissions and content findings still flow through Completeness/Refine/Re-review.
+Empty output, transport truncation, input/output token caps and approved fees
+remain independent hard checks. Old contracts without the field keep their
+historical capacity/length semantics and snapshots; old `CAPACITY_PENDING`
+records are not rewritten to manufacture progress. Offline consumer evidence
+does not prove Live capacity, story quality or final package acceptance.
 
 Remaining gates in existing R5 Atoms are field-to-role consumption,
 legal production authorization, and complete package-shaped
 eleven-stage review/revision/export verification. Live operation and private
 cutover remain subject to their existing gates.
 
-## Application-owned Run preparation (Atom-07 candidate)
+## Application-owned Run preparation and current gates
 
 The package entry can prepare offline Runs using internal task identities:
 
@@ -149,5 +193,8 @@ Old jobs without an original task-binding record are retained and return
 
 `RUNS_PREPARED_PENDING_AUTHORIZATION` means input/Run preparation only. Independent
 trusted review, separate real user Live/fee grants and complete package-to-story
-orchestration remain distinct gates. The current work must receive exact-candidate
-Controller review before this candidate is considered signed.
+orchestration remain distinct gates. Current07 offline engineering is frozen at
+`b93d0094`; current08 safe engineering and current09 product verification remain
+unaccepted. The final gate requires all tasks in the owner's actual package to
+produce, review and export their requested stories, with traceable requirements
+and true Provider receipts. It cannot be satisfied by parser success or mocks.

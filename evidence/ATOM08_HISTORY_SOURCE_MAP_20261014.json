@@ -1,0 +1,1502 @@
+{
+  "source_commit": "b93d0094003ca93428ab18fd5def6d29119543d0",
+  "archive_sha256": "35e404e3e85cff7700af2dee2cc285e7b016a8cfe5d3aa4c643cf6f7258cb4b8",
+  "routes": [
+    {
+      "path": "plans/MASTER_PLAN_FROM_EMPTY.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "a1af632e97ecd132a924942c4f73fd7d783b21911efdd0020068377727d63080",
+      "working_sha256": "07ac8f0b9dc31475baa1a615bd88ed98e761e5e26e494da12f05e91f8701391a",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_P2.md",
+          "line": 71
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 3
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 7
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 8
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 9
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 10
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 11
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 12
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 14
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 15
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 18
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 23
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 24
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 25
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 26
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 27
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 28
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 30
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 31
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 32
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 33
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 34
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 35
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 36
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 37
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 38
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 39
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 40
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 41
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 42
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 43
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 44
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 45
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 46
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 48
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 49
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 50
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 51
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 52
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 53
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 54
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 55
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 56
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 57
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 58
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 61
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 62
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 63
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 64
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 67
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 68
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 69
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 70
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 71
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 72
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 73
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 74
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 78
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 79
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 80
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 82
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 83
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 84
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 85
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 86
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 87
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 88
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 89
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 90
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 91
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 92
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 93
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 94
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 95
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 96
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 97
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 98
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 99
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 100
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 101
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 102
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 103
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 104
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 105
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 106
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 107
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 108
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 109
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 110
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 111
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 112
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 113
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 114
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 118
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 119
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 120
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 121
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 122
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 123
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 124
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 125
+        },
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 126
+        }
+      ],
+      "original_bytes": 451,
+      "original_physical_sha256": "07ac8f0b9dc31475baa1a615bd88ed98e761e5e26e494da12f05e91f8701391a",
+      "original_git_blob_sha256": "a1af632e97ecd132a924942c4f73fd7d783b21911efdd0020068377727d63080",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "plans/MASTER_PLAN_FROM_EMPTY.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "0c587a7bc12c057cf0a98085e4d9472a314f7c0f884d2a937d9d4b5acb8bbfbd",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "plans/MASTER_PLAN_P2.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "332970d1f543fddfb8f2a4a6a9942ccff85cdb916eb6c9c1e9b5ef5f8d555967",
+      "working_sha256": "332970d1f543fddfb8f2a4a6a9942ccff85cdb916eb6c9c1e9b5ef5f8d555967",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_FROM_EMPTY.md",
+          "line": 3
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 133
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 148
+        }
+      ],
+      "original_bytes": 26616,
+      "original_physical_sha256": "332970d1f543fddfb8f2a4a6a9942ccff85cdb916eb6c9c1e9b5ef5f8d555967",
+      "original_git_blob_sha256": "332970d1f543fddfb8f2a4a6a9942ccff85cdb916eb6c9c1e9b5ef5f8d555967",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "plans/MASTER_PLAN_P2.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "7de1a6c143fe2914b08c07930e48e1b1860ecb3bc63d6c8f32a89146beefdd13",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "plans/MASTER_PLAN_P3.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "0da1a16e334acc88df370396773381c1c384a04432c8852ad1ceab7d289c3584",
+      "working_sha256": "0da1a16e334acc88df370396773381c1c384a04432c8852ad1ceab7d289c3584",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_P2.md",
+          "line": 3
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 152
+        },
+        {
+          "consumer": "reviews/P3_1_DIFF_AUDIT.md",
+          "line": 14
+        },
+        {
+          "consumer": "reviews/P3_CODEX_START.md",
+          "line": 7
+        },
+        {
+          "consumer": "reviews/P3_CODEX_START.md",
+          "line": 24
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_MANIFEST_SHA256.txt",
+          "line": 3
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_README.md",
+          "line": 9
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_README.md",
+          "line": 25
+        }
+      ],
+      "original_bytes": 31373,
+      "original_physical_sha256": "0da1a16e334acc88df370396773381c1c384a04432c8852ad1ceab7d289c3584",
+      "original_git_blob_sha256": "0da1a16e334acc88df370396773381c1c384a04432c8852ad1ceab7d289c3584",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "plans/MASTER_PLAN_P3.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "59edd83ac5e9364d4befa81cda493117a3d0d68010690f138bb63169309b777d",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "plans/MASTER_PLAN_P3_1.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "cdf653e7db9578e8ae73957f9e88e837342fee0829cf365ea7cc045f8c128a25",
+      "working_sha256": "cdf653e7db9578e8ae73957f9e88e837342fee0829cf365ea7cc045f8c128a25",
+      "consumers": [
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 22
+        }
+      ],
+      "original_bytes": 38720,
+      "original_physical_sha256": "cdf653e7db9578e8ae73957f9e88e837342fee0829cf365ea7cc045f8c128a25",
+      "original_git_blob_sha256": "cdf653e7db9578e8ae73957f9e88e837342fee0829cf365ea7cc045f8c128a25",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "plans/MASTER_PLAN_P3_1.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "b1e74c7b27e561b92265f4d2cefd96c0733666b6bfbc186d7751a857cb659de8",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "plans/P3_1_AUDIT_FIXES.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "1b1f8692f8977b5bdcd738beab37e1701721411a125ec44572aa86e8c3ed48a9",
+      "working_sha256": "1b1f8692f8977b5bdcd738beab37e1701721411a125ec44572aa86e8c3ed48a9",
+      "consumers": [],
+      "original_bytes": 2158,
+      "original_physical_sha256": "1b1f8692f8977b5bdcd738beab37e1701721411a125ec44572aa86e8c3ed48a9",
+      "original_git_blob_sha256": "1b1f8692f8977b5bdcd738beab37e1701721411a125ec44572aa86e8c3ed48a9",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "plans/P3_1_AUDIT_FIXES.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "454229b854d2a490c778448d855bbb5ead14aa16f32961fd83755f4a85657c30",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/DESIGN_AUDIT.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "adfd2887d7e4fead7ca45afe421b84c1381834bef0c7f155d3bad6a187f49f65",
+      "working_sha256": "19596f7900f12fbd8f3cd728632a65f5dcfbb8fa1453ea9b2830baa821f30063",
+      "consumers": [
+        {
+          "consumer": "reviews/PLAN_PROVENANCE_MATRIX.md",
+          "line": 23
+        }
+      ],
+      "original_bytes": 12223,
+      "original_physical_sha256": "19596f7900f12fbd8f3cd728632a65f5dcfbb8fa1453ea9b2830baa821f30063",
+      "original_git_blob_sha256": "adfd2887d7e4fead7ca45afe421b84c1381834bef0c7f155d3bad6a187f49f65",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/DESIGN_AUDIT.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "4ce0fc4464a96e56b2462ec8b5b8f028bb8dda49b8c70deb2b8d832f89af26d6",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P2_ACCEPTANCE_LOG.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "a77aa6d02a902f75537345c8bc7c5317231aa33ee66e27ef2d70ab6be979122a",
+      "working_sha256": "dd679a3142aba16fab69b55c9b76a411d9ea0e01c8a64e315e3b8a95823d8389",
+      "consumers": [
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 215
+        },
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 1313
+        },
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 1331
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 624
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P2.md",
+          "line": 85
+        },
+        {
+          "consumer": "tests/test_studio_cli_routes.py",
+          "line": 205
+        }
+      ],
+      "original_bytes": 23006,
+      "original_physical_sha256": "dd679a3142aba16fab69b55c9b76a411d9ea0e01c8a64e315e3b8a95823d8389",
+      "original_git_blob_sha256": "a77aa6d02a902f75537345c8bc7c5317231aa33ee66e27ef2d70ab6be979122a",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P2_ACCEPTANCE_LOG.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "c182ef0dada087b06671cfd754e8afae21562ed136f3a4ed39040152b0d9d26e",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P2_DESIGN_REVIEW.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "f8f7092fa9d276c2b7042b909770fd5396f1413d9edb13330046d413f0955719",
+      "working_sha256": "26370b34c893cca3a826d4dffa392c3fa7e27ab86a1cef3e4e727e64769954cd",
+      "consumers": [],
+      "original_bytes": 4037,
+      "original_physical_sha256": "26370b34c893cca3a826d4dffa392c3fa7e27ab86a1cef3e4e727e64769954cd",
+      "original_git_blob_sha256": "f8f7092fa9d276c2b7042b909770fd5396f1413d9edb13330046d413f0955719",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P2_DESIGN_REVIEW.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "9da26041907012f5a84ccad924cd315b022319aac0f892c97722a5ecd742a5fa",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_1_CONTROLLER.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "8e79d9c760e8168fbb7d441124c23537812750ef265c541f76a0efa73a8ba9bc",
+      "working_sha256": "8e79d9c760e8168fbb7d441124c23537812750ef265c541f76a0efa73a8ba9bc",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 8
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 246
+        }
+      ],
+      "original_bytes": 3508,
+      "original_physical_sha256": "8e79d9c760e8168fbb7d441124c23537812750ef265c541f76a0efa73a8ba9bc",
+      "original_git_blob_sha256": "8e79d9c760e8168fbb7d441124c23537812750ef265c541f76a0efa73a8ba9bc",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_1_CONTROLLER.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "695eda39f0c288890cb461249391785c83a54cfd82593a0a673e44fe85adcec6",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_1_DIFF_AUDIT.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "8ed0c3ffc18ff3ea8f1a93536975a5db55886ef89bd5bcf72bb3f08bb2429a14",
+      "working_sha256": "7e454ef2e5f3b9dbae3b41f777ce9afe8c4fa3c5e737176f217ec96ba414db71",
+      "consumers": [
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 214
+        },
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 1330
+        }
+      ],
+      "original_bytes": 27160,
+      "original_physical_sha256": "7e454ef2e5f3b9dbae3b41f777ce9afe8c4fa3c5e737176f217ec96ba414db71",
+      "original_git_blob_sha256": "8ed0c3ffc18ff3ea8f1a93536975a5db55886ef89bd5bcf72bb3f08bb2429a14",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_1_DIFF_AUDIT.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "4fdabca030e427e870d7cbc3ca9464192564820e01f4f34353acad76c5661f28",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "e4238daccd8b5dc63dbdd5f5dd996cca17178745825506f933dcb71c19b3beb6",
+      "working_sha256": "e4238daccd8b5dc63dbdd5f5dd996cca17178745825506f933dcb71c19b3beb6",
+      "consumers": [],
+      "original_bytes": 26229,
+      "original_physical_sha256": "e4238daccd8b5dc63dbdd5f5dd996cca17178745825506f933dcb71c19b3beb6",
+      "original_git_blob_sha256": "e4238daccd8b5dc63dbdd5f5dd996cca17178745825506f933dcb71c19b3beb6",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "2ee1350d5b89c06beb41b806b3db3d83924e762f3cbbdc20db19b8f80a99fd7a",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_CODEX_START.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "1fdd5512f1062743a0c53126b7c35a6245a3452ad38739ca2207da19bc77bcc6",
+      "working_sha256": "1fdd5512f1062743a0c53126b7c35a6245a3452ad38739ca2207da19bc77bcc6",
+      "consumers": [],
+      "original_bytes": 5667,
+      "original_physical_sha256": "1fdd5512f1062743a0c53126b7c35a6245a3452ad38739ca2207da19bc77bcc6",
+      "original_git_blob_sha256": "1fdd5512f1062743a0c53126b7c35a6245a3452ad38739ca2207da19bc77bcc6",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_CODEX_START.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "c2de5dcb65b70495cf9e1fee03c57e3db9b666cd1db879d7dbcc451c7d9a17dd",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "b972bd6d6f0147d17854b5189e0e7782ca25015b540c497529ebb3b0784f1088",
+      "working_sha256": "b972bd6d6f0147d17854b5189e0e7782ca25015b540c497529ebb3b0784f1088",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 127
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 142
+        }
+      ],
+      "original_bytes": 12766,
+      "original_physical_sha256": "b972bd6d6f0147d17854b5189e0e7782ca25015b540c497529ebb3b0784f1088",
+      "original_git_blob_sha256": "b972bd6d6f0147d17854b5189e0e7782ca25015b540c497529ebb3b0784f1088",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "d24d5cf1c812c65f162019f44ed15aed4898ff967935e096d42dd18019d36012",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_CONTROLLER.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "5cf602e29ea54f5cff0ae64f740094dccf270ae2fb60c21c5e550a42ab030c3c",
+      "working_sha256": "5cf602e29ea54f5cff0ae64f740094dccf270ae2fb60c21c5e550a42ab030c3c",
+      "consumers": [],
+      "original_bytes": 3015,
+      "original_physical_sha256": "5cf602e29ea54f5cff0ae64f740094dccf270ae2fb60c21c5e550a42ab030c3c",
+      "original_git_blob_sha256": "5cf602e29ea54f5cff0ae64f740094dccf270ae2fb60c21c5e550a42ab030c3c",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_CONTROLLER.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "b4aba1143a15a4a607b3c9b7f5f5a7d804a6530f5b41a01b557683b0cfabf2ad",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_METHOD_COVERAGE.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "48fd4c3ae9e86c1029611b301408562a6d7ae4c09d92fd2e21cc2948f8ae77c8",
+      "working_sha256": "48fd4c3ae9e86c1029611b301408562a6d7ae4c09d92fd2e21cc2948f8ae77c8",
+      "consumers": [
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 213
+        },
+        {
+          "consumer": "plans/ATOM_CNW_PUBLIC_1TO1_RESTORE.md",
+          "line": 1330
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 111
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 126
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 3
+        }
+      ],
+      "original_bytes": 9436,
+      "original_physical_sha256": "48fd4c3ae9e86c1029611b301408562a6d7ae4c09d92fd2e21cc2948f8ae77c8",
+      "original_git_blob_sha256": "48fd4c3ae9e86c1029611b301408562a6d7ae4c09d92fd2e21cc2948f8ae77c8",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_METHOD_COVERAGE.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "7db38cd411abe8cd82902f6c5548bc079092ac20c52405b7db8f336e60d9afab",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_PACKAGE_MANIFEST_SHA256.txt",
+      "classification": "candidate_history_document",
+      "git_sha256": "1fe2fcf39160693787c7591a70730d43f788d64e43c703fe45bbc4d5ebb47cdf",
+      "working_sha256": "1fe2fcf39160693787c7591a70730d43f788d64e43c703fe45bbc4d5ebb47cdf",
+      "consumers": [],
+      "original_bytes": 906,
+      "original_physical_sha256": "1fe2fcf39160693787c7591a70730d43f788d64e43c703fe45bbc4d5ebb47cdf",
+      "original_git_blob_sha256": "1fe2fcf39160693787c7591a70730d43f788d64e43c703fe45bbc4d5ebb47cdf",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_PACKAGE_MANIFEST_SHA256.txt",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "14137c654165da02eba26f67702402d8686d55d7b940b6879a9ecb34fc90a43e",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_PACKAGE_README.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "203aca82f2b0ea350481460ce45672bbcfc55348158b40287827cc44048f8ef7",
+      "working_sha256": "203aca82f2b0ea350481460ce45672bbcfc55348158b40287827cc44048f8ef7",
+      "consumers": [],
+      "original_bytes": 2607,
+      "original_physical_sha256": "203aca82f2b0ea350481460ce45672bbcfc55348158b40287827cc44048f8ef7",
+      "original_git_blob_sha256": "203aca82f2b0ea350481460ce45672bbcfc55348158b40287827cc44048f8ef7",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_PACKAGE_README.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "5b2c2f0105037975babe689ad08c1b1d0e31ac26ae4b0e9c08ee1f8e569b0b6e",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "62684909c9bf1fa9a4865da2b2e660b80d8d56aee9dee0eb30f02b4a34174f46",
+      "working_sha256": "62684909c9bf1fa9a4865da2b2e660b80d8d56aee9dee0eb30f02b4a34174f46",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 33
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 119
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 48
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 134
+        },
+        {
+          "consumer": "reviews/P3_CODEX_START.md",
+          "line": 7
+        },
+        {
+          "consumer": "reviews/P3_CODEX_START.md",
+          "line": 24
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_MANIFEST_SHA256.txt",
+          "line": 5
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_README.md",
+          "line": 13
+        }
+      ],
+      "original_bytes": 23561,
+      "original_physical_sha256": "62684909c9bf1fa9a4865da2b2e660b80d8d56aee9dee0eb30f02b4a34174f46",
+      "original_git_blob_sha256": "62684909c9bf1fa9a4865da2b2e660b80d8d56aee9dee0eb30f02b4a34174f46",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "39ea2330bb673bf2a3ab2fdb7449bd928475efaee1092877538acf04d07fbfb8",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_W04_METHOD_DELTA.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "00628c6d20d39530630afebd3b02191fd703ce81cd02df6b6c35dcafb3a9f337",
+      "working_sha256": "00628c6d20d39530630afebd3b02191fd703ce81cd02df6b6c35dcafb3a9f337",
+      "consumers": [],
+      "original_bytes": 2800,
+      "original_physical_sha256": "00628c6d20d39530630afebd3b02191fd703ce81cd02df6b6c35dcafb3a9f337",
+      "original_git_blob_sha256": "00628c6d20d39530630afebd3b02191fd703ce81cd02df6b6c35dcafb3a9f337",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_W04_METHOD_DELTA.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "bf8cec9f0843056c87b7a4b984d4af04744a3f8875a10b74d6643e7d797a4f2f",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/P3_W05_METHOD_DELTA.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "053fc1caa1929572d104e8619d3fae2e85a2d6359113aabbeee6197e495ddbc7",
+      "working_sha256": "053fc1caa1929572d104e8619d3fae2e85a2d6359113aabbeee6197e495ddbc7",
+      "consumers": [],
+      "original_bytes": 3697,
+      "original_physical_sha256": "053fc1caa1929572d104e8619d3fae2e85a2d6359113aabbeee6197e495ddbc7",
+      "original_git_blob_sha256": "053fc1caa1929572d104e8619d3fae2e85a2d6359113aabbeee6197e495ddbc7",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/P3_W05_METHOD_DELTA.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "135ece0f17f8d5ca7e46d190a05b6c0ff38b142d500c5f45dd99c983f1cfb7fd",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "reviews/PLAN_PROVENANCE_MATRIX.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "61e71a25bc1dde642c95b14dda2fbe751c4c0d889c4570f9816f5c93cf95eef7",
+      "working_sha256": "23c0f36a7620ba84c17b1b90b48e2d02db959ded01deb9b5130df6df5c1f1fa1",
+      "consumers": [],
+      "original_bytes": 58168,
+      "original_physical_sha256": "23c0f36a7620ba84c17b1b90b48e2d02db959ded01deb9b5130df6df5c1f1fa1",
+      "original_git_blob_sha256": "61e71a25bc1dde642c95b14dda2fbe751c4c0d889c4570f9816f5c93cf95eef7",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "reviews/PLAN_PROVENANCE_MATRIX.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "adda758cd0439354b26fe5323ac9d888a3572acb0af2107fd27b189b9414a199",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "templates/P2_STATE_TEMPLATE.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "ccc7be18d07448d0fdeaa6dbebc3d86bcc9c9a6927b9d1fa4553b1295a524eee",
+      "working_sha256": "d1f0515aca9ae497d688473c85c2db7bd84d1cdaf03e10c6cc6c1556156de45e",
+      "consumers": [],
+      "original_bytes": 1298,
+      "original_physical_sha256": "d1f0515aca9ae497d688473c85c2db7bd84d1cdaf03e10c6cc6c1556156de45e",
+      "original_git_blob_sha256": "ccc7be18d07448d0fdeaa6dbebc3d86bcc9c9a6927b9d1fa4553b1295a524eee",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "templates/P2_STATE_TEMPLATE.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "ebc56ad9687cb1b42d62ba88966b96069ebe9416590ef2fe4daf3993f336b5ea",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tests/P3_1_ACCEPTANCE_TESTS.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "f03275611f58d643ef95c828e5d83ae99a76411f8117fcaae47893083d6c61f6",
+      "working_sha256": "f03275611f58d643ef95c828e5d83ae99a76411f8117fcaae47893083d6c61f6",
+      "consumers": [],
+      "original_bytes": 10581,
+      "original_physical_sha256": "f03275611f58d643ef95c828e5d83ae99a76411f8117fcaae47893083d6c61f6",
+      "original_git_blob_sha256": "f03275611f58d643ef95c828e5d83ae99a76411f8117fcaae47893083d6c61f6",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tests/P3_1_ACCEPTANCE_TESTS.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "1ebffaa2ba2fbf8c0cfd873dcff0bdde0596c6b3cd61e64d87e526ea22d4810c",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tests/P3_ACCEPTANCE_TESTS.md",
+      "classification": "candidate_history_document",
+      "git_sha256": "6f7b782f68da050dfeba6aee0b4501e37e44ac30a092cf3a5c91cdb749f9b4e4",
+      "working_sha256": "6f7b782f68da050dfeba6aee0b4501e37e44ac30a092cf3a5c91cdb749f9b4e4",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 35
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 50
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_MANIFEST_SHA256.txt",
+          "line": 9
+        },
+        {
+          "consumer": "reviews/P3_PACKAGE_README.md",
+          "line": 15
+        }
+      ],
+      "original_bytes": 9376,
+      "original_physical_sha256": "6f7b782f68da050dfeba6aee0b4501e37e44ac30a092cf3a5c91cdb749f9b4e4",
+      "original_git_blob_sha256": "6f7b782f68da050dfeba6aee0b4501e37e44ac30a092cf3a5c91cdb749f9b4e4",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tests/P3_ACCEPTANCE_TESTS.md",
+      "replacement_kind": "INACTIVE_HISTORY_INDEX_SAME_PATH",
+      "replacement_sha256": "ecc1b9923be215531e775e5bca45dfa7916cdd08dc62b7af95606d29b4f1599f",
+      "successor_routes": [
+        "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+        "reviews/CONTROLLER_PROMPT.md",
+        "implementation/ACCEPTANCE_SPEC.md",
+        "docs/HISTORICAL_ARCHIVE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_06_draft_run.py",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "c4756d606fbef31cabf2c997a491dca85e7c32d76f64ce536d0651778f11905d",
+      "working_sha256": "bd16b2d763cb3a6a599da29f49ae89b3956bb337073d0729958673dad66c04c0",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 93
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 639
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 123
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 192
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 138
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 214
+        },
+        {
+          "consumer": "reviews/P3_1_CONTROLLER.md",
+          "line": 7
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 15
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 22
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 23
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 24
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 64
+        },
+        {
+          "consumer": "reviews/P3_CODEX_START.md",
+          "line": 20
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 11
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 17
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 18
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 19
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 20
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 52
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 60
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 79
+        },
+        {
+          "consumer": "reviews/P3_CONTROLLER.md",
+          "line": 7
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 13
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 20
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 21
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 22
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 62
+        }
+      ],
+      "original_bytes": 4379,
+      "original_physical_sha256": "bd16b2d763cb3a6a599da29f49ae89b3956bb337073d0729958673dad66c04c0",
+      "original_git_blob_sha256": "c4756d606fbef31cabf2c997a491dca85e7c32d76f64ce536d0651778f11905d",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_06_draft_run.py",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "602ff6f8d8a2c1fe2efde9076201c99aebeae2549eeaeade888cffd72161d919",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_06_revision_run.py",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "58bff4a5b94f5e3b7700d36ddd2ce730c5b1bb76bd5708ecad815ff6c1fcc658",
+      "working_sha256": "0bac00d04902b926262423ce1bf2decd3ef98ff16ae3b5f9f28af726050cb4a7",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 93
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 639
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 123
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3.md",
+          "line": 192
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 138
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_P3_1.md",
+          "line": 214
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 38
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 73
+        },
+        {
+          "consumer": "reviews/P3_CODEX_START.md",
+          "line": 20
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 34
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 61
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 80
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 36
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 71
+        }
+      ],
+      "original_bytes": 3886,
+      "original_physical_sha256": "0bac00d04902b926262423ce1bf2decd3ef98ff16ae3b5f9f28af726050cb4a7",
+      "original_git_blob_sha256": "58bff4a5b94f5e3b7700d36ddd2ce730c5b1bb76bd5708ecad815ff6c1fcc658",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_06_revision_run.py",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "602ff6f8d8a2c1fe2efde9076201c99aebeae2549eeaeade888cffd72161d919",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_06_nk_live_probe.ps1",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "ebcbee4b6d3e19f4286c35c6a9ac64a6bbb3da5fbdfa4ae9b7a053ff3ba2e8f8",
+      "working_sha256": "ebcbee4b6d3e19f4286c35c6a9ac64a6bbb3da5fbdfa4ae9b7a053ff3ba2e8f8",
+      "consumers": [
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 93
+        },
+        {
+          "consumer": "plans/MASTER_PLAN_GENERIC_APP_R5.md",
+          "line": 639
+        },
+        {
+          "consumer": "reviews/P3_1_SOURCE_TO_CODE_MATRIX.md",
+          "line": 25
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 21
+        },
+        {
+          "consumer": "reviews/P3_CODE_CROSSWALK_ACTUAL.md",
+          "line": 45
+        },
+        {
+          "consumer": "reviews/P3_METHOD_COVERAGE.md",
+          "line": 17
+        },
+        {
+          "consumer": "reviews/P3_SOURCE_TO_CODE_MATRIX.md",
+          "line": 23
+        }
+      ],
+      "original_bytes": 7857,
+      "original_physical_sha256": "ebcbee4b6d3e19f4286c35c6a9ac64a6bbb3da5fbdfa4ae9b7a053ff3ba2e8f8",
+      "original_git_blob_sha256": "ebcbee4b6d3e19f4286c35c6a9ac64a6bbb3da5fbdfa4ae9b7a053ff3ba2e8f8",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_06_nk_live_probe.ps1",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "204e58cbc7739c778d89b24935c37c003423d4db2d919b11421da2db737fdee1",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_critics_live_probe.ps1",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "1b3df95e130544eed9bf6c7f91b9989237763a346db29aa33ef73ab870c39491",
+      "working_sha256": "f2989f3b55ac5f52b070b8995415678811e6b935c712db10cd3bab6ec06ee2a4",
+      "consumers": [],
+      "original_bytes": 1051,
+      "original_physical_sha256": "f2989f3b55ac5f52b070b8995415678811e6b935c712db10cd3bab6ec06ee2a4",
+      "original_git_blob_sha256": "1b3df95e130544eed9bf6c7f91b9989237763a346db29aa33ef73ab870c39491",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_critics_live_probe.ps1",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "204e58cbc7739c778d89b24935c37c003423d4db2d919b11421da2db737fdee1",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_critics_live_probe.py",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "708b7c814b23bb81cc53c5737e10c221a6ecdbd98c4dde79e9a67d9855e52cf3",
+      "working_sha256": "f57256363077dfa14e591d1b1ad85d0ca07675d4b64fa16065efe8be1e18a300",
+      "consumers": [
+        {
+          "consumer": "tools/p2_critics_live_probe.ps1",
+          "line": 11
+        }
+      ],
+      "original_bytes": 7437,
+      "original_physical_sha256": "f57256363077dfa14e591d1b1ad85d0ca07675d4b64fa16065efe8be1e18a300",
+      "original_git_blob_sha256": "708b7c814b23bb81cc53c5737e10c221a6ecdbd98c4dde79e9a67d9855e52cf3",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_critics_live_probe.py",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "602ff6f8d8a2c1fe2efde9076201c99aebeae2549eeaeade888cffd72161d919",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_direct_live_probe.py",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "14b397467fa44e4e54f98ca133acdadfdbe6bb7e27fd49d7b3f86d072f865e65",
+      "working_sha256": "42eec1fafc88437df0a0558b8057cc155816fa6a65a79b93c823a0b66c70263f",
+      "consumers": [],
+      "original_bytes": 3609,
+      "original_physical_sha256": "42eec1fafc88437df0a0558b8057cc155816fa6a65a79b93c823a0b66c70263f",
+      "original_git_blob_sha256": "14b397467fa44e4e54f98ca133acdadfdbe6bb7e27fd49d7b3f86d072f865e65",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_direct_live_probe.py",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "602ff6f8d8a2c1fe2efde9076201c99aebeae2549eeaeade888cffd72161d919",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    },
+    {
+      "path": "tools/p2_nk_live_probe.ps1",
+      "classification": "candidate_scene_only_tool",
+      "git_sha256": "74b3963a5953314ee46e0ee992f34699e87f5d901d11c814e877e0c695283b93",
+      "working_sha256": "74b3963a5953314ee46e0ee992f34699e87f5d901d11c814e877e0c695283b93",
+      "consumers": [],
+      "original_bytes": 6941,
+      "original_physical_sha256": "74b3963a5953314ee46e0ee992f34699e87f5d901d11c814e877e0c695283b93",
+      "original_git_blob_sha256": "74b3963a5953314ee46e0ee992f34699e87f5d901d11c814e877e0c695283b93",
+      "archive": "atom08_public_originals_b93d009.zip",
+      "archive_member": "tools/p2_nk_live_probe.ps1",
+      "replacement_kind": "RETIRED_NON_EXECUTING_COMPATIBILITY_ENTRY",
+      "replacement_sha256": "204e58cbc7739c778d89b24935c37c003423d4db2d919b11421da2db737fdee1",
+      "successor_routes": [
+        "tools/studio.ps1",
+        "docs/CLI_COMMANDS.md",
+        "docs/governance/W10_TRUST_INTERFACE.md"
+      ],
+      "active_python_imports": [],
+      "active_executable_string_consumers": [],
+      "proof_limits": "Static import/executable-reference inspection plus preserved source; no private history replay."
+    }
+  ],
+  "private_migration": "NOT_RUN",
+  "cutover_blocked": true
+}

@@ -163,13 +163,20 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
     if uses_advisory_length(contract):
         execution.update(length_policy='ADVISORY', target_visible_chars=unit['target_visible_chars'],
                          actual_visible_chars=validate_output_length(contract, v1)['visible_chars'])
-    if state.get("mode") == "offline" and contract.get("schema_version") == "cnw_work_unit_v2":
+    if contract.get("schema_version") == "cnw_work_unit_v2":
         receipts = state.get("provider_requests", [])
         simulated = bool(receipts) and all(row.get("mode") == "MOCK_ONLY" and row.get("simulation_status") == "SIMULATED"
                                           and row.get("fixture_only") is True for row in receipts)
-        execution.update(execution_mode="MOCK_ONLY" if simulated else "OFFLINE_UNVERIFIED" if receipts else "OFFLINE_NOT_EXECUTED",
-                         simulation_status="SIMULATED" if simulated else "NOT_VERIFIED" if receipts else "NOT_EXECUTED",
-                         live_validation_status="NOT_LIVE_VALIDATED")
+        # Describe actual receipt markings without treating Run mode as Live
+        # validation. The managed caller performs verify_live separately.
+        requested_mode = state.get("mode", "UNKNOWN")
+        execution.update(
+            execution_mode="MOCK_ONLY" if simulated else "LIVE_REQUESTED" if requested_mode == "live"
+                           else "OFFLINE_UNVERIFIED" if receipts else "OFFLINE_NOT_EXECUTED",
+            requested_execution_mode=requested_mode,
+            simulation_status="SIMULATED" if simulated else "NOT_VERIFIED" if receipts else "NOT_EXECUTED",
+            live_validation_status="NOT_LIVE_VALIDATED" if simulated or requested_mode != "live"
+                                   else "NOT_CHECKED_BY_EXPORT")
     emit("00_运行状态.md",
         "# 运行状态\n\n" + "\n".join(f"- {name}: `{value}`" for name, value in execution.items())
         + "\n\n导出是可读候选的保存，不代表完整工作流验收或用户创意接受。\n")
@@ -223,21 +230,34 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
         "- 反证: correctness / character_consistency / continuity_plausibility\n"
         f"\n## 来源\n{sources}\n")
     if job_id is not None:
+        resume_mode = "live" if state.get("mode") == "live" and execution.get("execution_mode") != "MOCK_ONLY" else "offline"
+        preparation_command = ("tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile -Offline -PrepareRuns\n"
+                               if resume_mode == "offline" else "")
+        acquisition_flag = " -Offline" if resume_mode == "offline" else ""
+        transport_note = (
+            "Live 恢复必须重新核验当前请求的独立可信签收、Owner Live/费用许可及原费用/产物身份。"
+            "缺许可时在 Provider 调用前拒绝；不会转用模拟结果。"
+            if resume_mode == "live" else
+            "离线生成仅在明确的测试模拟传输环境中执行；普通离线入口不能自行调用模型。"
+            "没有模拟传输时会保留任务并在 Provider 调用前拒绝。")
         emit("05_复用操作说明.md",
             "# 包任务恢复说明\n\n"
-            "本次结果为 MOCK_ONLY / SIMULATED，NOT_LIVE_VALIDATED；Live 未授权。\n"
+            f"- 执行记录: {execution['execution_mode']}\n"
+            f"- 模拟标记: {execution['simulation_status']}\n"
+            f"- Live 核验: {execution['live_validation_status']}\n\n"
+            "导出说明不核验或授予生产许可；Run mode 本身不能证明 Live 通过。\n"
             "从应用仓库目录使用启动本任务时所选的 DataHome，重新打开同一包任务：\n\n"
             "```powershell\n"
             "$DataHome = '<启动本任务时所选 DataHome>'\n"
             f"$JobFile = Join-Path $DataHome 'shared/input_pack_jobs/{job_id}/result.json'\n"
-            "tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile -Offline -PrepareRuns\n"
-            "tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile -Offline -Mode offline -ExecuteJob\n"
+            + preparation_command
+            + f"tools/studio.ps1 project-pack -DataHome $DataHome -JobFile $JobFile{acquisition_flag} -Mode {resume_mode} -ExecuteJob\n"
+            +
             "```\n\n"
             "应用保留同一任务的合同、Run、阶段产物和失败历史，核验身份后恢复；"
             "无需手填合同、WorkId 或 RunId。已经完成的任务核验并复用现有成果。\n"
-            "离线生成仅在明确的测试模拟传输环境中执行；普通离线入口不能自行调用模型。"
-            "没有模拟传输时会保留任务并在 Provider 调用前拒绝。"
-            "本说明不授予生产调用、费用或正文晋升权限。\n")
+            + transport_note
+            + "本说明不授予生产调用、费用或正文晋升权限。\n")
     else:
         emit("05_复用操作说明.md",
             "# 复用操作说明\n\n"
@@ -277,7 +297,7 @@ def export_reading_package(run_dir: str | Path, state: dict, *, project_root: st
         "p{margin:.6rem 0} .scene{border-left:3px solid #999;padding-left:1rem}</style></head><body>"
         f"<h1>{_html_escape(unit['id'])}</h1>"
         f"<p>候选状态：{candidate_status}；运行状态：{_html_escape(str(execution['pipeline_status']))}。导出不代表验收。</p>"
-        + (f"<p>执行标记：{execution['execution_mode']} / {execution['simulation_status']}；NOT_LIVE_VALIDATED。</p>" if "execution_mode" in execution else "")
+        + (f"<p>执行标记：{execution['execution_mode']} / {execution['simulation_status']}；{execution['live_validation_status']}。</p>" if "execution_mode" in execution else "")
         + "".join(f"<p>{_html_escape(line)}</p>" for line in before_text.splitlines() if line.strip())
         + "<div class=\"scene\">"
         + "".join(f"<p>{_html_escape(line)}</p>" for line in v1.splitlines() if line.strip())

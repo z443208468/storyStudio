@@ -3,8 +3,8 @@
 固定方法：CNW `97ad71fe5e5e` 的完整 `templates/CLAUDE.md` Standard Commands / Folder Classification / Safety for Long Projects，Canon policy，以及各操作对应模板。它们不增加逐话生产阶段。
 
 ```powershell
-pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot workspace/项目 -Operation extract_canon -SourceFile _INBOX/原稿.md -OperationTarget '当前章节的角色知情范围'
-pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot workspace/项目 -Operation revision_plan
+pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot '<selected absolute project root>' -Operation extract_canon -SourceFile '<project-relative source>' -OperationTarget '当前章节的角色知情范围'
+pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot '<selected absolute project root>' -Operation revision_plan
 ```
 
 | Operation | 读取与产物 |
@@ -28,7 +28,7 @@ pwsh -NoProfile -File tools/studio.ps1 standard-operation -ProjectRoot <项目�
 
 批准文件字段：`schema_version=cnw_workflow03_user_approval_v1`、`author_decision=APPROVE_SELECTED_ITEMS`、`project_instance_id`、`plan_sha256`、`draft_sha256`（所选原章路径→字节 SHA）、`protected_sha256`（01_theme、02_logline、90_canon 全部 MD/TXT/JSON 文件路径→字节 SHA），以及 `approved_items` 列表，每项为 `chapter` 和 `plan_excerpt`。excerpt 是用户批准的计划中完整一行，不接受空的全计划批准。文件由用户明确选择，模型返回的批准字段不授予任何权限。
 
-项目、计划、原章或保护资料身份变更会拒绝执行；每个章稿均须有具体批准项。标记 `REQUIRES AUTHOR DECISION` 的核心变更不在此普通修订入口执行，须单独处理核心/Canon 决策。此批准只授权指定修订项，不授权 Provider、费用、Controller 签收或正式晋升。该新增路径尚未接入生产项目授权，原生传输在费用 guard/slot 前返回 `LIVE_AUTHORIZATION_REQUIRED`；即使有 Key 也不发送。当前验证仅使用离线模拟模型响应，不能宣称此命令已支持 Live 修订。
+项目、计划、原章或保护资料身份变更会拒绝执行；每个章稿均须有具体批准项。标记 `REQUIRES AUTHOR DECISION` 的核心变更不在此普通修订入口执行，须单独处理核心/Canon 决策。此批准只授权指定修订项，不授权 Provider、费用、Controller 签收或正式晋升。实际注册 operation 授权适配已接入，要求独立 Controller 预检及 Owner Live/费用许可绑定真实请求、批准快照和保护资料。无许可的注册项目以及未绑定旧 V1 修订路线仍在 Key、slot、reserve、HTTP 前拒绝；生产信任未部署时不能执行真实修订。离线模拟消费成功不等于已验收 Live 修订。
 
 候选稿、批准快照、修订记录和工作日志在同一 maintenance 事务中保存；中断后复用原回执恢复，不重新请求模型。不同批准文件产生独立目录；既有候选不得覆盖。正式晋升仍需单独明确操作与对应审查。
 

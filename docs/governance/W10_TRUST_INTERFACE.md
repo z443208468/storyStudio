@@ -18,7 +18,7 @@ V2 使用 `cnw_run_contract_preflight_v1`，由 `build_run_contract_preflight()`
 
 首版要求部署文件自包含，公共信任材料嵌入受保护文件；不支持外部代码/配置依赖。AST 在执行前拒绝所有 Import/ImportFrom，包括方法内延迟导入；私有模块 builtins 在 factory 和 verify 期间仍拒绝动态导入。此约束防止再次搜索 Writer 可写依赖，不能称作 Python 沙箱。需要依赖的验证器必须等待另行审查，不能自动降级为普通 import。
 
-信任根和签名私钥由独立 Controller/部署主体管理；私钥不由加载器读取，不得放在 StoryStudio 仓库、项目 DataHome、预检 JSON 或 Writer 可写目录。本次工程没有部署生产验证器或生成私钥。
+信任根和签名私钥由独立 Controller/部署主体管理；私钥不由加载器读取，不得放在 StoryStudio 仓库、项目 DataHome、预检 JSON 或 Writer 可写目录。本次工程没有部署生产验证器或生成生产私钥；虚构离线测试签名不能成为生产信任根。
 
 缺少模块、信任根、可信签名者或有效签名时返回 `ATTESTATION_PENDING` 或签名错误。单有 `ACCEPTED` 字段、普通 JSON、reviewer 名称、摘要或历史 J19 签收都不构成信任。
 
@@ -43,6 +43,10 @@ V2 使用 `cnw_run_contract_preflight_v1`，由 `build_run_contract_preflight()`
 
 可信 Controller 签收不等于 Live 权限。Provider 调用仍需要独立、真实的用户 Live 授权、有效 Key、费用政策/预算和该请求的可信签收。离线报告和工程 Controller ACCEPT 均不足以 reserve 或发送请求。当前 ATOM-07 离线修正不提供这些生产授权，也不执行 TS resume。
 
-新 V2 的实际 `cnw_runner` slot 入口及低层请求入口均在缓存复用、Key、费用和 HTTP 前闭锁；手工改变 Run mode 或自报 `provider_call_authorized=true` 不授予生产权限。没有部署真实生产 grant adapter 时，可信审查与离线核验可以完成，Live 继续为 `NOT_AUTHORIZED`。
+新 V2 的实际 `cnw_runner` 高层/低层入口均消费 `cnw_live_authorization` 的当前请求绑定，在缓存复用、Key、slot、费用和 HTTP 前核验。接口已实现且有当期07离线消费者证据；生产信任验证器与真实授予机制尚未部署，不能因此调用 Live。手工改变 Run mode 或自报 `provider_call_authorized=true` 不授予权限。
+
+Controller 预检 purpose 与 Owner Live/费用 purpose 分离。实际注册 operation 使用 `cnw_operation_authorization` 及 `CNW_OPERATION_PREFLIGHT` / `CNW_OPERATION_OWNER_LIVE_FEE_AUTHORIZATION`，重建 operation namespace、冻结输入、真实构造器、stage/role、消息、cap 和 extras。批准修订的作者创意批准另行核验，不替代这两种许可。
+
+辅助作用域绑定实际父阶段和输入：NK support hook 对应 Writing Brief，CritiCS Plot 对应 Plot，CritiCS Text 对应 Refine。它们共用实际父 RunAccount、slot、账本、次数和累计费用；不能借独立子目录另开预算。签名不能跨项目/Run/来源/合同/实现重放。等待辅助服务 ready 后再核原请求、许可、账户及 PENDING 行；失败保留原归属和 UNKNOWN，不能重新预留来洗掉未知费用。测试签名/模拟会话从不成为生产信任根。
 
 W10 阶段签收在正式文件写入前严格要求匹配回执 `mode="LIVE"` 且 `fixture_only` 是布尔 `false`；缺字段、数值 `0` 和模拟标记均拒绝。下层 `accept_validated_stage()` 对非本地阶段使用相同要求；本地 Lint 继续禁止 Provider 回执。draft 不再预写正文，目标碰撞仍拒绝，只有下层签收成功才写目标。本修正不宣称下层阶段状态提交与上层文件写入已成为一个原子事务。
