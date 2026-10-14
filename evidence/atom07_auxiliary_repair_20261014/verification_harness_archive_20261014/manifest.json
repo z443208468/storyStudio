@@ -1,0 +1,21 @@
+{
+  "status": "HARNESS_PROVENANCE_NOT_TEST_RESULT",
+  "records": [
+    {
+      "name": "verify_current_v2.py",
+      "current_sha256": "1a31925b5ea414850d315bf215e5e972ff764717002d4e93e284667b34e1378e",
+      "prior_recorded_sha256": "8165db81c0013ec91fb44c65c3dbabc26cb0464c51be745d161f3364e74f284c",
+      "recovered_sha256": "8165db81c0013ec91fb44c65c3dbabc26cb0464c51be745d161f3364e74f284c",
+      "recovery_method": "EXPLICIT_PATCH_REVERSAL_MATCHED_RECORDED_SHA_NOT_UNTOUCHED_ORIGINAL",
+      "reference_check_sha256": "dc038402b43dd1356e32cc22b10e95de9a75d321622a7df9758ce754eb9aae20"
+    },
+    {
+      "name": "verify_native_v2.py",
+      "current_sha256": "43478270f61fa023bd139e540a9b18dad570da0aecdb81f7b10238a7669cd68a",
+      "prior_recorded_sha256": "e9fc38bbd68e704533663da6d2d4c474a45fa0b80f80807cf4839fe07fff7cde",
+      "recovered_sha256": "e9fc38bbd68e704533663da6d2d4c474a45fa0b80f80807cf4839fe07fff7cde",
+      "recovery_method": "EXPLICIT_PATCH_REVERSAL_MATCHED_RECORDED_SHA_NOT_UNTOUCHED_ORIGINAL",
+      "reference_check_sha256": "ca2b6e2a69729542611cfeb3e3a29a064982565b7181ac5155cd3d486b2e916c"
+    }
+  ]
+}
